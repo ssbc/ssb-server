@@ -17,7 +17,7 @@ var ssbapi = require('secure-scuttlebutt/api')
 // with the default api:
 var server = sbot.serve(2000)
 var client = sbot.connect(2000, 'localhost')
-client.getPublicKey(function(err, key) {
+client.whoami(function(err, prof) {
   // ...
 })
 
@@ -27,7 +27,5 @@ var server = sbot.serve(2000, function(backend) {
   return ssbapi.server(backend.ssb, backend.feed)
 })
 var client = sbot.connect(2000, 'localhost', ssbapi.client())
-client.getPublicKey(function(err, key) {
-  // ...
-})
-```
+var feedstream = client.createFeedStream()
+// ...
