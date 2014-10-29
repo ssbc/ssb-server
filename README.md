@@ -1,6 +1,6 @@
 # Scuttlebot
 
-A bot-server for the phoenix network. Provides an HTTP server alongside its SSB server for custom endpoints and interfaces. Can be `require()`ed to create your own bots.
+A bot-server for the phoenix network. Provides an RPC server for operating it locally or remotely. Can be `require()`ed to create your own bots.
 
 Usage:
 
