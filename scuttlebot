@@ -10,13 +10,9 @@ nomnom.command('serve')
       abbr: 'd',
       help: 'Run the server in the background as a daemon.'
     },
-    httpport: {
-      help: 'Sets the port for the http server.',
-      default: 80
-    },
-    ssbport: {
-      help: 'Sets the port for the secure-scuttlebutt server.',
-      default: 1984
+    port: {
+      help: 'Sets the port for the rpc server.',
+      default: 2000
     }
   })
   .callback(require('./lib/index').start);

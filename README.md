@@ -5,16 +5,29 @@ A bot-server for the phoenix network. Provides an HTTP server alongside its SSB 
 Usage:
 
 ```
-./scuttlebot serve --httpport 8000 --ssbport 8001
+./scuttlebot serve --port 2000 --ssbport 2001
 ```
 
 API:
 
 ```js
 var sbot = require('scuttlebot')
+var ssbapi = require('secure-scuttlebutt/api')
 
-sbot.createServers({ httpport: 8000, ssbport: 8001 }, function(req, res) {
-  // your custom HTTP server
-  res.writeHead(200).end('Scuttlebot!')
+// with the default api:
+var server = sbot.serve(2000)
+var client = sbot.connect(2000, 'localhost')
+client.getPublicKey(function(err, key) {
+  // ...
+})
+
+// with a custom API:
+var server = sbot.serve(2000, function(backend) {
+  // return your muxrpc server
+  return ssbapi.server(backend.ssb, backend.feed)
+})
+var client = sbot.connect(2000, 'localhost', ssbapi.client())
+client.getPublicKey(function(err, key) {
+  // ...
 })
 ```
