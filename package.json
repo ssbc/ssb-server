@@ -1,0 +1,11 @@
+{
+  "name": "scuttlebot",
+  "dependencies": {
+    "daemonize2": "0.4.2",
+    "nomnom": "1.8.0",
+    "pull-stream": "~2.24.1",
+    "pull-stream-to-stream": "~1.3.0",
+    "secure-scuttlebutt": "~4.0.0",
+    "ssb-keys": "~0.1.0"
+  }
+}
