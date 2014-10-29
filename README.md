@@ -42,3 +42,8 @@ pull(
   pull.collect(console.log) // => (err, array of user ids)
 )
 ```
+
+Todos:
+
+ - Once SSB supports channel authentication, apply a permissions model
+ - Add the SSB replication API when that's standardized
