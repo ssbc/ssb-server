@@ -46,4 +46,5 @@ pull(
 Todos:
 
  - Once SSB supports channel authentication, apply a permissions model
+ - Once SSB supports link de-indexing (via "delete" messages), make `unfollow()` work (it's broken atm)
  - Add the SSB replication API when that's standardized
