@@ -11,5 +11,12 @@
     "secure-scuttlebutt": "~4.0.0",
     "ssb-keys": "~0.1.0",
     "stream-to-pull-stream": "~1.6.0"
+  },
+  "devDependencies": {
+    "rimraf": "~2.2.8",
+    "tape": "~3.0.0"
+  },
+  "scripts": {
+    "test": "set -e; for t in test/*.js; do node $t; done"
   }
 }

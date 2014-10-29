@@ -15,14 +15,14 @@ var sbot = require('scuttlebot')
 var ssbapi = require('secure-scuttlebutt/api')
 
 // with the default api:
-var server = sbot.serve(2000)
-var client = sbot.connect(2000, 'localhost')
+var server = sbot.serve(2000, __dirname) // port, (optional) directory to put data
+var client = sbot.connect(2000, 'localhost') // port, (optional) hostname
 client.whoami(function(err, prof) {
   // ...
 })
 
 // with a custom API:
-var server = sbot.serve(2000, function(backend) {
+var server = sbot.serve(2000, __dirname, function(backend) {
   // return your muxrpc server
   return ssbapi.server(backend.ssb, backend.feed)
 })
