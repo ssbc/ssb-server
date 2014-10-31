@@ -42,6 +42,9 @@ pull(
   client.followedUsers(),
   pull.collect(console.log) // => (err, array of user ids)
 )
+
+var rstream = myfeed.createReplicationStream()
+pull(rstream, client.createReplicationStream(), rstream)
 ```
 
 Todos:
