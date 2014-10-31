@@ -33,6 +33,7 @@ client.whoami(function(err, prof) {
   console.log(prof.id) // => Buffer, the hash of the public key (user id)
   console.log(prof.public) // => Buffer, the public key
 })
+client.setProfile({ nickname: 'Mr Scuttlebot' })
 
 client.follow(id, function(err))
 client.unfollow(id, function(err))
@@ -45,6 +46,7 @@ pull(
 
 Todos:
 
+ - Add CLI commands for the api
  - Once SSB supports channel authentication, apply a permissions model
  - Once SSB supports link de-indexing (via "delete" messages), make `unfollow()` work (it's broken atm)
  - Add the SSB replication API when that's standardized
