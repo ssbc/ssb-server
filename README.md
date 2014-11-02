@@ -23,7 +23,7 @@ var server = sbot.serve(2000, __dirname, function(backend) {
   // return your muxrpc server
   return ssbapi.server(backend.ssb, backend.feed)
 })
-var client = sbot.connect(2000, 'localhost', ssbapi.client())
+var client = sbot.connect(2000, 'localhost', ssbapi.client)
 ```
 
 Default API:
