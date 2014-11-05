@@ -16,6 +16,19 @@ nomnom.command('serve')
     }
   })
   .callback(require('./lib/index').start);
+nomnom.command('repl')
+  .help('Starts a repl that connects to the given scuttlebot\'s RPC channel.')
+  .options({
+    host: {
+      help: 'Hostname of the scuttlebot.',
+      default: 'localhost'
+    },
+    port: {
+      help: 'Port of the scuttlebot.',
+      default: 2000
+    }
+  })
+  .callback(require('./lib/index').repl)
 nomnom.command('stop')
   .help('Stops the web-server daemon if it\'s active.')
   .callback(require('./lib/index').stop);

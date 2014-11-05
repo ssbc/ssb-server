@@ -2,13 +2,28 @@
 
 A bot-server for the phoenix network. Provides an RPC server for operating it locally or remotely. Can be `require()`ed to create your own bots.
 
-CLI usage:
+### CLI usage
 
 ```
-./scuttlebot serve --port 2000
+./scuttlebot serve [--port 2000]
 ```
 
-Setup:
+To get a convenient REPL:
+
+```
+./scuttlebot repl [--host localhost] [--port 2000]
+```
+
+In the REPL, a connection will have been established for you, and all of the RPC API will be imported into the toplevel:
+
+```
+localhost:2000> whoami(console.log)
+localhost:2000> setProfile({ nickname: 'Mr Scuttlebot' })
+...
+```
+
+
+### Setup
 
 ```js
 var sbot = require('scuttlebot')
