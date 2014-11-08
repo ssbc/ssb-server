@@ -1,0 +1,10 @@
+{
+  "anon": {
+    "pass": "",
+    "allow": null
+  },
+  "jail": {
+    "pass": "password",
+    "allow": ["auth"]
+  }
+}

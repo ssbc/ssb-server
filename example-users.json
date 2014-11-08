@@ -1,0 +1,10 @@
+{
+  "anon": {
+    "pass": "",
+    "allow": ["auth", "whoami", "createReplicationStream"]
+  },
+  "admin": {
+    "pass": "password",
+    "allow": null
+  }
+}
