@@ -22,8 +22,7 @@ localhost:2000> setProfile({ nickname: 'Mr Scuttlebot' })
 ...
 ```
 
-
-### Setup
+### Programmatic usage
 
 ```js
 var sbot = require('scuttlebot')
@@ -41,9 +40,10 @@ var server = sbot.serve(2000, __dirname, function(backend) {
 var client = sbot.connect(2000, 'localhost', ssbapi.client)
 ```
 
-Default API:
+### Default API
 
 ```js
+client.auth({user:, pass:}, function(err, perms))
 client.whoami(function(err, prof) {
   console.log(prof.id) // => Buffer, the hash of the public key (user id)
   console.log(prof.public) // => Buffer, the public key
@@ -62,9 +62,27 @@ var rstream = myfeed.createReplicationStream()
 pull(rstream, client.createReplicationStream(), rstream)
 ```
 
-Todos:
+### Permissions
+
+The RPC channel, by default, only allows `auth`, `whoami`, and `createReplicationStream`. To provide more access to the API, create a `users.json` file like this:
+
+```json
+{
+  "anon": {
+    "pass": "",
+    "allow": ["auth", "whoami", "createReplicationStream"]
+  },
+  "admin": {
+    "pass": "password",
+    "allow": null
+  }
+}
+```
+
+Set `allow` to `null` to allow all. RPC clients may authenticate by calling `auth({ user: 'username', pass: 'password' })`. Their channel will thereafter have access as defined by the user in the users file.
+
+### Todos
 
  - Add CLI commands for the api
- - Once SSB supports channel authentication, apply a permissions model
  - Once SSB supports link de-indexing (via "delete" messages), make `unfollow()` work (it's broken atm)
  - Add the SSB replication API when that's standardized
