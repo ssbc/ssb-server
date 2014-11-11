@@ -7,6 +7,11 @@ var create = require('secure-scuttlebutt/create')
 var ssbKeys = require('ssb-keys')
 var api = require('./lib/api')
 
+function createDir(config) {
+  try { require('fs').mkdirSync(config.path, 0755) }
+  catch (e) {}
+}
+
 function loadSSB (config) {
   var dbPath  = path.join(config.path, 'db')
   //load/create  secure scuttlebutt.
@@ -18,6 +23,13 @@ function loadKeys (config) {
   return ssbKeys.loadOrCreateSync(keyPath)
 }
 
+
+// create the server with the given ssb and feed
+// - `ssb`: object, the secure-scuttlebutt instance
+// - `feed`: object, the ssb feed instance
+// - `config.port`: number, port to serve on
+// - `config.pass`: string, password for full admin access to the rpc api
+// - `config.path`: string, the path to the directory which contains the keyfile and database
 exports = module.exports = function (ssb, feed, config) {
 
   if(!config)
@@ -64,7 +76,12 @@ exports = module.exports = function (ssb, feed, config) {
   return server
 }
 
-exports.init = function (config) {
+// load keys, ssb database, and create the server
+// - `config.port`: number, port to serve on
+// - `config.pass`: string, password for full admin access to the rpc api
+// - `config.path`: string, the path to the directory which contains the keyfile and database
+exports.fromConfig = function (config) {
+  createDir(config)
   var ssb  = loadSSB(config)
   var keys = loadKeys(config)
   var feed = ssb.createFeed(keys)
@@ -74,7 +91,19 @@ exports.init = function (config) {
       .use(require('./plugins/gossip'))
 }
 
+// connect to a peer as a client
+// - `address.host`: string, hostname of the target
+// - `address.port`: number, port of the target
+exports.connect = function (address) {
+  var conn = net.connect(address.port, address.host)
+  var rpc = api.client()
+  rpc.conn = conn
+  stream = toPull.duplex(conn)
+  pull(stream, rpc.createStream(), stream)
+  return rpc
+}
+
 if(!module.parent) {
   //start a server
-  exports.init(require('./config'))
+  exports.fromConfig(require('./config'))
 }
