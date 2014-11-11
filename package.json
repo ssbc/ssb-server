@@ -22,7 +22,8 @@
     "pull-stringify": "~1.2.2",
     "minimist": "~1.1.0",
     "pull-many": "~1.0.5",
-    "pull-cat": "~1.1.5"
+    "pull-cat": "~1.1.5",
+    "mkdirp": "~0.5.0"
   },
   "devDependencies": {
     "rimraf": "~2.2.8",
