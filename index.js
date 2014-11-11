@@ -34,7 +34,8 @@ exports = module.exports = function (config, ssb, feed) {
   if((!ssb || !feed) && !!config.path)
     throw new Error('if ssb and feed are not provided, config must have path')
 
-  mkdirp.sync(config.path)
+  if (config.path)
+    mkdirp.sync(config.path)
   ssb = ssb || loadSSB(config)
   feed = feed || ssb.createFeed(loadKeys(config))
 
@@ -97,6 +98,7 @@ exports.connect = function (address) {
   var conn = net.connect(address.port, address.host)
   var rpc = api.client()
   rpc.conn = conn
+  rpc.close = conn.end.bind(conn)
   stream = toPull.duplex(conn)
   pull(stream, rpc.createStream(), stream)
   return rpc

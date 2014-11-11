@@ -10,7 +10,7 @@
   "dependencies": {
     "daemonize2": "0.4.2",
     "json-human-buffer": "~1.1.0",
-    "muxrpc": "~0.6.0",
+    "muxrpc": "~0.6.1",
     "nomnom": "1.8.0",
     "pull-serializer": "~0.3.1",
     "pull-stream": "~2.24.1",
