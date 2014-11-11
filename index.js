@@ -6,11 +6,7 @@ var path = require('path')
 var create = require('secure-scuttlebutt/create')
 var ssbKeys = require('ssb-keys')
 var api = require('./lib/api')
-
-function createDir(config) {
-  try { require('fs').mkdirSync(config.path, 0755) }
-  catch (e) {}
-}
+var mkdirp = require('mkdirp')
 
 function loadSSB (config) {
   var dbPath  = path.join(config.path, 'db')
@@ -30,10 +26,17 @@ function loadKeys (config) {
 // - `config.port`: number, port to serve on
 // - `config.pass`: string, password for full admin access to the rpc api
 // - `config.path`: string, the path to the directory which contains the keyfile and database
-exports = module.exports = function (ssb, feed, config) {
+exports = module.exports = function (config, ssb, feed) {
 
   if(!config)
     throw new Error('must have config')
+
+  if((!ssb || !feed) && !!config.path)
+    throw new Error('if ssb and feed are not provided, config must have path')
+
+  mkdirp.sync(config.path)
+  ssb = ssb || loadSSB(config)
+  feed = feed || ssb.createFeed(loadKeys(config))
 
   function attachRPC (stream, eventName) {
     stream = toPull.duplex(stream)
@@ -80,13 +83,9 @@ exports = module.exports = function (ssb, feed, config) {
 // - `config.port`: number, port to serve on
 // - `config.pass`: string, password for full admin access to the rpc api
 // - `config.path`: string, the path to the directory which contains the keyfile and database
+exports.init =
 exports.fromConfig = function (config) {
-  createDir(config)
-  var ssb  = loadSSB(config)
-  var keys = loadKeys(config)
-  var feed = ssb.createFeed(keys)
-
-  return module.exports(ssb, feed, config)
+  return module.exports(ssb)
       .use(require('./plugins/replicate'))
       .use(require('./plugins/gossip'))
 }
@@ -105,5 +104,5 @@ exports.connect = function (address) {
 
 if(!module.parent) {
   //start a server
-  exports.fromConfig(require('./config'))
+  exports(require('./config'))
 }
