@@ -62,19 +62,19 @@ tape('replicate between 3 peers', function (t) {
       })
     }
 
-    var serverA = check(server(dbA, alice, {
+    var serverA = check(server({
       port: 45451, host: 'localhost',
-    }), 'ALICE').use(replicate).use(gossip)
+    },dbA, alice), 'ALICE').use(replicate).use(gossip)
 
-    var serverB = check(server(dbB, bob, {
+    var serverB = check(server({
       port: 45452, host: 'localhost',
       seeds: [{port: 45451, host: 'localhost'}]
-    }), 'BOB').use(replicate).use(gossip)
+    },dbB, bob), 'BOB').use(replicate).use(gossip)
 
-    var serverC = check(server(dbC, carol, {
+    var serverC = check(server({
       port: 45453, host: 'localhost',
       seeds: [{port: 45451, host: 'localhost'}]
-    }), 'CAROL').use(replicate).use(gossip)
+    }, dbC, carol), 'CAROL').use(replicate).use(gossip)
 
     var n = 2
 
