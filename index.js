@@ -95,10 +95,10 @@ exports.fromConfig = function (config) {
 // - `address.host`: string, hostname of the target
 // - `address.port`: number, port of the target
 exports.connect = function (address) {
-  var socket = ws.connect(address)
+  var stream = ws.connect(address)
   var rpc = api.client()
-  rpc.socket = socket
-  pull(socket, rpc.createStream(), socket)
+  rpc.socket = stream.socket
+  pull(stream, rpc.createStream(), stream)
   return rpc
 }
 

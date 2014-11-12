@@ -8,7 +8,10 @@ exports.connect = function (addr) {
     hostname: addr.host,
     port: addr.port
   })
-  return ws(new WebSocket(u))
+  var socket = new WebSocket(u)
+  var stream = ws(socket)
+  stream.socket = socket
+  return stream
 }
 
 var EventEmitter = require('events').EventEmitter
