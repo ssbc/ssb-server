@@ -1,4 +1,4 @@
-var net = require('net')
+var ws = require('./ws')
 
 var api = require('./lib/api')
 var config = require('./config')
@@ -73,8 +73,7 @@ var source = contains(cmd, api.manifest.source)
 if(!async && !source)
   return usage()
 
-var stream = net.connect(config.port)
-stream = duplex(stream)
+var stream = ws.connect({port: config.port, host: 'localhost'})
 
 pull(
   stream,

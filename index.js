@@ -8,8 +8,10 @@ var api = require('./lib/api')
 var mkdirp = require('mkdirp')
 var url = require('url')
 
-var WebSocket = require('ws')
-var ws = require('pull-ws')
+//var WebSocket = require('ws')
+//var ws = require('pull-ws')
+
+var ws = require('./ws')
 
 function loadSSB (config) {
   var dbPath  = path.join(config.path, 'db')
@@ -34,7 +36,7 @@ exports = module.exports = function (config, ssb, feed) {
   if(!config)
     throw new Error('must have config')
 
-  if((!ssb || !feed) && !!config.path)
+  if((!ssb || !feed) && !config.path)
     throw new Error('if ssb and feed are not provided, config must have path')
 
   if(config.path) mkdirp.sync(config.path)
@@ -58,22 +60,16 @@ exports = module.exports = function (config, ssb, feed) {
     if(eventName) server.emit(eventName, rpc, rpcStream)
   }
 
-  var server = new WebSocket.Server({port: config.port})
-    .on('connection', function (socket) {
-    attachRPC(ws(socket), 'rpc-server')
-  })
+  var server = ws.createServer(function (socket) {
+    attachRPC(socket, 'rpc-server')
+  }).listen(config.port)
 
   server.ssb = ssb
   server.feed = feed
   server.config = config
   //peer connection...
   server.connect = function (address) {
-    var u = url.format({
-      protocol: 'ws', slashes: true,
-      hostname: address.host,
-      port: address.port
-    })
-    attachRPC(ws(new WebSocket(u)), 'rpc-client')
+    attachRPC(ws.connect(address), 'rpc-client')
   }
 
   server.use = function (plugin) {
