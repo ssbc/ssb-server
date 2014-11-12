@@ -10,7 +10,7 @@
   "dependencies": {
     "daemonize2": "0.4.2",
     "json-human-buffer": "~1.1.0",
-    "muxrpc": "~0.6.0",
+    "muxrpc": "~2.0.0",
     "nomnom": "1.8.0",
     "pull-serializer": "~0.3.1",
     "pull-stream": "~2.24.1",
@@ -23,7 +23,9 @@
     "minimist": "~1.1.0",
     "pull-many": "~1.0.5",
     "pull-cat": "~1.1.5",
-    "mkdirp": "~0.5.0"
+    "mkdirp": "~0.5.0",
+    "ws": "~0.4.32",
+    "pull-ws": "dominictarr/pull-ws#91a177801766599218f0e0ab75947609f3e774f8"
   },
   "devDependencies": {
     "rimraf": "~2.2.8",
