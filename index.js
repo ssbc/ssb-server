@@ -1,4 +1,3 @@
-
 var pull = require('pull-stream')
 var toPull = require('stream-to-pull-stream')
 var net = require('net')
@@ -7,6 +6,10 @@ var create = require('secure-scuttlebutt/create')
 var ssbKeys = require('ssb-keys')
 var api = require('./lib/api')
 var mkdirp = require('mkdirp')
+var url = require('url')
+
+var WebSocket = require('ws')
+var ws = require('pull-ws')
 
 function loadSSB (config) {
   var dbPath  = path.join(config.path, 'db')
@@ -34,13 +37,11 @@ exports = module.exports = function (config, ssb, feed) {
   if((!ssb || !feed) && !!config.path)
     throw new Error('if ssb and feed are not provided, config must have path')
 
-  mkdirp.sync(config.path)
+  if(config.path) mkdirp.sync(config.path)
   ssb = ssb || loadSSB(config)
   feed = feed || ssb.createFeed(loadKeys(config))
 
   function attachRPC (stream, eventName) {
-    stream = toPull.duplex(stream)
-
     var rpc = api.peer(ssb, feed, config)
     var rpcStream = rpc.createStream()
 
@@ -57,10 +58,9 @@ exports = module.exports = function (config, ssb, feed) {
     if(eventName) server.emit(eventName, rpc, rpcStream)
   }
 
-  var server = net.createServer(function (stream) {
-    attachRPC(stream, 'rpc-server')
-  }).listen(config.port, function () {
-    console.error('scuttlebot listening on:'+config.port)
+  var server = new WebSocket.Server({port: config.port})
+    .on('connection', function (socket) {
+    attachRPC(ws(socket), 'rpc-server')
   })
 
   server.ssb = ssb
@@ -68,7 +68,12 @@ exports = module.exports = function (config, ssb, feed) {
   server.config = config
   //peer connection...
   server.connect = function (address) {
-    attachRPC(net.connect(address.port, address.host), 'rpc-client')
+    var u = url.format({
+      protocol: 'ws', slashes: true,
+      hostname: address.host,
+      port: address.port
+    })
+    attachRPC(ws(new WebSocket(u)), 'rpc-client')
   }
 
   server.use = function (plugin) {
