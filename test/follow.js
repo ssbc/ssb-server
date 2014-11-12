@@ -38,7 +38,7 @@ tape('follow, isFollowing, followedUsers, unfollow', function (t) {
                 if (err) throw err
                 t.equal(isFollowing, false)
                 t.end()
-                // client.socket.end()
+                client.socket.close()
                 server.close()
               })
             })
