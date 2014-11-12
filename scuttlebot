@@ -11,11 +11,10 @@ nomnom.command('serve')
       help: 'Run the server in the background as a daemon.'
     },
     port: {
-      help: 'Sets the port for the rpc server.',
-      default: 2000
+      help: 'Sets the port for the rpc server.'
     }
   })
-  .callback(require('./lib/index').start)
+  .callback(require('./lib/cli').start)
 nomnom.command('repl')
   .help('Starts a repl that connects to the given scuttlebot\'s RPC channel.')
   .options({
@@ -28,8 +27,8 @@ nomnom.command('repl')
       default: 2000
     }
   })
-  .callback(require('./lib/index').repl)
+  .callback(require('./lib/cli').repl)
 nomnom.command('stop')
   .help('Stops the web-server daemon if it\'s active.')
-  .callback(require('./lib/index').stop)
+  .callback(require('./lib/cli').stop)
 nomnom.parse();
