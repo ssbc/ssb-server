@@ -95,11 +95,10 @@ exports.fromConfig = function (config) {
 // - `address.host`: string, hostname of the target
 // - `address.port`: number, port of the target
 exports.connect = function (address) {
-  var conn = net.connect(address.port, address.host)
+  var socket = ws.connect(address)
   var rpc = api.client()
-  rpc.conn = conn
-  stream = toPull.duplex(conn)
-  pull(stream, rpc.createStream(), stream)
+  rpc.socket = socket
+  pull(socket, rpc.createStream(), socket)
   return rpc
 }
 
