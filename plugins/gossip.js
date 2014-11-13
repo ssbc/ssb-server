@@ -40,10 +40,10 @@ function isObject (o) {
 }
 
 module.exports = function (server) {
-  console.log(server)
   var config = server.config
 
   server.on('rpc-connection', function (rpc, stream) {
+
     rpc.once('replicated', function () {
       stream.close(function (err) {
         //connect again...
@@ -55,9 +55,7 @@ module.exports = function (server) {
 
   function connect () {
     peers(server, function (err, ary) {
-       console.log('peers:', ary)
       var p = ary[~~(Math.random()*ary.length)]
-      console.log('connect to:', p)
       //connect to this random peer
       //the replication plugin handle it from here.
       if(p) server.connect(p)
@@ -66,5 +64,4 @@ module.exports = function (server) {
   }
 
   connect()
-
 }
