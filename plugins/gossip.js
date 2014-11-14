@@ -22,12 +22,10 @@ function peers (server, cb) {
       return e.content.address
     }),
     pull.filter(function (e) {
-      console.log(e, config)
       return e.port !== config.port || e.host !== config.host
     }),
     pull.collect(function (err, ary) {
-      if(err) cb(err)
-      else cb(null, ary.concat(seeds))
+      cb(null, (ary || []).concat(seeds))
     })
   )
 
@@ -58,7 +56,9 @@ module.exports = function (server) {
       var p = ary[~~(Math.random()*ary.length)]
       //connect to this random peer
       //the replication plugin handle it from here.
-      if(p) server.connect(p)
+      if(p) server.connect(p, function (err) {
+        setTimeout(connect, 1000 + Math.random()*3000)
+      })
       else setTimeout(connect, 1000 + Math.random()*3000)
     })
   }
