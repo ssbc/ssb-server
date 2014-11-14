@@ -1,6 +1,6 @@
 var pull = require('pull-stream')
 var toPull = require('stream-to-pull-stream')
-var net = require('net')
+//var net = require('net')
 var path = require('path')
 var create = require('secure-scuttlebutt/create')
 var ssbKeys = require('ssb-keys')
@@ -11,7 +11,8 @@ var url = require('url')
 //var WebSocket = require('ws')
 //var ws = require('pull-ws')
 
-var ws = require('./ws')
+//var net = require('./tcp')
+var net = require('./ws')
 
 function loadSSB (config) {
   var dbPath  = path.join(config.path, 'db')
@@ -23,6 +24,7 @@ function loadKeys (config) {
   var keyPath = path.join(config.path, 'secret')
   return ssbKeys.loadOrCreateSync(keyPath)
 }
+
 
 
 // create the server with the given ssb and feed
@@ -60,7 +62,7 @@ exports = module.exports = function (config, ssb, feed) {
     if(eventName) server.emit(eventName, rpc, rpcStream)
   }
 
-  var server = ws.createServer(function (socket) {
+  var server = net.createServer(function (socket) {
     attachRPC(socket, 'rpc-server')
   }).listen(config.port)
 
@@ -69,7 +71,7 @@ exports = module.exports = function (config, ssb, feed) {
   server.config = config
   //peer connection...
   server.connect = function (address) {
-    attachRPC(ws.connect(address), 'rpc-client')
+    attachRPC(net.connect(address), 'rpc-client')
   }
 
   server.use = function (plugin) {
@@ -87,6 +89,7 @@ exports = module.exports = function (config, ssb, feed) {
 exports.init =
 exports.fromConfig = function (config) {
   return module.exports(ssb)
+      .use(require('./plugins/authorize'))
       .use(require('./plugins/replicate'))
       .use(require('./plugins/gossip'))
 }
@@ -94,11 +97,10 @@ exports.fromConfig = function (config) {
 // connect to a peer as a client
 // - `address.host`: string, hostname of the target
 // - `address.port`: number, port of the target
-exports.connect = function (address) {
-  var conn = net.connect(address.port, address.host)
+exports.connect = function (address, cb) {
+  var stream = net.connect(address, cb)
   var rpc = api.client()
   rpc.conn = conn
-  stream = toPull.duplex(conn)
   pull(stream, rpc.createStream(), stream)
   return rpc
 }
