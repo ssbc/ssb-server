@@ -39,7 +39,9 @@ module.exports = function (server) {
       )
     }
 
-    rpc.on('replicate', function () {
+    rpc.on('authorized', function (res) {
+      if(!res.granted || 'peer' !== res.type)
+        return //cannot replicate with a client, or if we are refused.
 
       var progress = function () {}
 
