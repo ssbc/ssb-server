@@ -87,7 +87,7 @@ tape('replicate between 3 peers', function (t) {
       serverA.close()
       serverB.close()
       serverC.close()
-
+      t.ok(true)
       t.end()
     }
 
