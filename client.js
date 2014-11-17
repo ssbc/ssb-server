@@ -1,15 +1,21 @@
 var ws = require('./ws')
+var path = require('path')
 
 var api = require('./lib/api')
 var config = require('./config')
+var JSONH = require('json-human-buffer')
+var opts = require('secure-scuttlebutt/defaults')
+opts.stringify = JSONH.stringify
+var seal = require('./lib/seal')(opts)
 
 var pull = require('pull-stream')
 var duplex = require('stream-to-pull-stream').duplex
 var stringify = require('pull-stringify')
-var JSONH = require('json-human-buffer')
 var toPull = require('stream-to-pull-stream')
 
 var rpc = api.client().permissions({allow: []})
+
+var keys = require('ssb-keys').loadSync(path.join(config.path, 'secret'))
 
 var aliases = {
   feed: 'createFeedStream',
@@ -109,23 +115,27 @@ function next (data) {
   //this would also work for replication...
   //which would allow blocking...
 
-  rpc.auth(config.pass, function (err) {
+  rpc.auth(seal.sign(keys, {
+    role: 'client',
+    ts: Date.now(),
+    public: keys.public
+  }), function (err) {
     if(err) throw err
-  })
-  if(async) {
-    rpc[cmd](data, function (err, ret) {
-      if(err) throw err
-      console.log(JSONH.stringify(ret, null, 2))
-      process.exit()
-    })
-  }
-  else
-    pull(
-      rpc[cmd](data),
-      stringify('', '\n', '\n\n', 2, JSONH.stringify),
-      toPull.sink(process.stdout, function (err) {
+    if(async) {
+      rpc[cmd](data, function (err, ret) {
         if(err) throw err
+        console.log(JSONH.stringify(ret, null, 2))
         process.exit()
       })
-    )
+    }
+    else
+      pull(
+        rpc[cmd](data),
+        stringify('', '\n', '\n\n', 2, JSONH.stringify),
+        toPull.sink(process.stdout, function (err) {
+          if(err) throw err
+          process.exit()
+        })
+      )
+  })
 }
