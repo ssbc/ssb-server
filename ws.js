@@ -35,9 +35,10 @@ exports.createServer = function (onConnection) {
       })
     return emitter
   }
-  emitter.close = function (onClose) {
-    if(!server) return onClose()
-    server.close(onClose)
+  emitter.close = function () {
+    if(!server) return
+    server.close()
+    emitter.emit('close')
     return emitter
   }
   return emitter
