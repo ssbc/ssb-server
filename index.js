@@ -58,6 +58,7 @@ exports = module.exports = function (config, ssb, feed) {
 
     server.emit('rpc-connection', rpc, rpcStream)
     if(eventName) server.emit(eventName, rpc, rpcStream)
+      return { socket: stream.socket, rpc: rpc, rpcStream: rpcStream }
   }
 
   var server = ws.createServer(function (socket) {
@@ -68,38 +69,26 @@ exports = module.exports = function (config, ssb, feed) {
   server.feed = feed
   server.config = config
   //peer connection...
-  server.connect = function (address) {
-    attachRPC(ws.connect(address), 'rpc-client')
+  server.connect = function (address, cb) {
+    return attachRPC(ws.connect(address, cb), 'rpc-client')
   }
+  server.gossip = require('./lib/gossip')
+  server.downloadFeeds = require('./lib/download-feeds')
 
-  server.use = function (plugin) {
-    plugin(server)
-    return this
-  }
 
   return server
-}
-
-// load keys, ssb database, and create the server
-// - `config.port`: number, port to serve on
-// - `config.pass`: string, password for full admin access to the rpc api
-// - `config.path`: string, the path to the directory which contains the keyfile and database
-exports.init =
-exports.fromConfig = function (config) {
-  return module.exports(ssb)
-      .use(require('./plugins/replicate'))
-      .use(require('./plugins/gossip'))
 }
 
 // connect to a peer as a client
 // - `address.host`: string, hostname of the target
 // - `address.port`: number, port of the target
-exports.connect = function (address) {
-  var stream = ws.connect(address)
+// - `cb`: optional function, called on channel-open
+exports.connect = function (address, cb) {
+  var stream = ws.connect(address, cb)
   var rpc = api.client()
-  rpc.socket = stream.socket
-  pull(stream, rpc.createStream(), stream)
-  return rpc
+  var rpcStream = rpc.createStream()
+  pull(stream, rpcStream, stream)
+  return { socket: stream.socket, rpc: rpc, rpcStream: rpcStream }
 }
 
 if(!module.parent) {

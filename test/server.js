@@ -51,6 +51,7 @@ tape('replicate between 3 peers', function (t) {
     function check(server, name) {
       var closed = false
       return server.on('replicated', function (actual) {
+        console.log('checking', name)
         console.log(expected)
         console.log(actual)
         console.log('*************')
@@ -62,24 +63,39 @@ tape('replicate between 3 peers', function (t) {
       })
     }
 
-    var serverA = check(server({
-      port: 45451, host: 'localhost',
-    },dbA, alice), 'ALICE').use(replicate).use(gossip)
+    function setupServer(server) {
+      server.on('rpc-server', function(rpc, rpcStream) {
+        server.downloadFeeds({ rpc: rpc, rpcStream: rpcStream }, function(err, res) {
+          if (err) throw err
+          rpcStream.close(console.log)
+        })
+      })
+      server.gossip()
+      return server
+    }
 
-    var serverB = check(server({
+    var serverA = check(setupServer(server({
+      port: 45451, host: 'localhost',
+    },dbA, alice)), 'ALICE')
+
+    var serverB = check(setupServer(server({
       port: 45452, host: 'localhost',
       seeds: [{port: 45451, host: 'localhost'}]
-    },dbB, bob), 'BOB').use(replicate).use(gossip)
+    },dbB, bob)), 'BOB')
 
-    var serverC = check(server({
+    var serverC = check(setupServer(server({
       port: 45453, host: 'localhost',
       seeds: [{port: 45451, host: 'localhost'}]
-    }, dbC, carol), 'CAROL').use(replicate).use(gossip)
+    }, dbC, carol)), 'CAROL')
+
+    console.log('servers setup')
 
     var n = 2
 
     function done () {
+      console.log('done', n)
       if(--n) return
+      console.log('shutting down')
       serverA.close()
       serverB.close()
       serverC.close()
