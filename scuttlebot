@@ -5,16 +5,11 @@ nomnom.script('scuttlebot').nocolors()
 nomnom.command('serve')
   .help('Starts the scuttlebot server.')
   .options({
-    daemon: {
-      flag: true,
-      abbr: 'd',
-      help: 'Run the server in the background as a daemon.'
-    },
     port: {
       help: 'Sets the port for the rpc server.'
     }
   })
-  .callback(require('./lib/cli').start)
+  .callback(require('./lib/cli').serve)
 nomnom.command('repl')
   .help('Starts a repl that connects to the given scuttlebot\'s RPC channel.')
   .options({
@@ -28,7 +23,46 @@ nomnom.command('repl')
     }
   })
   .callback(require('./lib/cli').repl)
-nomnom.command('stop')
-  .help('Stops the web-server daemon if it\'s active.')
-  .callback(require('./lib/cli').stop)
+nomnom.command('whoami')
+  .help('Outputs the scuttlebot\'s hash id and public key (whoami).')
+  .callback(require('./lib/cli').exec('whoami'))
+nomnom.command('feed')
+  .help('Outputs the aggregate feed, ordered by message created-times (createFeedStream).')
+  .callback(require('./lib/cli').exec('createFeedStream'))
+nomnom.command('log')
+  .help('Outputs the aggregate feed, ordered by message received-times (createLogStream).')
+  .callback(require('./lib/cli').exec('createLogStream'))
+nomnom.command('hist')
+  .help('Outputs the history of an individual feed (createHistoryStream).')
+  .options({
+    id: {
+      requireD: true,
+      help: 'ID of the feed'
+    },
+    seq: {
+      help: 'Starting message-sequence number'
+    },
+    live: {
+      help: 'Keep the connection open and emitting new entries?'
+    }
+  })
+  .callback(require('./lib/cli').exec('createHistoryStream'))
+nomnom.command('pubkey')
+  .help('Outputs the public key of a given feed (getPublicKey).')
+  .options({
+    id: {
+      position: 2,
+      help: 'ID of the feed'
+    }
+  })
+  .callback(require('./lib/cli').exec('getPublicKey'))
+nomnom.command('post')
+  .help('Post a message to the scuttlebot\'s feed (add).')
+  .options({
+    content: {
+      position: 2,
+      help: 'Message content'
+    }
+  })
+  .callback(require('./lib/cli').exec('add'))
 nomnom.parse();
