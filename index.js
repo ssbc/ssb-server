@@ -9,12 +9,11 @@ var mkdirp = require('mkdirp')
 var url = require('url')
 var crypto = require('crypto')
 var deepEqual = require('deep-equal')
+
+opts.hmac = require('./lib/hmac')
+
 var seal = require('./lib/seal')(opts)
 
-//var WebSocket = require('ws')
-//var ws = require('pull-ws')
-
-//var net = require('./tcp')
 var net = require('./ws')
 
 function loadSSB (config) {
@@ -37,7 +36,6 @@ function find(ary, test) {
 // - `ssb`: object, the secure-scuttlebutt instance
 // - `feed`: object, the ssb feed instance
 // - `config.port`: number, port to serve on
-// - `config.pass`: string, password for full admin access to the rpc api
 // - `config.path`: string, the path to the directory which contains the keyfile and database
 exports = module.exports = function (config, ssb, feed) {
 
