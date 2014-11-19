@@ -1,7 +1,7 @@
 
 var scuttlebot = require('../')
 var opts = require('secure-scuttlebutt/defaults')
-opts.stringify = require('json-human-buffer').stringify
+opts.hmac = require('../lib/hmac')
 var seal = require('../lib/seal')(opts)
 var tape = require('tape')
 
@@ -27,14 +27,12 @@ tape('test api', function (t) {
     keyId: server.options.hash(secret)
   })
 
-  console.log('SIGNED', signed)
-
   client.auth(signed, function (err, authed) {
     if(err) throw err
-    console.log(authed)
-    client.add({type: 'msg', content: 'hello'}, function (err, data) {
+    t.ok(authed.granted)
+    client.add({type: 'msg', value: 'hello'}, function (err, data) {
       if(err) throw err
-      console.log('ADDED', data)
+      t.equal(data.content.value, 'hello')
       client.close(function () {
         server.close()
         t.end()
