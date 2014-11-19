@@ -25,7 +25,9 @@
     "pull-cat": "~1.1.5",
     "mkdirp": "~0.5.0",
     "ws": "~0.4.32",
-    "pull-ws": "dominictarr/pull-ws#91a177801766599218f0e0ab75947609f3e774f8"
+    "pull-ws": "dominictarr/pull-ws#91a177801766599218f0e0ab75947609f3e774f8",
+    "hmac": "~1.0.1",
+    "blake2s": "~1.0.1"
   },
   "devDependencies": {
     "rimraf": "~2.2.8",
