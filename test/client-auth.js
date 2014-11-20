@@ -19,7 +19,7 @@ tape('test api', function (t) {
   //request a secret that with particular permissions.
   var secret = server.createAccessKey({allow: ['add']})
 
-  var client = scuttlebot.connect({port: 45451, host: 'localhost'})
+  var client = scuttlebot.createClient({port: 45451, host: 'localhost'})
 
   var signed = seal.signHmac(secret, {
     role: 'client',

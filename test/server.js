@@ -10,7 +10,6 @@ var tape      = require('tape')
 // and get them to follow each other...
 var replicate = require('../plugins/replicate')
 var gossip    = require('../plugins/gossip')
-var authorize = require('../plugins/authorize')
 
 tape('replicate between 3 peers', function (t) {
 
@@ -66,19 +65,19 @@ tape('replicate between 3 peers', function (t) {
     var serverA = check(server({
       port: 45451, host: 'localhost',
     }, dbA, alice), 'ALICE')
-      .use(authorize).use(replicate).use(gossip)
+      .use(replicate).use(gossip)
 
     var serverB = check(server({
       port: 45452, host: 'localhost',
       seeds: [{port: 45451, host: 'localhost'}]
     }, dbB, bob), 'BOB')
-      .use(authorize).use(replicate).use(gossip)
+      .use(replicate).use(gossip)
 
     var serverC = check(server({
       port: 45453, host: 'localhost',
       seeds: [{port: 45451, host: 'localhost'}]
     }, dbC, carol), 'CAROL')
-      .use(authorize).use(replicate).use(gossip)
+      .use(replicate).use(gossip)
 
     var n = 2
 
