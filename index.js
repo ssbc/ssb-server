@@ -1,16 +1,13 @@
 var pull = require('pull-stream')
 var toPull = require('stream-to-pull-stream')
 var path = require('path')
-var opts = require('secure-scuttlebutt/defaults')
+var opts = require('ssb-keys')
 var create = require('secure-scuttlebutt/create')
-var ssbKeys = require('ssb-keys')
 var api = require('./lib/api')
 var mkdirp = require('mkdirp')
 var url = require('url')
 var crypto = require('crypto')
 var deepEqual = require('deep-equal')
-
-opts.hmac = require('./lib/hmac')
 
 var seal = require('./lib/seal')(opts)
 
@@ -24,7 +21,7 @@ function loadSSB (config) {
 
 function loadKeys (config) {
   var keyPath = path.join(config.path, 'secret')
-  return ssbKeys.loadOrCreateSync(keyPath)
+  return opts.loadOrCreateSync(keyPath)
 }
 
 function find(ary, test) {
@@ -48,6 +45,8 @@ exports = module.exports = function (config, ssb, feed) {
   if(config.path) mkdirp.sync(config.path)
   ssb = ssb || loadSSB(config)
   feed = feed || ssb.createFeed(loadKeys(config))
+
+  var keys = feed.keys
 
   function attachRPC (stream, eventName) {
     var rpc = api.peer(server, config)
@@ -78,6 +77,22 @@ exports = module.exports = function (config, ssb, feed) {
   server.connect = function (address) {
     attachRPC(net.connect(address), 'rpc-client')
   }
+
+  server.on('rpc-connection', function (rpc) {
+    rpc.auth(seal.sign(keys, {
+      role: 'peer',
+      ToS: 'be excellent to each other',
+      public: keys.public,
+      ts: Date.now(),
+    }), function (err, res) {
+      if(err) return server.emit('unauthorized', err)
+      // if we got an auth failure,
+      // notify other plugins.
+      //emit locally...
+
+      server.emit('authorized', rpc)
+    })
+  })
 
   server.use = function (plugin) {
     plugin(server)
@@ -126,12 +141,11 @@ exports.fromConfig = function (config) {
 // connect to a peer as a client
 // - `address.host`: string, hostname of the target
 // - `address.port`: number, port of the target
-exports.connect = function (address, cb) {
+exports.createClient = function (address, cb) {
   var stream = net.connect(address, cb)
   var rpc = api.client()
-  rpc.conn = rpc.createStream()
-  rpc.close = rpc.conn.close
-  pull(stream, rpc.conn, stream)
+  pull(stream, rpc.createStream(), stream)
+
   return rpc
 }
 

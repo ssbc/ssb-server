@@ -3,9 +3,7 @@ var path = require('path')
 
 var api = require('./lib/api')
 var config = require('./config')
-var JSONH = require('json-human-buffer')
-var opts = require('secure-scuttlebutt/defaults')
-opts.stringify = JSONH.stringify
+var opts = require('ssb-keys')
 var seal = require('./lib/seal')(opts)
 
 var pull = require('pull-stream')
@@ -94,15 +92,14 @@ if(!process.stdin.isTTY) {
     toPull.source(process.stdin),
     pull.collect(function (err, ary) {
       var str = Buffer.concat(ary).toString('utf8')
-      console.log(str)
-      var data = JSONH.parse(str)
+      var data = JSON.parse(str)
       console.log(data)
       next(data)
     })
   )
 }
 else
-  next(JSONH.fromHuman(opts))
+  next(JSON.stringify(opts, null, 2))
 
 function next (data) {
   //set $rel as key name if it's missing.
@@ -124,14 +121,14 @@ function next (data) {
     if(async) {
       rpc[cmd](data, function (err, ret) {
         if(err) throw err
-        console.log(JSONH.stringify(ret, null, 2))
+        console.log(JSON.stringify(ret, null, 2))
         process.exit()
       })
     }
     else
       pull(
         rpc[cmd](data),
-        stringify('', '\n', '\n\n', 2, JSONH.stringify),
+        stringify('', '\n', '\n\n', 2, JSON.stringify),
         toPull.sink(process.stdout, function (err) {
           if(err) throw err
           process.exit()
