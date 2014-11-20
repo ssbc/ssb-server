@@ -3,9 +3,8 @@ var many = require('pull-many')
 var cat = require('pull-cat')
 
 function replicate(server, rpc, cb) {
-    var server = this
-    var ssb = this.ssb
-    var feed = this.feed
+    var ssb = server.ssb
+    var feed = server.feed
 
     function replicated () {
       pull(
@@ -52,10 +51,7 @@ function replicate(server, rpc, cb) {
     pull(
       sources,
       ssb.createWriteStream(function (err) {
-        rpcStream.close(function (err2) {
-          //cb(err || err2)
-          replicated()
-        })
+        replicated()
       })
     )
 }
@@ -65,6 +61,7 @@ module.exports = function (server) {
     replicate(server, rpc, function (err, progress) {
       if(err) return console.error(err)
       server.emit('replicated', progress)
+      rpc.close(function () {})
     })
   })
 }
