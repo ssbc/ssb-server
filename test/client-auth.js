@@ -1,7 +1,6 @@
 
 var scuttlebot = require('../')
-var opts = require('secure-scuttlebutt/defaults')
-opts.hmac = require('../lib/hmac')
+var opts = require('ssb-keys')
 var seal = require('../lib/seal')(opts)
 var tape = require('tape')
 
