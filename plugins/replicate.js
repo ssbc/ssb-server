@@ -2,24 +2,21 @@ var pull = require('pull-stream')
 var many = require('pull-many')
 var cat = require('pull-cat')
 
-module.exports = function (server) {
-
-  server.on('rpc-connection', function (rpc, rpcStream) {
+function replicate(server, rpc, cb) {
     var server = this
     var ssb = this.ssb
     var feed = this.feed
 
     function replicated () {
-      rpc.emit('replicated')
       pull(
         ssb.latest(),
         pull.collect(function (err, ary) {
-          if(err) return server.emit('error', err)
+          if(err) cb(err)
           var o = {}
           ary.forEach(function (e) {
             o[e.id.toString('base64')] = e.sequence
           })
-          server.emit('replicated', o)
+          cb(null, o)
         })
       )
     }
@@ -39,35 +36,37 @@ module.exports = function (server) {
       )
     }
 
-    rpc.on('authorized', function (res) {
-      if(!res.granted || 'peer' !== res.type)
-        return //cannot replicate with a client, or if we are refused.
+    var progress = function () {}
 
-      var progress = function () {}
+    var sources = many()
+    var sent = 0
+    pull(
+      latest(),
+      pull.drain(function (upto) {
+        sources.add(rpc.createHistoryStream(upto.id, upto.sequence + 1))
+      }, function () {
+        sources.cap()
+      })
+    )
 
-      var sources = many()
-      var sent = 0
-      pull(
-        latest(),
-        pull.drain(function (upto) {
-          sources.add(rpc.createHistoryStream(upto.id, upto.sequence + 1))
-        }, function () {
-          sources.cap()
+    pull(
+      sources,
+      ssb.createWriteStream(function (err) {
+        rpcStream.close(function (err2) {
+          //cb(err || err2)
+          replicated()
         })
-      )
+      })
+    )
+}
 
-      pull(
-        sources,
-        ssb.createWriteStream(function (err) {
-          rpcStream.close(function (err2) {
-            //cb(err || err2)
-            replicated()
-          })
-        })
-      )
-
+module.exports = function (server) {
+  server.on('authorized', function (rpc) {
+    replicate(server, rpc, function (err, progress) {
+      if(err) return console.error(err)
+      server.emit('replicated', progress)
     })
-
-    rpc.emit('replicate')
   })
 }
+
+module.exports.replicate = replicate
