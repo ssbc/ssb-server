@@ -133,19 +133,17 @@ exports = module.exports = function (config, ssb, feed) {
 exports.init =
 exports.fromConfig = function (config) {
   return module.exports(ssb)
-      .use(require('./plugins/authorize'))
       .use(require('./plugins/replicate'))
       .use(require('./plugins/gossip'))
 }
 
-// connect to a peer as a client
+// createClient  to a peer as a client
 // - `address.host`: string, hostname of the target
 // - `address.port`: number, port of the target
 exports.createClient = function (address, cb) {
   var stream = net.connect(address, cb)
   var rpc = api.client()
   pull(stream, rpc.createStream(), stream)
-
   return rpc
 }
 

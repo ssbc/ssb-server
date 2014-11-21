@@ -25,7 +25,7 @@ function replicate(server, rpc, cb) {
         cat([
           pull.values([feed.id]),
           pull(
-            ssb.feedsLinkedFromFeed(feed.id, 'follow'),
+            ssb.feedsLinkedFromFeed(feed.id, 'follows'),
             pull.map(function (link) {
               return link.dest
             })

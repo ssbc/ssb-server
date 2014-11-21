@@ -10,7 +10,7 @@
   "dependencies": {
     "daemonize2": "0.4.2",
     "json-human-buffer": "~1.1.0",
-    "muxrpc": "~2.0.0",
+    "muxrpc": "~2.1.0",
     "nomnom": "1.8.0",
     "pull-serializer": "~0.3.1",
     "pull-stream": "~2.24.1",
@@ -37,6 +37,7 @@
     "deep-equal": "~0.2.1",
     "level-sublevel": "~6.3.15"
   },
+  "bin": "./client.js",
   "scripts": {
     "test": "set -e; for t in test/*.js; do node $t; done"
   },

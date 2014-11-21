@@ -51,9 +51,7 @@ module.exports = function (server) {
   })
 
   server.on('unauthorized', function (rpc) {
-    rpc.close(function () {
-      setTimeout(connect, 1000 + Math.random() * 3000)
-    })
+    setTimeout(connect, 1000 + Math.random() * 3000)
   })
 
   function connect () {

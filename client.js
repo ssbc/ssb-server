@@ -1,3 +1,4 @@
+#! /usr/bin/env node
 var ws = require('./ws')
 var path = require('path')
 
@@ -7,7 +8,7 @@ var opts = require('ssb-keys')
 var seal = require('./lib/seal')(opts)
 
 var pull = require('pull-stream')
-var duplex = require('stream-to-pull-stream').duplex
+//var duplex = require('stream-to-pull-stream').duplex
 var stringify = require('pull-stringify')
 var toPull = require('stream-to-pull-stream')
 
@@ -60,7 +61,9 @@ delete opts._
 cmd = aliases[cmd] || cmd
 
 if(cmd === 'server')
-  return require('./index').init(config)
+  return require('./')(config)
+    .use(require('./plugins/replicate'))
+    .use(require('./plugins/gossip'))
 
 if(arg && Object.keys(opts).length === 0)
   opts = arg
@@ -69,7 +72,6 @@ if(cmd === 'config') {
   console.log(JSON.stringify(config, null, 2))
   process.exit()
 }
-
 
 var async  = contains(cmd, api.manifest.async)
 var source = contains(cmd, api.manifest.source)
@@ -99,7 +101,7 @@ if(!process.stdin.isTTY) {
   )
 }
 else
-  next(JSON.stringify(opts, null, 2))
+  next(opts)
 
 function next (data) {
   //set $rel as key name if it's missing.

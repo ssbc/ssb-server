@@ -1,45 +1,49 @@
 var tape = require('tape')
 var pull = require('pull-stream')
-var rimraf = require('rimraf')
-var sbot = require('../lib')
-
-var dbpath = require('path').join(__dirname, '.db')
-try { rimraf.sync(dbpath) } catch(e) { console.log(e) }
+var sbot = require('../')
 
 tape('follow, isFollowing, followedUsers, unfollow', function (t) {
+  var u = require('./util')
   var bob = '5f3eac42ae28da590889f68c9de75e3bf2c1194c8a6257a020a05b2bf42742de'
   var alice = '75e3bf2c1194c8a6257a020a05b2bf42742de5f3eac42ae28da590889f68c9de'
-  var server = sbot.serve(1234, __dirname)
-  var client = sbot.connect(1234)
 
-  client.follow(bob, function(err) {
+  var db = u.createDB('feed-test')
+  var feed = db.createFeed()
+  var server = sbot({port: 1234, host: 'localhost', pass: 'foo'}, db, feed)
+  var client = sbot.connect({port: 1234, host: 'localhost'})
+
+  client.auth('foo', function(err) {
     if (err) throw err
-    
-    client.isFollowing(bob, function(err, isFollowing) {
+  
+    client.follow(bob, function(err) {
       if (err) throw err
-      t.equal(isFollowing, true)
-
-      client.isFollowing(alice, function(err, isFollowing) {
+      
+      client.isFollowing(bob, function(err, isFollowing) {
         if (err) throw err
-        t.equal(isFollowing, false)
+        t.equal(isFollowing, true)
 
-        pull(client.followedUsers(), pull.collect(function(err, users) {
+        client.isFollowing(alice, function(err, isFollowing) {
           if (err) throw err
-          t.equal(users.length, 1)
-          t.equal(users[0].toString('hex'), bob)
+          t.equal(isFollowing, false)
 
-          client.unfollow(bob, function(err) {
+          pull(client.followedUsers(), pull.collect(function(err, users) {
             if (err) throw err
+            t.equal(users.length, 1)
+            t.equal(users[0].toString('hex'), bob)
 
-            client.isFollowing(bob, function(err, isFollowing) {
+            client.unfollow(bob, function(err) {
               if (err) throw err
-              t.equal(isFollowing, false)
-              t.end()
-              client.socket.end()
-              server.close()
+
+              client.isFollowing(bob, function(err, isFollowing) {
+                if (err) throw err
+                t.equal(isFollowing, false)
+                t.end()
+                client.socket.close()
+                server.close()
+              })
             })
-          })
-        }))
+          }))
+        })
       })
     })
   })
