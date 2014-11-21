@@ -9,14 +9,12 @@
   },
   "dependencies": {
     "daemonize2": "0.4.2",
-    "json-human-buffer": "~1.1.0",
     "muxrpc": "~2.1.0",
     "nomnom": "1.8.0",
     "pull-serializer": "~0.3.1",
     "pull-stream": "~2.24.1",
     "pull-stream-to-stream": "~1.3.0",
-    "secure-scuttlebutt": "~4.1.0",
-    "ssb-crypto": "git://github.com/dominictarr/ssb-crypto.git#b56ecdf6d897a3d845deba30a543cfe8336ea4b4",
+    "secure-scuttlebutt": "~6.0.0",
     "stream-to-pull-stream": "~1.6.0",
     "rc": "~0.5.4",
     "pull-stringify": "~1.2.2",
@@ -26,8 +24,7 @@
     "mkdirp": "~0.5.0",
     "ws": "~0.4.32",
     "pull-ws": "dominictarr/pull-ws#91a177801766599218f0e0ab75947609f3e774f8",
-    "hmac": "~1.0.1",
-    "blake2s": "~1.0.1"
+    "ssb-keys": "~0.3.0"
   },
   "devDependencies": {
     "rimraf": "~2.2.8",
