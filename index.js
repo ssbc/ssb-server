@@ -150,4 +150,6 @@ exports.createClient = function (address, cb) {
 if(!module.parent) {
   //start a server
   exports(require('./config'))
+    .use(require('./plugins/gossip'))
+    .use(require('./plugins/replicate'))
 }
