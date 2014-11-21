@@ -1,7 +1,6 @@
 
 var scuttlebot = require('../')
-var opts = require('secure-scuttlebutt/defaults')
-opts.hmac = require('../lib/hmac')
+var opts = require('ssb-keys')
 var seal = require('../lib/seal')(opts)
 var tape = require('tape')
 
@@ -19,7 +18,7 @@ tape('test api', function (t) {
   //request a secret that with particular permissions.
   var secret = server.createAccessKey({allow: ['add']})
 
-  var client = scuttlebot.connect({port: 45451, host: 'localhost'})
+  var client = scuttlebot.createClient({port: 45451, host: 'localhost'})
 
   var signed = seal.signHmac(secret, {
     role: 'client',

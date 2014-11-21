@@ -5,8 +5,38 @@ A bot-server for the phoenix network. Provides an RPC server for operating it lo
 ### CLI usage
 
 ```
-./scuttlebot serve [--port 2000]
+npm install -g scuttlebot
 ```
+start a server
+
+```
+scuttlebot serve
+```
+
+then issue commands from another terminal...
+
+```
+# add a simple message (type is required, but freeform)
+scuttlebot add --type msg --value hello
+
+# get your id
+scuttlebot whoami
+
+# follow another instance
+scuttlebot add --type follow --follow.'$feed' <id> --follow.'$rel' follows
+
+# add a pub server (this is a server you'll connect to replicate with)
+
+scuttlebot add --type pub --address.host <domain> --address.port <port>
+
+## reading data
+
+# read all messages in order received
+
+scuttlebot log
+
+```
+
 
 To get a convenient REPL:
 
@@ -27,7 +57,7 @@ localhost:2000> setProfile({ nickname: 'Mr Scuttlebot' })
 
 ```js
 var sbot = require('scuttlebot')
-var ssbapi = require('secure-scuttlebutt/api')
+
 
 // with the default api:
 var server = sbot.serve(2000, __dirname) // port, (optional) directory to put data

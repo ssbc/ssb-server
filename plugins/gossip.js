@@ -40,15 +40,18 @@ function isObject (o) {
 module.exports = function (server) {
   var config = server.config
 
-  server.on('rpc-connection', function (rpc, stream) {
-
+  server.on('authorized', function (rpc) {
     rpc.once('replicated', function () {
-      stream.close(function (err) {
+      rpc.close(function (err) {
         //connect again...
         setTimeout(connect, 1000 + Math.random() * 3000)
         if(err) console.error(err.stack)
       })
     })
+  })
+
+  server.on('unauthorized', function (rpc) {
+    setTimeout(connect, 1000 + Math.random() * 3000)
   })
 
   function connect () {
