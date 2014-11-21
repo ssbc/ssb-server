@@ -1,5 +1,5 @@
 #! /usr/bin/env node
-var ws = require('./ws')
+var ws = require('pull-ws-server')
 var path = require('path')
 
 var api = require('./lib/api')

@@ -11,7 +11,7 @@ var deepEqual = require('deep-equal')
 
 var seal = require('./lib/seal')(opts)
 
-var net = require('./ws')
+var net = require('pull-ws-server')
 
 function loadSSB (config) {
   var dbPath  = path.join(config.path, 'db')
