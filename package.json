@@ -24,7 +24,8 @@
     "mkdirp": "~0.5.0",
     "ws": "~0.4.32",
     "pull-ws": "dominictarr/pull-ws#91a177801766599218f0e0ab75947609f3e774f8",
-    "ssb-keys": "~0.3.0"
+    "ssb-keys": "~0.3.0",
+    "pull-ws-server": "~1.0.1"
   },
   "devDependencies": {
     "rimraf": "~2.2.8",
