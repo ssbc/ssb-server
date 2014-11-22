@@ -135,6 +135,7 @@ exports.fromConfig = function (config) {
   return module.exports(ssb)
       .use(require('./plugins/replicate'))
       .use(require('./plugins/gossip'))
+      .use(require('./plugins/local'))
 }
 
 // createClient  to a peer as a client
@@ -152,4 +153,5 @@ if(!module.parent) {
   exports(require('./config'))
     .use(require('./plugins/gossip'))
     .use(require('./plugins/replicate'))
+    .use(require('./plugins/local'))
 }

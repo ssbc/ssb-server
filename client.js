@@ -64,6 +64,7 @@ if(cmd === 'server')
   return require('./')(config)
     .use(require('./plugins/replicate'))
     .use(require('./plugins/gossip'))
+    .use(require('./plugins/local'))
 
 if(arg && Object.keys(opts).length === 0)
   opts = arg
