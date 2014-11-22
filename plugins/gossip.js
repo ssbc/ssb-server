@@ -35,7 +35,7 @@ function peers (server, cb) {
       return e.port !== config.port || e.host !== config.host
     }),
     pull.collect(function (err, ary) {
-      cb(null, (ary || []).concat(seeds).concat(localPeers))
+      cb(null, (ary || []).concat(seeds).concat(local))
     })
   )
 
