@@ -8,6 +8,7 @@
     "url": "git://github.com/pfraze/scuttlebot.git"
   },
   "dependencies": {
+    "cuid": "~1.2.4",
     "daemonize2": "0.4.2",
     "muxrpc": "~2.1.0",
     "nomnom": "1.8.0",

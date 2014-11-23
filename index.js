@@ -1,3 +1,4 @@
+var cuid = require('cuid');
 var pull = require('pull-stream')
 var toPull = require('stream-to-pull-stream')
 var path = require('path')
@@ -35,7 +36,6 @@ function find(ary, test) {
 // - `config.port`: number, port to serve on
 // - `config.path`: string, the path to the directory which contains the keyfile and database
 exports = module.exports = function (config, ssb, feed) {
-
   if(!config)
     throw new Error('must have config')
 
@@ -45,59 +45,130 @@ exports = module.exports = function (config, ssb, feed) {
   if(config.path) mkdirp.sync(config.path)
   ssb = ssb || loadSSB(config)
   feed = feed || ssb.createFeed(loadKeys(config))
-
   var keys = feed.keys
 
-  function attachRPC (stream, eventName) {
-    var rpc = api.peer(server, config)
-    var rpcStream = rpc.createStream()
+  // server
+  // ======
 
-    pull(stream, rpcStream, stream)
-
-    // an api stream has been attached,
-    // so now we need to call, say, the replication script
-    // it needs the server, the api connection, and the stream (so it can close)
-
-    // okay so maybe the approach is to implement the rpc server first
-    // and then figure out the replication stuff?
-
-    server.emit('rpc-connection', rpc, rpcStream)
-    if(eventName) server.emit(eventName, rpc, rpcStream)
-  }
-
-  var server = net.createServer(function (socket) {
-    attachRPC(socket, 'rpc-server')
+  // start listening
+  var server = net.createServer(function (socket) {          
+    // setup and auth session
+    var rpc = attachSession(socket, 'peer')
+    authSession(rpc, 'peer')
   }).listen(config.port)
 
   server.ssb = ssb
   server.feed = feed
   server.config = config
   server.options = opts
-  //peer connection...
-  server.connect = function (address) {
-    attachRPC(net.connect(address), 'rpc-client')
+
+  // peer connection
+  // ===============
+
+  server.connect = function (address, cb) {
+    return attachSession(net.connect(address, cb), 'client')
+  }
+  server.authconnect = function (address, cb) {
+    var rpc = attachSession(net.connect(address), 'client')
+    authSession(rpc, 'client', cb)
+    return rpc
   }
 
-  server.on('rpc-connection', function (rpc) {
+  // rpc session management
+  // ======================
+  var sessions = {}
+
+  // sets up RPC session on a stream
+  function attachSession (stream, role) {
+    var rpc = api.peer(server, config)
+    var rpcStream = rpc.createStream()
+    pull(stream, rpcStream, stream)
+
+    // begin tracking the rpc session's lifecycle
+    rpc._id = cuid()
+    sessions[rpc._id] = {
+      rpc: rpc, 
+      jobs: {},
+      timeout: 0,
+      timer: null
+    }
+
+    server.emit('rpc:connect', rpc, rpcStream)
+    if(role) server.emit('rpc:'+role, rpc, rpcStream)
+    return rpc
+  }
+
+  // authenticates the RPC stream
+  function authSession (rpc, role, cb) {
     rpc.auth(seal.sign(keys, {
-      role: 'peer',
+      role: role,
       ToS: 'be excellent to each other',
       public: keys.public,
       ts: Date.now(),
     }), function (err, res) {
-      if(err) return server.emit('unauthorized', err)
-      // if we got an auth failure,
-      // notify other plugins.
-      //emit locally...
-
-      server.emit('authorized', rpc)
+      if(err) rpc._emit('unauthorized', err)
+      else    rpc._emit('authorized', res)
+      if (cb) cb(err, res)
     })
-  })
+  }
+
+  // closes and destroys the session
+  function cleanupSession(id) {
+    var session = sessions[id]
+    if (!session)
+      return
+    clearTimeout(session.timer)
+    console.log('cleanup session: close')
+    console.log('remaining jobs', session.jobs)
+    session.rpc.close(function(){
+      // :TODO: this is temporary, 'close' should be emitted by muxrpc
+      session.rpc._emit('close')
+    })
+
+    delete sessions[id]
+  }
+
+  // plugin management
+  // =================
 
   server.use = function (plugin) {
     plugin(server)
     return this
   }
+
+  server.schedule = function(sessId, label, seconds, cb) {
+    if (sessId._id)
+      sessId = sessId._id
+    var session = sessions[sessId]
+    if (!session)
+      return cb(new Error('Session no longer active'))
+
+    // add the job
+    var jobId = cuid()
+    session.jobs[jobId] = label
+
+    // extend session life as needed
+    var needed = Date.now() + seconds*1000
+    if (needed > session.timeout) {
+      session.timeout = needed
+      clearTimeout(session.timer)
+      session.timer = setTimeout(cleanupSession.bind(null, sessId), seconds*1000)
+    }
+
+    // run the job
+    cb(null, function() {
+      delete session.jobs[jobId]
+
+      // any jobs left?
+      if (Object.keys(session.jobs).length === 0) {
+        // close session
+        cleanupSession(sessId)
+      }
+    })
+  }
+
+  // auth management
+  // ===============
 
   var secrets = []
   server.createAccessKey = function (perms) {

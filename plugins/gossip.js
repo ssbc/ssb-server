@@ -48,32 +48,21 @@ function isObject (o) {
 }
 
 module.exports = function (server) {
-  var config = server.config
-
-  server.on('authorized', function (rpc) {
-    rpc.once('replicated', function () {
-      rpc.close(function (err) {
-        //connect again...
-        setTimeout(connect, 1000 + Math.random() * 3000)
-        if(err) console.error(err.stack)
-      })
-    })
-  })
-
-  server.on('unauthorized', function (rpc) {
+  function schedule() {
     setTimeout(connect, 1000 + Math.random() * 3000)
-  })
+  }
 
   function connect () {
     peers(server, function (err, ary) {
       var p = ary[~~(Math.random()*ary.length)]
-      console.log('connect to', p)
-      //connect to this random peer
-      //the replication plugin handle it from here.
-      if(p) server.connect(p, function (err) {
-        setTimeout(connect, 1000 + Math.random()*3000)
-      })
-      else setTimeout(connect, 1000 + Math.random()*3000)
+      // connect to this random peer
+      if(p) {
+        console.log('GOSSIP connect to', p)
+        var rpc = server.authconnect(p, function() {
+          server.emit('gossip:connect', rpc)
+        })
+        rpc.on('closed', schedule)
+      } else schedule()
     })
   }
 

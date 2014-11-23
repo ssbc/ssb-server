@@ -57,11 +57,19 @@ function replicate(server, rpc, cb) {
 }
 
 module.exports = function (server) {
-  server.on('authorized', function (rpc) {
-    replicate(server, rpc, function (err, progress) {
-      if(err) return console.error(err)
-      server.emit('replicated', progress)
-      rpc.close(function () {})
+  server.on('rpc:connect', function (rpc) {
+    // schedule 30 seconds to do replication
+    server.schedule(rpc, 'replicate', 30, function(err, done) {
+      if (err) return console.log('REPLICATE Failed to schedule session time', err)
+      server.emit('replicate:start', rpc)
+      replicate(server, rpc, function (err, progress) {
+        if(err) {
+          server.emit('replicate:fail', rpc, err)
+          console.error(err)
+        } else
+          server.emit('replicate:finish', rpc, progress)
+        done()
+      })
     })
   })
 }
