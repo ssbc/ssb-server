@@ -121,8 +121,7 @@ exports = module.exports = function (config, ssb, feed) {
     console.log('cleanup session: close')
     console.log('remaining jobs', session.jobs)
     session.rpc.close(function(){
-      // :TODO: this is temporary, 'close' should be emitted by muxrpc
-      session.rpc._emit('close')
+      server.emit('rpc:close', session.rpc)
     })
 
     delete sessions[id]

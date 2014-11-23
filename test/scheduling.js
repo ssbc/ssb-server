@@ -16,7 +16,7 @@ tape('client -> server: finished job', function (t) {
   server.on('rpc:connect', function(rpc) {
 
     // watch for conn close
-    rpc.on('close', function() {
+    server.on('rpc:close', function() {
       t.assert(1)
       console.log('conn closed')
       server.close()
@@ -51,7 +51,7 @@ tape('client -> server: expired job', function (t) {
   server.on('rpc:connect', function(rpc) {
 
     // watch for conn close
-    rpc.on('close', function() {
+    server.on('rpc:close', function() {
       t.assert(1)
       console.log('conn closed')
       server.close()
@@ -84,7 +84,7 @@ tape('server -> server: finished job', function (t) {
   serverA.on('rpc:connect', function(rpc) {
 
     // watch for conn close
-    rpc.on('close', function() {
+    serverA.on('rpc:close', function() {
       t.assert(1)
       console.log('conn closed')
       serverA.close()
