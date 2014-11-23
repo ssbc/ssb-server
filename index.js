@@ -106,8 +106,8 @@ exports = module.exports = function (config, ssb, feed) {
       public: keys.public,
       ts: Date.now(),
     }), function (err, res) {
-      if(err) rpc._emit('unauthorized', err)
-      else    rpc._emit('authorized', res)
+      if(err) server.emit('rpc:unauthorized', rpc, err)
+      else    server.emit('rpc:authorized', rpc, res)
       if (cb) cb(err, res)
     })
   }
