@@ -1,4 +1,5 @@
-var cuid = require('cuid');
+//var cuid = require('cuid');
+var multicb = require('multicb')
 var pull = require('pull-stream')
 var toPull = require('stream-to-pull-stream')
 var path = require('path')
@@ -66,9 +67,6 @@ exports = module.exports = function (config, ssb, feed) {
   // ===============
 
   server.connect = function (address, cb) {
-    return attachSession(net.connect(address, cb), 'client')
-  }
-  server.authconnect = function (address, cb) {
     var rpc = attachSession(net.connect(address), 'client')
     authSession(rpc, 'client', cb)
     return rpc
@@ -79,22 +77,16 @@ exports = module.exports = function (config, ssb, feed) {
   var sessions = {}
 
   // sets up RPC session on a stream
-  function attachSession (stream, role) {
+  function attachSession (stream, role, cb) {
     var rpc = api.peer(server, config)
     var rpcStream = rpc.createStream()
     pull(stream, rpcStream, stream)
 
-    // begin tracking the rpc session's lifecycle
-    rpc._id = cuid()
-    sessions[rpc._id] = {
-      rpc: rpc, 
-      jobs: {},
-      timeout: 0,
-      timer: null
-    }
+    rpc.task = multicb()
+    server.emit('rpc:connect', rpc)
+    if(role) server.emit('rpc:'+role, rpc)
 
-    server.emit('rpc:connect', rpc, rpcStream)
-    if(role) server.emit('rpc:'+role, rpc, rpcStream)
+    authSession(rpc, role, cb)
     return rpc
   }
 
@@ -106,25 +98,18 @@ exports = module.exports = function (config, ssb, feed) {
       public: keys.public,
       ts: Date.now(),
     }), function (err, res) {
-      if(err) server.emit('rpc:unauthorized', rpc, err)
+      if(err) server.emit('rpc:unauthorized', err)
       else    server.emit('rpc:authorized', rpc, res)
+
+      //when the client connects (not a peer) we will be unable
+      //to authorize with it. In this case, we shouldn't close
+      //the connection...
+      if(!err)
+        rpc.task(function () {
+          rpc.close(function () {})
+        })
       if (cb) cb(err, res)
     })
-  }
-
-  // closes and destroys the session
-  function cleanupSession(id) {
-    var session = sessions[id]
-    if (!session)
-      return
-    clearTimeout(session.timer)
-    console.log('cleanup session: close')
-    console.log('remaining jobs', session.jobs)
-    session.rpc.close(function(){
-      server.emit('rpc:close', session.rpc)
-    })
-
-    delete sessions[id]
   }
 
   // plugin management
@@ -133,37 +118,6 @@ exports = module.exports = function (config, ssb, feed) {
   server.use = function (plugin) {
     plugin(server)
     return this
-  }
-
-  server.schedule = function(sessId, label, seconds, cb) {
-    if (sessId._id)
-      sessId = sessId._id
-    var session = sessions[sessId]
-    if (!session)
-      return cb(new Error('Session no longer active'))
-
-    // add the job
-    var jobId = cuid()
-    session.jobs[jobId] = label
-
-    // extend session life as needed
-    var needed = Date.now() + seconds*1000
-    if (needed > session.timeout) {
-      session.timeout = needed
-      clearTimeout(session.timer)
-      session.timer = setTimeout(cleanupSession.bind(null, sessId), seconds*1000)
-    }
-
-    // run the job
-    cb(null, function() {
-      delete session.jobs[jobId]
-
-      // any jobs left?
-      if (Object.keys(session.jobs).length === 0) {
-        // close session
-        cleanupSession(sessId)
-      }
-    })
   }
 
   // auth management
