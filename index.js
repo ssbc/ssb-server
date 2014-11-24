@@ -1,3 +1,5 @@
+//var cuid = require('cuid');
+var multicb = require('multicb')
 var pull = require('pull-stream')
 var toPull = require('stream-to-pull-stream')
 var path = require('path')
@@ -35,7 +37,6 @@ function find(ary, test) {
 // - `config.port`: number, port to serve on
 // - `config.path`: string, the path to the directory which contains the keyfile and database
 exports = module.exports = function (config, ssb, feed) {
-
   if(!config)
     throw new Error('must have config')
 
@@ -45,59 +46,82 @@ exports = module.exports = function (config, ssb, feed) {
   if(config.path) mkdirp.sync(config.path)
   ssb = ssb || loadSSB(config)
   feed = feed || ssb.createFeed(loadKeys(config))
-
   var keys = feed.keys
 
-  function attachRPC (stream, eventName) {
-    var rpc = api.peer(server, config)
-    var rpcStream = rpc.createStream()
+  // server
+  // ======
 
-    pull(stream, rpcStream, stream)
-
-    // an api stream has been attached,
-    // so now we need to call, say, the replication script
-    // it needs the server, the api connection, and the stream (so it can close)
-
-    // okay so maybe the approach is to implement the rpc server first
-    // and then figure out the replication stuff?
-
-    server.emit('rpc-connection', rpc, rpcStream)
-    if(eventName) server.emit(eventName, rpc, rpcStream)
-  }
-
-  var server = net.createServer(function (socket) {
-    attachRPC(socket, 'rpc-server')
+  // start listening
+  var server = net.createServer(function (socket) {          
+    // setup and auth session
+    var rpc = attachSession(socket, 'peer')
+    authSession(rpc, 'peer')
   }).listen(config.port)
 
   server.ssb = ssb
   server.feed = feed
   server.config = config
   server.options = opts
-  //peer connection...
-  server.connect = function (address) {
-    attachRPC(net.connect(address), 'rpc-client')
+
+  // peer connection
+  // ===============
+
+  server.connect = function (address, cb) {
+    var rpc = attachSession(net.connect(address), 'client')
+    authSession(rpc, 'client', cb)
+    return rpc
   }
 
-  server.on('rpc-connection', function (rpc) {
+  // rpc session management
+  // ======================
+  var sessions = {}
+
+  // sets up RPC session on a stream
+  function attachSession (stream, role, cb) {
+    var rpc = api.peer(server, config)
+    var rpcStream = rpc.createStream()
+    pull(stream, rpcStream, stream)
+
+    rpc.task = multicb()
+    server.emit('rpc:connect', rpc)
+    if(role) server.emit('rpc:'+role, rpc)
+
+    authSession(rpc, role, cb)
+    return rpc
+  }
+
+  // authenticates the RPC stream
+  function authSession (rpc, role, cb) {
     rpc.auth(seal.sign(keys, {
-      role: 'peer',
+      role: role,
       ToS: 'be excellent to each other',
       public: keys.public,
       ts: Date.now(),
     }), function (err, res) {
-      if(err) return server.emit('unauthorized', err)
-      // if we got an auth failure,
-      // notify other plugins.
-      //emit locally...
+      if(err) server.emit('rpc:unauthorized', err)
+      else    server.emit('rpc:authorized', rpc, res)
 
-      server.emit('authorized', rpc)
+      //when the client connects (not a peer) we will be unable
+      //to authorize with it. In this case, we shouldn't close
+      //the connection...
+      if(!err)
+        rpc.task(function () {
+          rpc.close(function () {})
+        })
+      if (cb) cb(err, res)
     })
-  })
+  }
+
+  // plugin management
+  // =================
 
   server.use = function (plugin) {
     plugin(server)
     return this
   }
+
+  // auth management
+  // ===============
 
   var secrets = []
   server.createAccessKey = function (perms) {

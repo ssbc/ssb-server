@@ -32,7 +32,7 @@ tape('test api', function (t) {
     client.add({type: 'msg', value: 'hello'}, function (err, data) {
       if(err) throw err
       t.equal(data.content.value, 'hello')
-      client.close(function () {
+      client.close(function() {
         server.close()
         t.end()
       })
