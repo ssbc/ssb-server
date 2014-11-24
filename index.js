@@ -112,21 +112,6 @@ exports = module.exports = function (config, ssb, feed) {
     })
   }
 
-  // closes and destroys the session
-//  function cleanupSession(id) {
-//    var session = sessions[id]
-//    if (!session)
-//      return
-//    clearTimeout(session.timer)
-//    console.log('cleanup session: close')
-//    console.log('remaining jobs', session.jobs)
-//    session.rpc.close(function(){
-//      server.emit('rpc:close', session.rpc)
-//    })
-//
-//    delete sessions[id]
-//  }
-
   // plugin management
   // =================
 
@@ -134,37 +119,6 @@ exports = module.exports = function (config, ssb, feed) {
     plugin(server)
     return this
   }
-
-//  server.schedule = function(sessId, label, seconds, cb) {
-//    if (sessId._id)
-//      sessId = sessId._id
-//    var session = sessions[sessId]
-//    if (!session)
-//      return cb(new Error('Session no longer active'))
-//
-//    // add the job
-//    var jobId = cuid()
-//    session.jobs[jobId] = label
-//
-//    // extend session life as needed
-//    var needed = Date.now() + seconds*1000
-//    if (needed > session.timeout) {
-//      session.timeout = needed
-//      clearTimeout(session.timer)
-//      session.timer = setTimeout(cleanupSession.bind(null, sessId), seconds*1000)
-//    }
-//
-//    // run the job
-//    cb(null, function() {
-//      delete session.jobs[jobId]
-//
-//      // any jobs left?
-//      if (Object.keys(session.jobs).length === 0) {
-//        // close session
-//        cleanupSession(sessId)
-//      }
-//    })
-//  }
 
   // auth management
   // ===============
