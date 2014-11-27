@@ -14,7 +14,7 @@ var toPull = require('stream-to-pull-stream')
 
 var rpc = api.client().permissions({allow: []})
 
-var keys = require('ssb-keys').loadSync(path.join(config.path, 'secret'))
+var keys = require('ssb-keys').loadOrCreateSync(path.join(config.path, 'secret'))
 
 var aliases = {
   feed: 'createFeedStream',
