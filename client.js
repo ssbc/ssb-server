@@ -90,7 +90,9 @@ pull(
   stream
 )
 
-if(!process.stdin.isTTY) {
+var isStdin = ~process.argv.indexOf('.') || ~process.argv.indexOf('--')
+
+if(!process.stdin.isTTY && isStdin) {
   pull(
     toPull.source(process.stdin),
     pull.collect(function (err, ary) {
