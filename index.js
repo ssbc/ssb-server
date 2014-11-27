@@ -52,10 +52,9 @@ exports = module.exports = function (config, ssb, feed) {
   // ======
 
   // start listening
-  var server = net.createServer(function (socket) {          
+  var server = net.createServer(function (socket) {
     // setup and auth session
     var rpc = attachSession(socket, 'peer')
-    rpc.permissions({allow: ['auth']})
     authSession(rpc, 'peer')
   }).listen(config.port)
 
@@ -83,6 +82,7 @@ exports = module.exports = function (config, ssb, feed) {
     var rpcStream = rpc.createStream()
     pull(stream, rpcStream, stream)
 
+    rpc.permissions({allow: ['auth']})
     rpc.task = multicb()
     server.emit('rpc:connect', rpc)
     if(role) server.emit('rpc:'+role, rpc)
