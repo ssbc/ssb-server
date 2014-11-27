@@ -55,7 +55,6 @@ exports = module.exports = function (config, ssb, feed) {
   var server = net.createServer(function (socket) {
     // setup and auth session
     var rpc = attachSession(socket, 'peer')
-    authSession(rpc, 'peer')
   }).listen(config.port)
 
   server.ssb = ssb
@@ -68,7 +67,6 @@ exports = module.exports = function (config, ssb, feed) {
 
   server.connect = function (address, cb) {
     var rpc = attachSession(net.connect(address), 'client')
-    authSession(rpc, 'client', cb)
     return rpc
   }
 
@@ -109,6 +107,9 @@ exports = module.exports = function (config, ssb, feed) {
         rpc.task(function () {
           rpc.close(function () {})
         })
+      else
+        console.error(err.stack)
+
       if (cb) cb(err, res)
     })
   }
