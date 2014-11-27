@@ -55,6 +55,7 @@ exports = module.exports = function (config, ssb, feed) {
   var server = net.createServer(function (socket) {          
     // setup and auth session
     var rpc = attachSession(socket, 'peer')
+    rpc.permissions({allow: ['auth']})
     authSession(rpc, 'peer')
   }).listen(config.port)
 
