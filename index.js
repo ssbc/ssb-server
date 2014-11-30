@@ -180,6 +180,7 @@ exports.fromConfig = function (config) {
       .use(require('./plugins/replicate'))
       .use(require('./plugins/gossip'))
       .use(require('./plugins/local'))
+      .use(require('./plugins/easy'))
 }
 
 // createClient  to a peer as a client
@@ -200,8 +201,5 @@ exports.createClient = function (address, manf, cb) {
 
 if(!module.parent) {
   //start a server
-  exports(require('./config'))
-    .use(require('./plugins/gossip'))
-    .use(require('./plugins/replicate'))
-    .use(require('./plugins/local'))
+  exports.init(require('./config'))
 }
