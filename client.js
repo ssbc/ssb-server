@@ -6,13 +6,15 @@ var api = require('./lib/api')
 var config = require('./config')
 var opts = require('ssb-keys')
 var seal = require('./lib/seal')(opts)
+var explain = require('explain-error')
 
 var pull = require('pull-stream')
-//var duplex = require('stream-to-pull-stream').duplex
 var stringify = require('pull-stringify')
 var toPull = require('stream-to-pull-stream')
 
-var rpc = api.client().permissions({allow: []})
+var peerRpc = require('./lib/rpc')
+
+var fs = require('fs')
 
 var keys = require('ssb-keys').loadOrCreateSync(path.join(config.path, 'secret'))
 
@@ -43,11 +45,6 @@ function defaultRel (o, r) {
   return o
 }
 
-function contains (s, a) {
-  if(!a) return false
-  return !!~a.indexOf(s)
-}
-
 function usage () {
   console.error('sbot {cmd} {options}')
   process.exit(1)
@@ -58,13 +55,35 @@ var cmd = opts._[0]
 var arg = opts._[1]
 delete opts._
 
+var manifestFile = path.join(config.path, 'manifest.json')
+
 cmd = aliases[cmd] || cmd
 
-if(cmd === 'server')
-  return require('./')(config)
+if(cmd === 'server') {
+  var server = require('./')(config)
     .use(require('./plugins/replicate'))
     .use(require('./plugins/gossip'))
     .use(require('./plugins/local'))
+    .use(require('./plugins/easy'))
+
+  fs.writeFileSync(
+    manifestFile,
+    JSON.stringify(server.getManifest(), null, 2)
+  )
+
+  return
+}
+
+var manifest
+try {
+  manifest = JSON.parse(fs.readFileSync(manifestFile))
+} catch (err) {
+  throw explain(err,
+    'no manifest file'
+    + '- should be generated first time server is run'
+  )
+}
+var rpc = peerRpc(manifest, {options: opts}).permissions({allow: []})
 
 if(arg && Object.keys(opts).length === 0)
   opts = arg
@@ -74,8 +93,16 @@ if(cmd === 'config') {
   process.exit()
 }
 
-var async  = contains(cmd, api.manifest.async)
-var source = contains(cmd, api.manifest.source)
+function get(obj, path) {
+  path.forEach(function (k) {
+    obj = obj ? obj[k] : null
+  })
+  return obj
+}
+
+cmd = cmd.split('.')
+var async  = get(manifest, cmd) === 'async'
+var source = get(manifest, cmd) === 'source'
 
 if(!async && !source)
   return usage()
@@ -122,20 +149,20 @@ function next (data) {
     ts: Date.now(),
     public: keys.public
   }), function (err) {
-    if(err) throw err
+    if(err) throw explain(err, 'auth failed')
     if(async) {
-      rpc[cmd](data, function (err, ret) {
-        if(err) throw err
+      get(rpc, cmd)(data, function (err, ret) {
+        if(err) throw explain(err, 'async call failed')
         console.log(JSON.stringify(ret, null, 2))
         process.exit()
       })
     }
     else
       pull(
-        rpc[cmd](data),
+        get(rpc, cmd)(data),
         stringify('', '\n', '\n\n', 2, JSON.stringify),
         toPull.sink(process.stdout, function (err) {
-          if(err) throw err
+          if(err) throw explain(err, 'reading stream failed')
           process.exit()
         })
       )

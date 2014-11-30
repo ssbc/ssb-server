@@ -1,30 +1,19 @@
-var fs         = require('fs')
-var net        = require('pull-ws-server')
-var url        = require('url')
-var pull       = require('pull-stream')
-var path       = require('path')
-var opts       = require('ssb-keys')
-var merge      = require('deepmerge')
-var create     = require('secure-scuttlebutt/create')
-var mkdirp     = require('mkdirp')
-var crypto     = require('crypto')
-var muxrpc     = require('muxrpc')
-var multicb    = require('multicb')
-var Serializer = require('pull-serializer')
+var fs      = require('fs')
+var net     = require('pull-ws-server')
+var url     = require('url')
+var pull    = require('pull-stream')
+var path    = require('path')
+var opts    = require('ssb-keys')
+var merge   = require('deepmerge')
+var create  = require('secure-scuttlebutt/create')
+var mkdirp  = require('mkdirp')
+var crypto  = require('crypto')
+var multicb = require('multicb')
 
 var Api      = require('./lib/api')
 var seal     = require('./lib/seal')(opts)
 var manifest = require('./lib/manifest')
-
-
-
-function serialize (stream) {
-  return Serializer(stream, JSON, {split: '\n\n'})
-}
-
-function peerApi (manifest, api) {
-  return muxrpc(manifest, manifest, serialize) (api)
-}
+var peerApi  = require('./lib/rpc')
 
 function loadSSB (config) {
   var dbPath  = path.join(config.path, 'db')
@@ -184,6 +173,7 @@ exports = module.exports = function (config, ssb, feed) {
 // - `config.port`: number, port to serve on
 // - `config.pass`: string, password for full admin access to the rpc api
 // - `config.path`: string, the path to the directory which contains the keyfile and database
+
 exports.init =
 exports.fromConfig = function (config) {
   return module.exports(ssb)
