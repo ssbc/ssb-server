@@ -27,7 +27,8 @@
     "secure-scuttlebutt": "~6.0.0",
     "ssb-keys": "~0.3.0",
     "stream-to-pull-stream": "~1.6.0",
-    "ws": "~0.4.32"
+    "ws": "~0.4.32",
+    "deepmerge": "~0.2.7"
   },
   "devDependencies": {
     "rimraf": "~2.2.8",
