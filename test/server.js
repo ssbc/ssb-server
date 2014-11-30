@@ -50,7 +50,7 @@ tape('replicate between 3 peers', function (t) {
       expected[carol.id.toString('base64')] = 4
     function check(server, name) {
       var closed = false
-      return server.on('replicate:finish', function (rpc, actual) {
+      return server.on('replicate:finish', function (actual) {
         console.log(expected)
         console.log(actual)
         console.log('*************')

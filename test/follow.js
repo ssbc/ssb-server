@@ -14,8 +14,15 @@ tape('follow, isFollowing, followedUsers, unfollow', function (t) {
 
   var db = u.createDB('feed-test')
   var feed = db.createFeed()
-  var server = sbot({port: 1234, host: 'localhost', pass: 'foo'}, db, feed)
-  var client = sbot.createClient({port: 1234, host: 'localhost'})
+  var server = sbot({port: 1234, host: 'localhost'}, db, feed)
+    .use(require('../plugins/easy'))
+
+  console.log(server.getManifest())
+
+  var client = sbot.createClient(
+    {port: 1234, host: 'localhost'},
+    server.getManifest()
+  )
 
   var signed = seal.sign(feed.keys, {
     role: 'client',
@@ -25,19 +32,19 @@ tape('follow, isFollowing, followedUsers, unfollow', function (t) {
 
   client.auth(signed, function(err) {
     if (err) throw err
-  
-    client.follow(bob.id, function(err, msg) {
+
+    client.easy.follow(bob.id, function(err, msg) {
       if (err) throw err
-      
-      client.isFollowing(bob.id, function(err, isFollowing) {
+
+      client.easy.isFollowing(bob.id, function(err, isFollowing) {
         if (err) throw err
         t.equal(isFollowing, true)
 
-        client.isFollowing(alice.id, function(err, isFollowing) {
+        client.easy.isFollowing(alice.id, function(err, isFollowing) {
           if (err) throw err
           t.equal(isFollowing, false)
 
-          pull(client.followedUsers(), pull.collect(function(err, users) {
+          pull(client.easy.followedUsers(), pull.collect(function(err, users) {
             if (err) throw err
             t.equal(users.length, 1)
             t.equal(users[0].toString('base64'), bob.id.toString('base64'))
