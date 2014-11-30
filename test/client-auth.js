@@ -1,7 +1,6 @@
 
 var scuttlebot = require('../')
-var opts = require('ssb-keys')
-var seal = require('../lib/seal')(opts)
+var ssbkeys = require('ssb-keys')
 var tape = require('tape')
 
 tape('test api', function (t) {
@@ -20,7 +19,7 @@ tape('test api', function (t) {
 
   var client = scuttlebot.createClient({port: 45451, host: 'localhost'})
 
-  var signed = seal.signHmac(secret, {
+  var signed = ssbkeys.signObjHmac(secret, {
     role: 'client',
     ts: Date.now(),
     keyId: server.options.hash(secret)

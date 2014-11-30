@@ -4,8 +4,7 @@ var path = require('path')
 
 var api = require('./lib/api')
 var config = require('./config')
-var opts = require('ssb-keys')
-var seal = require('./lib/seal')(opts)
+var ssbkeys = require('ssb-keys')
 
 var pull = require('pull-stream')
 //var duplex = require('stream-to-pull-stream').duplex
@@ -115,7 +114,7 @@ function next (data) {
   //this would also work for replication...
   //which would allow blocking...
 
-  rpc.auth(seal.sign(keys, {
+  rpc.auth(ssbkeys.signObj(keys, {
     role: 'client',
     ts: Date.now(),
     public: keys.public

@@ -3,15 +3,13 @@ var multicb = require('multicb')
 var pull = require('pull-stream')
 var toPull = require('stream-to-pull-stream')
 var path = require('path')
-var opts = require('ssb-keys')
+var ssbkeys = require('ssb-keys')
 var create = require('secure-scuttlebutt/create')
 var api = require('./lib/api')
 var mkdirp = require('mkdirp')
 var url = require('url')
 var crypto = require('crypto')
 var deepEqual = require('deep-equal')
-
-var seal = require('./lib/seal')(opts)
 
 var net = require('pull-ws-server')
 
@@ -23,7 +21,7 @@ function loadSSB (config) {
 
 function loadKeys (config) {
   var keyPath = path.join(config.path, 'secret')
-  return opts.loadOrCreateSync(keyPath)
+  return ssbkeys.loadOrCreateSync(keyPath)
 }
 
 function find(ary, test) {
@@ -61,7 +59,7 @@ exports = module.exports = function (config, ssb, feed) {
   server.ssb = ssb
   server.feed = feed
   server.config = config
-  server.options = opts
+  server.options = ssbkeys
 
   // peer connection
   // ===============
@@ -92,7 +90,7 @@ exports = module.exports = function (config, ssb, feed) {
 
   // authenticates the RPC stream
   function authSession (rpc, role, cb) {
-    rpc.auth(seal.sign(keys, {
+    rpc.auth(ssbkeys.signObj(keys, {
       role: role,
       ToS: 'be excellent to each other',
       public: keys.public,
@@ -132,7 +130,7 @@ exports = module.exports = function (config, ssb, feed) {
       created: ts,
       expires: ts + (perms.ttl || 60*60*1000), //1 hour
       key: key,
-      id: opts.hash(key),
+      id: ssbkeys.hash(key),
       perms: perms
     }
     secrets.push(sec)
@@ -144,7 +142,7 @@ exports = module.exports = function (config, ssb, feed) {
       return deepEqual(e.id, msg.keyId)
     })
     if(!secret) return
-    return seal.verifyHmac(secret.key, msg)
+    return ssbkeys.verifyObjHmac(secret.key, msg)
   }
 
   return server
