@@ -1,19 +1,19 @@
-//var cuid = require('cuid');
+var fs      = require('fs')
+var net     = require('pull-ws-server')
+var url     = require('url')
+var pull    = require('pull-stream')
+var path    = require('path')
+var opts    = require('ssb-keys')
+var merge   = require('deepmerge')
+var create  = require('secure-scuttlebutt/create')
+var mkdirp  = require('mkdirp')
+var crypto  = require('crypto')
 var multicb = require('multicb')
-var pull = require('pull-stream')
-var toPull = require('stream-to-pull-stream')
-var path = require('path')
-var opts = require('ssb-keys')
-var create = require('secure-scuttlebutt/create')
-var api = require('./lib/api')
-var mkdirp = require('mkdirp')
-var url = require('url')
-var crypto = require('crypto')
-var deepEqual = require('deep-equal')
 
-var seal = require('./lib/seal')(opts)
-
-var net = require('pull-ws-server')
+var Api      = require('./lib/api')
+var seal     = require('./lib/seal')(opts)
+var manifest = require('./lib/manifest')
+var peerApi  = require('./lib/rpc')
 
 function loadSSB (config) {
   var dbPath  = path.join(config.path, 'db')
@@ -24,6 +24,14 @@ function loadSSB (config) {
 function loadKeys (config) {
   var keyPath = path.join(config.path, 'secret')
   return opts.loadOrCreateSync(keyPath)
+}
+
+function isString (s) {
+  return 'string' === typeof s
+}
+
+function isFunction (f) {
+  return 'function' === typeof f
 }
 
 function find(ary, test) {
@@ -52,23 +60,24 @@ exports = module.exports = function (config, ssb, feed) {
   // ======
 
   // start listening
-  var server = net.createServer(function (socket) {          
+  var server = net.createServer(function (socket) {
     // setup and auth session
     var rpc = attachSession(socket, 'peer')
-    authSession(rpc, 'peer')
   }).listen(config.port)
 
   server.ssb = ssb
   server.feed = feed
   server.config = config
-  server.options = opts
+  server.options = opts //crypto stuff.
+  server.manifest = merge({}, manifest)
+
+  var api = Api(server)
 
   // peer connection
   // ===============
 
   server.connect = function (address, cb) {
     var rpc = attachSession(net.connect(address), 'client')
-    authSession(rpc, 'client', cb)
     return rpc
   }
 
@@ -78,7 +87,8 @@ exports = module.exports = function (config, ssb, feed) {
 
   // sets up RPC session on a stream
   function attachSession (stream, role, cb) {
-    var rpc = api.peer(server, config)
+    var rpc = peerApi(server.manifest, api)
+                .permissions({allow: ['auth']})
     var rpcStream = rpc.createStream()
     pull(stream, rpcStream, stream)
 
@@ -108,6 +118,7 @@ exports = module.exports = function (config, ssb, feed) {
         rpc.task(function () {
           rpc.close(function () {})
         })
+
       if (cb) cb(err, res)
     })
   }
@@ -116,7 +127,11 @@ exports = module.exports = function (config, ssb, feed) {
   // =================
 
   server.use = function (plugin) {
-    plugin(server)
+    if(isFunction(plugin)) plugin(server)
+    else if(isString(plugin.name)) {
+      server.manifest[plugin.name] = plugin.manifest
+      api[plugin.name] = plugin.init(server)
+    }
     return this
   }
 
@@ -139,9 +154,13 @@ exports = module.exports = function (config, ssb, feed) {
     return  sec.key
   }
 
+  server.getManifest = function () {
+    return server.manifest
+  }
+
   server.authorize = function (msg) {
     var secret = find(secrets, function (e) {
-      return deepEqual(e.id, msg.keyId)
+      return e.id === msg.keyId
     })
     if(!secret) return
     return seal.verifyHmac(secret.key, msg)
@@ -154,6 +173,7 @@ exports = module.exports = function (config, ssb, feed) {
 // - `config.port`: number, port to serve on
 // - `config.pass`: string, password for full admin access to the rpc api
 // - `config.path`: string, the path to the directory which contains the keyfile and database
+
 exports.init =
 exports.fromConfig = function (config) {
   return module.exports(ssb)
@@ -165,9 +185,15 @@ exports.fromConfig = function (config) {
 // createClient  to a peer as a client
 // - `address.host`: string, hostname of the target
 // - `address.port`: number, port of the target
-exports.createClient = function (address, cb) {
+exports.createClient = function (address, manf, cb) {
+
+  manf = manf || manifest
+
+  if(isFunction(manf))
+    cb = manf, manf = manifest
+
   var stream = net.connect(address, cb)
-  var rpc = api.client()
+  var rpc = peerApi(manf, {})
   pull(stream, rpc.createStream(), stream)
   return rpc
 }
