@@ -3,15 +3,15 @@ var net     = require('pull-ws-server')
 var url     = require('url')
 var pull    = require('pull-stream')
 var path    = require('path')
-var opts    = require('ssb-keys')
 var merge   = require('deepmerge')
 var create  = require('secure-scuttlebutt/create')
 var mkdirp  = require('mkdirp')
 var crypto  = require('crypto')
+var ssbKeys = require('ssb-keys')
 var multicb = require('multicb')
 
+
 var Api      = require('./lib/api')
-var seal     = require('./lib/seal')(opts)
 var manifest = require('./lib/manifest')
 var peerApi  = require('./lib/rpc')
 
@@ -23,7 +23,7 @@ function loadSSB (config) {
 
 function loadKeys (config) {
   var keyPath = path.join(config.path, 'secret')
-  return opts.loadOrCreateSync(keyPath)
+  return ssbKeys.loadOrCreateSync(keyPath)
 }
 
 function isString (s) {
@@ -68,7 +68,7 @@ exports = module.exports = function (config, ssb, feed) {
   server.ssb = ssb
   server.feed = feed
   server.config = config
-  server.options = opts //crypto stuff.
+  server.options = ssbKeys
   server.manifest = merge({}, manifest)
 
   var api = Api(server)
@@ -102,7 +102,7 @@ exports = module.exports = function (config, ssb, feed) {
 
   // authenticates the RPC stream
   function authSession (rpc, role, cb) {
-    rpc.auth(seal.sign(keys, {
+    rpc.auth(ssbKeys.signObj(keys, {
       role: role,
       ToS: 'be excellent to each other',
       public: keys.public,
@@ -147,7 +147,7 @@ exports = module.exports = function (config, ssb, feed) {
       created: ts,
       expires: ts + (perms.ttl || 60*60*1000), //1 hour
       key: key,
-      id: opts.hash(key),
+      id: ssbKeys.hash(key),
       perms: perms
     }
     secrets.push(sec)
@@ -163,7 +163,7 @@ exports = module.exports = function (config, ssb, feed) {
       return e.id === msg.keyId
     })
     if(!secret) return
-    return seal.verifyHmac(secret.key, msg)
+    return ssbKeys.verifyObjHmac(secret.key, msg)
   }
 
   return server
@@ -176,10 +176,11 @@ exports = module.exports = function (config, ssb, feed) {
 
 exports.init =
 exports.fromConfig = function (config) {
-  return module.exports(ssb)
+  return module.exports(config)
       .use(require('./plugins/replicate'))
       .use(require('./plugins/gossip'))
       .use(require('./plugins/local'))
+      .use(require('./plugins/easy'))
 }
 
 // createClient  to a peer as a client
@@ -200,8 +201,5 @@ exports.createClient = function (address, manf, cb) {
 
 if(!module.parent) {
   //start a server
-  exports(require('./config'))
-    .use(require('./plugins/gossip'))
-    .use(require('./plugins/replicate'))
-    .use(require('./plugins/local'))
+  exports.init(require('./config'))
 }

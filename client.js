@@ -1,22 +1,20 @@
 #! /usr/bin/env node
-var ws = require('pull-ws-server')
-var path = require('path')
 
-var api = require('./lib/api')
-var config = require('./config')
-var opts = require('ssb-keys')
-var seal = require('./lib/seal')(opts)
-var explain = require('explain-error')
-
-var pull = require('pull-stream')
+var fs        = require('fs')
+var ws        = require('pull-ws-server')
+var path      = require('path')
+var pull      = require('pull-stream')
+var toPull    = require('stream-to-pull-stream')
+var explain   = require('explain-error')
+var ssbKeys   = require('ssb-keys')
 var stringify = require('pull-stringify')
-var toPull = require('stream-to-pull-stream')
 
+var api     = require('./lib/api')
+var config  = require('./config')
 var peerRpc = require('./lib/rpc')
 
-var fs = require('fs')
 
-var keys = require('ssb-keys').loadOrCreateSync(path.join(config.path, 'secret'))
+var keys = ssbKeys.loadOrCreateSync(path.join(config.path, 'secret'))
 
 var aliases = {
   feed: 'createFeedStream',
@@ -60,11 +58,7 @@ var manifestFile = path.join(config.path, 'manifest.json')
 cmd = aliases[cmd] || cmd
 
 if(cmd === 'server') {
-  var server = require('./')(config)
-    .use(require('./plugins/replicate'))
-    .use(require('./plugins/gossip'))
-    .use(require('./plugins/local'))
-    .use(require('./plugins/easy'))
+  var server = require('./').init(config)
 
   fs.writeFileSync(
     manifestFile,
@@ -144,7 +138,7 @@ function next (data) {
   //this would also work for replication...
   //which would allow blocking...
 
-  rpc.auth(seal.sign(keys, {
+  rpc.auth(ssbKeys.signObj(keys, {
     role: 'client',
     ts: Date.now(),
     public: keys.public

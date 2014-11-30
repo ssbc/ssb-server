@@ -1,7 +1,7 @@
-var tape = require('tape')
-var pull = require('pull-stream')
-var sbot = require('../')
-var seal = require('../lib/seal')(require('ssb-keys'))
+var tape    = require('tape')
+var pull    = require('pull-stream')
+var sbot    = require('../')
+var ssbkeys = require('ssb-keys')
 
 tape('follow, isFollowing, followedUsers, unfollow', function (t) {
   var u = require('./util')
@@ -24,7 +24,7 @@ tape('follow, isFollowing, followedUsers, unfollow', function (t) {
     server.getManifest()
   )
 
-  var signed = seal.sign(feed.keys, {
+  var signed = ssbkeys.signObj(feed.keys, {
     role: 'client',
     ts: Date.now(),
     public: feed.keys.public
