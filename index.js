@@ -1,19 +1,30 @@
-//var cuid = require('cuid');
-var multicb = require('multicb')
-var pull = require('pull-stream')
-var toPull = require('stream-to-pull-stream')
-var path = require('path')
-var opts = require('ssb-keys')
-var create = require('secure-scuttlebutt/create')
-var api = require('./lib/api')
-var mkdirp = require('mkdirp')
-var url = require('url')
-var crypto = require('crypto')
-var deepEqual = require('deep-equal')
+var fs         = require('fs')
+var net        = require('pull-ws-server')
+var url        = require('url')
+var pull       = require('pull-stream')
+var path       = require('path')
+var opts       = require('ssb-keys')
+var merge      = require('deepmerge')
+var create     = require('secure-scuttlebutt/create')
+var mkdirp     = require('mkdirp')
+var crypto     = require('crypto')
+var muxrpc     = require('muxrpc')
+var multicb    = require('multicb')
+var Serializer = require('pull-serializer')
 
-var seal = require('./lib/seal')(opts)
+var Api      = require('./lib/api')
+var seal     = require('./lib/seal')(opts)
+var manifest = require('./lib/manifest')
 
-var net = require('pull-ws-server')
+
+
+function serialize (stream) {
+  return Serializer(stream, JSON, {split: '\n\n'})
+}
+
+function peerApi (manifest, api) {
+  return muxrpc(manifest, manifest, serialize) (api)
+}
 
 function loadSSB (config) {
   var dbPath  = path.join(config.path, 'db')
@@ -24,6 +35,14 @@ function loadSSB (config) {
 function loadKeys (config) {
   var keyPath = path.join(config.path, 'secret')
   return opts.loadOrCreateSync(keyPath)
+}
+
+function isString (s) {
+  return 'string' === typeof s
+}
+
+function isFunction (f) {
+  return 'function' === typeof f
 }
 
 function find(ary, test) {
@@ -60,7 +79,10 @@ exports = module.exports = function (config, ssb, feed) {
   server.ssb = ssb
   server.feed = feed
   server.config = config
-  server.options = opts
+  server.options = opts //crypto stuff.
+  server.manifest = merge({}, manifest)
+
+  var api = Api(server)
 
   // peer connection
   // ===============
@@ -76,11 +98,11 @@ exports = module.exports = function (config, ssb, feed) {
 
   // sets up RPC session on a stream
   function attachSession (stream, role, cb) {
-    var rpc = api.peer(server, config)
+    var rpc = peerApi(server.manifest, api)
+                .permissions({allow: ['auth']})
     var rpcStream = rpc.createStream()
     pull(stream, rpcStream, stream)
 
-    rpc.permissions({allow: ['auth']})
     rpc.task = multicb()
     server.emit('rpc:connect', rpc)
     if(role) server.emit('rpc:'+role, rpc)
@@ -107,8 +129,6 @@ exports = module.exports = function (config, ssb, feed) {
         rpc.task(function () {
           rpc.close(function () {})
         })
-      else
-        console.error(err.stack)
 
       if (cb) cb(err, res)
     })
@@ -118,7 +138,11 @@ exports = module.exports = function (config, ssb, feed) {
   // =================
 
   server.use = function (plugin) {
-    plugin(server)
+    if(isFunction(plugin)) plugin(server)
+    else if(isString(plugin.name)) {
+      server.manifest[plugin.name] = plugin.manifest
+      api[plugin.name] = plugin.init(server)
+    }
     return this
   }
 
@@ -141,9 +165,13 @@ exports = module.exports = function (config, ssb, feed) {
     return  sec.key
   }
 
+  server.getManifest = function () {
+    return server.manifest
+  }
+
   server.authorize = function (msg) {
     var secret = find(secrets, function (e) {
-      return deepEqual(e.id, msg.keyId)
+      return e.id === msg.keyId
     })
     if(!secret) return
     return seal.verifyHmac(secret.key, msg)
@@ -167,9 +195,15 @@ exports.fromConfig = function (config) {
 // createClient  to a peer as a client
 // - `address.host`: string, hostname of the target
 // - `address.port`: number, port of the target
-exports.createClient = function (address, cb) {
+exports.createClient = function (address, manf, cb) {
+
+  manf = manf || manifest
+
+  if(isFunction(manf))
+    cb = manf, manf = manifest
+
   var stream = net.connect(address, cb)
-  var rpc = api.client()
+  var rpc = peerApi(manf, {})
   pull(stream, rpc.createStream(), stream)
   return rpc
 }
