@@ -28,8 +28,8 @@
     "ssb-keys": "~0.4.1",
     "stream-to-pull-stream": "~1.6.0",
     "ws": "~0.4.32",
-    "deepmerge": "~0.2.7",
-    "explain-error": "~1.0.1"
+    "explain-error": "~1.0.1",
+    "map-merge": "~1.1.0"
   },
   "devDependencies": {
     "rimraf": "~2.2.8",
