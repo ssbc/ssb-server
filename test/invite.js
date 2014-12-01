@@ -39,9 +39,6 @@ tape('test api', function (t) {
       var bobC =
         sbot.createClient({port: 45451, host: 'localhost'}, manf)
 
-
-      console.log(bob)
-
       bobC.auth(ssbKeys.signObj(bob.keys, {
           role: 'client',
           ts: Date.now(),
