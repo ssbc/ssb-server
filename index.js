@@ -3,7 +3,7 @@ var net     = require('pull-ws-server')
 var url     = require('url')
 var pull    = require('pull-stream')
 var path    = require('path')
-var merge   = require('deepmerge')
+var merge   = require('map-merge')
 var create  = require('secure-scuttlebutt/create')
 var mkdirp  = require('mkdirp')
 var crypto  = require('crypto')
@@ -14,6 +14,7 @@ var multicb = require('multicb')
 var Api      = require('./lib/api')
 var manifest = require('./lib/manifest')
 var peerApi  = require('./lib/rpc')
+var clone    = require('./lib/util').clone
 
 function loadSSB (config) {
   var dbPath  = path.join(config.path, 'db')
@@ -70,6 +71,11 @@ exports = module.exports = function (config, ssb, feed) {
   server.config = config
   server.options = ssbKeys
   server.manifest = merge({}, manifest)
+
+  server.permissions = {
+    master: {allow: null, deny: null},
+    anonymous: {allow: ['createHistoryStream'], deny: null}
+  }
 
   var api = Api(server)
 
@@ -130,6 +136,12 @@ exports = module.exports = function (config, ssb, feed) {
     if(isFunction(plugin)) plugin(server)
     else if(isString(plugin.name)) {
       server.manifest[plugin.name] = plugin.manifest
+      server.permissions = merge(
+        server.permissions,
+        clone(plugin.permissions, function (v) {
+          return plugin.name + '.' + v
+        }))
+
       api[plugin.name] = plugin.init(server)
     }
     return this
