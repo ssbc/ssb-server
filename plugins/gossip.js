@@ -48,13 +48,10 @@ function isObject (o) {
 }
 
 module.exports = function (server) {
-  function schedule() {
-    setTimeout(connect, 1000 + Math.random() * 3000)
-  }
-
   function connect () {
     peers(server, function (err, ary) {
-      var p = ary[~~(Math.random()*ary.length)]
+      var nPeers = ary.length
+      var p = ary[~~(Math.random()*nPeers)]
       // connect to this random peer
       if(p) {
         console.log('GOSSIP connect to', p)
@@ -63,6 +60,18 @@ module.exports = function (server) {
         })
         rpc.on('closed', schedule)
       } else schedule()
+
+      function schedule() {
+        // try to hit each peer approx once a minute
+        // - if there's one peer, wait 60-63s
+        // - if there's two peers, wait 30-33s
+        // - if there's 15 peers, wait 4-7s
+        // - if there's 30 peers, wait 2-5s
+        // - if there's 60+ peers, wait 1-4s
+        var baseWait = (60 / nPeers)|0
+        if (baseWait < 1) baseWait = 1
+        setTimeout(connect, baseWait*1000 + Math.random() * 3000)
+      }
     })
   }
 
