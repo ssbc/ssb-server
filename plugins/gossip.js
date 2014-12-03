@@ -7,14 +7,26 @@ function all(stream, cb) {
   }
 }
 
+function isString(s) {
+  return 'string' === typeof s
+}
+
+var DEFAULT_PORT = 2000
+
 function peers (server, cb) {
   var config = server.config
 
   var seeds = config.seeds
   seeds =
-    ( isArray(seeds)  ? seeds
-    : isObject(seeds) ? [seeds]
-    : [])
+    (isArray(seeds)  ? seeds : [seeds]).filter(Boolean)
+      .map(function (e) {
+            if(isString(e)) {
+              var parts = e.split(':')
+              e = {host: parts[0], port: parts[1]}
+            }
+            e.port = e.port || DEFAULT_PORT
+            return e
+          })
 
   //local peers added by the local discovery...
   //could have the local plugin call a method to add this,
