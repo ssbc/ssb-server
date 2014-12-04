@@ -31,14 +31,15 @@ module.exports = {
           secret: secret, total: n, used: 0
         }
 
-        var token = {
-          addr: server.getAddress(),
+        var addr = server.getAddress()
+        if (addr.indexOf('localhost') !== -1)
+          return cb(new Error('Server has no `hostname` configured, unable to create an invite token'))
+
+        cb(null, {
+          addr: addr,
           id: server.getId(),
           sec: secret
-        }
-        if (token.addr.indexOf('localhost') !== -1)
-          delete token.addr
-        cb(null, token)
+        })
       },
       use: function (req, cb) {
         var rpc = this
