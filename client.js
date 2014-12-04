@@ -95,11 +95,9 @@ function get(obj, path) {
 }
 
 cmd = cmd.split('.')
-var async  = get(manifest, cmd) === 'async'
-var source = get(manifest, cmd) === 'source'
+var type = get(manifest, cmd)
 
-if(!async && !source)
-  return usage()
+if(!type) return usage()
 
 var stream = ws.connect({port: config.port, host: 'localhost'})
 
@@ -127,6 +125,10 @@ if(!process.stdin.isTTY && isStdin) {
 else
   next(opts)
 
+function toBase64() {
+  return pull.map(function (b) { return b.toString('base64') })
+}
+
 function next (data) {
   //set $rel as key name if it's missing.
   defaultRel(data)
@@ -144,19 +146,28 @@ function next (data) {
     public: keys.public
   }), function (err) {
     if(err) throw explain(err, 'auth failed')
-    if(async) {
+    if('async' === type) {
       get(rpc, cmd)(data, function (err, ret) {
         if(err) throw explain(err, 'async call failed')
         console.log(JSON.stringify(ret, null, 2))
         process.exit()
       })
     }
-    else
+    else if('source' === type)
       pull(
         get(rpc, cmd)(data),
         stringify('', '\n', '\n\n', 2, JSON.stringify),
         toPull.sink(process.stdout, function (err) {
           if(err) throw explain(err, 'reading stream failed')
+          process.exit()
+        })
+      )
+    else if('sink' === type)
+      pull(
+        toPull.source(process.stdin),
+        toBase64(),
+        get(rpc, cmd)(data, function (err) {
+          if(err) throw explain(err, 'writing stream failed')
           process.exit()
         })
       )

@@ -64,7 +64,9 @@ exports = module.exports = function (config, ssb, feed) {
   var server = net.createServer(function (socket) {
     // setup and auth session
     var rpc = attachSession(socket, 'peer')
-  }).listen(config.port)
+  })
+
+  if(config.port) server.listen(config.port)
 
   server.ssb = ssb
   server.feed = feed
@@ -120,10 +122,20 @@ exports = module.exports = function (config, ssb, feed) {
       //when the client connects (not a peer) we will be unable
       //to authorize with it. In this case, we shouldn't close
       //the connection...
-      if(!err)
-        rpc.task(function () {
-          rpc.close(function () {})
-        })
+      var n = 2
+      function done () {
+        if(--n) return
+        rpc.close()
+      }
+
+      rpc.once('done', function () {
+        done()
+      })
+
+      rpc.task(function () {
+        rpc.emit('done')
+        done()
+      })
 
       if (cb) cb(err, res)
     })
@@ -142,7 +154,7 @@ exports = module.exports = function (config, ssb, feed) {
           return plugin.name + '.' + v
         }))
 
-      api[plugin.name] = plugin.init(server)
+      server[plugin.name] = api[plugin.name] = plugin.init(server)
     }
     return this
   }
@@ -193,6 +205,7 @@ exports.fromConfig = function (config) {
       .use(require('./plugins/gossip'))
       .use(require('./plugins/local'))
       .use(require('./plugins/easy'))
+      .use(require('./plugins/blobs'))
 }
 
 // createClient  to a peer as a client
