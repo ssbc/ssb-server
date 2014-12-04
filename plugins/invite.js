@@ -58,7 +58,7 @@ module.exports = {
           return cb(new Error('invite code may not be used to follow another key'))
 
         if(!invite)
-          return cb(new Error('unknown id:'+req.id))
+          return cb(new Error('invite code is incorrect or expired'))
 
         if(invite.used >= invite.count)
           return cb(new Error('invite code:'+id+' has expired'))
