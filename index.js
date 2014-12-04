@@ -193,6 +193,7 @@ exports.fromConfig = function (config) {
       .use(require('./plugins/gossip'))
       .use(require('./plugins/local'))
       .use(require('./plugins/easy'))
+      .use(require('./plugins/blobs'))
 }
 
 // createClient  to a peer as a client
