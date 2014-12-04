@@ -96,14 +96,18 @@ module.exports = {
       // calls back when that file is available.
       want: function (hash, cb) {
         console.log('want', hash)
-        if(!want[hash])
-          want[hash] = cb
-        else {
-          var _cb = want[hash]
-          want[hash] = function (err, hash) {
-            _cb(err, hash); cb(err, hash)
+        if(blobs.has(hash, function (_, has) {
+          if(has) return cb()
+
+          if(!want[hash])
+            want[hash] = cb
+          else {
+            var _cb = want[hash]
+            want[hash] = function (err, hash) {
+              _cb(err, hash); cb(err, hash)
+            }
           }
-        }
+        })
       }
     }
   }
