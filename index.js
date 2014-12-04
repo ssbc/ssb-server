@@ -144,7 +144,7 @@ exports = module.exports = function (config, ssb, feed) {
           return plugin.name + '.' + v
         }))
 
-      api[plugin.name] = plugin.init(server)
+      server[plugin.name] = api[plugin.name] = plugin.init(server)
     }
     return this
   }
