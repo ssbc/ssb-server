@@ -17,7 +17,8 @@ module.exports = {
     get: 'source',
     has: 'async',
     add: 'sink',
-    ls: 'source'
+    ls: 'source',
+    want: 'async'
   },
   permissions: {
     anonymous: {allow: ['has', 'get']},
