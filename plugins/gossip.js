@@ -64,7 +64,12 @@ module.exports = function (server) {
     setTimeout(connect, 1000 + Math.random() * 3000)
   }
 
+  server.on('close', function () {
+    server.closed = true
+  })
+
   function connect () {
+    if(server.closed) return
     peers(server, function (err, ary) {
       var p = ary[~~(Math.random()*ary.length)]
       // connect to this random peer
