@@ -125,17 +125,14 @@ exports = module.exports = function (config, ssb, feed) {
       var n = 2
       function done () {
         if(--n) return
-        console.log("CLOSE!")
         rpc.close()
       }
 
       rpc.once('done', function () {
-        console.log('remote tasks complete')
         done()
       })
 
       rpc.task(function () {
-        console.log('local tasks complete')
         rpc.emit('done')
         done()
       })

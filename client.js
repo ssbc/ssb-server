@@ -166,7 +166,6 @@ function next (data) {
       pull(
         toPull.source(process.stdin),
         toBase64(),
-//        pull.through(console.log),
         get(rpc, cmd)(data, function (err) {
           if(err) throw explain(err, 'writing stream failed')
           process.exit()

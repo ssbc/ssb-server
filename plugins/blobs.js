@@ -41,12 +41,11 @@ module.exports = {
       var wantList = Object.keys(want)
       var n = 0
       var done = rpc.task()
-      console.log('wants', wantList)
       if(!wantList.length) return done()
 
       rpc.blobs.has(wantList, function (err, ary) {
         if(err) {
-          //this could mhappen
+          //this would happen if the rpc drops while connected.
           console.error(err.stack)
           return done()
         }
@@ -56,7 +55,6 @@ module.exports = {
           pull(
             rpc.blobs.get(wantList[i]),
             toBuffer(),
-            pull.through(console.log),
             blobs.add(wantList[i], function (err, hash) {
               if(err) console.error(err.stack)
               else got(hash)
@@ -71,7 +69,6 @@ module.exports = {
 
     return {
       get: function (hash) {
-        console.log('GET', hash)
         return pull(blobs.get(hash), toBase64())
       },
 
@@ -81,7 +78,6 @@ module.exports = {
 
       add: function (hash, cb) {
         return pull(
-          pull.through(console.log),
           toBuffer(),
           blobs.add(function (err, hash) {
             if(err) console.error(err.stack)
