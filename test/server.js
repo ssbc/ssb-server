@@ -1,7 +1,5 @@
 
-var server    = require('../')
 var cont      = require('cont')
-var net       = require('net')
 var deepEqual = require('deep-equal')
 var tape      = require('tape')
 
@@ -15,14 +13,23 @@ tape('replicate between 3 peers', function (t) {
 
   var u = require('./util')
 
-  var dbA = u.createDB('test-alice')
-  var alice = dbA.createFeed()
+  var dbA = u.createDB('test-alice', {
+      port: 45451, host: 'localhost',
+    })
 
-  var dbB = u.createDB('test-bob')
-  var bob = dbB.createFeed()
+  var alice = dbA.feed
 
-  var dbC = u.createDB('test-carol')
-  var carol = dbC.createFeed()
+  var dbB = u.createDB('test-bob', {
+      port: 45452, host: 'localhost',
+      seeds: [{port: 45451, host: 'localhost'}]
+    })
+  var bob = dbB.feed
+
+  var dbC = u.createDB('test-carol', {
+      port: 45453, host: 'localhost',
+      seeds: [{port: 45451, host: 'localhost'}]
+    })
+  var carol = dbC.feed
 
 
   cont.para([
@@ -45,9 +52,8 @@ tape('replicate between 3 peers', function (t) {
 
     var expected = {}
 
-    expected[alice.id.toString('base64')] =
-      expected[bob  .id.toString('base64')] =
-      expected[carol.id.toString('base64')] = 4
+    expected[alice.id] = expected[bob.id] = expected[carol.id] = 4
+
     function check(server, name) {
       var closed = false
       return server.on('replicate:finish', function (actual) {
@@ -62,21 +68,13 @@ tape('replicate between 3 peers', function (t) {
       })
     }
 
-    var serverA = check(server({
-      port: 45451, host: 'localhost',
-    }, dbA, alice), 'ALICE')
+    var serverA = check(dbA, 'ALICE')
       .use(replicate).use(gossip)
 
-    var serverB = check(server({
-      port: 45452, host: 'localhost',
-      seeds: [{port: 45451, host: 'localhost'}]
-    }, dbB, bob), 'BOB')
+    var serverB = check(dbB, 'BOB')
       .use(replicate).use(gossip)
 
-    var serverC = check(server({
-      port: 45453, host: 'localhost',
-      seeds: [{port: 45451, host: 'localhost'}]
-    }, dbC, carol), 'CAROL')
+    var serverC = check(dbC, 'CAROL')
       .use(replicate).use(gossip)
 
     var n = 2

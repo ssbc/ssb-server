@@ -1,9 +1,17 @@
-var level    = require('level-test')()
-var sublevel = require('level-sublevel/bytewise')
-var SSB      = require('secure-scuttlebutt')
+var rimraf = require('rimraf')
+var osenv = require('osenv')
+var merge = require('map-merge')
+var path = require('path')
+var SBot = require('../')
 
-exports.createDB = function (name) {
-    return SSB(sublevel(level(name, {
-      valueEncoding: require('secure-scuttlebutt/defaults').codec
-    })), require('secure-scuttlebutt/defaults'))
+exports.createDB = function (name, config) {
+  var dir = path.join(osenv.tmpdir(), name)
+
+  rimraf.sync(dir)
+
+  config = merge({
+    path: dir,
+  }, config || {})
+
+  return SBot(config)
 }

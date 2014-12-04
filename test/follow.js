@@ -7,20 +7,19 @@ tape('follow, isFollowing, followedUsers, unfollow', function (t) {
   var u = require('./util')
 
   var dbAlice = u.createDB('followtest-alice')
-  var alice = dbAlice.createFeed()
+  var alice = dbAlice.feed
 
   var dbBob = u.createDB('followtest-bob')
-  var bob = dbBob.createFeed()
+  var bob = dbBob.feed
 
-  var db = u.createDB('feed-test')
-  var feed = db.createFeed()
-  var server = sbot({port: 1234, host: 'localhost'}, db, feed)
-    .use(require('../plugins/easy'))
+  var db = u.createDB('feed-test', {port: 1234, host: 'localhost'})
+  var feed = db.feed
+  var server = db.use(require('../plugins/easy'))
 
   console.log(server.getManifest())
 
   var client = sbot.createClient(
-    {port: 1234, host: 'localhost'},
+    db.config,
     server.getManifest()
   )
 

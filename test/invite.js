@@ -9,14 +9,13 @@ tape('test api', function (t) {
 
   var u = require('./util')
 
-  var dbA = u.createDB('test-invite-alice')
-  var alice = dbA.createFeed()
-  var bob = dbA.createFeed() //bob
-
-  var server = sbot({
+  var sbotA = u.createDB('test-invite-alice', {
     port: 45451, host: 'localhost'
-  }, dbA, alice)
-    .use(require('../plugins/invite'))
+  })
+  var alice = sbotA.feed
+  var bob = sbotA.ssb.createFeed() //bob
+
+  var server = sbotA.use(require('../plugins/invite'))
 
   //request a secret that with particular permissions.
 

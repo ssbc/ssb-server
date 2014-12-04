@@ -64,7 +64,9 @@ exports = module.exports = function (config, ssb, feed) {
   var server = net.createServer(function (socket) {
     // setup and auth session
     var rpc = attachSession(socket, 'peer')
-  }).listen(config.port)
+  })
+
+  if(config.port) server.listen(config.port)
 
   server.ssb = ssb
   server.feed = feed

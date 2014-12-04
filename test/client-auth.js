@@ -8,7 +8,7 @@ tape('test api', function (t) {
   var u = require('./util')
 
   var dbA = u.createDB('test-alice')
-  var alice = dbA.createFeed()
+  var alice = dbA.feed
 
   var server = scuttlebot({
     port: 45451, host: 'localhost',
