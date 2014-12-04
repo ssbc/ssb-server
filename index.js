@@ -10,6 +10,7 @@ var crypto  = require('crypto')
 var ssbKeys = require('ssb-keys')
 var multicb = require('multicb')
 
+var DEFAULT_PORT = 2000
 
 var Api      = require('./lib/api')
 var manifest = require('./lib/manifest')
@@ -75,6 +76,17 @@ exports = module.exports = function (config, ssb, feed) {
   server.permissions = {
     master: {allow: null, deny: null},
     anonymous: {allow: ['createHistoryStream'], deny: null}
+  }
+
+  server.getId = function() {
+    return server.feed.id
+  }
+
+  server.getAddress = function() {
+    var address = 'localhost' // :TODO:
+    if (server.config.port != DEFAULT_PORT)
+      address += ':' + server.config.port
+    return address
   }
 
   var api = Api(server)
