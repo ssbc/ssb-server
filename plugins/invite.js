@@ -30,7 +30,15 @@ module.exports = {
         codes[ssbKeys.hash(secret, 'base64')] = {
           secret: secret, total: n, used: 0
         }
-        cb(null, secret)
+
+        var token = {
+          addr: server.getAddress(),
+          id: server.getId(),
+          sec: secret
+        }
+        if (token.addr.indexOf('localhost') !== -1)
+          delete token.addr
+        cb(null, token)
       },
       use: function (req, cb) {
         var rpc = this

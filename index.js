@@ -83,7 +83,7 @@ exports = module.exports = function (config, ssb, feed) {
   }
 
   server.getAddress = function() {
-    var address = 'localhost' // :TODO:
+    var address = server.config.hostname || 'localhost'
     if (server.config.port != DEFAULT_PORT)
       address += ':' + server.config.port
     return address
@@ -205,6 +205,7 @@ exports.fromConfig = function (config) {
       .use(require('./plugins/gossip'))
       .use(require('./plugins/local'))
       .use(require('./plugins/easy'))
+      .use(require('./plugins/invite'))
 }
 
 // createClient  to a peer as a client
