@@ -38,7 +38,8 @@
     "cont": "~1.0.1",
     "level-test": "~1.6.6",
     "deep-equal": "~0.2.1",
-    "level-sublevel": "~6.3.15"
+    "level-sublevel": "~6.3.15",
+    "osenv": "~0.1.0"
   },
   "bin": "./client.js",
   "scripts": {
