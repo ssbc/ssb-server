@@ -59,14 +59,14 @@ function replicate(server, rpc, cb) {
 module.exports = function (server) {
   server.on('rpc:authorized', function(rpc) {
     var done = rpc.task()
-    server.emit('log:info', '[REPL] Starting with', rpc.authorized.id)
+    server.emit('log:info', '[REPL] RPC#'+rpc._sessid+' Starting SSB replicate')
     server.emit('replicate:start', rpc)
     replicate(server, rpc, function (err, progress) {
       if(err) {
         server.emit('log:warning', '[REPL] Failed', err)
         server.emit('replicate:fail', err)
       } else {
-        server.emit('log:info', '[REPL] Finished with', rpc.authorized.id)
+        server.emit('log:info', '[REPL] RPC#'+rpc._sessid+' Finished SSB replicate')
         server.emit('replicate:finish', progress)
       }
       done()

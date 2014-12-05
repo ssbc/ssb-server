@@ -62,9 +62,9 @@ exports = module.exports = function (config, ssb, feed) {
 
   // start listening
   var server = net.createServer(function (socket) {
-    server.emit('log:info', '[MAIN] New incoming RPC connection') // :TODO: would be nice to log remoteAddress
     // setup and auth session
     var rpc = attachSession(socket, 'peer')
+    server.emit('log:info', '[MAIN] RPC#'+rpc._sessid+' New incoming RPC connection') // :TODO: would be nice to log remoteAddress
   })
 
   if(config.port) server.listen(config.port)
@@ -86,8 +86,8 @@ exports = module.exports = function (config, ssb, feed) {
   // ===============
 
   server.connect = function (address, cb) {
-    server.emit('log:info', '[MAIN] Connecting to', address.host+':'+address.port)
     var rpc = attachSession(net.connect(address), 'client')
+    server.emit('log:info', '[MAIN] RPC#'+rpc._sessid+' Connecting to', address.host+':'+address.port)
     return rpc
   }
 
@@ -96,12 +96,14 @@ exports = module.exports = function (config, ssb, feed) {
   var sessions = {}
 
   // sets up RPC session on a stream
+  var sessCounter = 0
   function attachSession (stream, role, cb) {
     var rpc = peerApi(server.manifest, api)
                 .permissions({allow: ['auth']})
     var rpcStream = rpc.createStream()
     pull(stream, rpcStream, stream)
 
+    rpc._sessid = ++sessCounter
     rpc.task = multicb()
     server.emit('rpc:connect', rpc)
     if(role) server.emit('rpc:'+role, rpc)
@@ -118,8 +120,8 @@ exports = module.exports = function (config, ssb, feed) {
       public: keys.public,
       ts: Date.now(),
     }), function (err, res) {
-      if(err) server.emit('rpc:unauthorized', err), server.emit('log:warning', '[MAIN] Failed to authenticate RPC session:', err.message)
-      else    server.emit('rpc:authorized', rpc, res), server.emit('log:info', '[MAIN] RPC session authenticated')
+      if(err) server.emit('rpc:unauthorized', err), server.emit('log:warning', '[MAIN] RPC#'+rpc._sessid+' Failed to authenticate session:', err.message)
+      else    server.emit('rpc:authorized', rpc, res), server.emit('log:info', '[MAIN] RPC#'+rpc._sessid+' Session authenticated')
 
       //when the client connects (not a peer) we will be unable
       //to authorize with it. In this case, we shouldn't close
@@ -131,10 +133,12 @@ exports = module.exports = function (config, ssb, feed) {
       }
 
       rpc.once('done', function () {
+        server.emit('log:info', '[MAIN] RPC#'+rpc._sessid+' session "done" remotely')
         done()
       })
 
       rpc.task(function () {
+        server.emit('log:info', '[MAIN] RPC#'+rpc._sessid+' session "done" locally')
         rpc.emit('done')
         done()
       })
