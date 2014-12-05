@@ -37,7 +37,7 @@ module.exports = {
 
         cb(null, {
           addr: addr,
-          id: server.getId(),
+          id: this.authorized.id,
           sec: secret
         })
       },
