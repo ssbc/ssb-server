@@ -14,22 +14,28 @@ module.exports = function (server) {
 
   local.on('data', function (buf) {
     if(buf.loopback) return
+
     var data = JSON.parse(buf.toString())
     data.host = buf.address
-    var ts = Date.now()
-    data.ts = ts
+    data.ts = Date.now()
     peers[data.id] = data
-    for(var k in peers) {
-      if(peers[k].ts + 3000 < ts)
-        delete peers[k]
-    }
+
     server.localPeers = toArray(peers)
     console.log('local', server.localPeers)
     server.emit('local', data)
   })
 
   setInterval(function () {
+    // broadcast self
     local.write(JSON.stringify({id: id, port: server.config.port}))
+
+    // clean out expired entries
+    var ts = Date.now()
+    for(var k in peers) {
+      if(peers[k].ts + 3000 < ts)
+        delete peers[k]
+    }
+    server.localPeers = toArray(peers)
   }, 1000)
 
 }
