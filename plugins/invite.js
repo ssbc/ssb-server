@@ -58,6 +58,7 @@ module.exports = {
           return cb(new Error('invalid invite request'))
 
         invite.used ++
+        server.emit('log:info', '[INVI] Use() called by', id)
 
         server.feed.add({
           type: 'auto-follow',

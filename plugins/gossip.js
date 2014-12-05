@@ -74,7 +74,7 @@ module.exports = function (server) {
       var p = ary[~~(Math.random()*ary.length)]
       // connect to this random peer
       if(p) {
-        console.log('GOSSIP connect to', p)
+        server.emit('log:info', '[GOSS] Select '+p.host+':'+p.port)
         var rpc = server.connect(p, function() {
           server.emit('gossip:connect', rpc)
         })

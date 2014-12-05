@@ -18,13 +18,15 @@ module.exports = function (server) {
     data.host = buf.address
     var ts = Date.now()
     data.ts = ts
+    var isNew = (data.id in peers)
     peers[data.id] = data
     for(var k in peers) {
       if(peers[k].ts + 3000 < ts)
         delete peers[k]
     }
     server.localPeers = toArray(peers)
-    console.log('local', server.localPeers)
+    if (isNew)
+      server.emit('log:info', '[LOCL] Discovered peer', data.host + ':' + data.port)
     server.emit('local', data)
   })
 

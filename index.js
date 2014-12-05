@@ -62,6 +62,7 @@ exports = module.exports = function (config, ssb, feed) {
 
   // start listening
   var server = net.createServer(function (socket) {
+    server.emit('log:info', '[MAIN] New incoming RPC connection') // :TODO: would be nice to log remoteAddress
     // setup and auth session
     var rpc = attachSession(socket, 'peer')
   })
@@ -85,6 +86,7 @@ exports = module.exports = function (config, ssb, feed) {
   // ===============
 
   server.connect = function (address, cb) {
+    server.emit('log:info', '[MAIN] Connecting to', address.host+':'+address.port)
     var rpc = attachSession(net.connect(address), 'client')
     return rpc
   }
@@ -116,8 +118,8 @@ exports = module.exports = function (config, ssb, feed) {
       public: keys.public,
       ts: Date.now(),
     }), function (err, res) {
-      if(err) server.emit('rpc:unauthorized', err)
-      else    server.emit('rpc:authorized', rpc, res)
+      if(err) server.emit('rpc:unauthorized', err), server.emit('log:warning', '[MAIN] Failed to authenticate RPC session:', err.message)
+      else    server.emit('rpc:authorized', rpc, res), server.emit('log:info', '[MAIN] RPC session authenticated')
 
       //when the client connects (not a peer) we will be unable
       //to authorize with it. In this case, we shouldn't close
@@ -201,6 +203,7 @@ exports = module.exports = function (config, ssb, feed) {
 exports.init =
 exports.fromConfig = function (config) {
   return module.exports(config)
+      .use(require('./plugins/logging'))
       .use(require('./plugins/replicate'))
       .use(require('./plugins/gossip'))
       .use(require('./plugins/local'))
