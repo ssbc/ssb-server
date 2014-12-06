@@ -27,7 +27,8 @@ module.exports = {
           return cb(new Error('must pass a number to createInvite'))
 
         var secret = crypto.randomBytes(32).toString('base64')
-        codes[ssbKeys.hash(secret, 'base64')] = {
+        var keyId = ssbKeys.hash(secret, 'base64')
+        codes[keyId] = {
           secret: secret, total: n, used: 0
         }
 
@@ -36,9 +37,9 @@ module.exports = {
           return cb(new Error('Server has no `hostname` configured, unable to create an invite token'))
 
         cb(null, {
-          addr: addr,
+          address: addr,
           id: this.authorized.id,
-          sec: secret
+          secret: secret
         })
       },
       use: function (req, cb) {
@@ -48,7 +49,6 @@ module.exports = {
 
         var id = rpc.authorized.id
         var invite = codes[req.keyId]
-
         // although we already know the current feed
         // it's included so that request cannot be replayed.
         if(!req.feed)
