@@ -35,7 +35,7 @@ exports.init = function (server) {
     if (!id) return cb(new Error('Invalid ID'))
 
     // publish follows link
-    feed.add({ type: 'follow', $feed: id, $rel: 'follows' }, cb)
+    feed.add({ type: 'follow', feed: id, rel: 'follows' }, cb)
   }
 
   api.unfollow = function(id, cb) {
@@ -47,7 +47,7 @@ exports.init = function (server) {
       if (!isFollowing) return cb()
 
       // publish unfollows link
-      feed.add({ type: 'follow', $feed: id, $rel: 'unfollows' }, cb)
+      feed.add({ type: 'follow', feed: id, rel: 'unfollows' }, cb)
     })
   }
 

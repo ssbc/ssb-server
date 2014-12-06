@@ -70,7 +70,7 @@ module.exports = {
 
         server.feed.add({
           type: 'auto-follow',
-          $feed: id, $rel: 'follows'
+          feed: id, rel: 'follows'
         }, cb)
       }
     }
