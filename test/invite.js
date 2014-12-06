@@ -10,7 +10,7 @@ tape('test api', function (t) {
   var u = require('./util')
 
   var sbotA = u.createDB('test-invite-alice', {
-    port: 45451, host: 'localhost'
+    port: 45451, host: '127.0.0.1'
   })
   var alice = sbotA.feed
   var bob = sbotA.ssb.createFeed() //bob
@@ -32,7 +32,7 @@ tape('test api', function (t) {
     console.log(err, authed)
     if(err) throw explain(err, 'cannot authorize')
     t.ok(authed.granted)
-    client.invite.create(1, function (err, secret) {
+    client.invite.create(1, function (err, invite) {
       if(err) throw explain(err, 'cannot create invite code')
 
       var bobC =
@@ -45,13 +45,14 @@ tape('test api', function (t) {
         }), function (err, authed) {
           if(err) throw explain(err, 'bob cannot auth')
 
-          var hmacd = ssbKeys.signObjHmac(secret, {
-              keyId: ssbKeys.hash(secret, 'base64'),
+          var hmacd = ssbKeys.signObjHmac(invite.secret, {
+              keyId: ssbKeys.hash(invite.secret, 'base64'),
+              //request must contain your own id,
+              //which prevents this request from being replayed.
+              //because the server checks this the authed user.
               feed: bob.id,
               ts: Date.now()
             })
-
-          console.log('HMAC', hmacd)
 
           bobC.invite.use(hmacd, function (err, msg) {
               if(err) throw explain(err, 'bob cannot use invite code')
