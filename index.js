@@ -85,7 +85,7 @@ exports = module.exports = function (config, ssb, feed) {
   }
 
   server.getAddress = function() {
-    var address = server.config.hostname || 'localhost'
+    var address = server.config.hostname || server.config.host || 'localhost'
     if (server.config.port != DEFAULT_PORT)
       address += ':' + server.config.port
     return address

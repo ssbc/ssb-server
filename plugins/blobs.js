@@ -41,6 +41,7 @@ module.exports = {
       var wantList = Object.keys(want)
       var n = 0
       var done = rpc.task()
+
       if(!wantList.length) return done()
 
       rpc.blobs.has(wantList, function (err, ary) {
@@ -49,6 +50,7 @@ module.exports = {
           console.error(err.stack)
           return done()
         }
+
         ary.forEach(function (e, i) {
           if(!e) return
           n++
@@ -92,7 +94,6 @@ module.exports = {
       // request to retrive a blob,
       // calls back when that file is available.
       want: function (hash, cb) {
-        console.log('want', hash)
         blobs.has(hash, function (_, has) {
           if(has) return cb()
 

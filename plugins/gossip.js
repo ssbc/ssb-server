@@ -85,9 +85,11 @@ module.exports = function (server) {
         // - if there's 15 peers, wait 4-7s
         // - if there's 30 peers, wait 2-5s
         // - if there's 60+ peers, wait 1-4s
-        var baseWait = (60 / nPeers)|0
-        if (baseWait < 1) baseWait = 1
-        setTimeout(connect, baseWait*1000 + Math.random() * 3000)
+        //var baseWait = (60 / nPeers)|0
+        //if (baseWait < 1) baseWait = 1
+
+        //setTimeout(connect, baseWait*1000 + Math.random() * 3000)
+        setTimeout(connect, 500 + Math.random() * 1000)
       }
     })
   }
