@@ -5,6 +5,9 @@ var cat = require('pull-cat')
 function replicate(server, rpc, cb) {
     var ssb = server.ssb
     var feed = server.feed
+    var config = server.config
+
+    var live = !!config.timeout
 
     function replicated () {
       pull(
@@ -42,8 +45,9 @@ function replicate(server, rpc, cb) {
     pull(
       latest(),
       pull.drain(function (upto) {
-        sources.add(rpc.createHistoryStream(upto.id, upto.sequence + 1))
-      }, function () {
+        sources.add(rpc.createHistoryStream({id: upto.id, seq: upto.sequence + 1, live: live}))
+      }, function (err) {
+        if(err) console.log(err.stack)
         sources.cap()
       })
     )
@@ -59,7 +63,6 @@ function replicate(server, rpc, cb) {
 module.exports = function (server) {
   server.on('rpc:authorized', function(rpc) {
     var done = rpc.task()
-    console.log('start!!!')
     server.emit('replicate:start', rpc)
     replicate(server, rpc, function (err, progress) {
       console.log('replicate end', progress)
