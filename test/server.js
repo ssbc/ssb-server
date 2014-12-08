@@ -37,14 +37,14 @@ tape('replicate between 3 peers', function (t) {
     bob  .add('pub', {address: {host: 'localhost', port: 45452}}),
     carol.add('pub', {address: {host: 'localhost', port: 45453}}),
 
-    alice.add('flw', {feed: bob.id,   rel: 'follows'}),
-    alice.add('flw', {feed: carol.id, rel: 'follows'}),
+    alice.add('follows', {feed: bob.id,   rel: 'follows'}),
+    alice.add('follows', {feed: carol.id, rel: 'follows'}),
 
-    bob  .add('flw', {feed: alice.id, rel: 'follows'}),
-    bob  .add('flw', {feed: carol.id, rel: 'follows'}),
+    bob  .add('follows', {feed: alice.id, rel: 'follows'}),
+    bob  .add('follows', {feed: carol.id, rel: 'follows'}),
 
-    carol.add('flw', {feed: alice.id, rel: 'follows'}),
-    carol.add('flw', {feed: bob.id,   rel: 'follows'})
+    carol.add('follows', {feed: alice.id, rel: 'follows'}),
+    carol.add('follows', {feed: bob.id,   rel: 'follows'})
   ]) (function () {
 
     //TODO: detect when everything has been replicated
