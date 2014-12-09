@@ -97,7 +97,7 @@ exports = module.exports = function (config, ssb, feed) {
   // ===============
 
   server.connect = function (address, cb) {
-    var rpc = attachSession(net.connect(address), 'client')
+    var rpc = attachSession(net.connect(address), 'client', cb)
     return rpc
   }
 
