@@ -145,7 +145,12 @@ function next (data) {
     ts: Date.now(),
     public: keys.public
   }), function (err) {
-    if(err) throw explain(err, 'auth failed')
+    if(err) {
+      if(err.code === 'ECONNREFUSED')
+        throw explain(err, 'Scuttlebot server is not running')
+      else
+        throw explain(err, 'auth failed')
+    }
     if('async' === type) {
       get(rpc, cmd)(data, function (err, ret) {
         if(err) throw explain(err, 'async call failed')
