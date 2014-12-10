@@ -147,6 +147,9 @@ function next (data) {
     ts: Date.now(),
     public: keys.public
   }), function (err) {
+
+    if(Object.keys(data).length === 0)
+      data = null
     if(err) throw explain(err, 'auth failed')
     if('async' === type) {
       get(rpc, cmd)(data, function (err, ret) {
