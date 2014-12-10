@@ -10,6 +10,7 @@ function replicate(server, rpc, cb) {
     var live = !!config.timeout
 
     function replicated () {
+
       pull(
         ssb.latest(),
         pull.collect(function (err, ary) {
@@ -25,15 +26,7 @@ function replicate(server, rpc, cb) {
 
     function latest () {
       return pull(
-        cat([
-          pull.values([feed.id]),
-          pull(
-            ssb.feedsLinkedFromFeed(feed.id, 'follows'),
-            pull.map(function (link) {
-              return link.dest
-            })
-          )
-        ]),
+        pull.values(Object.keys(server.friends.hops())),
         ssb.createLatestLookupStream()
       )
     }
