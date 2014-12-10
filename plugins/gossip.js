@@ -46,6 +46,9 @@ function peers (server, cb) {
     pull.filter(function (e) {
       return e.port !== config.port || e.host !== config.host
     }),
+    pull.unique(function (e) {
+      return JSON.stringify(e)
+    }),
     pull.collect(function (err, ary) {
       cb(null, (ary || []).concat(seeds).concat(local))
     })
@@ -63,8 +66,9 @@ module.exports = function (server) {
   server.on('close', function () {
     server.closed = true
   })
-
+  var scheduled = false
   function connect () {
+    scheduled = false
     if(server.closed) return
     peers(server, function (err, ary) {
       var nPeers = ary.length
@@ -72,13 +76,17 @@ module.exports = function (server) {
       // connect to this random peer
       if(p) {
         console.log('GOSSIP connect to', p)
-        var rpc = server.connect(p, function() {
-          server.emit('gossip:connect', rpc)
+        var rpc = server.connect(p, function(err) {
+          console.log('DISCONNECT')
+          schedule()
         })
         rpc.on('closed', schedule)
       } else schedule()
 
       function schedule() {
+        if(scheduled) return console.log('reconnect already scheduled...')
+        scheduled = true
+        console.log('reconnect')
         // try to hit each peer approx once a minute
         // - if there's one peer, wait 60-63s
         // - if there's two peers, wait 30-33s

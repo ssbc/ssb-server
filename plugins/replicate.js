@@ -65,7 +65,6 @@ module.exports = function (server) {
     var done = rpc.task()
     server.emit('replicate:start', rpc)
     replicate(server, rpc, function (err, progress) {
-      console.log('replicate end', progress)
       if(err) {
         server.emit('replicate:fail', err)
         console.error(err)
