@@ -77,7 +77,6 @@ module.exports = function (server) {
       if(p) {
         console.log('GOSSIP connect to', p)
         var rpc = server.connect(p, function(err) {
-          console.log('DISCONNECT')
           schedule()
         })
         rpc.on('closed', schedule)
