@@ -1,14 +1,15 @@
-var fs      = require('fs')
-var net     = require('pull-ws-server')
-var url     = require('url')
-var pull    = require('pull-stream')
-var path    = require('path')
-var merge   = require('map-merge')
-var create  = require('secure-scuttlebutt/create')
-var mkdirp  = require('mkdirp')
-var crypto  = require('crypto')
-var ssbKeys = require('ssb-keys')
-var multicb = require('multicb')
+var fs       = require('fs')
+var net      = require('pull-ws-server')
+var url      = require('url')
+var pull     = require('pull-stream')
+var path     = require('path')
+var merge    = require('map-merge')
+var create   = require('secure-scuttlebutt/create')
+var mkdirp   = require('mkdirp')
+var crypto   = require('crypto')
+var ssbKeys  = require('ssb-keys')
+var multicb  = require('multicb')
+var inactive = require('pull-inactivity')
 
 var DEFAULT_PORT = 2000
 
@@ -110,18 +111,19 @@ exports = module.exports = function (config, ssb, feed) {
     var rpc = peerApi(server.manifest, api)
                 .permissions({allow: ['auth']})
     var rpcStream = rpc.createStream()
+    rpcStream = inactive(rpcStream, 3000)
     pull(stream, rpcStream, stream)
 
     rpc.task = multicb()
     server.emit('rpc:connect', rpc)
     if(role) server.emit('rpc:'+role, rpc)
 
-    authSession(rpc, role, cb)
-    return rpc
-  }
+    rpc.on('remote:authorized', function (authed) {
+      console.log('remote connection', rpc.authorized, authed)
+      if(authed.type === 'client')
+        rpcStream.setTTL(null) //don't abort the stream on timeout.
+    })
 
-  // authenticates the RPC stream
-  function authSession (rpc, role, cb) {
     rpc.auth(ssbKeys.signObj(keys, {
       role: role,
       ToS: 'be excellent to each other',
@@ -130,6 +132,8 @@ exports = module.exports = function (config, ssb, feed) {
     }), function (err, res) {
       if(err) server.emit('rpc:unauthorized', err)
       else    server.emit('rpc:authorized', rpc, res)
+
+      //TODO: put this stuff somewhere else...?
 
       //when the client connects (not a peer) we will be unable
       //to authorize with it. In this case, we shouldn't close
@@ -151,6 +155,12 @@ exports = module.exports = function (config, ssb, feed) {
 
       if (cb) cb(err, res)
     })
+
+    return rpc
+  }
+
+  // authenticates the RPC stream
+  function authSession (rpc, role, cb) {
   }
 
   // plugin management
@@ -160,11 +170,13 @@ exports = module.exports = function (config, ssb, feed) {
     if(isFunction(plugin)) plugin(server)
     else if(isString(plugin.name)) {
       server.manifest[plugin.name] = plugin.manifest
-      server.permissions = merge(
-        server.permissions,
-        clone(plugin.permissions, function (v) {
-          return plugin.name + '.' + v
-        }))
+      if(plugin.permissions) {
+        server.permissions = merge(
+          server.permissions,
+          clone(plugin.permissions, function (v) {
+            return plugin.name + '.' + v
+          }))
+      }
 
       server[plugin.name] = api[plugin.name] = plugin.init(server)
     }
@@ -213,12 +225,12 @@ exports = module.exports = function (config, ssb, feed) {
 exports.init =
 exports.fromConfig = function (config) {
   return module.exports(config)
-      .use(require('./plugins/replicate'))
       .use(require('./plugins/gossip'))
+      .use(require('./plugins/replicate'))
       .use(require('./plugins/local'))
-      .use(require('./plugins/easy'))
       .use(require('./plugins/blobs'))
       .use(require('./plugins/invite'))
+      .use(require('./plugins/friends'))
 }
 
 // createClient  to a peer as a client

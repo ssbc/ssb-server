@@ -28,7 +28,9 @@
     "stream-to-pull-stream": "~1.6.0",
     "explain-error": "~1.0.1",
     "map-merge": "~1.1.0",
-    "multiblob": "~1.2.0"
+    "multiblob": "~1.2.0",
+    "pull-inactivity": "~2.1.1",
+    "graphmitter": "~1.0.0"
   },
   "devDependencies": {
     "rimraf": "~2.2.8",

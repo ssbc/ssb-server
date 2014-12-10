@@ -8,25 +8,26 @@ var tape      = require('tape')
 // and get them to follow each other...
 var replicate = require('../plugins/replicate')
 var gossip    = require('../plugins/gossip')
+var friends   = require('../plugins/friends')
 
 tape('replicate between 3 peers', function (t) {
 
   var u = require('./util')
 
   var dbA = u.createDB('test-alice', {
-      port: 45451, host: 'localhost',
+      port: 45451, host: 'localhost', timeout: 1000,
     })
 
   var alice = dbA.feed
 
   var dbB = u.createDB('test-bob', {
-      port: 45452, host: 'localhost',
+      port: 45452, host: 'localhost', timeout: 1000,
       seeds: [{port: 45451, host: 'localhost'}]
     })
   var bob = dbB.feed
 
   var dbC = u.createDB('test-carol', {
-      port: 45453, host: 'localhost',
+      port: 45453, host: 'localhost', timeout: 1000,
       seeds: [{port: 45451, host: 'localhost'}]
     })
   var carol = dbC.feed
@@ -37,14 +38,14 @@ tape('replicate between 3 peers', function (t) {
     bob  .add('pub', {address: {host: 'localhost', port: 45452}}),
     carol.add('pub', {address: {host: 'localhost', port: 45453}}),
 
-    alice.add('flw', {feed: bob.id,   rel: 'follows'}),
-    alice.add('flw', {feed: carol.id, rel: 'follows'}),
+    alice.add('follow', {feed: bob.id,   rel: 'follows'}),
+    alice.add('follow', {feed: carol.id, rel: 'follows'}),
 
-    bob  .add('flw', {feed: alice.id, rel: 'follows'}),
-    bob  .add('flw', {feed: carol.id, rel: 'follows'}),
+    bob  .add('follow', {feed: alice.id, rel: 'follows'}),
+    bob  .add('follow', {feed: carol.id, rel: 'follows'}),
 
-    carol.add('flw', {feed: alice.id, rel: 'follows'}),
-    carol.add('flw', {feed: bob.id,   rel: 'follows'})
+    carol.add('follow', {feed: alice.id, rel: 'follows'}),
+    carol.add('follow', {feed: bob.id,   rel: 'follows'})
   ]) (function () {
 
     //TODO: detect when everything has been replicated
@@ -69,13 +70,13 @@ tape('replicate between 3 peers', function (t) {
     }
 
     var serverA = check(dbA, 'ALICE')
-      .use(replicate).use(gossip)
+      .use(replicate).use(gossip).use(friends)
 
     var serverB = check(dbB, 'BOB')
-      .use(replicate).use(gossip)
+      .use(replicate).use(gossip).use(friends)
 
     var serverC = check(dbC, 'CAROL')
-      .use(replicate).use(gossip)
+      .use(replicate).use(gossip).use(friends)
 
     var n = 2
 

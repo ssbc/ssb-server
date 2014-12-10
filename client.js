@@ -30,14 +30,16 @@ function isObject (o) {
   return o && 'object' === typeof o && !Buffer.isBuffer(o)
 }
 
+var isHash = ssbKeys.isHash
+
 function defaultRel (o, r) {
   if(!isObject(o)) return o
   for(var k in o) {
     if(isObject(o[k]))
       defaultRel(o[k], k)
-    else if(k[0] === '$' && ~['$msg', '$ext', '$feed'].indexOf(k)) {
-      if(!o.$rel)
-        o.$rel = r ? r : o.type
+    else if(isHash(o[k]) && ~['msg', 'ext', 'feed'].indexOf(k)) {
+      if(!o.rel)
+        o.rel = r ? r : o.type
     }
   }
   return o
@@ -145,6 +147,8 @@ function next (data) {
     ts: Date.now(),
     public: keys.public
   }), function (err) {
+    if(typeof data == 'object' && Object.keys(data).length === 0)
+      data = null
     if(err) {
       if(err.code === 'ECONNREFUSED')
         throw explain(err, 'Scuttlebot server is not running')
