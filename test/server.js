@@ -8,6 +8,7 @@ var tape      = require('tape')
 // and get them to follow each other...
 var replicate = require('../plugins/replicate')
 var gossip    = require('../plugins/gossip')
+var friends   = require('../plugins/friends')
 
 tape('replicate between 3 peers', function (t) {
 
@@ -37,14 +38,14 @@ tape('replicate between 3 peers', function (t) {
     bob  .add('pub', {address: {host: 'localhost', port: 45452}}),
     carol.add('pub', {address: {host: 'localhost', port: 45453}}),
 
-    alice.add('follows', {feed: bob.id,   rel: 'follows'}),
-    alice.add('follows', {feed: carol.id, rel: 'follows'}),
+    alice.add('follow', {feed: bob.id,   rel: 'follows'}),
+    alice.add('follow', {feed: carol.id, rel: 'follows'}),
 
-    bob  .add('follows', {feed: alice.id, rel: 'follows'}),
-    bob  .add('follows', {feed: carol.id, rel: 'follows'}),
+    bob  .add('follow', {feed: alice.id, rel: 'follows'}),
+    bob  .add('follow', {feed: carol.id, rel: 'follows'}),
 
-    carol.add('follows', {feed: alice.id, rel: 'follows'}),
-    carol.add('follows', {feed: bob.id,   rel: 'follows'})
+    carol.add('follow', {feed: alice.id, rel: 'follows'}),
+    carol.add('follow', {feed: bob.id,   rel: 'follows'})
   ]) (function () {
 
     //TODO: detect when everything has been replicated
@@ -69,13 +70,13 @@ tape('replicate between 3 peers', function (t) {
     }
 
     var serverA = check(dbA, 'ALICE')
-      .use(replicate).use(gossip)
+      .use(replicate).use(gossip).use(friends)
 
     var serverB = check(dbB, 'BOB')
-      .use(replicate).use(gossip)
+      .use(replicate).use(gossip).use(friends)
 
     var serverC = check(dbC, 'CAROL')
-      .use(replicate).use(gossip)
+      .use(replicate).use(gossip).use(friends)
 
     var n = 2
 
