@@ -111,7 +111,7 @@ exports = module.exports = function (config, ssb, feed) {
     var rpc = peerApi(server.manifest, api)
                 .permissions({allow: ['auth']})
     var rpcStream = rpc.createStream()
-    rpcStream = inactive(rpcStream, 3000)
+    rpcStream = inactive(rpcStream, server.config.timeout)
     pull(stream, rpcStream, stream)
 
     rpc.task = multicb()
