@@ -67,7 +67,6 @@ module.exports = function (server) {
     server.closed = true
   })
   var scheduled = false
-  var nconns = 0
   function connect () {
     scheduled = false
     if(server.closed) return
