@@ -86,9 +86,7 @@ module.exports = function (server) {
       // connect to this random peer
       if(p) {
         console.log('GOSSIP connect to', p)
-        var rpc = server.connect(p, function(err) {
-          schedule()
-        })
+        var rpc = server.connect(p)
         rpc.on('closed', schedule)
       } else schedule()
 
