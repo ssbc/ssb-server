@@ -35,6 +35,14 @@ exports.init = function (sbot) {
     })
   )
 
+  pull(
+    sbot.ssb.messagesByType({type: 'auto-follow', live: true}),
+    pull.drain(function (msg) {
+      var feed = msg.content.feed || msg.content.$feed
+      if(feed) graph.edge(msg.author, feed, true)
+    })
+  )
+
   return {
     all: maybeAsync(function () {
       return graph.toJSON()
