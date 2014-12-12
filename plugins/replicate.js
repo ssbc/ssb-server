@@ -5,8 +5,12 @@ var cat = require('pull-cat')
 function replicate(server, rpc, cb) {
     var ssb = server.ssb
     var feed = server.feed
+    var config = server.config
+
+    var live = !!config.timeout
 
     function replicated () {
+
       pull(
         ssb.latest(),
         pull.collect(function (err, ary) {
@@ -22,15 +26,7 @@ function replicate(server, rpc, cb) {
 
     function latest () {
       return pull(
-        cat([
-          pull.values([feed.id]),
-          pull(
-            ssb.feedsLinkedFromFeed(feed.id, 'follows'),
-            pull.map(function (link) {
-              return link.dest
-            })
-          )
-        ]),
+        pull.values(Object.keys(server.friends.hops())),
         ssb.createLatestLookupStream()
       )
     }
@@ -42,8 +38,9 @@ function replicate(server, rpc, cb) {
     pull(
       latest(),
       pull.drain(function (upto) {
-        sources.add(rpc.createHistoryStream(upto.id, upto.sequence + 1))
-      }, function () {
+        sources.add(rpc.createHistoryStream({id: upto.id, seq: upto.sequence + 1, live: live}))
+      }, function (err) {
+        if(err) console.log(err.stack)
         sources.cap()
       })
     )

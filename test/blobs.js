@@ -21,13 +21,13 @@ tape('replicate between 3 peers', function (t) {
   var u = require('./util')
 
   var sbotA = u.createDB('test-alice', {
-      port: 45451, host: 'localhost',
+      port: 45451, host: 'localhost', timeout: 1000,
     }).use(gossip).use(blobs)
 
   var alice = sbotA.feed
 
   var sbotB = u.createDB('test-bob', {
-      port: 45452, host: 'localhost',
+      port: 45452, host: 'localhost', timeout: 1000,
       seeds: [{port: 45451, host: 'localhost'}]
     }).use(gossip).use(blobs)
 
