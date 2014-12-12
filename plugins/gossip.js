@@ -13,12 +13,12 @@ function isString(s) {
 
 var DEFAULT_PORT = 2000
 
-function peers (server, cb) {
-  var config = server.config
-
-  var seeds = config.seeds
-  seeds =
-    (isArray(seeds)  ? seeds : [seeds]).filter(Boolean)
+function clean (ary) {
+  return ary
+      .filter(Boolean)
+      .filter(function (e) {
+        return 'string' !== typeof e
+      })
       .map(function (e) {
             if(isString(e)) {
               var parts = e.split(':')
@@ -27,6 +27,15 @@ function peers (server, cb) {
             e.port = e.port || DEFAULT_PORT
             return e
           })
+
+}
+
+function peers (server, cb) {
+  var config = server.config
+
+  var seeds = config.seeds
+  seeds =
+    (isArray(seeds)  ? seeds : [seeds])
 
   //local peers added by the local discovery...
   //could have the local plugin call a method to add this,
@@ -50,7 +59,7 @@ function peers (server, cb) {
       return JSON.stringify(e)
     }),
     pull.collect(function (err, ary) {
-      cb(null, (ary || []).concat(seeds).concat(local))
+      cb(null, clean((ary || []).concat(seeds).concat(local)))
     })
   )
 
@@ -73,6 +82,7 @@ module.exports = function (server) {
     peers(server, function (err, ary) {
       var nPeers = ary.length
       var p = ary[~~(Math.random()*nPeers)]
+      console.log(ary)
       // connect to this random peer
       if(p) {
         console.log('GOSSIP connect to', p)
