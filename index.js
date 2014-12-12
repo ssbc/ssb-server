@@ -18,6 +18,10 @@ var manifest = require('./lib/manifest')
 var peerApi  = require('./lib/rpc')
 var clone    = require('./lib/util').clone
 
+//I made this global so that when you run tests with multiple
+//servers each connection gets it's own id..
+var sessCounter = 0
+
 function loadSSB (config) {
   var dbPath  = path.join(config.path, 'db')
   //load/create  secure scuttlebutt.
@@ -66,6 +70,7 @@ exports = module.exports = function (config, ssb, feed) {
   var server = net.createServer(function (socket) {
     // setup and auth session
     var rpc = attachSession(socket, 'peer')
+    server.emit('log:info', ['sbot',  rpc._sessid, 'incoming-connection']) // :TODO: would be nice to log remoteAddress
   })
 
   if(config.port) server.listen(config.port)
@@ -99,6 +104,7 @@ exports = module.exports = function (config, ssb, feed) {
 
   server.connect = function (address, cb) {
     var rpc = attachSession(net.connect(address), 'client', cb)
+    server.emit('log:info', ['sbot', rpc._sessid, 'connect', address])
     return rpc
   }
 
@@ -114,12 +120,13 @@ exports = module.exports = function (config, ssb, feed) {
     rpcStream = inactive(rpcStream, server.config.timeout)
     pull(stream, rpcStream, stream)
 
+    rpc._sessid = ++sessCounter
     rpc.task = multicb()
     server.emit('rpc:connect', rpc)
     if(role) server.emit('rpc:'+role, rpc)
 
     rpc.on('remote:authorized', function (authed) {
-      console.log('remote connection', rpc.authorized, authed)
+      server.emit('log:info', ['remote', rpc._sessid, 'authed', authed])
       if(authed.type === 'client')
         rpcStream.setTTL(null) //don't abort the stream on timeout.
     })
@@ -130,8 +137,15 @@ exports = module.exports = function (config, ssb, feed) {
       public: keys.public,
       ts: Date.now(),
     }), function (err, res) {
-      if(err) server.emit('rpc:unauthorized', err)
-      else    server.emit('rpc:authorized', rpc, res)
+      if(err) {
+        server.emit('rpc:unauthorized', err)
+        server.emit('log:warning', ['sbot', rpc._sessid, 'unauthed', err])
+        return rpc.close(function () {})
+      }
+      else {
+        server.emit('rpc:authorized', rpc, res)
+        server.emit('log:info', ['sbot', rpc._sessid, 'authed', res])
+      }
 
       //TODO: put this stuff somewhere else...?
 
@@ -141,14 +155,17 @@ exports = module.exports = function (config, ssb, feed) {
       var n = 2
       function done () {
         if(--n) return
+        server.emit('log:info', ['sbot', rpc._sessid, 'done'])
         rpc.close()
       }
 
       rpc.once('done', function () {
+        server.emit('log:info', ['sbot', rpc._sessid, 'remote-done'])
         done()
       })
 
       rpc.task(function () {
+        server.emit('log:info', ['sbot', rpc._sessid, 'local-done'])
         rpc.emit('done')
         done()
       })
@@ -159,14 +176,14 @@ exports = module.exports = function (config, ssb, feed) {
     return rpc
   }
 
-  // authenticates the RPC stream
-  function authSession (rpc, role, cb) {
-  }
-
   // plugin management
   // =================
 
   server.use = function (plugin) {
+    server.emit('log:info', [
+      'sbot', null, 'use-plugin',
+      plugin.name + (plugin.version ? '@'+plugin.version : '')
+    ])
     if(isFunction(plugin)) plugin(server)
     else if(isString(plugin.name)) {
       server.manifest[plugin.name] = plugin.manifest
@@ -225,8 +242,9 @@ exports = module.exports = function (config, ssb, feed) {
 exports.init =
 exports.fromConfig = function (config) {
   return module.exports(config)
-      .use(require('./plugins/gossip'))
+      .use(require('./plugins/logging'))
       .use(require('./plugins/replicate'))
+      .use(require('./plugins/gossip'))
       .use(require('./plugins/local'))
       .use(require('./plugins/blobs'))
       .use(require('./plugins/invite'))
