@@ -18,8 +18,9 @@ var manifest = require('./lib/manifest')
 var peerApi  = require('./lib/rpc')
 var clone    = require('./lib/util').clone
 
+//I made this global so that when you run tests with multiple
+//servers each connection gets it's own id..
 var sessCounter = 0
-
 
 function loadSSB (config) {
   var dbPath  = path.join(config.path, 'db')
