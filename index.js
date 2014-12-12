@@ -65,6 +65,7 @@ exports = module.exports = function (config, ssb, feed) {
   var server = net.createServer(function (socket) {
     // setup and auth session
     var rpc = attachSession(socket, 'peer')
+    server.emit('log:info', '[MAIN] RPC#'+rpc._sessid+' New incoming RPC connection') // :TODO: would be nice to log remoteAddress
   })
 
   if(config.port) server.listen(config.port)
@@ -98,6 +99,7 @@ exports = module.exports = function (config, ssb, feed) {
 
   server.connect = function (address, cb) {
     var rpc = attachSession(net.connect(address), 'client', cb)
+    server.emit('log:info', ['sbot', rpc._sessid, 'connect', address])
     return rpc
   }
 
@@ -106,12 +108,14 @@ exports = module.exports = function (config, ssb, feed) {
   var sessions = {}
 
   // sets up RPC session on a stream
+  var sessCounter = 0
   function attachSession (stream, role, cb) {
     var rpc = peerApi(server.manifest, api)
                 .permissions({allow: ['auth']})
     var rpcStream = rpc.createStream()
     pull(stream, rpcStream, stream)
 
+    rpc._sessid = ++sessCounter
     rpc.task = multicb()
     server.emit('rpc:connect', rpc)
     if(role) server.emit('rpc:'+role, rpc)
@@ -128,8 +132,14 @@ exports = module.exports = function (config, ssb, feed) {
       public: keys.public,
       ts: Date.now(),
     }), function (err, res) {
-      if(err) server.emit('rpc:unauthorized', err)
-      else    server.emit('rpc:authorized', rpc, res)
+      if(err) {
+        server.emit('rpc:unauthorized', err)
+        server.emit('log:warning', ['sbot', rpc._sessid, 'unauthed', err])
+      }
+      else {
+        server.emit('rpc:authorized', rpc, res)
+        server.emit('log:info', ['sbot', rpc._sessid, 'authed', res])
+      }
 
       //when the client connects (not a peer) we will be unable
       //to authorize with it. In this case, we shouldn't close
@@ -137,14 +147,17 @@ exports = module.exports = function (config, ssb, feed) {
       var n = 2
       function done () {
         if(--n) return
+        server.emit('log:info', ['sbot', rpc._sessid, 'done'])
         rpc.close()
       }
 
       rpc.once('done', function () {
+        server.emit('log:info', ['sbot', rpc._sessid, 'remote-done'])
         done()
       })
 
       rpc.task(function () {
+        server.emit('log:info', ['sbot', rpc._sessid, 'local-done'])
         rpc.emit('done')
         done()
       })
@@ -213,12 +226,14 @@ exports = module.exports = function (config, ssb, feed) {
 exports.init =
 exports.fromConfig = function (config) {
   return module.exports(config)
+      .use(require('./plugins/logging'))
       .use(require('./plugins/replicate'))
       .use(require('./plugins/gossip'))
       .use(require('./plugins/local'))
       .use(require('./plugins/easy'))
       .use(require('./plugins/blobs'))
       .use(require('./plugins/invite'))
+      .use(require('./plugins/logging'))
 }
 
 // createClient  to a peer as a client

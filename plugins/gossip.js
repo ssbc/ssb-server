@@ -75,18 +75,13 @@ module.exports = function (server) {
       var p = ary[~~(Math.random()*nPeers)]
       // connect to this random peer
       if(p) {
-        console.log('GOSSIP connect to', p)
-        var rpc = server.connect(p, function(err) {
-          console.log('DISCONNECT')
-          schedule()
-        })
+        var rpc = server.connect(p)
         rpc.on('closed', schedule)
       } else schedule()
 
       function schedule() {
-        if(scheduled) return console.log('reconnect already scheduled...')
+        if(scheduled) return server.emit('log:info', ['gossip', null, 'already-scheduled'])
         scheduled = true
-        console.log('reconnect')
         // try to hit each peer approx once a minute
         // - if there's one peer, wait 60-63s
         // - if there's two peers, wait 30-33s

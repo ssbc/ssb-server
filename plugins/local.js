@@ -17,11 +17,14 @@ module.exports = function (server) {
 
     var data = JSON.parse(buf.toString())
     data.host = buf.address
-    data.ts = Date.now()
+    var ts = Date.now()
+    data.ts = ts
+    var isNew = (data.id in peers)
     peers[data.id] = data
 
     server.localPeers = toArray(peers)
-    console.log('local', server.localPeers)
+    if (isNew)
+      server.emit('log:info', ['local', null, 'discovered', data])
     server.emit('local', data)
   })
 
@@ -38,11 +41,4 @@ module.exports = function (server) {
     server.localPeers = toArray(peers)
   }, 1000)
 
-}
-
-if(!module.parent) {
-  var emitter = new (require('events').EventEmitter)
-  emitter.config = {port: 2000}
-  emitter.feed = {id: 'noauroabker.test'}
-  module.exports(emitter)
 }
