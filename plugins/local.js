@@ -2,7 +2,7 @@
 
 var broadcast = require('broadcast-stream')
 
-module.exports = function (server) {
+module.exports = function local (server) {
 
   var local = broadcast(server.config.port)
 

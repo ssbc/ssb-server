@@ -18,6 +18,9 @@ var manifest = require('./lib/manifest')
 var peerApi  = require('./lib/rpc')
 var clone    = require('./lib/util').clone
 
+var sessCounter = 0
+
+
 function loadSSB (config) {
   var dbPath  = path.join(config.path, 'db')
   //load/create  secure scuttlebutt.
@@ -66,7 +69,7 @@ exports = module.exports = function (config, ssb, feed) {
   var server = net.createServer(function (socket) {
     // setup and auth session
     var rpc = attachSession(socket, 'peer')
-    server.emit('log:info', '[MAIN] RPC#'+rpc._sessid+' New incoming RPC connection') // :TODO: would be nice to log remoteAddress
+    server.emit('log:info', ['sbot',  rpc._sessid, 'incoming-connection']) // :TODO: would be nice to log remoteAddress
   })
 
   if(config.port) server.listen(config.port)
@@ -109,7 +112,6 @@ exports = module.exports = function (config, ssb, feed) {
   var sessions = {}
 
   // sets up RPC session on a stream
-  var sessCounter = 0
   function attachSession (stream, role, cb) {
     var rpc = peerApi(server.manifest, api)
                 .permissions({allow: ['auth']})
@@ -123,7 +125,7 @@ exports = module.exports = function (config, ssb, feed) {
     if(role) server.emit('rpc:'+role, rpc)
 
     rpc.on('remote:authorized', function (authed) {
-      console.log('remote connection', rpc.authorized, authed)
+      server.emit('log:info', ['remote', rpc._sessid, 'authed', authed])
       if(authed.type === 'client')
         rpcStream.setTTL(null) //don't abort the stream on timeout.
     })
@@ -137,6 +139,7 @@ exports = module.exports = function (config, ssb, feed) {
       if(err) {
         server.emit('rpc:unauthorized', err)
         server.emit('log:warning', ['sbot', rpc._sessid, 'unauthed', err])
+        return rpc.close(function () {})
       }
       else {
         server.emit('rpc:authorized', rpc, res)
@@ -172,15 +175,14 @@ exports = module.exports = function (config, ssb, feed) {
     return rpc
   }
 
-  // authenticates the RPC stream
-  function authSession (rpc, role, cb) {
-  }
-
   // plugin management
   // =================
 
   server.use = function (plugin) {
-    server.emit('log:info', ['sbot', null, 'use-plugin', plugin.name+'@'+plugin.version])
+    server.emit('log:info', [
+      'sbot', null, 'use-plugin',
+      plugin.name + (plugin.version ? '@'+plugin.version : '')
+    ])
     if(isFunction(plugin)) plugin(server)
     else if(isString(plugin.name)) {
       server.manifest[plugin.name] = plugin.manifest
@@ -242,7 +244,6 @@ exports.fromConfig = function (config) {
       .use(require('./plugins/logging'))
       .use(require('./plugins/replicate'))
       .use(require('./plugins/gossip'))
-      .use(require('./plugins/replicate'))
       .use(require('./plugins/local'))
       .use(require('./plugins/blobs'))
       .use(require('./plugins/invite'))
