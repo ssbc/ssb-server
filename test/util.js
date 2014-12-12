@@ -13,5 +13,5 @@ exports.createDB = function (name, config) {
     path: dir,
   }, config || {})
 
-  return SBot(config)
+  return SBot(config).use(require('../plugins/logging'))
 }

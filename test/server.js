@@ -9,6 +9,7 @@ var tape      = require('tape')
 var replicate = require('../plugins/replicate')
 var gossip    = require('../plugins/gossip')
 var friends   = require('../plugins/friends')
+var logging   = require('../plugins/logging')
 
 tape('replicate between 3 peers', function (t) {
 
@@ -58,11 +59,7 @@ tape('replicate between 3 peers', function (t) {
     function check(server, name) {
       var closed = false
       return server.on('replicate:finish', function (actual) {
-        console.log(expected)
-        console.log(actual)
-        console.log('*************')
         if(deepEqual(expected, actual) && !closed) {
-          console.log('consistent', name)
           closed = true
           done()
         }
