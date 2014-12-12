@@ -54,7 +54,6 @@ function replicate(server, rpc, cb) {
 }
 
 module.exports = function (server) {
-  server.emit('log:error', ['replicate', null, 'adding-replicate-plugin', new Error()])
   server.on('rpc:authorized', function(rpc) {
     var done = rpc.task()
     server.emit('log:info', ['replicate', rpc._sessid, 'start'])
