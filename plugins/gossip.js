@@ -13,17 +13,23 @@ function isString(s) {
 
 var DEFAULT_PORT = 2000
 
+function toObj(e) {
+  if(isString(e)) {
+    var parts = e.split(':')
+    var e = {host: parts[0], port: parts[1] || DEFAULT_PORT}
+    return e
+  }
+  return e
+}
+
 function clean (ary) {
   return ary
       .filter(Boolean)
       .filter(function (e) {
-        return 'string' !== typeof e
+        return e && 'string' !== typeof e && e.host
       })
       .map(function (e) {
-            if(isString(e)) {
-              var parts = e.split(':')
-              e = {host: parts[0], port: parts[1]}
-            }
+            e = toObj(e)
             e.port = e.port || DEFAULT_PORT
             return e
           })
@@ -40,7 +46,7 @@ function peers (server, cb) {
   //local peers added by the local discovery...
   //could have the local plugin call a method to add this,
   //but it would be the same amount of coupling either way.
-  var local = server.localPeers || []
+  var local = server.local ? server.local.get() : []
 
   //NOTE: later, we will probably want to not replicate
   //with nodes that we don't (at least) recognise (know someone who knows them)
@@ -50,7 +56,10 @@ function peers (server, cb) {
   pull(
     server.ssb.messagesByType('pub'),
     pull.map(function (e) {
-      return e.content.address
+      console.log('pub', e)
+      var o = toObj(e.content.address)
+      o.id = e.content.id || e.author
+      return o
     }),
     pull.filter(function (e) {
       return e.port !== config.port || e.host !== config.host
@@ -75,6 +84,9 @@ module.exports = function gossip (server) {
   server.on('close', function () {
     server.closed = true
   })
+
+  var connections = {}
+
   var scheduled = false
   function connect () {
     scheduled = false
@@ -83,9 +95,15 @@ module.exports = function gossip (server) {
       var nPeers = ary.length
       var p = ary[~~(Math.random()*nPeers)]
       // connect to this random peer
+      console.log(ary)
       if(p) {
+        console.log(p)
         var rpc = server.connect(p)
         rpc.on('closed', schedule)
+        rpc.on('remote:authorized', function () {
+          connections[rpc.authorized.id] = rpc
+          console.log(Object.keys(connections))
+        })
       } else schedule()
 
       function schedule() {
