@@ -38,7 +38,6 @@ function replicate(server, rpc, cb) {
     pull(
       latest(),
       pull.drain(function (upto) {
-        console.log(upto, live)
         sources.add(rpc.createHistoryStream({id: upto.id, seq: upto.sequence + 1, live: live}))
       }, function (err) {
         if(err)
