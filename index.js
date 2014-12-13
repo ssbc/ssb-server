@@ -140,7 +140,7 @@ exports = module.exports = function (config, ssb, feed) {
       if(err) {
         server.emit('rpc:unauthorized', err)
         server.emit('log:warning', ['sbot', rpc._sessid, 'unauthed', err])
-        return rpc.close(function () {})
+        return
       }
       else {
         server.emit('rpc:authorized', rpc, res)
