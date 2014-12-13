@@ -10,7 +10,8 @@ function isString(s) {
   return 'string' === s
 }
 
-function formatter(level, log) {
+function formatter(id, level) {
+  var b = id.substring(0, 4)
   return function (ary) {
     var plug = ary[0].substring(0, 4).toUpperCase()
     var id = ary[1]
@@ -24,9 +25,9 @@ function formatter(level, log) {
 
     var c = process.stdout.columns
     if((process.stdout.columns > length) && !lines)
-      console.log([level, pre, _data].join(' '))
+      console.log([level, b, pre, _data].join(' '))
     else {
-      console.log([level, pre].join(' '))
+      console.log([level, b, pre].join(' '))
       if(lines)
         console.log(indent(data))
       else if(data && data.stack)
@@ -39,7 +40,8 @@ function formatter(level, log) {
 }
 
 module.exports = function logging (server) {
-  server.on('log:info',    formatter(color.green('info')))
-  server.on('log:warning', formatter(color.yellow('warn')))
-  server.on('log:error',   formatter(color.red('err!')))
+  var id = server.feed.id
+  server.on('log:info',    formatter(id, color.green('info')))
+  server.on('log:warning', formatter(id, color.yellow('warn')))
+  server.on('log:error',   formatter(id, color.red('err!')))
 }
