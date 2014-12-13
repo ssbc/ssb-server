@@ -17,7 +17,7 @@ function replicate(server, rpc, cb) {
           if(err) cb(err)
           var o = {}
           ary.forEach(function (e) {
-            o[e.id.toString('base64')] = e.sequence
+            o[e.id] = e.sequence
           })
           cb(null, o)
         })
@@ -40,7 +40,8 @@ function replicate(server, rpc, cb) {
       pull.drain(function (upto) {
         sources.add(rpc.createHistoryStream({id: upto.id, seq: upto.sequence + 1, live: live}))
       }, function (err) {
-        if(err) console.log(err.stack)
+        if(err)
+          server.emit('log:error', ['replication', rep._sessid, 'error', err])
         sources.cap()
       })
     )
@@ -54,7 +55,6 @@ function replicate(server, rpc, cb) {
 }
 
 module.exports = function (server) {
-  server.emit('log:error', ['replicate', null, 'adding-replicate-plugin', new Error()])
   server.on('rpc:authorized', function(rpc) {
     var done = rpc.task()
     server.emit('log:info', ['replicate', rpc._sessid, 'start'])
