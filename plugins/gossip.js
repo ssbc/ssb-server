@@ -105,8 +105,14 @@ module.exports = function gossip (server) {
   })
 
   var connections = {}
-
   var scheduled = false
+
+  function schedule() {
+    if(scheduled) return server.emit('log:info', ['gossip', null, 'already-scheduled'])
+    scheduled = true
+    setTimeout(connect, 500 + Math.random() * 1000)
+  }
+
   function connect () {
     scheduled = false
     if(server.closed) return
@@ -122,13 +128,8 @@ module.exports = function gossip (server) {
         })
       } else schedule()
 
-      function schedule() {
-        if(scheduled) return server.emit('log:info', ['gossip', null, 'already-scheduled'])
-        scheduled = true
-        setTimeout(connect, 500 + Math.random() * 1000)
-      }
     })
   }
 
-  connect()
+  schedule()
 }
