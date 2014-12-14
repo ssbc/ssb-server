@@ -2,6 +2,9 @@
 
 A bot-server for the [phoenix network](https://github.com/pfraze/phoenix). Provides an RPC server for operating it locally or remotely. Can be `require()`ed to create your own bots.
 
+[![build status](https://secure.travis-ci.org/pfraze/scuttlebot.png)](http://travis-ci.org/pfraze/scuttlebot)
+
+
 ### CLI usage
 
 ```
