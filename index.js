@@ -241,11 +241,15 @@ exports = module.exports = function (config, ssb, feed) {
 
 exports.init =
 exports.fromConfig = function (config) {
-  return module.exports(config)
+  var sbot = module.exports(config)
       .use(require('./plugins/logging'))
       .use(require('./plugins/replicate'))
       .use(require('./plugins/gossip'))
-      .use(require('./plugins/local'))
+
+  if(config.local)
+    sbot.use(require('./plugins/local'))
+
+  return sbot
       .use(require('./plugins/blobs'))
       .use(require('./plugins/invite'))
       .use(require('./plugins/friends'))
