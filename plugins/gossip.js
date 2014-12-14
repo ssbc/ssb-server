@@ -1,5 +1,22 @@
 var pull = require('pull-stream')
 
+/*
+
+Track available peers, and what keys are reachable at them.
+
+We want to make sure that we don't connect to one node
+more than once.
+
+It's easier to tell the remote connection by it's key,
+because that is sent with the message, so, on connecting
+outwards to a node, remember the address -> key,
+and when 
+
+so, when connecting to another node, check if you are already
+connected to that key.
+
+*/
+
 function all(stream, cb) {
   if (cb) return pull(stream, pull.collect(cb))
   else return function (cb) {
@@ -43,20 +60,22 @@ function peers (server, cb) {
   seeds =
     (isArray(seeds)  ? seeds : [seeds])
 
-  //local peers added by the local discovery...
-  //could have the local plugin call a method to add this,
-  //but it would be the same amount of coupling either way.
-  var local = server.local ? server.local.get() : []
+  //this may be disabled by --no-local option
+  var local = config.local
+    ? (server.local ? server.local.get() : [])
+    : []
 
   //NOTE: later, we will probably want to not replicate
   //with nodes that we don't (at least) recognise (know someone who knows them)
   //but for now, we can pretty much assume that if they are running
   //scuttlebot they are cool.
 
+  if(!config.pub)
+    return cb(null, seeds.concat(local))
+
   pull(
     server.ssb.messagesByType('pub'),
     pull.map(function (e) {
-      console.log('pub', e)
       var o = toObj(e.content.address)
       o.id = e.content.id || e.author
       return o
@@ -65,7 +84,7 @@ function peers (server, cb) {
       return e.port !== config.port || e.host !== config.host
     }),
     pull.unique(function (e) {
-      return JSON.stringify(e)
+      return e.host + ":" + e.port
     }),
     pull.collect(function (err, ary) {
       cb(null, clean((ary || []).concat(seeds).concat(local)))
@@ -95,14 +114,11 @@ module.exports = function gossip (server) {
       var nPeers = ary.length
       var p = ary[~~(Math.random()*nPeers)]
       // connect to this random peer
-      console.log(ary)
       if(p) {
-        console.log(p)
         var rpc = server.connect(p)
         rpc.on('closed', schedule)
         rpc.on('remote:authorized', function () {
-          connections[rpc.authorized.id] = rpc
-          console.log(Object.keys(connections))
+          connections[rpc.authorized.id] = p
         })
       } else schedule()
 
