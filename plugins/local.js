@@ -25,6 +25,7 @@ module.exports = {
       if(buf.loopback) return
 
       var data = JSON.parse(buf.toString())
+      console.log(data)
       data.host = buf.address
       var ts = Date.now()
       data.ts = ts
@@ -51,9 +52,10 @@ module.exports = {
 
     return {
       get: function (cb, cb2) {
-        if(isFunction(cb)) cb(null, peers)
-        else if(isFunction(cb2)) cb2(null, peers)
-        else return toArray(peers)
+        var r = toArray(peers)
+        if(isFunction(cb)) cb(null, r)
+        else if(isFunction(cb2)) cb2(null, r)
+        else return r
       }
     }
 
