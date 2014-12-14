@@ -53,7 +53,7 @@ module.exports = {
       get: function (cb, cb2) {
         if(isFunction(cb)) cb(null, peers)
         else if(isFunction(cb2)) cb2(null, peers)
-        else return peers
+        else return toArray(peers)
       }
     }
 
