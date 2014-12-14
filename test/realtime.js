@@ -15,19 +15,20 @@ tape('replicate between 3 peers', function (t) {
 
   var u = require('./util')
 
-  var alicePort = ~~(1024 + Math.random()*40000)
-  var bobPort = ~~(1024 + Math.random()*40000)
-
   var aliceDb = u.createDB('test-alice', {
-      port: alicePort, host: 'localhost', timeout: 2000,
-      seeds: [{port: bobPort, host: 'localhost'}]
+      port: 45451, host: 'localhost', timeout: 2000,
+      seeds: [{port: 45452, host: 'localhost'}]
     }).use(gossip).use(friends).use(replicate)
 
   var alice = aliceDb.feed
 
   var bobDb = u.createDB('test-bob', {
-      port: bobPort, host: 'localhost', timeout: 2000,
+      port: 45452, host: 'localhost', timeout: 2000,
     }).use(friends).use(replicate)
+
+  bobDb.on('rpc:authorized', function (_, req) {
+    console.log('AUTH', req)
+  })
 
   var bob = bobDb.feed
 
@@ -35,10 +36,6 @@ tape('replicate between 3 peers', function (t) {
     alice.add({type: 'follow', feed: bob.id, rel: 'follows'}),
     bob.add({type: 'follow', feed: alice.id, rel: 'follows'})
   ])(function () {
-
-    bobDb.on('rpc:authorized', function (_, req) {
-      console.log('AUTH', req)
-    })
 
     var ary = []
     pull(
@@ -52,21 +49,29 @@ tape('replicate between 3 peers', function (t) {
     var l = 11
     var int = setInterval(function () {
       if(!--l) {
-        bobDb.close()
-        aliceDb.close()
         clearInterval(int)
+        var _ary = []
+          pull(
+            bobDb.ssb.createHistoryStream({id: alice.id, sequence: 0, live: true}),
+            pull.through(function (msg) {
+              _ary.push(msg)
+              if(_ary.length < 12) return
 
-        pull(
-          bobDb.ssb.createHistoryStream({id: alice.id, sequence: 0}),
-          pull.collect(function (err, _ary) {
-            if(err) throw err
-            t.equal(_ary.length, 12)
-            t.deepEqual(ary,_ary)
-            t.end()
-          })
-        )
+              bobDb.close()
+              aliceDb.close()
+
+              t.equal(_ary.length, 12)
+              t.deepEqual(ary,_ary)
+              t.end()
+            }),
+            pull.drain()
+          )
       }
-      alice.add({type: 'test', value: new Date()}, function (){})
+      else
+        alice.add({type: 'test', value: new Date()},
+          function (err, msg, hash){
+            console.log('added', hash, msg.sequence)
+          })
     }, 200)
 
   })
