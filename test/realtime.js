@@ -56,6 +56,8 @@ tape('replicate between 3 peers', function (t) {
         pull(
           bobDb.ssb.createHistoryStream({id: alice.id, sequence: 0}),
           pull.collect(function (err, _ary) {
+            if(err) throw err
+            t.equal(_ary.length, 12)
             t.deepEqual(ary,_ary)
             t.end()
           })
