@@ -110,7 +110,7 @@ module.exports = function gossip (server) {
   function schedule() {
     if(scheduled) return server.emit('log:info', ['gossip', null, 'already-scheduled'])
     scheduled = true
-    setTimeout(connect, 500 + Math.random() * 1000)
+    setTimeout(connect, 500 + ~~(Math.random() * 1000))
   }
 
   function connect () {
