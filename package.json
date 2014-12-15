@@ -42,7 +42,7 @@
     "level-sublevel": "~6.3.15",
     "osenv": "~0.1.0"
   },
-  "bin": "./client.js",
+  "bin": "./bin.js",
   "scripts": {
     "test": "set -e; for t in test/*.js; do node $t; done"
   },
