@@ -55,7 +55,10 @@ function replicate(server, rpc, cb) {
 }
 
 module.exports = function (server) {
-  server.on('rpc:authorized', function(rpc) {
+  server.on('rpc:authorized', function(rpc, res) {
+    //do not replicate if we are authorize as server.
+    if(res.type === 'server') return
+
     var done = rpc.task()
     server.emit('log:info', ['replicate', rpc._sessid, 'start'])
     server.emit('replicate:start', rpc)
