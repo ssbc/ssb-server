@@ -70,17 +70,6 @@ if(cmd === 'server') {
   return
 }
 
-var manifest
-try {
-  manifest = JSON.parse(fs.readFileSync(manifestFile))
-} catch (err) {
-  throw explain(err,
-    'no manifest file'
-    + '- should be generated first time server is run'
-  )
-}
-//var rpc = peerRpc(manifest, {options: opts}).permissions({allow: []})
-
 if(arg && Object.keys(opts).length === 0)
   opts = arg
 
@@ -99,11 +88,21 @@ function get(obj, path) {
 if(!cmd) return usage()
 
 cmd = cmd.split('.')
+var manifest
+try {
+  manifest = JSON.parse(fs.readFileSync(manifestFile))
+} catch (err) {
+  throw explain(err,
+    'no manifest file'
+    + '- should be generated first time server is run'
+  )
+}
+
 var type = get(manifest, cmd)
 
 if(!type) return usage()
 
-var rpc = sbot.createClient(config, null, function (err) {
+var rpc = sbot.createClient(config, manifest, function (err) {
     if(err) throw err
   })
 
