@@ -255,30 +255,6 @@ exports.fromConfig = function (config) {
       .use(require('./plugins/friends'))
 }
 
-// createClient  to a peer as a client
-// - `address.host`: string, hostname of the target
-// - `address.port`: number, port of the target
-exports.createClient = function (address, manf, cb) {
-
-  manf = manf || manifest
-
-  if(isFunction(manf) || !manf)
-    cb = manf, manf = manifest
-
-  var addr = {port: address.port, host: address.host || 'localhost'}
-
-  var stream = net.connect(addr, cb)
-  var rpc = peerApi.clientApi(manf, {auth: 'async'}, {
-    auth: function (req, cb) {
-      cb(null, {type: 'server'})
-    }
-  })
-              .permissions({allow: ['auth'], deny: null})
-  rpc.client = true
-  pull(stream, rpc.createStream(), stream)
-  return rpc
-}
-
 if(!module.parent) {
   //start a server
   exports.init(require('./config'))
