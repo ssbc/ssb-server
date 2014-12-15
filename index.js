@@ -262,11 +262,19 @@ exports.createClient = function (address, manf, cb) {
 
   manf = manf || manifest
 
-  if(isFunction(manf))
+  if(isFunction(manf) || !manf)
     cb = manf, manf = manifest
 
-  var stream = net.connect(address, cb)
-  var rpc = peerApi(manf, {})
+  var addr = {port: address.port, host: address.host || 'localhost'}
+
+  var stream = net.connect(addr, cb)
+  var rpc = peerApi.clientApi(manf, {auth: 'async'}, {
+    auth: function (req, cb) {
+      cb(null, {type: 'server'})
+    }
+  })
+              .permissions({allow: ['auth'], deny: null})
+  rpc.client = true
   pull(stream, rpc.createStream(), stream)
   return rpc
 }

@@ -9,10 +9,10 @@ var explain   = require('explain-error')
 var ssbKeys   = require('ssb-keys')
 var stringify = require('pull-stringify')
 
-var api     = require('./lib/api')
+//var api     = require('./lib/api')
 var config  = require('./config')
-var peerRpc = require('./lib/rpc')
-
+//var peerRpc = require('./lib/rpc')
+var sbot    = require('./')
 
 var keys = ssbKeys.loadOrCreateSync(path.join(config.path, 'secret'))
 
@@ -60,7 +60,7 @@ var manifestFile = path.join(config.path, 'manifest.json')
 cmd = aliases[cmd] || cmd
 
 if(cmd === 'server') {
-  var server = require('./').init(config)
+  var server = sbot.init(config)
 
   fs.writeFileSync(
     manifestFile,
@@ -79,7 +79,7 @@ try {
     + '- should be generated first time server is run'
   )
 }
-var rpc = peerRpc(manifest, {options: opts}).permissions({allow: []})
+//var rpc = peerRpc(manifest, {options: opts}).permissions({allow: []})
 
 if(arg && Object.keys(opts).length === 0)
   opts = arg
@@ -96,20 +96,16 @@ function get(obj, path) {
   return obj
 }
 
+if(!cmd) return usage()
+
 cmd = cmd.split('.')
 var type = get(manifest, cmd)
 
 if(!type) return usage()
 
-var stream = ws.connect({port: config.port, host: 'localhost'})
-
-pull(
-  stream,
-  rpc.createStream(function (err) {
+var rpc = sbot.createClient(config, null, function (err) {
     if(err) throw err
-  }),
-  stream
-)
+  })
 
 var isStdin = ~process.argv.indexOf('.') || ~process.argv.indexOf('--')
 
