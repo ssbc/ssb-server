@@ -10,17 +10,8 @@ function isFunction (f) {
 exports.name = 'friends'
 exports.version = '1.0.0'
 exports.manifest = {
-  all  : 'async',
-  hops : 'async'
-}
-
-function maybeAsync (fun) {
-  return function (opts, cb) {
-    if(!isFunction(cb))
-      return fun.call(this, opts)
-    else
-      cb(null, fun.call(this, opts))
-  }
+  all  : 'sync',
+  hops : 'sync'
 }
 
 exports.init = function (sbot) {
@@ -44,10 +35,10 @@ exports.init = function (sbot) {
   )
 
   return {
-    all: maybeAsync(function () {
+    all: function () {
       return graph.toJSON()
-    }),
-    hops: maybeAsync(function (start) {
+    },
+    hops: function (start) {
       if(!start) start = sbot.feed.id
       var s = {}
       s[start] = 0
@@ -70,6 +61,6 @@ exports.init = function (sbot) {
       }
 
       return s
-    })
+    }
   }
 }

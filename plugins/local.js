@@ -9,7 +9,7 @@ module.exports = {
   name: 'local',
   version: '1.0.0',
   manifest: {
-    get: 'async'
+    get: 'sync'
   },
   init: function (server) {
 
@@ -51,11 +51,8 @@ module.exports = {
     }, 1000)
 
     return {
-      get: function (cb, cb2) {
-        var r = toArray(peers)
-        if(isFunction(cb)) cb(null, r)
-        else if(isFunction(cb2)) cb2(null, r)
-        else return r
+      get: function () {
+        return toArray(peers)
       }
     }
 

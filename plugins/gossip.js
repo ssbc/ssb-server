@@ -99,37 +99,44 @@ function isObject (o) {
   return o && 'object' === typeof o
 }
 
-module.exports = function gossip (server) {
-  server.on('close', function () {
-    server.closed = true
-  })
-
-  var connections = {}
-  var scheduled = false
-
-  function schedule() {
-    if(scheduled) return server.emit('log:info', ['gossip', null, 'already-scheduled'])
-    scheduled = true
-    setTimeout(connect, 500 + ~~(Math.random() * 1000))
-  }
-
-  function connect () {
-    scheduled = false
-    if(server.closed) return
-    peers(server, function (err, ary) {
-      var nPeers = ary.length
-      var p = ary[~~(Math.random()*nPeers)]
-      // connect to this random peer
-      if(p) {
-        var rpc = server.connect(p)
-        rpc.on('closed', schedule)
-        rpc.on('remote:authorized', function () {
-          connections[rpc.authorized.id] = p
-        })
-      } else schedule()
-
+module.exports = {
+  name: 'gossip',
+  version: '1.0.0',
+  manifest: {
+    connections: 'async',
+  },
+  init: function (server) {
+    server.on('close', function () {
+      server.closed = true
     })
-  }
 
-  schedule()
+    var connections = {}
+    var scheduled = false
+
+    function schedule() {
+      if(scheduled) return server.emit('log:info', ['gossip', null, 'already-scheduled'])
+      scheduled = true
+      setTimeout(connect, 500 + ~~(Math.random() * 1000))
+    }
+
+    function connect () {
+      scheduled = false
+      if(server.closed) return
+      peers(server, function (err, ary) {
+        var nPeers = ary.length
+        var p = ary[~~(Math.random()*nPeers)]
+        // connect to this random peer
+        if(p) {
+          var rpc = server.connect(p)
+          rpc.on('closed', schedule)
+          rpc.on('remote:authorized', function () {
+            connections[rpc.authorized.id] = p
+          })
+        } else schedule()
+
+      })
+    }
+
+    schedule()
+  }
 }
