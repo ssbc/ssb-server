@@ -13,7 +13,7 @@
     "minimist": "~1.1.0",
     "mkdirp": "~0.5.0",
     "multicb": "^1.0.0",
-    "muxrpc": "~3.2.0",
+    "muxrpc": "~3.3.0",
     "nomnom": "1.8.0",
     "pull-cat": "~1.1.5",
     "pull-many": "~1.0.5",
