@@ -1,4 +1,5 @@
 var pull = require('pull-stream')
+var toAddress = require('../lib/util').toAddress
 
 /*
 
@@ -30,26 +31,13 @@ function isString(s) {
 
 var DEFAULT_PORT = 2000
 
-function toObj(e) {
-  if(isString(e)) {
-    var parts = e.split(':')
-    var e = {host: parts[0], port: parts[1] || DEFAULT_PORT}
-    return e
-  }
-  return e
-}
-
 function clean (ary) {
   return ary
       .filter(Boolean)
       .filter(function (e) {
         return e && 'string' !== typeof e && e.host
       })
-      .map(function (e) {
-            e = toObj(e)
-            e.port = e.port || DEFAULT_PORT
-            return e
-          })
+      .map(toAddress)
 
 }
 

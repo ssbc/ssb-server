@@ -1,8 +1,9 @@
-var net      = require('pull-ws-server')
-var Api      = require('./lib/api')
-var manifest = require('./lib/manifest')
-var peerApi  = require('./lib/rpc')
-var pull     = require('pull-stream')
+var net       = require('pull-ws-server')
+var Api       = require('./lib/api')
+var manifest  = require('./lib/manifest')
+var peerApi   = require('./lib/rpc')
+var pull      = require('pull-stream')
+var toAddress = require('./lib/util').toAddress
 
 // createClient  to a peer as a client
 // - `address.host`: string, hostname of the target
@@ -17,9 +18,7 @@ module.exports = function (address, manf, cb) {
   if(isFunction(manf) || !manf)
     cb = manf, manf = manifest
 
-  var addr = {port: address.port, host: address.host || 'localhost'}
-
-  var stream = net.connect(addr, cb)
+  var stream = net.connect(toAddress(address), cb)
   var rpc = peerApi.clientApi(manf, {auth: 'async'}, {
     auth: function (req, cb) {
       cb(null, {type: 'server'})

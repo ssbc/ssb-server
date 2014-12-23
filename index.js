@@ -13,10 +13,12 @@ var inactive = require('pull-inactivity')
 
 var DEFAULT_PORT = 2000
 
-var Api      = require('./lib/api')
-var manifest = require('./lib/manifest')
-var peerApi  = require('./lib/rpc')
-var clone    = require('./lib/util').clone
+var Api       = require('./lib/api')
+var manifest  = require('./lib/manifest')
+var peerApi   = require('./lib/rpc')
+var u         = require('./lib/util')
+var clone     = u.clone
+var toAddress = u.toAddress
 
 //I made this global so that when you run tests with multiple
 //servers each connection gets it's own id..
@@ -103,7 +105,7 @@ exports = module.exports = function (config, ssb, feed) {
   // ===============
 
   server.connect = function (address, cb) {
-    var rpc = attachSession(net.connect(address), 'client', cb)
+    var rpc = attachSession(net.connect(toAddress(address)), 'client', cb)
     server.emit('log:info', ['sbot', rpc._sessid, 'connect', address])
     return rpc
   }
