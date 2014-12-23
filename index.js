@@ -255,6 +255,8 @@ exports.fromConfig = function (config) {
       .use(require('./plugins/friends'))
 }
 
+exports.createClient = require('./client')
+
 if(!module.parent) {
   //start a server
   exports.init(require('./config'))
