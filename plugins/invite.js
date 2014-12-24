@@ -2,6 +2,7 @@
 var crypto = require('crypto')
 var ssbKeys = require('ssb-keys')
 var toAddress = require('../lib/util').toAddress
+var cont = require('cont')
 //okay this plugin adds a method
 //invite(seal({code, public})
 
@@ -97,12 +98,25 @@ module.exports = {
             feed: server.feed.id,
             ts: Date.now()
           })
-          console.log(invite)
-          
+
           rpc.invite.use(invite, function (err, res) {
-            console.log('added')
-            done()
-            cb(err, res)
+            if(err) {
+              done(); cb(err)
+              return
+            }
+            cont.para([
+              server.feed.add({
+                type: 'follow',
+                feed: rpc.authorized.id, rel: 'follows',
+              }),
+              server.feed.add({
+                type: 'pub',
+                address: req.address
+              })
+            ])(function (err, results) {
+              done()
+              cb(err, results)
+            })
           })
         })
       }
