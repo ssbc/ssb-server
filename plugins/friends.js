@@ -18,8 +18,17 @@ exports.init = function (sbot) {
 
   var graph = new Graphmitter()
 
+  //handle the various legacy link types!
   pull(
     sbot.ssb.messagesByType({type: 'follow', live: true}),
+    pull.drain(function (msg) {
+      var feed = msg.content.feed || msg.content.$feed
+      if(feed) graph.edge(msg.author, feed, true)
+    })
+  )
+
+  pull(
+    sbot.ssb.messagesByType({type: 'follows', live: true}),
     pull.drain(function (msg) {
       var feed = msg.content.feed || msg.content.$feed
       if(feed) graph.edge(msg.author, feed, true)
