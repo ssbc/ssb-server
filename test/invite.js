@@ -1,17 +1,17 @@
-
 var sbot = require('../')
 var ssbKeys = require('ssb-keys')
 var tape = require('tape')
 var explain = require('explain-error')
 var pull = require('pull-stream')
 
-tape('test api', function (t) {
+tape('test invite api', function (t) {
 
   var u = require('./util')
 
   var sbotA = u.createDB('test-invite-alice', {
     port: 45451, host: '127.0.0.1'
   })
+
   var alice = sbotA.feed
   var bob = sbotA.ssb.createFeed() //bob
 
@@ -78,12 +78,46 @@ tape('test api', function (t) {
 
               })
             )
-
           })
-
       })
     })
   })
 })
 
+tape('test invite.addMe api', function (t) {
+
+  var u = require('./util')
+
+  var sbotA = u.createDB('test-invite-alice2', {
+    port: 45451, host: '127.0.0.1'
+  })
+
+  var sbotB = u.createDB('test-invite-bob2', {
+    port: 45452, host: '127.0.0.1'
+  })
+
+  var alice = sbotA.feed
+  var bob = sbotA.ssb.createFeed() //bob
+
+  sbotA
+    .use(require('../plugins/invite'))
+    .use(require('../plugins/friends'))
+  sbotB.use(require('../plugins/invite'))
+
+  //request a secret that with particular permissions.
+
+  sbotA.invite.create(1, function (err, invite) {
+    console.log('INVITE', invite)
+    invite.feed = sbotB.feed.id
+    sbotB.invite.addMe(invite, function (err) {
+      if(err) throw err
+      var hops = sbotA.friends.hops(sbotA.feed.id)
+      console.log(hops)
+      t.equal(hops[sbotB.feed.id], 1)
+      sbotA.close()
+      sbotB.close()
+      t.end()
+    })
+  })
+})
 
