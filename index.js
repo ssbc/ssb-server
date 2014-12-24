@@ -141,11 +141,13 @@ exports = module.exports = function (config, ssb, feed) {
     }), function (err, res) {
       if(err) {
         server.emit('rpc:unauthorized', err)
+        rpc._emit('rpc:unauthorized', err)
         server.emit('log:warning', ['sbot', rpc._sessid, 'unauthed', err])
         return
       }
       else {
         server.emit('rpc:authorized', rpc, res)
+        rpc._emit('rpc:authorized', rpc, res)
         server.emit('log:info', ['sbot', rpc._sessid, 'authed', res])
       }
 
