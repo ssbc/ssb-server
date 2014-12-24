@@ -1,6 +1,7 @@
 
 var crypto = require('crypto')
 var ssbKeys = require('ssb-keys')
+var toAddress = require('../lib/util').toAddress
 //okay this plugin adds a method
 //invite(seal({code, public})
 
@@ -14,7 +15,8 @@ module.exports = {
   version: '1.0.0',
   manifest: {
     create: 'async',
-    use: 'async'
+    use: 'async',
+    addMe: 'async'
   },
   permissions: {
     anonymous: {allow: ['use']}
@@ -36,9 +38,11 @@ module.exports = {
         if (addr.indexOf('localhost') !== -1)
           return cb(new Error('Server has no `hostname` configured, unable to create an invite token'))
 
+        var owner = this.authorized || server.feed
+
         cb(null, {
           address: addr,
-          id: this.authorized.id,
+          id: owner.id,
           secret: secret
         })
       },
@@ -49,6 +53,7 @@ module.exports = {
 
         var id = rpc.authorized.id
         var invite = codes[req.keyId]
+
         // although we already know the current feed
         // it's included so that request cannot be replayed.
         if(!req.feed)
@@ -67,12 +72,39 @@ module.exports = {
           return cb(new Error('invalid invite request'))
 
         invite.used ++
-        server.emit('log:info', '[INVI] Use() called by', id, ' (RPC#'+rpc._sessid+')')
+//        server.emit('log:info', '[INVI] Use() called by', id, ' (RPC#'+rpc._sessid+')')
 
         server.feed.add({
-          type: 'auto-follow',
-          feed: id, rel: 'follows'
+          type: 'follow',
+          feed: id, rel: 'follows',
+          auto: true
         }, cb)
+      },
+      addMe: function (req, cb) {
+        var rpc = server.connect(toAddress(req.address))
+        rpc.once('rpc:unauthorized', function (err) {
+          rpc.close(); cb(err)
+        }),
+        rpc.once('rpc:authorized', function (res) {
+          var done = rpc.task()
+          var secret = req.secret || req.invite
+          delete req.invite
+          delete req.secret
+          req.feed = req.feed || server.feed.id
+
+          var invite = ssbKeys.signObjHmac(secret, {
+            keyId: ssbKeys.hash(secret, 'base64'),
+            feed: server.feed.id,
+            ts: Date.now()
+          })
+          console.log(invite)
+          
+          rpc.invite.use(invite, function (err, res) {
+            console.log('added')
+            done()
+            cb(err, res)
+          })
+        })
       }
     }
   }
