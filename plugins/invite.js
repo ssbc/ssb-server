@@ -25,7 +25,7 @@ module.exports = {
     var codes = {}
     return {
       create: function (n, cb) {
-        if(isFunction(n))
+        if(isFunction(n) || isNaN(n))
           return cb(new Error('must pass a number to createInvite'))
 
         var secret = crypto.randomBytes(32).toString('base64')
