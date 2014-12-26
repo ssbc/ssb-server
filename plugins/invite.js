@@ -3,6 +3,7 @@ var crypto = require('crypto')
 var ssbKeys = require('ssb-keys')
 var toAddress = require('../lib/util').toAddress
 var cont = require('cont')
+var explain = require('explain-error')
 //okay this plugin adds a method
 //invite(seal({code, public})
 
@@ -26,8 +27,9 @@ module.exports = {
     var codes = {}
     return {
       create: function (n, cb) {
-        if(isFunction(n) || isNaN(n))
-          return cb(new Error('must pass a number to createInvite'))
+        console.log(n)
+        if(isFunction(n) || n == null || isNaN(n))
+          return cb(new Error('invite.create must get number of uses.'))
 
         var secret = crypto.randomBytes(32).toString('base64')
         var keyId = ssbKeys.hash(secret, 'base64')
@@ -101,7 +103,7 @@ module.exports = {
 
           rpc.invite.use(invite, function (err, res) {
             if(err) {
-              done(); cb(err)
+              done(); cb(explain(err, 'invite not accepted'))
               return
             }
             cont.para([
