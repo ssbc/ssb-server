@@ -4,12 +4,17 @@ var ssbKeys = require('ssb-keys')
 var toAddress = require('../lib/util').toAddress
 var cont = require('cont')
 var explain = require('explain-error')
+var ip = require('ip')
 //okay this plugin adds a method
 //invite(seal({code, public})
 
 
 function isFunction (f) {
   return 'function' === typeof f
+}
+
+function isString (s) {
+  return 'string' === typeof s
 }
 
 module.exports = {
@@ -27,7 +32,6 @@ module.exports = {
     var codes = {}
     return {
       create: function (n, cb) {
-        console.log(n)
         if(isFunction(n) || n == null || isNaN(n))
           return cb(new Error('invite.create must get number of uses.'))
 
@@ -38,16 +42,16 @@ module.exports = {
         }
 
         var addr = server.getAddress()
-        if (addr.indexOf('localhost') !== -1)
-          return cb(new Error('Server has no `hostname` configured, unable to create an invite token'))
+        var host = addr.split(':')[0]
+        if(!server.config.allowPrivate && (
+          ip.isPrivate(host) || 'localhost' === host)
+        )
+          return cb(new Error('Server has no public ip address,'
+                            + 'cannot create useable invitation'))
 
-        var owner = this.authorized || server.feed
+        var owner = server.feed
 
-        cb(null, {
-          address: addr,
-          id: owner.id,
-          secret: secret
-        })
+        cb(null, [addr, owner.id, secret].join(','))
       },
       use: function (req, cb) {
         var rpc = this
@@ -75,7 +79,7 @@ module.exports = {
           return cb(new Error('invalid invite request'))
 
         invite.used ++
-//        server.emit('log:info', '[INVI] Use() called by', id, ' (RPC#'+rpc._sessid+')')
+        server.emit('log:info', ['invite', rpc._sessid, 'use', req])
 
         server.feed.add({
           type: 'follow',
@@ -84,12 +88,37 @@ module.exports = {
         }, cb)
       },
       addMe: function (req, cb) {
+        if(isString(req)) {
+          req = req.split(',')
+          req = {
+            address: req[0],
+            id: req[1],
+            invite: req[2]
+          }
+        }
         var rpc = server.connect(toAddress(req.address))
+
         rpc.once('rpc:unauthorized', function (err) {
           rpc.close(); cb(err)
-        }),
+        })
+
+        var remote, auth, done
+
+        rpc.once('remote:authorized', function (res) {
+          remote = true
+          if(remote && done) next()
+        })
+
         rpc.once('rpc:authorized', function (res) {
-          var done = rpc.task()
+          auth = true; done = rpc.task()
+          if(remote && done) next()
+        })
+
+        function next () {
+          if(rpc.authorized.id !== req.id) {
+            rpc.close()
+            return cb(new Error('pub server did not have correct public key'))
+          }
           var secret = req.secret || req.invite
           delete req.invite
           delete req.secret
@@ -120,7 +149,7 @@ module.exports = {
               cb(err, results)
             })
           })
-        })
+        }
       }
     }
   }
