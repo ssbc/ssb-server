@@ -34,7 +34,8 @@ You'll see a similar output if you use this command.
 (see also [running your own pub server](#running-your-own-pub-server))
 
 ```
-> scuttlebot invite.addMe --address 176.58.117.63 --invite lQxwo558zeOct3YvK+GMvACLtPQw2uAjsBTOVmQl2Dw=
+> scuttlebot invite.addMe "176.58.117.63,TNn7v0MsAs8OpQnyRwtsMeROVWGlKnS/ItX966PAWjI=.blake2s,AKLwYVD1wLQj9ynbhuM3YfLCZMPDG5y+NJr//CzfqNM="
+
 [
   {
     "previous": "M9s8ow8TEkVrzrVfdOHs266ABOL58d50TYEduBMYLfM=.blake2s",
@@ -89,12 +90,12 @@ and help support the network.
 # now in another terminal, create an invitation:
 
 > scuttlebot invite.create 100
-{
-  "address": "176.58.117.63",
-  "id": "TNn7v0MsAs8OpQnyRwtsMeROVWGlKnS/ItX966PAWjI=.blake2s",
-  "secret": "15zcLza0aQhBg5kf9+IzcOlzJ88mlDnXlx+5W3BJec4="
-}
+"176.58.117.63,TNn7v0MsAs8OpQnyRwtsMeROVWGlKnS/ItX966PAWjI=.blake2s,AKLwYVD1wLQj9ynbhuM3YfLCZMPDG5y+NJr//CzfqNM="
 ```
+
+This invite token can be passed to the `invite.addMe` command to
+instruct my server at 176.58.117.63 to follow you.
+
 
 ### CLI usage
 
