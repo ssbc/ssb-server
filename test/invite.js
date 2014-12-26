@@ -9,7 +9,8 @@ tape('test invite api', function (t) {
   var u = require('./util')
 
   var sbotA = u.createDB('test-invite-alice', {
-    port: 45451, host: '127.0.0.1'
+    port: 45451, host: '127.0.0.1',
+    allowPrivate: true
   })
 
   var alice = sbotA.feed
@@ -45,8 +46,10 @@ tape('test invite api', function (t) {
         }), function (err, authed) {
           if(err) throw explain(err, 'bob cannot auth')
 
-          var hmacd = ssbKeys.signObjHmac(invite.secret, {
-              keyId: ssbKeys.hash(invite.secret, 'base64'),
+          var secret = invite.split(',')[2]
+
+          var hmacd = ssbKeys.signObjHmac(secret, {
+              keyId: ssbKeys.hash(secret, 'base64'),
               //request must contain your own id,
               //which prevents this request from being replayed.
               //because the server checks this the authed user.
@@ -89,7 +92,8 @@ tape('test invite.addMe api', function (t) {
   var u = require('./util')
 
   var sbotA = u.createDB('test-invite-alice2', {
-    port: 45451, host: '127.0.0.1'
+    port: 45451, host: '127.0.0.1',
+    allowPrivate: true
   })
 
   var sbotB = u.createDB('test-invite-bob2', {
@@ -102,13 +106,15 @@ tape('test invite.addMe api', function (t) {
   sbotA
     .use(require('../plugins/invite'))
     .use(require('../plugins/friends'))
+
   sbotB.use(require('../plugins/invite'))
 
   //request a secret that with particular permissions.
 
   sbotA.invite.create(1, function (err, invite) {
+    if(err) throw err
     console.log('INVITE', invite)
-    invite.feed = sbotB.feed.id
+//    invite.feed = sbotB.feed.id
     sbotB.invite.addMe(invite, function (err) {
       if(err) throw err
       var hops = sbotA.friends.hops(sbotA.feed.id)
