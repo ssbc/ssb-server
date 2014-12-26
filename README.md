@@ -31,7 +31,7 @@ many other commands, but first, join the network.
 
 This sends a request to my pub server and asks it to follow you.
 You'll see a similar output if you use this command.
-(see also "create a pub server")
+(see also [running your own pub server](#running-your-own-pub-server))
 
 ```
 > scuttlebot invite.addMe --address 176.58.117.63 --invite lQxwo558zeOct3YvK+GMvACLtPQw2uAjsBTOVmQl2Dw=
@@ -62,13 +62,11 @@ You'll see a similar output if you use this command.
     "signature": "tbGFP/OSLrOxCjXJqjoGNzkpUmFXI4b4pf5t53REEBopDA6XG8oPphC1r3vYKhCvJuLERB8EhvwOs2GNjaOKUA==.blake2s.k256"
   }
 ]
-
 ```
 
 This has connected to my pub server and used a temporary invite token
 to tell it to follow you. Now my server will replicate your data for you.
 If you create your own pub server you can give out your own invite codes.
-
 
 ### running your own pub server.
 
@@ -119,8 +117,8 @@ scuttlebot whoami
 scuttlebot add --type follow --feed <id> --rel follows
 
 # add a pub server (this is a server you'll connect to replicate with)
-
-scuttlebot add --type pub --address.host <domain> --address.port <port>
+# (if port is the default, :2000 then that can be leftoff)
+scuttlebot add --type pub --address <domain:port>
 
 ## reading data
 
