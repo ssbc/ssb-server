@@ -1,15 +1,16 @@
-var fs       = require('fs')
-var net      = require('pull-ws-server')
-var url      = require('url')
-var pull     = require('pull-stream')
-var path     = require('path')
-var merge    = require('map-merge')
-var create   = require('secure-scuttlebutt/create')
-var mkdirp   = require('mkdirp')
-var crypto   = require('crypto')
-var ssbKeys  = require('ssb-keys')
-var multicb  = require('multicb')
-var inactive = require('pull-inactivity')
+var fs         = require('fs')
+var net        = require('pull-ws-server')
+var url        = require('url')
+var pull       = require('pull-stream')
+var path       = require('path')
+var merge      = require('map-merge')
+var create     = require('secure-scuttlebutt/create')
+var mkdirp     = require('mkdirp')
+var crypto     = require('crypto')
+var ssbKeys    = require('ssb-keys')
+var multicb    = require('multicb')
+var inactive   = require('pull-inactivity')
+var nonPrivate = require('non-private-ip')
 
 var DEFAULT_PORT = 2000
 
@@ -75,7 +76,9 @@ exports = module.exports = function (config, ssb, feed) {
     server.emit('log:info', ['sbot',  rpc._sessid, 'incoming-connection']) // :TODO: would be nice to log remoteAddress
   })
 
-  if(config.port) server.listen(config.port)
+  if(config.port) server.listen(config.port, function () {
+      server.emit('log:info', ['sbot', null, 'listening', server.getAddress()])
+  })
 
   server.ssb = ssb
   server.feed = feed
@@ -93,7 +96,7 @@ exports = module.exports = function (config, ssb, feed) {
   }
 
   server.getAddress = function() {
-    var address = server.config.hostname || server.config.host || 'localhost'
+    var address = server.config.hostname || server.config.host || nonPrivate.private() || 'localhost'
     if (server.config.port != DEFAULT_PORT)
       address += ':' + server.config.port
     return address
