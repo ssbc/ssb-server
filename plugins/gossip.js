@@ -64,7 +64,7 @@ function peers (server, cb) {
   pull(
     server.ssb.messagesByType('pub'),
     pull.map(function (e) {
-      var o = toObj(e.content.address)
+      var o = toAddress(e.content.address)
       o.id = e.content.id || e.author
       return o
     }),
