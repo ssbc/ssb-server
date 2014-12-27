@@ -16,6 +16,6 @@ module.exports = require('rc')('ssb', {
     hops: 3
     //friend feeds are replicated until either the dunbar limit
     //or the hop limit is reached.
-  }
+  },
   path: path.join(process.env.HOME, '.ssb'),
 })
