@@ -96,6 +96,7 @@ exports = module.exports = function (config, ssb, feed) {
     server.emit('rpc:' + (incoming ? 'incoming' : 'outgoing'), rpc)
 
     rpc.on('remote:authorized', function (authed) {
+      server.emit('remote:authorized', rpc, authed)
       server.emit('log:info', ['remote', rpc._sessid, 'remote-authed', authed])
       if(authed.type === 'client')
         rpcStream.setTTL(null) //don't abort the stream on timeout.
