@@ -184,14 +184,7 @@ var rstream = myfeed.createReplicationStream()
 pull(rstream, client.createReplicationStream(), rstream)
 ```
 
-Todos:
-
- - Add CLI commands for the api
- - Once SSB supports channel authentication, apply a permissions model
- - Once SSB supports link de-indexing (via "delete" messages), make `unfollow()` work (it's broken atm)
- - Add the SSB replication API when that's standardized
-
-## configuration
+## Configuration
 
 There are some configuration options for the sysadmins out there.
 All configuration is loaded via [rc](https://github.com/dominictarr/rc)
@@ -229,3 +222,4 @@ Mostly, you will want to edit `~/.ssb/config`
 }
 
 ```
+
