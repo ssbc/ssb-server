@@ -7,6 +7,10 @@ function isFunction (f) {
   return 'function' === typeof f
 }
 
+function isString (s) {
+  return 'string' === typeof s
+}
+
 exports.name = 'friends'
 exports.version = '1.0.0'
 exports.manifest = {
@@ -17,6 +21,7 @@ exports.manifest = {
 exports.init = function (sbot) {
 
   var graph = new Graphmitter()
+  var config = sbot.config
 
   //handle the various legacy link types!
   pull(
@@ -48,28 +53,18 @@ exports.init = function (sbot) {
       return graph.toJSON()
     },
     hops: function (start) {
-      if(!start) start = sbot.feed.id
-      var s = {}
-      s[start] = 0
-      var queue = [{key: start, hops: 1}]
+      var opts
+      if(isString(start))
+        opts = {start: start}
+      else
+        opts = start || {}
 
-      function hops (start, n, m) {
-        if(n > m) return
-        if(!graph.nodes[start]) return
-        graph.nodes[start]
-          .each(function (k) {
-            if(s[k] !== undefined) return
-            s[k] = n
-            queue.push({key: k, hops: n+1})
-          })
-      }
+      var conf = config.friends || {}
+      opts.start  = opts.start || sbot.feed.id
+      opts.dunbar = conf.dunbar || 150
+      opts.hops   = conf.hops   || 3
 
-      while(queue.length) {
-        var o = queue.shift()
-        hops(o.key, o.hops, 2)
-      }
-
-      return s
+      return graph.traverse(opts)
     }
   }
 }
