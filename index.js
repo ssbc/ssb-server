@@ -69,16 +69,96 @@ exports = module.exports = function (config, ssb, feed) {
   // server
   // ======
 
-  // start listening
   var server = net.createServer(function (socket) {
     // setup and auth session
-    var rpc = attachSession(socket, 'peer')
+    var rpc = attachSession(socket, true)
     server.emit('log:info', ['sbot',  rpc._sessid, 'incoming-connection']) // :TODO: would be nice to log remoteAddress
   })
 
-  if(config.port) server.listen(config.port, function () {
+  // peer connection
+  // ===============
+
+  // sets up RPC session on a stream (used by {in,out}going streams)
+
+  function attachSession (stream, incoming, cb) {
+    var rpc = peerApi(server.manifest, api)
+                .permissions({allow: ['auth']})
+    var rpcStream = rpc.createStream()
+    rpcStream = inactive(rpcStream, server.config.timeout)
+    pull(stream, rpcStream, stream)
+
+    rpc.incoming = incoming
+    rpc.outgoing = !incoming
+
+    rpc._sessid = ++sessCounter
+    rpc.task = multicb()
+    server.emit('rpc:connect', rpc)
+    server.emit('rpc:' + (incoming ? 'incoming' : 'outgoing'), rpc)
+
+    rpc.on('remote:authorized', function (authed) {
+      server.emit('log:info', ['remote', rpc._sessid, 'remote-authed', authed])
+      if(authed.type === 'client')
+        rpcStream.setTTL(null) //don't abort the stream on timeout.
+    })
+
+    rpc.auth(ssbKeys.signObj(keys, {
+      ToS: 'be excellent to each other',
+      public: keys.public,
+      ts: Date.now(),
+    }), function (err, res) {
+
+      if(err) {
+        server.emit('rpc:unauthorized', err)
+        rpc._emit('rpc:unauthorized', err)
+        server.emit('log:warning', ['sbot', rpc._sessid, 'unauthed', err])
+        return
+      }
+      else {
+        server.emit('rpc:authorized', rpc, res)
+        rpc._emit('rpc:authorized', rpc, res)
+        server.emit('log:info', ['sbot', rpc._sessid, 'authed', res])
+      }
+
+      //TODO: put this stuff somewhere else...?
+
+      //when the client connects (not a peer) we will be unable
+      //to authorize with it. In this case, we shouldn't close
+      //the connection...
+
+      var n = 2
+      function done () {
+        if(--n) return
+        server.emit('log:info', ['sbot', rpc._sessid, 'done'])
+        rpc.close()
+      }
+
+      rpc.once('done', function () {
+        server.emit('log:info', ['sbot', rpc._sessid, 'remote-done'])
+        done()
+      })
+
+      rpc.task(function () {
+        server.emit('log:info', ['sbot', rpc._sessid, 'local-done'])
+        rpc.emit('done')
+        done()
+      })
+
+      if (cb) cb(err, res)
+    })
+
+    return rpc
+  }
+
+  server.connect = function (address, cb) {
+    var rpc = attachSession(net.connect(toAddress(address)), false, cb)
+    server.emit('log:info', ['sbot', rpc._sessid, 'connect', address])
+    return rpc
+  }
+
+  if(config.port)
+    server.listen(config.port, function () {
       server.emit('log:info', ['sbot', null, 'listening', server.getAddress()])
-  })
+    })
 
   server.ssb = ssb
   server.feed = feed
@@ -104,84 +184,10 @@ exports = module.exports = function (config, ssb, feed) {
 
   var api = Api(server)
 
-  // peer connection
-  // ===============
-
-  server.connect = function (address, cb) {
-    var rpc = attachSession(net.connect(toAddress(address)), 'client', cb)
-    server.emit('log:info', ['sbot', rpc._sessid, 'connect', address])
-    return rpc
-  }
-
   // rpc session management
   // ======================
   var sessions = {}
 
-  // sets up RPC session on a stream
-  function attachSession (stream, role, cb) {
-    var rpc = peerApi(server.manifest, api)
-                .permissions({allow: ['auth']})
-    var rpcStream = rpc.createStream()
-    rpcStream = inactive(rpcStream, server.config.timeout)
-    pull(stream, rpcStream, stream)
-
-    rpc._sessid = ++sessCounter
-    rpc.task = multicb()
-    server.emit('rpc:connect', rpc)
-    if(role) server.emit('rpc:'+role, rpc)
-
-    rpc.on('remote:authorized', function (authed) {
-      server.emit('log:info', ['remote', rpc._sessid, 'remote-authed', authed])
-      if(authed.type === 'client')
-        rpcStream.setTTL(null) //don't abort the stream on timeout.
-    })
-
-    rpc.auth(ssbKeys.signObj(keys, {
-      role: role,
-      ToS: 'be excellent to each other',
-      public: keys.public,
-      ts: Date.now(),
-    }), function (err, res) {
-      if(err) {
-        server.emit('rpc:unauthorized', err)
-        rpc._emit('rpc:unauthorized', err)
-        server.emit('log:warning', ['sbot', rpc._sessid, 'unauthed', err])
-        return
-      }
-      else {
-        server.emit('rpc:authorized', rpc, res)
-        rpc._emit('rpc:authorized', rpc, res)
-        server.emit('log:info', ['sbot', rpc._sessid, 'authed', res])
-      }
-
-      //TODO: put this stuff somewhere else...?
-
-      //when the client connects (not a peer) we will be unable
-      //to authorize with it. In this case, we shouldn't close
-      //the connection...
-      var n = 2
-      function done () {
-        if(--n) return
-        server.emit('log:info', ['sbot', rpc._sessid, 'done'])
-        rpc.close()
-      }
-
-      rpc.once('done', function () {
-        server.emit('log:info', ['sbot', rpc._sessid, 'remote-done'])
-        done()
-      })
-
-      rpc.task(function () {
-        server.emit('log:info', ['sbot', rpc._sessid, 'local-done'])
-        rpc.emit('done')
-        done()
-      })
-
-      if (cb) cb(err, res)
-    })
-
-    return rpc
-  }
 
   // plugin management
   // =================

@@ -26,6 +26,9 @@ module.exports = function (address, manf, cb) {
   })
               .permissions({allow: ['auth'], deny: null})
   rpc.client = true
+  //match the server's way of tracking rpc direction.
+  //I don't know if we'll need this, but for consistency.
+  rpc.outgoing = true; rpc.incoming = false
   pull(stream, rpc.createStream(), stream)
   return rpc
 }
