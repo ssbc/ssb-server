@@ -190,3 +190,42 @@ Todos:
  - Once SSB supports channel authentication, apply a permissions model
  - Once SSB supports link de-indexing (via "delete" messages), make `unfollow()` work (it's broken atm)
  - Add the SSB replication API when that's standardized
+
+## configuration
+
+There are some configuration options for the sysadmins out there.
+All configuration is loaded via [rc](https://github.com/dominictarr/rc)
+you can pass any configuration value in as cli arg, env var, or in a file.
+
+Mostly, you will want to edit `~/.ssb/config`
+```
+{
+  //listen on a non-standard port (it's easiest if you stay on 2000)
+  port: 2000,
+  //disconnect any replication stream after nothing has happened for
+  //this many milliseconds
+  timeout: 30000,
+
+  //replicate with pub servers
+  pub: true,
+
+  //replicate with local servers (discovered on same network via udp)
+  local: true,
+
+  //where to keep the database & files (default: next to config file)
+  path: ~/.ssb
+
+  //configuration for friends plugin
+  friends: {
+    //replicate first 150 peers
+    dunbar: 150,
+    //replicate 3 hops out from yourself.
+    hops: 3
+  },
+
+  //if you want to host with a domain, set it here.
+  //otherwise, your public ip is auto detected.
+  host: <auto detects non-private ip>
+}
+
+```
