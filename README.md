@@ -34,7 +34,7 @@ You'll see a similar output if you use this command.
 (see also [running your own pub server](#running-your-own-pub-server))
 
 ```
-> scuttlebot invite.addMe "176.58.117.63,TNn7v0MsAs8OpQnyRwtsMeROVWGlKnS/ItX966PAWjI=.blake2s,AKLwYVD1wLQj9ynbhuM3YfLCZMPDG5y+NJr//CzfqNM="
+> scuttlebot invite.addMe "176.58.117.63,TNn7v0MsAs8OpQnyRwtsMeROVWGlKnS/ItX966PAWjI=.blake2s,yCHiB1JfBdIEUZEW/eURMRYe64FTTKuj7+F1p/xDrUc="
 
 [
   {
@@ -90,7 +90,7 @@ and help support the network.
 # now in another terminal, create an invitation:
 
 > scuttlebot invite.create 100
-"176.58.117.63,TNn7v0MsAs8OpQnyRwtsMeROVWGlKnS/ItX966PAWjI=.blake2s,AKLwYVD1wLQj9ynbhuM3YfLCZMPDG5y+NJr//CzfqNM="
+"176.58.117.63,TNn7v0MsAs8OpQnyRwtsMeROVWGlKnS/ItX966PAWjI=.blake2s,yCHiB1JfBdIEUZEW/eURMRYe64FTTKuj7+F1p/xDrUc="
 ```
 
 This invite token can be passed to the `invite.addMe` command to
