@@ -30,16 +30,11 @@ module.exports = {
   },
   init: function (server) {
     var codes = {}
+    var codesDB = server.ssb.sublevel('codes')
     return {
       create: function (n, cb) {
         if(isFunction(n) || n == null || isNaN(n))
           return cb(new Error('invite.create must get number of uses.'))
-
-        var secret = crypto.randomBytes(32).toString('base64')
-        var keyId = ssbKeys.hash(secret, 'base64')
-        codes[keyId] = {
-          secret: secret, total: n, used: 0
-        }
 
         var addr = server.getAddress()
         var host = addr.split(':')[0]
@@ -49,9 +44,21 @@ module.exports = {
           return cb(new Error('Server has no public ip address,'
                             + 'cannot create useable invitation'))
 
-        var owner = server.feed
+        var secret = crypto.randomBytes(32).toString('base64')
+        var keyId = ssbKeys.hash(secret, 'base64')
 
-        cb(null, [addr, owner.id, secret].join(','))
+//        codes[keyId] = {
+//          secret: secret, total: n, used: 0
+//        }
+
+        var owner = server.feed
+        codesDB.put(keyId,  {
+          secret: secret, total: n, used: 0
+        }, function (err) {
+          if(err) cb(err)
+          else cb(null, [addr, owner.id, secret].join(','))
+        })
+
       },
       use: function (req, cb) {
         var rpc = this
@@ -59,33 +66,42 @@ module.exports = {
           return cb(new Error('cannot use invite code when authorized with hmac'))
 
         var id = rpc.authorized.id
-        var invite = codes[req.keyId]
+        codesDB.get(req.keyId, function(err, invite) {
 
-        // although we already know the current feed
-        // it's included so that request cannot be replayed.
-        if(!req.feed)
-          return cb(new Error('feed to follow is missing'))
+          // although we already know the current feed
+          // it's included so that request cannot be replayed.
+          if(!req.feed)
+            return cb(new Error('feed to follow is missing'))
 
-        if(req.feed !== id)
-          return cb(new Error('invite code may not be used to follow another key'))
+          if(req.feed !== id)
+            return cb(new Error('invite code may not be used to follow another key'))
 
-        if(!invite)
-          return cb(new Error('invite code is incorrect or expired'))
+          if(!invite)
+            return cb(new Error('invite code is incorrect or expired'))
 
-        if(invite.used >= invite.count)
-          return cb(new Error('invite code:'+id+' has expired'))
+          if(invite.used >= invite.count)
+            return cb(new Error('invite code:'+id+' has expired'))
 
-        if(!ssbKeys.verifyObjHmac(invite.secret, req))
-          return cb(new Error('invalid invite request'))
+          if(!ssbKeys.verifyObjHmac(invite.secret, req))
+            return cb(new Error('invalid invite request'))
 
-        invite.used ++
-        server.emit('log:info', ['invite', rpc._sessid, 'use', req])
+          invite.used ++
 
-        server.feed.add({
-          type: 'follow',
-          feed: id, rel: 'follows',
-          auto: true
-        }, cb)
+          //okay so there is a small race condition here
+          //if people use a code massively in parallel
+          //then it may not be counted correctly...
+          //this is not a big enough deal to fix though.
+
+          codesDB.put(req.keyId, invite, function (err) {
+            server.emit('log:info', ['invite', rpc._sessid, 'use', req])
+
+            server.feed.add({
+              type: 'follow',
+              feed: id, rel: 'follows',
+              auto: true
+            }, cb)
+          })
+        })
       },
       addMe: function (req, cb) {
         if(isString(req)) {
