@@ -31,7 +31,7 @@
     "multiblob": "~1.2.0",
     "bash-color": "~0.0.3",
     "pull-inactivity": "~2.1.1",
-    "graphmitter": "~1.0.0",
+    "graphmitter": "~1.1.2",
     "non-private-ip": "~1.1.0",
     "ip": "~0.3.2"
   },
