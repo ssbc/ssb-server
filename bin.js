@@ -149,7 +149,7 @@ function next (data) {
     }
     if('async' === type || type === 'sync') {
       get(rpc, cmd)(data, function (err, ret) {
-        if(err) throw explain(err, 'async call failed')
+        if(err) throw err
         console.log(JSON.stringify(ret, null, 2))
         process.exit()
       })
