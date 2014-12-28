@@ -16,11 +16,11 @@ Please post an issue if the following does not work for you.
 
 # start your local server
 
-> scuttlebot server
+> sbot server
 
 # now, in another tab, issue commands.
 
-> scuttlebot whoami
+> sbot whoami
 {
   "id": "wuDDnMxVtk8U9hrueDj/T0itgp5HJZ4ZDEJodTyoMdg=.blake2s",
   "public": "vUadxn7OumI4aaHa3FGNQZ+822rsaPvBeJoM4lQ6ayTZcOHlnb0+u41isdwGQv3t3qw//wvFH6JmeHTpJzmO2w==.k256"
@@ -34,7 +34,7 @@ You'll see a similar output if you use this command.
 (see also [running your own pub server](#running-your-own-pub-server))
 
 ```
-> scuttlebot invite.addMe "176.58.117.63,TNn7v0MsAs8OpQnyRwtsMeROVWGlKnS/ItX966PAWjI=.blake2s,yCHiB1JfBdIEUZEW/eURMRYe64FTTKuj7+F1p/xDrUc="
+> sbot invite.addMe "176.58.117.63,TNn7v0MsAs8OpQnyRwtsMeROVWGlKnS/ItX966PAWjI=.blake2s,yCHiB1JfBdIEUZEW/eURMRYe64FTTKuj7+F1p/xDrUc="
 
 [
   {
@@ -85,11 +85,11 @@ and help support the network.
 # the ip address of the server it's running on. this is my ip,
 # yours will be different. (You can use a domain instead of an ip)
 
-> scuttlebot server --host 176.58.117.63
+> sbot server --host 176.58.117.63
 
 # now in another terminal, create an invitation:
 
-> scuttlebot invite.create 100
+> sbot invite.create 100
 "176.58.117.63,TNn7v0MsAs8OpQnyRwtsMeROVWGlKnS/ItX966PAWjI=.blake2s,yCHiB1JfBdIEUZEW/eURMRYe64FTTKuj7+F1p/xDrUc="
 ```
 
@@ -102,30 +102,30 @@ instruct my server at 176.58.117.63 to follow you.
 start a server
 
 ```
-scuttlebot server
+sbot server
 ```
 
 then issue commands from another terminal...
 
 ```
 # add a simple message (type is required, but freeform)
-scuttlebot add --type msg --value hello
+sbot add --type msg --value hello
 
 # get your id
-scuttlebot whoami
+sbot whoami
 
 # follow another instance
-scuttlebot add --type follow --feed <id> --rel follows
+sbot add --type follow --feed <id> --rel follows
 
 # add a pub server (this is a server you'll connect to replicate with)
 # (if port is the default, :2000 then that can be leftoff)
-scuttlebot add --type pub --address <domain:port>
+sbot add --type pub --address <domain:port>
 
 ## reading data
 
 # read all messages in order received
 
-scuttlebot log
+sbot log
 
 ```
 
@@ -133,7 +133,7 @@ scuttlebot log
 To get a convenient REPL:
 
 ```
-./scuttlebot repl [--host localhost] [--port 2000]
+sbot repl [--host localhost] [--port 2000]
 ```
 
 In the REPL, a connection will have been established for you, and all of the RPC API will be imported into the toplevel:
@@ -214,6 +214,11 @@ Mostly, you will want to edit `~/.ssb/config`
     dunbar: 150,
     //replicate 3 hops out from yourself.
     hops: 3
+  },
+
+  gossip: {
+    //how many other nodes to connect with at one time.
+    connections: 2
   },
 
   //if you want to host with a domain, set it here.
