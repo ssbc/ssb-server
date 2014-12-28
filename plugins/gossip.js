@@ -31,67 +31,6 @@ function rand(array) {
 
 var DEFAULT_PORT = 2000
 
-function clean (ary) {
-  return ary
-      .filter(Boolean)
-      .filter(function (e) {
-        return e && 'string' !== typeof e && e.host
-      })
-      .map(toAddress)
-}
-
-function seeds (server, cb) {
-  var config = server.config
-
-  var seeds = config.seeds
-  seeds =
-    (isArray(seeds)  ? seeds : [seeds])
-
-  //this may be disabled by --no-local option
-  var local = config.local
-    ? (server.local ? server.local.get() : [])
-    : []
-
-  //NOTE: later, we will probably want to not replicate
-  //with nodes that we don't (at least) recognise (know someone who knows them)
-  //but for now, we can pretty much assume that if they are running
-  //scuttlebot they are cool.
-
-  if(!config.pub)
-    return cb(null, seeds.concat(local))
-
-  pull(
-    server.ssb.messagesByType('pub'),
-    pull.map(function (e) {
-      var o = toAddress(e.content.address)
-      return o
-    }),
-    pull.filter(function (e) {
-      return e.port !== config.port || e.host !== config.host
-    }),
-    pull.unique(function (e) {
-      return e.host + ":" + e.port
-    }),
-    pull.collect(function (err, ary) {
-      var peers = clean((ary || []).concat(seeds).concat(local))
-      var host = config.host || nonPrivate.private() || 'localhost'
-      var port = config.port
-
-      //filter out peers which are probably you.
-      peers = peers.filter(function (e) {
-        if(e.port == port) {
-          if(e.host == host) return false
-          if(e.host == '127.0.0.1' || e.host == 'localhost') return false
-        }
-
-        return true
-      })
-      cb(null, peers)
-    })
-  )
-
-}
-
 function sameHost(e) {
   return function (p) {
       return p.host == e.host && e.port == e.port
@@ -112,10 +51,21 @@ module.exports = {
       clearTimeout(sched)
     })
 
+    var config = server.config
     var conf = server.config.gossip || {}
 
     //current list of known peers.
     var peers = []
+    var seeds = config.seeds
+    seeds =
+      (isArray(seeds)  ? seeds : [seeds])
+
+    seeds.forEach(function (e) {
+      if(!e) return
+      var p = toAddress(e)
+      if(p) peers.push(p)
+    })
+
 
     function get(id) {
       return u.find(peers.filter(Boolean), function (e) {
@@ -124,13 +74,9 @@ module.exports = {
     }
 
     var gossip = {
-      seeds: function (_, cb) {
-        if(isFunction(_)) cb = _
-        seeds(server, cb)
-      },
       peers: function () {
         return peers
-      },
+      }
     }
 
     server.on('remote:authorized', function (rpc, authed) {
@@ -147,6 +93,27 @@ module.exports = {
 
     })
 
+    var host = config.host || nonPrivate.private() || 'localhost'
+    var port = config.port
+
+    pull(
+      server.ssb.messagesByType({type: 'pub', live: true}),
+      pull.map(function (e) {
+        var o = toAddress(e.content.address)
+        return o
+      }),
+      pull.filter(function (e) {
+        if(e.port == port) {
+          if(e.host == host) return false
+          if(e.host == '127.0.0.1' || e.host == 'localhost') return false
+        }
+        return true
+      }),
+      pull.drain(function (e) {
+        if(!u.find(peers, sameHost(e))) peers.push(e)
+      })
+    )
+
     server.on('local', function (_peer) {
       var peer = get(_peer.id)
       if(!peer) peers.push(_peer)
@@ -160,16 +127,6 @@ module.exports = {
         peer.port = _peer.port
       }
     })
-
-    //add all the seeds
-    ;(function initPeers () {
-      gossip.seeds(function (_, ary) {
-        ary.forEach(function (e) {
-          if(e && !u.find(peers, sameHost(e)))
-            peers.push(e)
-        })
-      })
-    })()
 
     ;(function schedule() {
       if(server.closed) return
@@ -218,7 +175,7 @@ module.exports = {
           if(fail) p.failure = (p.failure || 0) + 1
           else     p.failure = 0
 
-          current = Math.max(current - 1, 0)
+          count = Math.max(count - 1, 0)
         })
 
       }
