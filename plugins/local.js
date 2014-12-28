@@ -25,7 +25,6 @@ module.exports = {
       if(buf.loopback) return
 
       var data = JSON.parse(buf.toString())
-      console.log(data)
       data.host = buf.address
       var ts = Date.now()
       data.ts = ts
@@ -39,7 +38,15 @@ module.exports = {
 
     setInterval(function () {
       // broadcast self
-      local.write(JSON.stringify({id: id, port: server.config.port}))
+      // TODO: sign beacons, so that receipient can be confidant
+      // that is really your id.
+      // (which means they can update their peer table)
+      // Oh if this includes your local address,
+      // then it becomes unforgeable.
+      local.write(JSON.stringify({
+        id: id,
+        port: server.config.port
+      }))
 
       // clean out expired entries
       var ts = Date.now()
