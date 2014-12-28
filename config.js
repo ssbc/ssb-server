@@ -17,5 +17,8 @@ module.exports = require('rc')('ssb', {
     //friend feeds are replicated until either the dunbar limit
     //or the hop limit is reached.
   },
+  gossip: {
+    connections: 2
+  },
   path: path.join(process.env.HOME, '.ssb'),
 })
