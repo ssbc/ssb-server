@@ -30,7 +30,12 @@ exports.init = function (sbot) {
       sbot.ssb.messagesByType({type: type, live: true}),
       pull.drain(function (msg) {
         var feed = msg.content.feed || msg.content.$feed
-        if(feed) graph.edge(msg.author, feed, true)
+        if(feed) {
+          if (msg.content.rel.slice(0, 2) == 'un')
+            graph.del(msg.author, feed)
+          else
+            graph.edge(msg.author, feed, true)
+        }
       })
     )
   }
