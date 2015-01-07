@@ -196,6 +196,9 @@ module.exports = {
           blobs.add(function (err, hash) {
             if(err) console.error(err.stack)
             else got(hash)
+            // sink cbs are not exposed over rpc
+            // so this is only available when using this api locally.
+            if(cb) cb(err, hash)
           })
         )
       },
