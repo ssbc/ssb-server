@@ -3,6 +3,11 @@
 var Blobs = require('multiblob')
 var path = require('path')
 var pull = require('pull-stream')
+var isHash = require('ssb-keys').isHash
+
+function isFunction (f) {
+  return 'function' === typeof f
+}
 
 function toBase64() {
   return pull.map(function (b) { return b.toString('base64') })
@@ -94,6 +99,17 @@ module.exports = {
     }
 
     var blobs = sbot._blobs = Blobs(path.join(sbot.config.path, 'blobs'))
+
+    pull(
+      sbot.ssb.externalsLinkedFromFeed({live: true}),
+      pull.drain(function (data) {
+        var hash = data.dest
+        if(isHash(hash))
+          blobs.has(hash, function (_, has) {
+            if(!has) queue(hash, function () {})
+          })
+      })
+    )
 
     // query worker
 
@@ -191,6 +207,8 @@ module.exports = {
       },
 
       add: function (hash, cb) {
+        if(isFunction(hash)) cb = hash, hash = null
+
         return pull(
           toBuffer(),
           blobs.add(function (err, hash) {
@@ -209,6 +227,8 @@ module.exports = {
       // request to retrive a blob,
       // calls back when that file is available.
       want: function (hash, cb) {
+        if(!isHash(hash)) return cb(new Error('not a hash:' + hash))
+
         blobs.has(hash, function (_, has) {
           if(has) return cb()
           queue(hash, cb)
