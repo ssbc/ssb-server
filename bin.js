@@ -186,7 +186,7 @@ function next (data) {
         }
       })
 
-      function next () {
+      function next (err) {
         if(err && n > 0) { n = -1; throw err }
         if(--n) return
         rpc.add(data, function (err, ret) {
