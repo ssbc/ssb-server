@@ -5,28 +5,31 @@ var path      = require('path')
 var toPull    = require('stream-to-pull-stream')
 var pull      = require('pull-stream')
 var u         = require('./util')
+var cont      = require('cont')
 
 // create 3 servers
 // give them all pub servers (on localhost)
 // and get them to follow each other...
 var gossip    = require('../plugins/gossip')
 var blobs     = require('../plugins/blobs')
+var friends   = require('../plugins/friends')
+var replicate = require('../plugins/replicate')
 
 function read (filename) {
   return toPull.source(fs.createReadStream(filename))
 }
 
-tape('replicate between 3 peers', function (t) {
+tape('replicate blobs between 2 peers - explicit want request', function (t) {
 
   var u = require('./util')
 
-  var sbotA = u.createDB('test-alice', {
+  var sbotA = u.createDB('test-blobs-alice1', {
       port: 45451, host: 'localhost', timeout: 1000,
     }).use(gossip).use(blobs)
 
   var alice = sbotA.feed
 
-  var sbotB = u.createDB('test-bob', {
+  var sbotB = u.createDB('test-blobs-bob1', {
       port: 45452, host: 'localhost', timeout: 1000,
       seeds: [{port: 45451, host: 'localhost'}]
     }).use(gossip).use(blobs)
@@ -56,3 +59,47 @@ tape('replicate between 3 peers', function (t) {
 
 })
 
+tape('replicate published blobs between 2 peers', function (t) {
+
+  var sbotA = u.createDB('test-blobs-alice2', {
+      port: 45451, host: 'localhost', timeout: 1000,
+    }).use(gossip).use(friends).use(replicate).use(blobs)
+
+  var alice = sbotA.feed
+
+  var sbotB = u.createDB('test-blobs-bob2', {
+      port: 45452, host: 'localhost', timeout: 1000,
+      seeds: [{port: 45451, host: 'localhost'}]
+    }).use(gossip).use(friends).use(replicate).use(blobs)
+
+  var bob = sbotB.feed
+
+
+  pull(
+    read(__filename),
+    sbotA.blobs.add(null, function (err, hash) {
+      if(err) throw err
+      cont.para([
+        alice.add({type: 'post', text: 'this file', ext: hash, rel: 'js'}),
+        alice.add({type: 'follow', feed: bob.id, rel: 'follows'}),
+        bob.add({type: 'follow', feed: alice.id, rel: 'follows'})
+      ])(function (err, data) {
+        if(err) throw err
+        console.log(data)
+      })
+
+      // bob should request the blob,
+      // and then emit this event.
+
+      sbotB.on('blobs:got', function (_hash) {
+        t.equal(_hash, hash)
+        sbotB.blobs.has(hash, function (err, okay) {
+          t.ok(okay, 'file replicated:' + hash)
+          t.end()
+          sbotA.close()
+          sbotB.close()
+        })
+      })
+    })
+  )
+})
