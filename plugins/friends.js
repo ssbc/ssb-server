@@ -20,39 +20,45 @@ exports.manifest = {
 
 exports.init = function (sbot) {
 
-  var graph = new Graphmitter()
+  var followGraph = new Graphmitter()
+  var trustGraph = new Graphmitter()
+  var flagGraph = new Graphmitter()
   var config = sbot.config
 
+  function index(graph, type) {
+    pull(
+      sbot.ssb.messagesByType({type: type, live: true}),
+      pull.drain(function (msg) {
+        var feed = msg.content.feed || msg.content.$feed
+        if(feed) {
+          if (msg.content.rel.slice(0, 2) == 'un')
+            graph.del(msg.author, feed)
+          else
+            graph.edge(msg.author, feed, true)
+        }
+      })
+    )
+  }
+
+  index(followGraph, 'follow')
+  index(trustGraph, 'trust')
+  index(flagGraph, 'flag')
+
   //handle the various legacy link types!
-  pull(
-    sbot.ssb.messagesByType({type: 'follow', live: true}),
-    pull.drain(function (msg) {
-      var feed = msg.content.feed || msg.content.$feed
-      if(feed) graph.edge(msg.author, feed, true)
-    })
-  )
-
-  pull(
-    sbot.ssb.messagesByType({type: 'follows', live: true}),
-    pull.drain(function (msg) {
-      var feed = msg.content.feed || msg.content.$feed
-      if(feed) graph.edge(msg.author, feed, true)
-    })
-  )
-
-  pull(
-    sbot.ssb.messagesByType({type: 'auto-follow', live: true}),
-    pull.drain(function (msg) {
-      var feed = msg.content.feed || msg.content.$feed
-      if(feed) graph.edge(msg.author, feed, true)
-    })
-  )
+  index(followGraph, 'follows')
+  index(followGraph, 'auto-follow')
 
   return {
-    all: function () {
-      return graph.toJSON()
+    all: function (graph) {
+      if (!graph || graph == 'follow' || graph == 'follows')
+        return followGraph.toJSON()
+      if (graph == 'trust' || graph == 'trusts')
+        return trustGraph.toJSON()
+      if (graph == 'flag' || graph == 'flags')
+        return flagGraph.toJSON()
+      return null
     },
-    hops: function (start) {
+    hops: function (start, graph) {
       var opts
       if(isString(start))
         opts = {start: start}
@@ -63,6 +69,15 @@ exports.init = function (sbot) {
       opts.start  = opts.start || sbot.feed.id
       opts.dunbar = conf.dunbar || 150
       opts.hops   = conf.hops   || 3
+
+      if (!graph || graph == 'follow' || graph == 'follows')
+        graph = followGraph
+      else if (graph == 'trust' || graph == 'trusts')
+        graph = trustGraph
+      else if (graph == 'flag' || graph == 'flags')
+        graph = flagGraph
+      else
+        throw new Error('Invalid graph type: '+graph)
 
       return graph.traverse(opts)
     }
