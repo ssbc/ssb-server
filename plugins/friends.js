@@ -58,17 +58,21 @@ exports.init = function (sbot) {
         return flagGraph.toJSON()
       return null
     },
-    hops: function (start, graph) {
-      var opts
-      if(isString(start))
-        opts = {start: start}
-      else
-        opts = start || {}
+    hops: function (start, graph, opts) {
+      opts = opts || {}
+      if(isString(start)) {
+        // first arg is id string
+        opts.start = start
+      } else if (start && typeof start == 'object') {
+        // first arg is opts
+        for (var k in start)
+          opts[k] = start[k]
+      }
 
       var conf = config.friends || {}
-      opts.start  = opts.start || sbot.feed.id
-      opts.dunbar = conf.dunbar || 150
-      opts.hops   = conf.hops   || 3
+      opts.start  = opts.start  || sbot.feed.id
+      opts.dunbar = opts.dunbar || conf.dunbar || 150
+      opts.hops   = opts.hops   || conf.hops   || 3
 
       if (!graph || graph == 'follow' || graph == 'follows')
         graph = followGraph
