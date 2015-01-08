@@ -1,7 +1,7 @@
 {
   "name": "scuttlebot",
   "description": "A bot-server for the phoenix network",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "homepage": "https://github.com/pfraze/scuttlebot",
   "repository": {
     "type": "git",
@@ -44,7 +44,9 @@
     "level-sublevel": "~6.3.15",
     "osenv": "~0.1.0"
   },
-  "bin": {"sbot": "./bin.js"},
+  "bin": {
+    "sbot": "./bin.js"
+  },
   "scripts": {
     "test": "set -e; for t in test/*.js; do node $t; done"
   },
