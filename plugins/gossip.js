@@ -152,7 +152,8 @@ module.exports = {
 
       if(p) {
         p.time = p.time || {}
-        p.time.connect = 0
+        if (!p.time.connect)
+          p.time.connect = 0
         p.time.attempt = Date.now()
         p.connected = true
         var rpc = server.connect(p)
