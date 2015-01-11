@@ -146,15 +146,14 @@ module.exports = {
 
       // connect to this random peer
       var p = rand(peers.filter(function (e) {
-        return !e.connected
-        //TODO: filter out peers that we have been unable to connect to.
-        // (where failure > 0, give them exponential backoff...)
-        //if they also have a private ip (local network)
-        //delete them after too many trys
+        var lim = (1/(1+e.failure)) || 1 // decrease odds of selection due to failures
+        return !e.connected && (Math.random() < lim)
       }))
 
       if(p) {
         p.time = p.time || {}
+        if (!p.time.connect)
+          p.time.connect = 0
         p.time.attempt = Date.now()
         p.connected = true
         var rpc = server.connect(p)
@@ -174,6 +173,8 @@ module.exports = {
 
           if(fail) p.failure = (p.failure || 0) + 1
           else     p.failure = 0
+
+          // :TODO: delete local peers if failure > N
 
           count = Math.max(count - 1, 0)
         })
