@@ -178,6 +178,7 @@ module.exports = {
       pull(
         remotes[id].blobs.get(f.id),
         toBuffer(),
+        //TODO: error if the object is longer than we expected.
         blobs.add(f.id, function (err, hash) {
           if(err) console.error(err.stack)
           else got(hash)
@@ -204,6 +205,10 @@ module.exports = {
 
       has: function (hash, cb) {
         blobs.has(hash, cb)
+      },
+
+      size: function (hash, cb) {
+        blobs.size(hash, cb)
       },
 
       add: function (hash, cb) {
