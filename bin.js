@@ -180,11 +180,14 @@ function next (data) {
             rpc.blobs.add(function (err) {
               if(err) return next(err)
               link.ext = hasher.digest
+              if(link.size == null) link.size = hasher.size
               next()
             })
           )
         }
       })
+
+      if(n == 0) n = 1, next()
 
       function next (err) {
         if(err && n > 0) { n = -1; throw err }
