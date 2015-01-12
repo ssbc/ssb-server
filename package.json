@@ -23,7 +23,7 @@
     "pull-stringify": "~1.2.2",
     "pull-ws-server": "~1.1.1",
     "rc": "~0.5.4",
-    "secure-scuttlebutt": "~7.0.4",
+    "secure-scuttlebutt": "~8.0.0",
     "ssb-keys": "~0.4.1",
     "stream-to-pull-stream": "~1.6.0",
     "explain-error": "~1.0.1",

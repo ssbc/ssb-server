@@ -97,7 +97,7 @@ module.exports = {
     var port = config.port
 
     pull(
-      server.ssb.messagesByType({type: 'pub', live: true}),
+      server.ssb.messagesByType({type: 'pub', live: true, keys: false}),
       pull.map(function (e) {
         var o = toAddress(e.content.address)
         return o

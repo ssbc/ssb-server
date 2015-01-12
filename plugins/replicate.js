@@ -38,7 +38,7 @@ function replicate(server, rpc, cb) {
     pull(
       latest(),
       pull.drain(function (upto) {
-        sources.add(rpc.createHistoryStream({id: upto.id, seq: upto.sequence + 1, live: live}))
+        sources.add(rpc.createHistoryStream({id: upto.id, seq: upto.sequence + 1, live: live, keys: false}))
       }, function (err) {
         if(err)
           server.emit('log:error', ['replication', rep._sessid, 'error', err])

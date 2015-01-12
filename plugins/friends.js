@@ -27,7 +27,7 @@ exports.init = function (sbot) {
 
   function index(graph, type) {
     pull(
-      sbot.ssb.messagesByType({type: type, live: true}),
+      sbot.ssb.messagesByType({type: type, keys: false, live: true}),
       pull.drain(function (msg) {
         var feed = msg.content.feed || msg.content.$feed
         if(feed) {
