@@ -39,7 +39,7 @@ tape('replicate between 3 peers', function (t) {
 
     var ary = []
     pull(
-      bobDb.ssb.createHistoryStream({id: alice.id, seq: 0, live: true}),
+      bobDb.ssb.createHistoryStream({id: alice.id, seq: 0, keys: false, live: true}),
       pull.through(function (data) {
         console.log(data)
         ary.push(data);
@@ -52,7 +52,7 @@ tape('replicate between 3 peers', function (t) {
         clearInterval(int)
         var _ary = []
           pull(
-            bobDb.ssb.createHistoryStream({id: alice.id, sequence: 0, live: true}),
+            bobDb.ssb.createHistoryStream({id: alice.id, sequence: 0, keys: false, live: true}),
             pull.through(function (msg) {
               _ary.push(msg)
               if(_ary.length < 12) return
@@ -69,8 +69,8 @@ tape('replicate between 3 peers', function (t) {
       }
       else
         alice.add({type: 'test', value: new Date()},
-          function (err, msg, hash){
-            console.log('added', hash, msg.sequence)
+          function (err, msg){
+            console.log('added', msg.key, msg.value.sequence)
           })
     }, 200)
 
