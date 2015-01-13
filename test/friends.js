@@ -1,4 +1,5 @@
 var ssbKeys = require('ssb-keys')
+var schemas = require('ssb-msg-schemas')
 var cont    = require('cont')
 var tape    = require('tape')
 
@@ -19,15 +20,15 @@ tape('construct and analyze graph', function (t) {
   var carol = server.ssb.createFeed(ssbKeys.generate())
 
   cont.para([
-    cont(server.friends.follow)(bob.id),
-    cont(server.friends.follow)(carol.id),
-    cont(server.friends.trust)(1, bob.id),
+    cont(schemas.addFollow)(server.feed, bob.id),
+    cont(schemas.addFollow)(server.feed, carol.id),
+    cont(schemas.addTrust)(server.feed, bob.id, 1),
 
-    bob  .add('follow', {feed: alice.id, rel: 'follows'}),
-    bob  .add('trust',  {feed: alice.id, rel: 'trusts', value:  1}),
-    bob  .add('trust',  {feed: carol.id, rel: 'trusts', value: -1}),
+    cont(schemas.addFollow)(bob, alice.id),
+    cont(schemas.addTrust)(bob, alice.id, 1),
+    cont(schemas.addTrust)(bob, carol.id, -1),
 
-    carol.add('follow', {feed: alice.id, rel: 'follows'})
+    cont(schemas.addFollow)(carol, alice.id)
   ]) (function () {
 
     // kludge!
@@ -75,19 +76,19 @@ tape('correctly delete edges', function (t) {
   var carol = server.ssb.createFeed(ssbKeys.generate())
 
   cont.para([
-    cont(server.friends.follow)(bob.id),
-    cont(server.friends.follow)(carol.id),
-    cont(server.friends.trust)(1, bob.id),
+    cont(schemas.addFollow)(server.feed, bob.id),
+    cont(schemas.addFollow)(server.feed, carol.id),
+    cont(schemas.addTrust)(server.feed, bob.id, 1),
 
-    bob  .add('follow', {feed: alice.id, rel: 'follows'}),
-    bob  .add('trust',  {feed: alice.id, rel: 'trusts', value: 1}),
-    bob  .add('trust',  {feed: carol.id, rel: 'trusts', value: -1}),
+    cont(schemas.addFollow)(bob, alice.id),
+    cont(schemas.addTrust)(bob, alice.id, 1),
+    cont(schemas.addTrust)(bob, carol.id, -1),
 
-    carol.add('follow', {feed: alice.id, rel: 'follows'}),
+    cont(schemas.addFollow)(carol, alice.id),
 
-    cont(server.friends.unfollow)(carol.id),
-    cont(server.friends.trust)(0, bob.id),
-    bob  .add('trust',  {feed: carol.id, rel: 'trusts', value: 0})
+    cont(schemas.addUnfollow)(server.feed, carol.id),
+    cont(schemas.addTrust)(server.feed, bob.id, 0),
+    cont(schemas.addTrust)(bob, carol.id, 0)
   ]) (function () {
 
     // kludge!

@@ -1,9 +1,6 @@
-
-
 var Graphmitter = require('graphmitter')
 var pull        = require('pull-stream')
 var ssbMsgs     = require('ssb-msgs')
-var ssbKeys     = require('ssb-keys')
 
 function isFunction (f) {
   return 'function' === typeof f
@@ -16,11 +13,8 @@ function isString (s) {
 exports.name = 'friends'
 exports.version = '1.0.0'
 exports.manifest = {
-  all      : 'sync',
-  hops     : 'sync',
-  trust    : 'async',
-  follow   : 'async',
-  unfollow : 'async'
+  all  : 'sync',
+  hops : 'sync'
 }
 
 exports.init = function (sbot) {
@@ -88,23 +82,6 @@ exports.init = function (sbot) {
         throw new Error('Invalid graph type: '+graph)
 
       return g.traverse(opts)
-    },
-    trust: function (value, id, cb) {
-      if (value !== -1 && value !== 0 && value !== 1)
-        cb(new Error('param 1 `value` needs to be a number, -1, 0, or 1'))
-      if (!ssbKeys.isHash(id))
-        cb(new Error('param 2 `id` needs to be the hash id of a feed'))
-      sbot.feed.add({ type: 'trust', rel: 'trusts', value: value, feed: id }, cb)
-    },
-    follow: function (id, cb) {
-      if (!ssbKeys.isHash(id))
-        cb(new Error('param 1 `id` needs to be the hash id of a feed'))
-      sbot.feed.add({ type: 'follow', rel: 'follows', feed: id }, cb)
-    },
-    unfollow: function (id, cb) {
-      if (!ssbKeys.isHash(id))
-        cb(new Error('param 1 `id` needs to be the hash id of a feed'))
-      sbot.feed.add({ type: 'follow', rel: 'unfollows', feed: id }, cb)
     }
   }
 }
