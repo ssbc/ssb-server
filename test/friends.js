@@ -19,9 +19,9 @@ tape('construct and analyze graph', function (t) {
   var carol = server.ssb.createFeed(ssbKeys.generate())
 
   cont.para([
-    alice.add('follow', {feed: bob.id,   rel: 'follows'}),
-    alice.add('follow', {feed: carol.id, rel: 'follows'}),
-    alice.add('trust',  {feed: bob.id,   rel: 'trusts', value: 1}),
+    cont(server.friends.follow)(bob.id),
+    cont(server.friends.follow)(carol.id),
+    cont(server.friends.trust)(1, bob.id),
 
     bob  .add('follow', {feed: alice.id, rel: 'follows'}),
     bob  .add('trust',  {feed: alice.id, rel: 'trusts', value:  1}),
@@ -75,9 +75,9 @@ tape('correctly delete edges', function (t) {
   var carol = server.ssb.createFeed(ssbKeys.generate())
 
   cont.para([
-    alice.add('follow', {feed: bob.id,   rel: 'follows'}),
-    alice.add('follow', {feed: carol.id, rel: 'follows'}),
-    alice.add('trust',  {feed: bob.id,   rel: 'trusts', value: 1}),
+    cont(server.friends.follow)(bob.id),
+    cont(server.friends.follow)(carol.id),
+    cont(server.friends.trust)(1, bob.id),
 
     bob  .add('follow', {feed: alice.id, rel: 'follows'}),
     bob  .add('trust',  {feed: alice.id, rel: 'trusts', value: 1}),
@@ -85,8 +85,8 @@ tape('correctly delete edges', function (t) {
 
     carol.add('follow', {feed: alice.id, rel: 'follows'}),
 
-    alice.add('follow', {feed: carol.id, rel: 'unfollows'}),
-    alice.add('trust',  {feed: bob.id,   rel: 'trusts', value: 0}),
+    cont(server.friends.unfollow)(carol.id),
+    cont(server.friends.trust)(0, bob.id),
     bob  .add('trust',  {feed: carol.id, rel: 'trusts', value: 0})
   ]) (function () {
 
