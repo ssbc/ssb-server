@@ -2,6 +2,7 @@
 
 var Graphmitter = require('graphmitter')
 var pull        = require('pull-stream')
+var ssbMsgs     = require('ssb-msgs')
 
 function isFunction (f) {
   return 'function' === typeof f
@@ -20,43 +21,45 @@ exports.manifest = {
 
 exports.init = function (sbot) {
 
-  var followGraph = new Graphmitter()
-  var trustGraph = new Graphmitter()
-  var flagGraph = new Graphmitter()
+  var graphs = {
+    follow: new Graphmitter(),
+    trust: new Graphmitter()
+  }
   var config = sbot.config
 
-  function index(graph, type) {
-    pull(
-      sbot.ssb.messagesByType({type: type, keys: false, live: true}),
-      pull.drain(function (msg) {
-        var feed = msg.content.feed || msg.content.$feed
-        if(feed) {
-          if (msg.content.rel.slice(0, 2) == 'un')
-            graph.del(msg.author, feed)
-          else
-            graph.edge(msg.author, feed, true)
-        }
+  // collect follows
+  var toFeedOpts = { tofeed: true }
+  pull(
+    sbot.ssb.messagesByType({ type: 'follow', keys: false, live: true }),
+    pull.drain(function (msg) {
+      ssbMsgs.indexLinks(msg.content, toFeedOpts, function (link) {
+        if (msg.content.rel === 'follows')
+          graphs.follow.edge(msg.author, link.feed, true)
+        else if (msg.content.rel === 'unfollows')
+          graphs.follow.del(msg.author, link.feed)
       })
-    )
-  }
+    })
+  )
 
-  index(followGraph, 'follow')
-  index(trustGraph, 'trust')
-  index(flagGraph, 'flag')
-
-  //handle the various legacy link types!
-  index(followGraph, 'follows')
-  index(followGraph, 'auto-follow')
+  // collect trusts
+  var toFeedTrustsOpts = { tofeed: true, rel: 'trusts' }
+  pull(
+    sbot.ssb.messagesByType({ type: 'trust', keys: false, live: true }),
+    pull.drain(function (msg) {
+      ssbMsgs.indexLinks(msg.content, toFeedTrustsOpts, function (link) {
+        if (msg.content.value != 0)
+          graphs.trust.edge(msg.author, link.feed, (+msg.content.value > 0) ? 1 : -1)
+        else
+          graphs.trust.del(msg.author, link.feed)
+      })
+    })
+  )
 
   return {
     all: function (graph) {
-      if (!graph || graph == 'follow' || graph == 'follows')
-        return followGraph.toJSON()
-      if (graph == 'trust' || graph == 'trusts')
-        return trustGraph.toJSON()
-      if (graph == 'flag' || graph == 'flags')
-        return flagGraph.toJSON()
-      return null
+      if (!graph)
+        graph = 'follow'
+      return graphs[graph] ? graphs[graph].toJSON() : null
     },
     hops: function (start, graph, opts) {
       opts = opts || {}
@@ -74,16 +77,11 @@ exports.init = function (sbot) {
       opts.dunbar = opts.dunbar || conf.dunbar || 150
       opts.hops   = opts.hops   || conf.hops   || 3
 
-      if (!graph || graph == 'follow' || graph == 'follows')
-        graph = followGraph
-      else if (graph == 'trust' || graph == 'trusts')
-        graph = trustGraph
-      else if (graph == 'flag' || graph == 'flags')
-        graph = flagGraph
-      else
+      var g = graphs[graph || 'follow']
+      if (!g)
         throw new Error('Invalid graph type: '+graph)
 
-      return graph.traverse(opts)
+      return g.traverse(opts)
     }
   }
 }
