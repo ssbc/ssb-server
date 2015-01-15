@@ -1,4 +1,5 @@
 var ssbKeys = require('ssb-keys')
+var schemas = require('ssb-msg-schemas')
 var cont    = require('cont')
 var tape    = require('tape')
 
@@ -19,50 +20,59 @@ tape('construct and analyze graph', function (t) {
   var carol = server.ssb.createFeed(ssbKeys.generate())
 
   cont.para([
-    alice.add('follow', {feed: bob.id,   rel: 'follows'}),
-    alice.add('follow', {feed: carol.id, rel: 'follows'}),
-    alice.add('trust',  {feed: bob.id,   rel: 'trusts'}),
+    cont(schemas.addFollow)(server.feed, bob.id),
+    cont(schemas.addFollow)(server.feed, carol.id),
+    cont(schemas.addTrust)(server.feed, bob.id, 1),
 
-    bob  .add('follow', {feed: alice.id, rel: 'follows'}),
-    bob  .add('trust',  {feed: alice.id, rel: 'trusts'}),
-    bob  .add('flag',   {feed: carol.id, rel: 'flags'}),
+    cont(schemas.addFollow)(bob, alice.id),
+    cont(schemas.addTrust)(bob, alice.id, 1),
+    cont(schemas.addTrust)(bob, carol.id, -1),
 
-    carol.add('follow', {feed: alice.id, rel: 'follows'})
+    cont(schemas.addFollow)(carol, alice.id)
   ]) (function () {
 
-    // kludge!
-    // have to wait a bit for the friends plugin to do its indexing (carol's follow is missed sometimes if we dont wait)
-    // feel free to improve
-    setTimeout(next, 500)
+    cont.para([
+      cont(server.friends.all)(),
+      cont(server.friends.all)('follow'),
+      cont(server.friends.all)('trust'),
 
-    function next() {
+      cont(server.friends.hops)(alice.id),
+      cont(server.friends.hops)(alice.id, 'follow'),
+      cont(server.friends.hops)(alice.id, 'trust'),
+
+      cont(server.friends.hops)(bob.id, 'follow'),
+      cont(server.friends.hops)(bob.id, 'trust'),
+
+      cont(server.friends.hops)(carol.id, 'follow'),
+      cont(server.friends.hops)(carol.id, 'trust')
+    ], function (err, results) {
+
       var aliasMap = {}
       aliasMap[alice.id] = 'alice'
       aliasMap[bob.id]   = 'bob'
       aliasMap[carol.id] = 'carol'
       a = toAliases(aliasMap)
 
-      t.deepEqual(a(server.friends.all()),         { alice: { bob: true, carol: true }, bob: { alice: true }, carol: { alice: true } })
-      t.deepEqual(a(server.friends.all('follow')), { alice: { bob: true, carol: true }, bob: { alice: true }, carol: { alice: true } })
-      t.deepEqual(a(server.friends.all('trust')),  { alice: { bob: true }, bob: { alice: true } })
-      t.deepEqual(a(server.friends.all('flag')),   { bob: { carol: true }, carol: {} })
+      results = results.map(a)
+      var i = 0
 
-      t.deepEqual(a(server.friends.hops(alice.id)), { alice: 0, bob: 1, carol: 1 })
-      t.deepEqual(a(server.friends.hops(alice.id, 'follow')), { alice: 0, bob: 1, carol: 1 })
-      t.deepEqual(a(server.friends.hops(alice.id, 'trust')), { alice: 0, bob: 1 })
-      t.deepEqual(a(server.friends.hops(alice.id, 'flag')), { alice: 0 })
+      t.deepEqual(results[i++], { alice: { bob: true, carol: true }, bob: { alice: true }, carol: { alice: true } })
+      t.deepEqual(results[i++], { alice: { bob: true, carol: true }, bob: { alice: true }, carol: { alice: true } })
+      t.deepEqual(results[i++], { alice: { bob: 1 }, bob: { alice: 1, carol: -1 }, carol: {} })
 
-      t.deepEqual(a(server.friends.hops(bob.id, 'follow')), { bob: 0, alice: 1, carol: 2 })
-      t.deepEqual(a(server.friends.hops(bob.id, 'trust')), { bob: 0, alice: 1 })
-      t.deepEqual(a(server.friends.hops(bob.id, 'flag')), { bob: 0, carol: 1 })
+      t.deepEqual(results[i++], { alice: 0, bob: 1, carol: 1 })
+      t.deepEqual(results[i++], { alice: 0, bob: 1, carol: 1 })
+      t.deepEqual(results[i++], { alice: 0, bob: 1, carol: 2 })
 
-      t.deepEqual(a(server.friends.hops(carol.id, 'follow')), { carol: 0, alice: 1, bob: 2 })
-      t.deepEqual(a(server.friends.hops(carol.id, 'trust')), { carol: 0 })
-      t.deepEqual(a(server.friends.hops(carol.id, 'flag')), { carol: 0 })
+      t.deepEqual(results[i++], { bob: 0, alice: 1, carol: 2 })
+      t.deepEqual(results[i++], { bob: 0, alice: 1, carol: 1 })
+
+      t.deepEqual(results[i++], { carol: 0, alice: 1, bob: 2 })
+      t.deepEqual(results[i++], { carol: 0 })
 
       t.end()
       server.close()
-    }
+    })
   })
 })
 
@@ -79,52 +89,59 @@ tape('correctly delete edges', function (t) {
   var carol = server.ssb.createFeed(ssbKeys.generate())
 
   cont.para([
-    alice.add('follow', {feed: bob.id,   rel: 'follows'}),
-    alice.add('follow', {feed: carol.id, rel: 'follows'}),
-    alice.add('trust',  {feed: bob.id,   rel: 'trusts'}),
+    cont(schemas.addFollow)(server.feed, bob.id),
+    cont(schemas.addFollow)(server.feed, carol.id),
+    cont(schemas.addTrust)(server.feed, bob.id, 1),
 
-    bob  .add('follow', {feed: alice.id, rel: 'follows'}),
-    bob  .add('trust',  {feed: alice.id, rel: 'trusts'}),
-    bob  .add('flag',   {feed: carol.id, rel: 'flags'}),
+    cont(schemas.addFollow)(bob, alice.id),
+    cont(schemas.addTrust)(bob, alice.id, 1),
+    cont(schemas.addTrust)(bob, carol.id, -1),
 
-    carol.add('follow', {feed: alice.id, rel: 'follows'}),
+    cont(schemas.addFollow)(carol, alice.id),
 
-    alice.add('follow', {feed: carol.id, rel: 'unfollows'}),
-    alice.add('trust',  {feed: bob.id,   rel: 'untrusts'}),
-    bob  .add('flag',   {feed: carol.id, rel: 'unflags'})
+    cont(schemas.addUnfollow)(server.feed, carol.id),
+    cont(schemas.addTrust)(server.feed, bob.id, 0),
+    cont(schemas.addTrust)(bob, carol.id, 0)
   ]) (function () {
 
-    // kludge!
-    // have to wait a bit for the friends plugin to do its indexing (carol's follow is missed sometimes if we dont wait)
-    // feel free to improve
-    setTimeout(next, 500)
+    cont.para([
+      cont(server.friends.all)('follow'),
+      cont(server.friends.all)('trust'),
 
-    function next() {
+      cont(server.friends.hops)(alice.id, 'follow'),
+      cont(server.friends.hops)(alice.id, 'trust'),
+
+      cont(server.friends.hops)(bob.id, 'follow'),
+      cont(server.friends.hops)(bob.id, 'trust'),
+
+      cont(server.friends.hops)(carol.id, 'follow'),
+      cont(server.friends.hops)(carol.id, 'trust')
+    ], function (err, results) {
+
       var aliasMap = {}
       aliasMap[alice.id] = 'alice'
       aliasMap[bob.id]   = 'bob'
       aliasMap[carol.id] = 'carol'
       a = toAliases(aliasMap)
 
-      t.deepEqual(a(server.friends.all('follow')), { alice: { bob: true }, bob: { alice: true }, carol: { alice: true } })
-      t.deepEqual(a(server.friends.all('trust')),  { alice: {}, bob: { alice: true } })
-      t.deepEqual(a(server.friends.all('flag')),   { bob: {}, carol: {} })
+      results = results.map(a)
+      var i = 0
 
-      t.deepEqual(a(server.friends.hops(alice.id, 'follow')), { alice: 0, bob: 1 })
-      t.deepEqual(a(server.friends.hops(alice.id, 'trust')), { alice: 0 })
-      t.deepEqual(a(server.friends.hops(alice.id, 'flag')), { alice: 0 })
+      t.deepEqual(results[i++], { alice: { bob: true }, bob: { alice: true }, carol: { alice: true } })
+      t.deepEqual(results[i++],  { alice: {}, bob: { alice: 1 }, carol: {} })
 
-      t.deepEqual(a(server.friends.hops(bob.id, 'follow')), { bob: 0, alice: 1 })
-      t.deepEqual(a(server.friends.hops(bob.id, 'trust')), { bob: 0, alice: 1 })
-      t.deepEqual(a(server.friends.hops(bob.id, 'flag')), { bob: 0 })
+      t.deepEqual(results[i++], { alice: 0, bob: 1 })
+      t.deepEqual(results[i++], { alice: 0 })
 
-      t.deepEqual(a(server.friends.hops(carol.id, 'follow')), { carol: 0, alice: 1, bob: 2 })
-      t.deepEqual(a(server.friends.hops(carol.id, 'trust')), { carol: 0 })
-      t.deepEqual(a(server.friends.hops(carol.id, 'flag')), { carol: 0 })
+      t.deepEqual(results[i++], { bob: 0, alice: 1 })
+      t.deepEqual(results[i++], { bob: 0, alice: 1 })
+
+      t.deepEqual(results[i++], { carol: 0, alice: 1, bob: 2 })
+      t.deepEqual(results[i++], { carol: 0 })
 
       t.end()
       server.close()
-    }
+    })
   })
 })
 
