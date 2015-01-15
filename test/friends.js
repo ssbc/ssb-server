@@ -31,35 +31,48 @@ tape('construct and analyze graph', function (t) {
     cont(schemas.addFollow)(carol, alice.id)
   ]) (function () {
 
-    // kludge!
-    // have to wait a bit for the friends plugin to do its indexing (last messages are missed sometimes if we dont wait)
-    // feel free to improve
-    setTimeout(next, 500)
+    cont.para([
+      cont(server.friends.all)(),
+      cont(server.friends.all)('follow'),
+      cont(server.friends.all)('trust'),
 
-    function next() {
+      cont(server.friends.hops)(alice.id),
+      cont(server.friends.hops)(alice.id, 'follow'),
+      cont(server.friends.hops)(alice.id, 'trust'),
+
+      cont(server.friends.hops)(bob.id, 'follow'),
+      cont(server.friends.hops)(bob.id, 'trust'),
+
+      cont(server.friends.hops)(carol.id, 'follow'),
+      cont(server.friends.hops)(carol.id, 'trust')
+    ], function (err, results) {
+
       var aliasMap = {}
       aliasMap[alice.id] = 'alice'
       aliasMap[bob.id]   = 'bob'
       aliasMap[carol.id] = 'carol'
       a = toAliases(aliasMap)
 
-      t.deepEqual(a(server.friends.all()),         { alice: { bob: true, carol: true }, bob: { alice: true }, carol: { alice: true } })
-      t.deepEqual(a(server.friends.all('follow')), { alice: { bob: true, carol: true }, bob: { alice: true }, carol: { alice: true } })
-      t.deepEqual(a(server.friends.all('trust')),  { alice: { bob: 1 }, bob: { alice: 1, carol: -1 }, carol: {} })
+      results = results.map(a)
+      var i = 0
 
-      t.deepEqual(a(server.friends.hops(alice.id)), { alice: 0, bob: 1, carol: 1 })
-      t.deepEqual(a(server.friends.hops(alice.id, 'follow')), { alice: 0, bob: 1, carol: 1 })
-      t.deepEqual(a(server.friends.hops(alice.id, 'trust')), { alice: 0, bob: 1, carol: 2 })
+      t.deepEqual(results[i++], { alice: { bob: true, carol: true }, bob: { alice: true }, carol: { alice: true } })
+      t.deepEqual(results[i++], { alice: { bob: true, carol: true }, bob: { alice: true }, carol: { alice: true } })
+      t.deepEqual(results[i++], { alice: { bob: 1 }, bob: { alice: 1, carol: -1 }, carol: {} })
 
-      t.deepEqual(a(server.friends.hops(bob.id, 'follow')), { bob: 0, alice: 1, carol: 2 })
-      t.deepEqual(a(server.friends.hops(bob.id, 'trust')), { bob: 0, alice: 1, carol: 1 })
+      t.deepEqual(results[i++], { alice: 0, bob: 1, carol: 1 })
+      t.deepEqual(results[i++], { alice: 0, bob: 1, carol: 1 })
+      t.deepEqual(results[i++], { alice: 0, bob: 1, carol: 2 })
 
-      t.deepEqual(a(server.friends.hops(carol.id, 'follow')), { carol: 0, alice: 1, bob: 2 })
-      t.deepEqual(a(server.friends.hops(carol.id, 'trust')), { carol: 0 })
+      t.deepEqual(results[i++], { bob: 0, alice: 1, carol: 2 })
+      t.deepEqual(results[i++], { bob: 0, alice: 1, carol: 1 })
+
+      t.deepEqual(results[i++], { carol: 0, alice: 1, bob: 2 })
+      t.deepEqual(results[i++], { carol: 0 })
 
       t.end()
       server.close()
-    }
+    })
   })
 })
 
@@ -91,33 +104,44 @@ tape('correctly delete edges', function (t) {
     cont(schemas.addTrust)(bob, carol.id, 0)
   ]) (function () {
 
-    // kludge!
-    // have to wait a bit for the friends plugin to do its indexing (last messages are missed sometimes if we dont wait)
-    // feel free to improve
-    setTimeout(next, 500)
+    cont.para([
+      cont(server.friends.all)('follow'),
+      cont(server.friends.all)('trust'),
 
-    function next() {
+      cont(server.friends.hops)(alice.id, 'follow'),
+      cont(server.friends.hops)(alice.id, 'trust'),
+
+      cont(server.friends.hops)(bob.id, 'follow'),
+      cont(server.friends.hops)(bob.id, 'trust'),
+
+      cont(server.friends.hops)(carol.id, 'follow'),
+      cont(server.friends.hops)(carol.id, 'trust')
+    ], function (err, results) {
+
       var aliasMap = {}
       aliasMap[alice.id] = 'alice'
       aliasMap[bob.id]   = 'bob'
       aliasMap[carol.id] = 'carol'
       a = toAliases(aliasMap)
 
-      t.deepEqual(a(server.friends.all('follow')), { alice: { bob: true }, bob: { alice: true }, carol: { alice: true } })
-      t.deepEqual(a(server.friends.all('trust')),  { alice: {}, bob: { alice: 1 }, carol: {} })
+      results = results.map(a)
+      var i = 0
 
-      t.deepEqual(a(server.friends.hops(alice.id, 'follow')), { alice: 0, bob: 1 })
-      t.deepEqual(a(server.friends.hops(alice.id, 'trust')), { alice: 0 })
+      t.deepEqual(results[i++], { alice: { bob: true }, bob: { alice: true }, carol: { alice: true } })
+      t.deepEqual(results[i++],  { alice: {}, bob: { alice: 1 }, carol: {} })
 
-      t.deepEqual(a(server.friends.hops(bob.id, 'follow')), { bob: 0, alice: 1 })
-      t.deepEqual(a(server.friends.hops(bob.id, 'trust')), { bob: 0, alice: 1 })
+      t.deepEqual(results[i++], { alice: 0, bob: 1 })
+      t.deepEqual(results[i++], { alice: 0 })
 
-      t.deepEqual(a(server.friends.hops(carol.id, 'follow')), { carol: 0, alice: 1, bob: 2 })
-      t.deepEqual(a(server.friends.hops(carol.id, 'trust')), { carol: 0 })
+      t.deepEqual(results[i++], { bob: 0, alice: 1 })
+      t.deepEqual(results[i++], { bob: 0, alice: 1 })
+
+      t.deepEqual(results[i++], { carol: 0, alice: 1, bob: 2 })
+      t.deepEqual(results[i++], { carol: 0 })
 
       t.end()
       server.close()
-    }
+    })
   })
 })
 

@@ -1,4 +1,5 @@
 var pull = require('pull-stream')
+var pushable = require('pull-pushable')
 var many = require('pull-many')
 var cat = require('pull-cat')
 
@@ -25,8 +26,16 @@ function replicate(server, rpc, cb) {
     }
 
     function latest () {
+      var ps = pushable()
+      server.friends.hops(null, 'follow', function (err, friends) {
+        if (friends) {
+          for (var k in friends)
+            ps.push(k)
+        }
+        ps.end()
+      })
       return pull(
-        pull.values(Object.keys(server.friends.hops())),
+        ps,
         ssb.createLatestLookupStream()
       )
     }

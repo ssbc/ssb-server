@@ -117,12 +117,13 @@ tape('test invite.addMe api', function (t) {
 //    invite.feed = sbotB.feed.id
     sbotB.invite.addMe(invite, function (err) {
       if(err) throw err
-      var hops = sbotA.friends.hops(sbotA.feed.id)
-      console.log(hops)
-      t.equal(hops[sbotB.feed.id], 1)
-      sbotA.close()
-      sbotB.close()
-      t.end()
+      sbotA.friends.hops(sbotA.feed.id, function (err, hops) {
+        console.log(hops)
+        t.equal(hops[sbotB.feed.id], 1)
+        sbotA.close()
+        sbotB.close()
+        t.end()
+      })
     })
   })
 })

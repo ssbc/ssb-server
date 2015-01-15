@@ -1,6 +1,7 @@
 var Graphmitter = require('graphmitter')
 var pull        = require('pull-stream')
-var ssbMsgs     = require('ssb-msgs')
+var mlib        = require('ssb-msgs')
+var memview     = require('level-memview')
 
 function isFunction (f) {
   return 'function' === typeof f
@@ -13,8 +14,8 @@ function isString (s) {
 exports.name = 'friends'
 exports.version = '1.0.0'
 exports.manifest = {
-  all  : 'sync',
-  hops : 'sync'
+  all  : 'async',
+  hops : 'async'
 }
 
 exports.init = function (sbot) {
@@ -25,48 +26,55 @@ exports.init = function (sbot) {
   }
   var config = sbot.config
 
-  // collect follows
+  // view processor
   var toFeedOpts = { tofeed: true }
-  pull(
-    sbot.ssb.messagesByType({ type: 'follow', keys: false, live: true }),
-    pull.drain(function (msg) {
-      ssbMsgs.indexLinks(msg.content, toFeedOpts, function (link) {
-        if (msg.content.rel === 'follows')
-          graphs.follow.edge(msg.author, link.feed, true)
-        else if (msg.content.rel === 'unfollows')
-          graphs.follow.del(msg.author, link.feed)
-      })
-    })
-  )
-
-  // collect trusts
   var toFeedTrustsOpts = { tofeed: true, rel: 'trusts' }
-  pull(
-    sbot.ssb.messagesByType({ type: 'trust', keys: false, live: true }),
-    pull.drain(function (msg) {
-      ssbMsgs.indexLinks(msg.content, toFeedTrustsOpts, function (link) {
-        if (+msg.content.value != msg.content.value) // numeric (or an empty string)?
-          return
-        if (msg.content.value != 0)
-          graphs.trust.edge(msg.author, link.feed, (+msg.content.value > 0) ? 1 : -1)
-        else
-          graphs.trust.del(msg.author, link.feed)
+  var awaitSync = memview(sbot.ssb, function (msg) {
+    if (msg.value.content.type == 'follow') {
+      mlib.indexLinks(msg.value.content, toFeedOpts, function (link) {
+        if (msg.value.content.rel === 'follows')
+          graphs.follow.edge(msg.value.author, link.feed, true)
+        else if (msg.value.content.rel === 'unfollows')
+          graphs.follow.del(msg.value.author, link.feed)
       })
-    })
-  )
+    }
+    else if (msg.value.content.type == 'trust') {
+      mlib.indexLinks(msg.value.content, toFeedTrustsOpts, function (link) {
+        if (+msg.value.content.value != msg.value.content.value) // numeric (or an empty string)?
+          return
+        if (msg.value.content.value != 0)
+          graphs.trust.edge(msg.value.author, link.feed, (+msg.value.content.value > 0) ? 1 : -1)
+        else
+          graphs.trust.del(msg.value.author, link.feed)
+      })
+    }
+  }, function() {})
 
   return {
-    all: function (graph) {
+    all: function (graph, cb) {
+      if (typeof graph == 'function') {
+        cb = graph
+        graph = null
+      }
       if (!graph)
         graph = 'follow'
-      return graphs[graph] ? graphs[graph].toJSON() : null
+      awaitSync(function () {
+        cb(null, graphs[graph] ? graphs[graph].toJSON() : null)
+      })
     },
-    hops: function (start, graph, opts) {
+    hops: function (start, graph, opts, cb) {
+      if (typeof opts == 'function') { // (start|opts, graph, cb)
+        cb = opts
+        opts = null
+      } else if (typeof graph == 'function') { // (start|opts, cb)
+        cb = graph
+        opts = graph = null
+      }
       opts = opts || {}
-      if(isString(start)) {
+      if(isString(start)) { // (start, ...)
         // first arg is id string
         opts.start = start
-      } else if (start && typeof start == 'object') {
+      } else if (start && typeof start == 'object') { // (opts, ...)
         // first arg is opts
         for (var k in start)
           opts[k] = start[k]
@@ -79,9 +87,11 @@ exports.init = function (sbot) {
 
       var g = graphs[graph || 'follow']
       if (!g)
-        throw new Error('Invalid graph type: '+graph)
+        return cb(new Error('Invalid graph type: '+graph))
 
-      return g.traverse(opts)
+      awaitSync(function () {
+        cb(null, g.traverse(opts))
+      })
     }
   }
 }
