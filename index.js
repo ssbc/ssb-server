@@ -260,8 +260,10 @@ exports.fromConfig = function (config) {
       .use(require('./plugins/replicate'))
       .use(require('./plugins/gossip'))
 
-  if(config.local)
+  if (config.local)
     sbot.use(require('./plugins/local'))
+  if (config.phoenix)
+    sbot.use(require('ssbplug-phoenix'))
 
   return sbot
       .use(require('./plugins/blobs'))
