@@ -53,7 +53,7 @@ module.exports = {
 
         var owner = server.feed
         codesDB.put(keyId,  {
-          secret: secret, total: n, used: 0
+          secret: secret, total: +n, used: 0
         }, function (err) {
           if(err) cb(err)
           else cb(null, [addr, owner.id, secret].join(','))
@@ -79,7 +79,7 @@ module.exports = {
           if(!invite)
             return cb(new Error('invite code is incorrect or expired'))
 
-          if(invite.used >= invite.count)
+          if(invite.used >= invite.total)
             return cb(new Error('invite code:'+id+' has expired'))
 
           if(!ssbKeys.verifyObjHmac(invite.secret, req))
