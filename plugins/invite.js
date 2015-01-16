@@ -68,7 +68,7 @@ module.exports = {
         var id = rpc.authorized.id
         server.friends.all('follow', function(err, follows) {
           if (follows && follows[server.feed.id] && follows[server.feed.id][id])
-            return cb() // already followed
+            return cb(new Error('already following'))
 
           codesDB.get(req.keyId, function(err, invite) {
 
