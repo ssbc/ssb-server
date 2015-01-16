@@ -66,41 +66,46 @@ module.exports = {
           return cb(new Error('cannot use invite code when authorized with hmac'))
 
         var id = rpc.authorized.id
-        codesDB.get(req.keyId, function(err, invite) {
+        server.friends.all('follow', function(err, follows) {
+          if (follows && follows[server.feed.id] && follows[server.feed.id][id])
+            return cb() // already followed
 
-          // although we already know the current feed
-          // it's included so that request cannot be replayed.
-          if(!req.feed)
-            return cb(new Error('feed to follow is missing'))
+          codesDB.get(req.keyId, function(err, invite) {
 
-          if(req.feed !== id)
-            return cb(new Error('invite code may not be used to follow another key'))
+            // although we already know the current feed
+            // it's included so that request cannot be replayed.
+            if(!req.feed)
+              return cb(new Error('feed to follow is missing'))
 
-          if(!invite)
-            return cb(new Error('invite code is incorrect or expired'))
+            if(req.feed !== id)
+              return cb(new Error('invite code may not be used to follow another key'))
 
-          if(invite.used >= invite.total)
-            return cb(new Error('invite code:'+id+' has expired'))
+            if(!invite)
+              return cb(new Error('invite code is incorrect or expired'))
 
-          if(!ssbKeys.verifyObjHmac(invite.secret, req))
-            return cb(new Error('invalid invite request'))
+            if(invite.used >= invite.total)
+              return cb(new Error('invite code:'+id+' has expired'))
 
-          invite.used ++
+            if(!ssbKeys.verifyObjHmac(invite.secret, req))
+              return cb(new Error('invalid invite request'))
 
-          //okay so there is a small race condition here
-          //if people use a code massively in parallel
-          //then it may not be counted correctly...
-          //this is not a big enough deal to fix though.
+            invite.used ++
 
-          codesDB.put(req.keyId, invite, function (err) {
-            server.emit('log:info', ['invite', rpc._sessid, 'use', req])
+            //okay so there is a small race condition here
+            //if people use a code massively in parallel
+            //then it may not be counted correctly...
+            //this is not a big enough deal to fix though.
 
-            server.feed.add({
-              type: 'follow',
-              feed: id, rel: 'follows',
-              auto: true
-            }, cb)
-          })
+            codesDB.put(req.keyId, invite, function (err) {
+              server.emit('log:info', ['invite', rpc._sessid, 'use', req])
+
+              server.feed.add({
+                type: 'follow',
+                feed: id, rel: 'follows',
+                auto: true
+              }, cb)
+            })
+          }) 
         })
       },
       addMe: function (req, cb) {
