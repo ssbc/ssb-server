@@ -1,6 +1,6 @@
 # Scuttlebot
 
-Scuttlebot is a node.js app for decentralized social networking. It runs on your computer and syncs over wifi, and through user-hosted "pub" servers. It ships with a discussions application and is open for users to hack on.
+Scuttlebot is a node.js app for decentralized social networking. It runs on user PCs (not remote hosts) and syncs over wifi and through user-hosted "pub" servers.
 
 Scuttlebot was created for
 
@@ -15,6 +15,10 @@ Join us in #scuttlebutt on freenode.
 **What is Secure Scuttlebutt?**
 
 [Secure Scuttlebutt](https://github.com/ssbc/secure-scuttlebutt) (SSB) is a fully-decentralized data network designed to replace Web services. It uses cryptographic keypairs to gossip unforgeable data-feeds across the network. "Pub" servers aggregate and redistribute the feeds, but SSB has no central authority: every node is equal, and the network is fully open.
+
+**What is Phoenix?**
+
+[Phoenix](https://github.com/ssbc/phoenix) is a Web UI for public discussion threads. It is the default frontend that ships with scuttlebot.
 
 
 ### Installing
@@ -49,7 +53,7 @@ The `whoami` command outputs your id and your public key. There are many other c
 
 ### Web UI
 
-Once the scuttlebot server is running, you can access the Web UI at `http://localhost:2000`. It will prompt you to setup your new account, then give you instructions on how to join the network. Follow them, or the instructions below.
+Once the scuttlebot server is running, you can access the Web UI at `http://localhost:2000`. It will prompt you to setup your new account, then give you instructions on how to join the network. You can follow them or the instructions below.
 
 
 ### Joining the Network
