@@ -8,6 +8,7 @@ module.exports = require('rc')('ssb', {
   timeout: 30000,
   pub: true,
   local: true,
+  phoenix: true,
   friends: {
     //dunbar number - this is how many nodes
     //your instance will replicate.
