@@ -16,7 +16,7 @@ tape('test invite api', function (t) {
   var alice = sbotA.feed
   var bob = sbotA.ssb.createFeed() //bob
 
-  var server = sbotA.use(require('../plugins/invite'))
+  var server = sbotA.use(require('../plugins/invite')).use(require('../plugins/friends'))
 
   //request a secret that with particular permissions.
 
@@ -107,7 +107,7 @@ tape('test invite.addMe api', function (t) {
     .use(require('../plugins/invite'))
     .use(require('../plugins/friends'))
 
-  sbotB.use(require('../plugins/invite'))
+  sbotB.use(require('../plugins/invite')).use(require('../plugins/friends'))
 
   //request a secret that with particular permissions.
 
