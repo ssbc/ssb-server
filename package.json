@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "broadcast-stream": "~0.0.0",
+    "cont": "~1.0.1",
     "daemonize2": "0.4.2",
     "level-memview": "~0.0.0",
     "minimist": "~1.1.0",
@@ -43,7 +44,6 @@
   "devDependencies": {
     "rimraf": "~2.2.8",
     "tape": "~3.0.0",
-    "cont": "~1.0.1",
     "level-test": "~1.6.6",
     "deep-equal": "~0.2.1",
     "level-sublevel": "~6.3.15",
