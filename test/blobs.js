@@ -224,3 +224,72 @@ tape('request missing blobs again after reconnect', function (t) {
   )
 })
 
+tape('emit "has" event to let peer know you have blob now', function (t) {
+
+  var sbotA = u.createDB('test-blobs-alice5', {
+      port: 45455, host: 'localhost', timeout: 1000,
+    }).use(gossip).use(friends).use(replicate).use(blobs)
+
+  var alice = sbotA.feed
+
+  var sbotB = u.createDB('test-blobs-bob5', {
+      port: 45456, host: 'localhost', timeout: 1000,
+      seeds: [{port: 45455, host: 'localhost'}]
+    }).use(gossip).use(friends).use(replicate).use(blobs)
+
+  var bob = sbotB.feed
+
+  var hasher = Hasher()
+
+  sbotA.on('blobs:has', function (r) {
+    console.log('REQUEST', r)
+  })
+
+  pull(
+    read(__filename),
+    hasher,
+    pull.drain(null, function (err) {
+
+      var hash = hasher.digest
+      console.log('WANT:', hash)
+
+      cont.para([
+        alice.add({type: 'post', text: 'this file', ext: hash, rel: 'js'}),
+        alice.add({type: 'follow', feed: bob.id, rel: 'follows'}),
+        bob.add({type: 'follow', feed: alice.id, rel: 'follows'})
+      ])(function (err, data) {
+        if(err) throw err
+      })
+      // bob should not request `hash` more than once.
+
+      t.plan(2)
+
+      sbotB.on('blobs:got', function (h) {
+        t.equal(h, hash)
+        sbotA.close()
+        sbotB.close()
+        t.end()
+      })
+
+      //wait for bob to request the hash
+      //then add that file.
+      sbotA.on('blobs:has', function (h) {
+        console.log('HAS', h)
+        t.deepEqual(h, [hash])
+
+        pull(
+          read(__filename),
+          sbotA.blobs.add(null, function (err, hash) {
+            //have now added the blob to 
+          })
+        )
+      })
+    })
+  )
+
+  //this test should only require one connection.
+  var n = 0
+  sbotB.on('rpc:authorized', function (rpc) {
+    if(++n > 1) throw new Error('connected twice')
+  })
+})
