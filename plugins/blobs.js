@@ -50,7 +50,7 @@ function oneTrack(delay, fun) {
 
   var doing = false, timeout
 
-  return function job () {
+  function job () {
     if(doing) return
     doing = true
     clearTimeout(timeout); timeout = null
@@ -66,6 +66,12 @@ function oneTrack(delay, fun) {
     })
 
   }
+
+  job.abort = function () {
+    clearTimeout(timeout)
+  }
+
+  return job
 }
 
 module.exports = {
@@ -118,6 +124,11 @@ module.exports = {
     sbot.on('rpc:authorized', function (rpc) {
       var id = rpc.authorized.id
       remotes[id] = rpc
+      //forget any blobs that they did not have
+      //in previous requests. they might have them by now.
+      each(want, function (e, k) {
+        if(e.has && e.has[id] === false) delete e.has[id]
+      })
       query(); download()
       var done = rpc.task()
       rpc.once('closed', function () {
@@ -145,18 +156,31 @@ module.exports = {
       var n = 0
       each(remotes, function (remote, id) {
         n++
-        remote.blobs.has(wantList, function (err, hasList) {
-          if(hasList)
-            wantList.forEach(function (key, i) {
-              want[key].has = want[key].has || {}
-              want[key].has[id] = hasList[i]
-              if(hasList[i] && want[key].state === 'waiting')
-                want[key].state = 'ready'
-            })
+        var thisWantList = wantList.filter(function (key) {
+          return (
+            !want[key].has ||
+            want[key].has[id] == null
+          )
+        })
+
+        if(!thisWantList.length) next()
+        else {
+          remote.blobs.has(thisWantList, function (err, hasList) {
+            if(hasList)
+              wantList.forEach(function (key, i) {
+                want[key].has = want[key].has || {}
+                want[key].has[id] = hasList[i]
+                if(hasList[i] && want[key].state === 'waiting')
+                  want[key].state = 'ready'
+              })
+            next()
+          })
+        }
+
+        function next () {
           if(--n) return
           done(); download()
-
-        })
+        }
       })
 
       if(!n) done()
@@ -198,16 +222,22 @@ module.exports = {
       query()
     }
 
+    sbot.on('close', download.abort)
+    sbot.on('close', query.abort)
+
+
     return {
       get: function (hash) {
         return pull(blobs.get(hash), toBase64())
       },
 
       has: function (hash, cb) {
+        sbot.emit('blobs:has', hash)
         blobs.has(hash, cb)
       },
 
       size: function (hash, cb) {
+        sbot.emit('blobs:size', hash)
         blobs.size(hash, cb)
       },
 
