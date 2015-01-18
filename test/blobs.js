@@ -1,4 +1,3 @@
-
 var fs        = require('fs')
 var tape      = require('tape')
 var path      = require('path')
@@ -145,7 +144,7 @@ tape('avoid flooding a peer with blob requests', function (t) {
 
       t.plan(1)
 
-      sbotB.on('blobs:has', function (h) {
+      sbotA.on('blobs:has', function (h) {
         console.log('HAS', h)
         t.deepEqual(h, [hash])
       })
@@ -154,11 +153,74 @@ tape('avoid flooding a peer with blob requests', function (t) {
         console.log('rpc:authorized')
         rpc.on('closed', function () {
           console.log('CLOSE')
+          t.end()
           sbotA.close()
           sbotB.close()
-          t.end()
         })
       })
     })
   )
 })
+
+
+tape('request missing blobs again after reconnect', function (t) {
+
+  var sbotA = u.createDB('test-blobs-alice4', {
+      port: 45453, host: 'localhost', timeout: 1000,
+    }).use(gossip).use(friends).use(replicate).use(blobs)
+
+  var alice = sbotA.feed
+
+  var sbotB = u.createDB('test-blobs-bob4', {
+      port: 45454, host: 'localhost', timeout: 1000,
+      seeds: [{port: 45453, host: 'localhost'}]
+    }).use(gossip).use(friends).use(replicate).use(blobs)
+
+  var bob = sbotB.feed
+
+  var hasher = Hasher()
+
+  sbotA.on('blobs:has', function (r) {
+    console.log('REQUEST', r)
+  })
+
+  pull(
+    read(__filename),
+    hasher,
+    pull.drain(null, function (err) {
+
+      var hash = hasher.digest
+      console.log('WANT:', hash)
+
+      cont.para([
+        alice.add({type: 'post', text: 'this file', ext: hash, rel: 'js'}),
+        alice.add({type: 'follow', feed: bob.id, rel: 'follows'}),
+        bob.add({type: 'follow', feed: alice.id, rel: 'follows'})
+      ])(function (err, data) {
+        if(err) throw err
+      })
+      // bob should not request `hash` more than once.
+
+      t.plan(2)
+
+      sbotA.on('blobs:has', function (h) {
+        console.log('HAS', h)
+        t.deepEqual(h, [hash])
+      })
+
+      sbotB.once('rpc:authorized', function (rpc) {
+        console.log('rpc:authorized - 1')
+        sbotB.once('rpc:authorized', function (rpc) {
+          console.log('rpc:authorized - 2')
+          rpc.on('closed', function () {
+            console.log('CLOSE')
+            sbotA.close()
+            sbotB.close()
+            t.end()
+          })
+        })
+      })
+    })
+  )
+})
+
