@@ -6,6 +6,7 @@ var toPull    = require('stream-to-pull-stream')
 var pull      = require('pull-stream')
 var u         = require('./util')
 var cont      = require('cont')
+var Hasher    = require('multiblob/util').createHash
 
 // create 3 servers
 // give them all pub servers (on localhost)
@@ -98,6 +99,64 @@ tape('replicate published blobs between 2 peers', function (t) {
           t.end()
           sbotA.close()
           sbotB.close()
+        })
+      })
+    })
+  )
+})
+
+tape('avoid flooding a peer with blob requests', function (t) {
+
+  var sbotA = u.createDB('test-blobs-alice3', {
+      port: 45451, host: 'localhost', timeout: 1000,
+    }).use(gossip).use(friends).use(replicate).use(blobs)
+
+  var alice = sbotA.feed
+
+  var sbotB = u.createDB('test-blobs-bob3', {
+      port: 45452, host: 'localhost', timeout: 1000,
+      seeds: [{port: 45451, host: 'localhost'}]
+    }).use(gossip).use(friends).use(replicate).use(blobs)
+
+  var bob = sbotB.feed
+
+  var hasher = Hasher()
+
+  sbotA.on('blobs:has', function (r) {
+    console.log('REQUEST', r)
+  })
+
+  pull(
+    read(__filename),
+    hasher,
+    pull.drain(null, function (err) {
+
+      var hash = hasher.digest
+      console.log('WANT:', hash)
+
+      cont.para([
+        alice.add({type: 'post', text: 'this file', ext: hash, rel: 'js'}),
+        alice.add({type: 'follow', feed: bob.id, rel: 'follows'}),
+        bob.add({type: 'follow', feed: alice.id, rel: 'follows'})
+      ])(function (err, data) {
+        if(err) throw err
+      })
+      // bob should not request `hash` more than once.
+
+      t.plan(1)
+
+      sbotB.on('blobs:has', function (h) {
+        console.log('HAS', h)
+        t.deepEqual(h, [hash])
+      })
+
+      sbotB.once('rpc:authorized', function (rpc) {
+        console.log('rpc:authorized')
+        rpc.on('closed', function () {
+          console.log('CLOSE')
+          sbotA.close()
+          sbotB.close()
+          t.end()
         })
       })
     })
