@@ -94,6 +94,11 @@ module.exports = {
 
     function got (hash) {
       sbot.emit('blobs:got', hash)
+
+      each(remotes, function (rpc) {
+        rpc.emit('blobs:got', hash)
+      })
+
       if(!want[hash]) return
       var cbs = want[hash].waiting
       delete want[hash]
@@ -133,6 +138,18 @@ module.exports = {
       var done = rpc.task()
       rpc.once('closed', function () {
         delete remotes[id]
+      })
+
+      //when the peer gets a blob, if its one we want,
+      //then request it.
+      rpc.on('blobs:got', function (hash) {
+        if(want[hash]) {
+          want[hash].has = want[hash].has || {}
+          want[hash].has[id] = true
+          if(want[hash].state === 'waiting')
+            want[hash].state = 'ready'
+          download()
+        }
       })
     })
 
