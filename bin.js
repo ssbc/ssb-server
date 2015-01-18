@@ -1,13 +1,15 @@
 #! /usr/bin/env node
 
-var fs        = require('fs')
-var ws        = require('pull-ws-server')
-var path      = require('path')
-var pull      = require('pull-stream')
-var toPull    = require('stream-to-pull-stream')
-var explain   = require('explain-error')
-var ssbKeys   = require('ssb-keys')
-var stringify = require('pull-stringify')
+var fs         = require('fs')
+var ws         = require('pull-ws-server')
+var path       = require('path')
+var msgs       = require('ssb-msgs')
+var pull       = require('pull-stream')
+var toPull     = require('stream-to-pull-stream')
+var explain    = require('explain-error')
+var ssbKeys    = require('ssb-keys')
+var stringify  = require('pull-stringify')
+var createHash = require('multiblob/util').createHash
 
 var config  = require('./config')
 
@@ -28,6 +30,14 @@ function isObject (o) {
 }
 
 var isHash = ssbKeys.isHash
+
+function isString (s) {
+  return 'string' === typeof s
+}
+
+function toBase64() {
+  return pull.map(function (b) { return b.toString('base64') })
+}
 
 function defaultRel (o, r) {
   if(!isObject(o)) return o
@@ -103,7 +113,7 @@ var rpc = require('./client')(config, manifest, function (err) {
     if(err) throw err
   })
 
-var isStdin = ~process.argv.indexOf('.') || ~process.argv.indexOf('--')
+var isStdin = ('.' === arg || '--' === arg)
 
 if(!process.stdin.isTTY && isStdin) {
   pull(
@@ -118,10 +128,6 @@ if(!process.stdin.isTTY && isStdin) {
 }
 else
   next(opts)
-
-function toBase64() {
-  return pull.map(function (b) { return b.toString('base64') })
-}
 
 function next (data) {
   //set $rel as key name if it's missing.
@@ -147,7 +153,54 @@ function next (data) {
       else
         throw explain(err, 'auth failed')
     }
-    if('async' === type || type === 'sync') {
+
+    // handle add specially, so that external links (ext)
+    // can be detected, and files uploaded first.
+    // then the message is created and everything is in a valid state.
+
+    if(cmd.toString() === 'add' && !isStdin) {
+      //parse and add ext links before adding message.
+      var n = 0
+      msgs.indexLinks(data, function (link) {
+        if(isString(link.ext)) {
+          n++
+          var hasher = createHash()
+          var source = (
+              /^(\.|--)$/.test(link.ext)
+            ? toPull.source(process.stdin)
+            : 0 === link.ext.indexOf('./')
+            ? toPull.source(fs.createReadStream(link.ext))
+            : (function () { throw new Error('cannot process ext:'+link.ext) })()
+          )
+
+          pull(
+            source,
+            hasher,
+            toBase64(),
+            rpc.blobs.add(function (err) {
+              if(err) return next(err)
+              link.ext = hasher.digest
+              if(link.size == null) link.size = hasher.size
+              next()
+            })
+          )
+        }
+      })
+
+      if(n == 0) n = 1, next()
+
+      function next (err) {
+        if(err && n > 0) { n = -1; throw err }
+        if(--n) return
+        rpc.add(data, function (err, ret) {
+          if(err) throw err
+          console.log(JSON.stringify(ret, null, 2))
+          process.exit()
+        })
+      }
+
+    }
+    else if('async' === type || type === 'sync') {
       get(rpc, cmd)(data, function (err, ret) {
         if(err) throw err
         console.log(JSON.stringify(ret, null, 2))
@@ -155,6 +208,9 @@ function next (data) {
       })
     }
     else if('source' === type)
+      //TODO: handle binary sources. this will require a different
+      //s  erialization, specially for muxrpc... that can handle
+      //JSON and length delimitation.
       pull(
         get(rpc, cmd)(data),
         stringify('', '\n', '\n\n', 2, JSON.stringify),
@@ -167,8 +223,9 @@ function next (data) {
       pull(
         toPull.source(process.stdin),
         toBase64(),
-        get(rpc, cmd)(data, function (err) {
+        get(rpc, cmd)(data, function (err, res) {
           if(err) throw explain(err, 'writing stream failed')
+          console.log(JSON.stringify(res, null, 2))
           process.exit()
         })
       )

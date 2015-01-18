@@ -34,7 +34,7 @@
     "stream-to-pull-stream": "~1.6.0",
     "explain-error": "~1.0.1",
     "map-merge": "~1.1.0",
-    "multiblob": "~1.2.0",
+    "multiblob": "~1.4.1",
     "bash-color": "~0.0.3",
     "pull-inactivity": "~2.1.1",
     "graphmitter": "~1.3.0",
