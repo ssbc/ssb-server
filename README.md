@@ -1,12 +1,14 @@
 # Scuttlebot
 
-Scuttlebot is a node.js app for decentralized social networking. It runs on user PCs (not remote hosts) and syncs over wifi and "pub" servers.
+Scuttlebot is a decentralized, distributed database and application server. It runs on user devices and syncs over wifi and "pub" servers.
 
 Scuttlebot was created for
 
- - Secure, cloud-free office communications
- - User-hackable web apps without walled gardens
- - Distributed (EC) systems research
+ - Cloud-free office communications
+ - Social computing
+ - File-sharing
+ - Keypair trust-graphs
+ - Distributed systems research
 
 Join us in #scuttlebutt on freenode.
 
