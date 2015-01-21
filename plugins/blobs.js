@@ -82,7 +82,8 @@ module.exports = {
     has: 'async',
     add: 'sink',
     ls: 'source',
-    want: 'async'
+    want: 'async',
+    wants: 'sync'
   },
   permissions: {
     anonymous: {allow: ['has', 'get']},
@@ -285,6 +286,11 @@ module.exports = {
           if(has) return cb()
           queue(hash, cb)
         })
+      },
+
+      // get current want list
+      wants: function () {
+        return jobs
       }
     }
   }
