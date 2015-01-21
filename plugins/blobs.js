@@ -191,7 +191,7 @@ module.exports = {
                 want[key].has[id] = hasList[i]
                 if(hasList[i] && want[key].state === 'waiting') {
                   want[key].state = 'ready'
-                  sbot.emit('log:info', ['blobs', id, 'found', hash])
+                  sbot.emit('log:info', ['blobs', id, 'found', key])
                 }
               })
             next()
