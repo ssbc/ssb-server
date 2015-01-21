@@ -95,6 +95,7 @@ module.exports = {
 
     function got (hash) {
       sbot.emit('blobs:got', hash)
+      sbot.emit('log:info', ['blobs', null, 'got', hash])
 
       each(remotes, function (rpc) {
         rpc.emit('blobs:got', hash)
@@ -188,8 +189,10 @@ module.exports = {
               wantList.forEach(function (key, i) {
                 want[key].has = want[key].has || {}
                 want[key].has[id] = hasList[i]
-                if(hasList[i] && want[key].state === 'waiting')
+                if(hasList[i] && want[key].state === 'waiting') {
                   want[key].state = 'ready'
+                  sbot.emit('log:info', ['blobs', id, 'found', hash])
+                }
               })
             next()
           })
@@ -217,6 +220,7 @@ module.exports = {
       var f = wantList.shift()
 
       var id = firstKey(f.has)
+      sbot.emit('log:info', ['blobs', id, 'downloading', f.id])
       pull(
         remotes[id].blobs.get(f.id),
         toBuffer(),
@@ -229,6 +233,7 @@ module.exports = {
     })
 
     function queue (hash, cb) {
+      sbot.emit('log:info', ['blobs', null, 'want', hash])
       if(want[hash]) {
         want[hash].waiting.push(cb)
       }
