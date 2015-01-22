@@ -228,6 +228,7 @@ module.exports = {
         blobs.add(f.id, function (err, hash) {
           if(err) console.error(err.stack)
           else got(hash)
+          done()
         })
       )
     })
