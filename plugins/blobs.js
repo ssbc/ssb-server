@@ -210,8 +210,8 @@ module.exports = {
     var download = oneTrack(function (done) {
       var wantList = getWantList('ready')
         .filter(function (e) {
-          return first(e.has, function (_, k) {
-            return remotes[k]
+          return first(e.has, function (has, k) {
+            return has && remotes[k]
           })
         })
 
