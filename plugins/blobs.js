@@ -187,6 +187,8 @@ module.exports = {
           remote.blobs.has(thisWantList, function (err, hasList) {
             if(hasList)
               thisWantList.forEach(function (key, i) {
+                if (!want[key])
+                  return
                 want[key].has = want[key].has || {}
                 want[key].has[id] = hasList[i]
                 if(hasList[i] && want[key].state === 'waiting') {
