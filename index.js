@@ -177,7 +177,7 @@ exports = module.exports = function (config, ssb, feed) {
   }
 
   server.getAddress = function() {
-    var address = server.config.hostname || server.config.host || nonPrivate.private() || 'localhost'
+    var address = server.config.host || nonPrivate.private() || 'localhost'
     if (server.config.port != DEFAULT_PORT)
       address += ':' + server.config.port
     return address
