@@ -33,7 +33,7 @@ var DEFAULT_PORT = 2000
 
 function sameHost(e) {
   return function (p) {
-      return p.host == e.host && e.port == e.port
+      return p.host == e.host && p.port == e.port
     }
 }
 
