@@ -168,6 +168,7 @@ module.exports = {
           //track whether we have successfully connected.
           //or how many failures there have been.
           p.connected = false
+          server.emit('log:info', ['SBOT', rpc._sessid, 'disconnect'])
 
           var fail = !p.time || (p.time.attempt > p.time.connect)
 
