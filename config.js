@@ -21,5 +21,5 @@ module.exports = require('rc')('ssb', {
   gossip: {
     connections: 2
   },
-  path: path.join(process.env.HOME, '.ssb'),
+  path: path.join((process.platform == 'win32') ? process.env.HOMEPATH : process.env.HOME, '.ssb'),
 })
