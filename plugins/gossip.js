@@ -142,7 +142,6 @@ module.exports = {
 
       //two concurrent connections.
       if(count >= (conf.connections || 2)) return
-      count ++
 
       // connect to this random peer
       var p = rand(peers.filter(function (e) {
@@ -151,11 +150,14 @@ module.exports = {
       }))
 
       if(p) {
+        count ++
+
         p.time = p.time || {}
         if (!p.time.connect)
           p.time.connect = 0
         p.time.attempt = Date.now()
         p.connected = true
+        
         var rpc = server.connect(p)
         rpc._peer = p
         rpc.on('remote:authorized', function () {
