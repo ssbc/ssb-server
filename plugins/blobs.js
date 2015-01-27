@@ -109,6 +109,7 @@ module.exports = {
       cbs.forEach(function (cb) {
         cb()
       })
+      cbs.length = 0, cbs = null
     }
 
     var blobs = sbot._blobs = Blobs(path.join(sbot.config.path, 'blobs'))
@@ -119,7 +120,7 @@ module.exports = {
         var hash = data.dest
         if(isHash(hash))
           blobs.has(hash, function (_, has) {
-            if(!has) queue(hash, function () {})
+            if(!has) queue(hash)
           })
       })
     )
@@ -137,7 +138,6 @@ module.exports = {
         if(e.has && e.has[id] === false) delete e.has[id]
       })
       query(); download()
-      var done = rpc.task()
       rpc.once('closed', function () {
         delete remotes[id]
       })
@@ -237,13 +237,14 @@ module.exports = {
 
     function queue (hash, cb) {
       sbot.emit('log:info', ['blobs', null, 'want', hash])
-      if(want[hash]) {
-        want[hash].waiting.push(cb)
-      }
-      else
+      if(!want[hash]) {
         jobs.push(want[hash] = {
-          id: hash, waiting: [cb], state: 'waiting'
+          id: hash, waiting: [], state: 'waiting'
         })
+      }
+      
+      if (cb)
+        want[hash].waiting.push(cb)
 
       query()
     }
