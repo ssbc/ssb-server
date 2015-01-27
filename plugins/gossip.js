@@ -43,6 +43,7 @@ module.exports = {
   manifest: {
     seeds: 'async',
     peers: 'sync',
+    connect: 'async'
   },
   init: function (server) {
     var sched
@@ -76,6 +77,21 @@ module.exports = {
     var gossip = {
       peers: function () {
         return peers
+      },
+      connect: function (addr, cb) {
+        addr = u.toAddress(addr)
+        if (!addr || typeof addr != 'object')
+          return cb(new Error('first param must be an address'))
+
+        // find the peer
+        var p = u.find(peers.filter(Boolean), function (e) {
+          return e.host === addr.host && e.port === addr.port
+        })
+        if (!p) // only connect to known peers
+          return cb(new Error('address not a known peer'))
+
+        connectTo(p)
+        cb()
       }
     }
 
@@ -151,38 +167,44 @@ module.exports = {
 
       if(p) {
         count ++
-
-        p.time = p.time || {}
-        if (!p.time.connect)
-          p.time.connect = 0
-        p.time.attempt = Date.now()
-        p.connected = true
-        
-        var rpc = server.connect(p)
-        rpc._peer = p
-        rpc.on('remote:authorized', function () {
-          p.id = rpc.authorized.id
-          p.time = p.time || {}
-          p.time.connect = Date.now()
-        })
-
+        var rpc = connectTo(p)
         rpc.on('closed', function () {
-          //track whether we have successfully connected.
-          //or how many failures there have been.
-          p.connected = false
-          server.emit('log:info', ['SBOT', rpc._sessid, 'disconnect'])
-
-          var fail = !p.time || (p.time.attempt > p.time.connect)
-
-          if(fail) p.failure = (p.failure || 0) + 1
-          else     p.failure = 0
-
-          // :TODO: delete local peers if failure > N
-
           count = Math.max(count - 1, 0)
         })
 
       }
+    }
+
+    function connectTo (p) {
+      p.time = p.time || {}
+      if (!p.time.connect)
+        p.time.connect = 0
+      p.time.attempt = Date.now()
+      p.connected = true
+      
+      var rpc = server.connect(p)
+      rpc._peer = p
+      rpc.on('remote:authorized', function () {
+        p.id = rpc.authorized.id
+        p.time = p.time || {}
+        p.time.connect = Date.now()
+      })
+
+      rpc.on('closed', function () {
+        //track whether we have successfully connected.
+        //or how many failures there have been.
+        p.connected = false
+        server.emit('log:info', ['SBOT', rpc._sessid, 'disconnect'])
+
+        var fail = !p.time || (p.time.attempt > p.time.connect)
+
+        if(fail) p.failure = (p.failure || 0) + 1
+        else     p.failure = 0
+
+        // :TODO: delete local peers if failure > N
+      })
+
+      return rpc
     }
 
     return gossip
