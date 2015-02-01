@@ -1,5 +1,5 @@
 var path = require('path')
-
+var home = require('osenv').home
 var nonPrivate = require('non-private-ip')
 
 module.exports = require('rc')('ssb', {
@@ -21,5 +21,5 @@ module.exports = require('rc')('ssb', {
   gossip: {
     connections: 2
   },
-  path: path.join((process.platform == 'win32') ? process.env.HOMEPATH : process.env.HOME, '.ssb'),
+  path: path.join(home(), '.ssb')
 })
