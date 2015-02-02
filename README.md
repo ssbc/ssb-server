@@ -2,15 +2,8 @@
 
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ssbc/scuttlebot?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-Scuttlebot is a decentralized, distributed database and application server. It runs on user devices and syncs over wifi and "pub" servers.
-
-Scuttlebot was created for
-
- - Cloud-free office communications
- - Social computing
- - File-sharing
- - Keypair trust-graphs
- - Distributed systems research
+Scuttlebot is a decentralized, distributed database.
+It uses [Secure Scuttlebutt](https://github.com/ssbc/secure-scuttlebutt) to syncronize users' devices over the LAN or net - no central service required.
 
 Join us in #scuttlebutt on freenode.
 
