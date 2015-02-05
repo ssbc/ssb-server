@@ -122,6 +122,27 @@ and help support the network.
 
 The number specifies how many times the invite can be used before it expires. Share the code with friends so you can reach each other through your pub.
 
+### remote control your pub server
+
+sshing into your pub server all the time is a pain,
+but you can configure it to do whatever your local key asks.
+
+Add a property to your config file (create one at `~/.ssb/config`) if it does not exist.
+
+``` js
+"master": <your_id>,
+```
+
+To get your id, use `whoami` command on your local instance.
+If you would like to have more than one remote master, set master
+to an array of ids.
+
+Restart your pub server, and now issue commands from your local computer,
+
+```
+ssb_host=<pub_ip> sbot whoami
+{ "id": <pub server's id>, "public": <pub server's pubkey>}
+```
 
 ### CLI usage
 
