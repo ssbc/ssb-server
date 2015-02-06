@@ -275,5 +275,5 @@ exports.createClient = require('./client')
 
 if(!module.parent) {
   //start a server
-  exports.init(require('./config'))
+  exports.init(require('ssb-config'))
 }
