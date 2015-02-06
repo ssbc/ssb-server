@@ -11,7 +11,7 @@ var ssbKeys    = require('ssb-keys')
 var stringify  = require('pull-stringify')
 var createHash = require('multiblob/util').createHash
 
-var config  = require('./config')
+var config  = require('ssb-config')
 
 var keys = ssbKeys.loadOrCreateSync(path.join(config.path, 'secret'))
 
