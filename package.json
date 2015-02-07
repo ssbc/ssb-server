@@ -48,8 +48,7 @@
     "tape": "~3.0.0",
     "level-test": "~1.6.6",
     "deep-equal": "~0.2.1",
-    "level-sublevel": "~6.3.15",
-    "osenv": "~0.1.0"
+    "level-sublevel": "~6.3.15"
   },
   "bin": {
     "sbot": "./bin.js"
