@@ -23,22 +23,24 @@ Join us in #scuttlebutt on freenode.
 Set up a local client, join the network, and post messages.
 Please post an issue if the following does not work for you.
 
-```
-# first, install scuttlebot globally.
+First install scuttlebot globally:
 
-> npm install -g scuttlebot
+```
+$ npm install -g scuttlebot
 ```
 
 If this gives you a permissions error, [fix it using the method here (recommended)](http://stackoverflow.com/questions/19352976/npm-modules-wont-install-globally-without-sudo) or install and run scuttlebot using sudo.
 
+Start your local server:
+
 ```
-# start your local server
+$ sbot server
+```
 
-> sbot server
+Now, in another terminal, issue command:
 
-# now, in another tab, issue commands.
-
-> sbot whoami
+```
+$ sbot whoami
 {
   "id": "wuDDnMxVtk8U9hrueDj/T0itgp5HJZ4ZDEJodTyoMdg=.blake2s",
   "public": "vUadxn7OumI4aaHa3FGNQZ+822rsaPvBeJoM4lQ6ayTZcOHlnb0+u41isdwGQv3t3qw//wvFH6JmeHTpJzmO2w==.k256"
@@ -60,7 +62,7 @@ Scuttlebot will automatically sync with other computers on your wifi. If you wan
 It's easy to [run your own pub server](#running-a-pub-server), but life's easier if you can join an existing pub ([see the informal registry of pub servers](https://github.com/ssbc/scuttlebot/wiki/Pub-Servers)). Ask a pub-owner for an invite, then run the following command. This sends a request to the server and asks it to follow you. You'll see a similar output if you use this command.
 
 ```
-> sbot invite.addMe <invite-code>
+$ sbot invite.addMe <invite-code>
 
 [
   {
@@ -102,30 +104,31 @@ If you run a pub server - an ordinary machine, except running with
 a static ip address - then you can give out your own invite codes
 and help support the network.
 
-``` js
-# ssh into your server & install scuttlebot
+Ssh into your server and install scuttlebot:
 
-> ssh <user>@<host>
-> npm install -g scuttlebot
+```
+$ ssh <user>@<host>
+$ npm install -g scuttlebot
+```
 
-# run a server like above, but with a public ip, this must be the
-# the ip address of the server it's running on. this is my ip,
-# yours will be different. (You can use a domain instead of an ip)
+Run a server like above but with the public ip address of the computer it's running on (using a domain name is also fine):
 
-> sbot server --host 176.58.117.63
+```
+$ sbot server --host 176.58.117.63
+```
 
-# now in another terminal, create an invitation:
+In another terminal, create an invitation:
 
-> sbot invite.create 100
+```
+$ sbot invite.create 100
 "176.58.117.63,TNn7v0MsAs8OpQnyRwtsMeROVWGlKnS/ItX966PAWjI=.blake2s,yCHiB1JfBdIEUZEW/eURMRYe64FTTKuj7+F1p/xDrUc="
 ```
 
 The number specifies how many times the invite can be used before it expires. Share the code with friends so you can reach each other through your pub.
 
-### remote control your pub server
+### Control your pub server remotely
 
-sshing into your pub server all the time is a pain,
-but you can configure it to do whatever your local key asks.
+Using `ssh` to manage your pub server can be a pain. Instead you can configure it to do whatever your local key asks.
 
 Add a property to your config file (create one at `~/.ssb/config`) if it does not exist.
 
@@ -140,7 +143,7 @@ to an array of ids.
 Restart your pub server, and now issue commands from your local computer,
 
 ```
-ssb_host=<pub_ip> sbot whoami
+$ ssb_host=<pub_ip> sbot whoami
 { "id": <pub server's id>, "public": <pub server's pubkey>}
 ```
 
@@ -149,76 +152,48 @@ ssb_host=<pub_ip> sbot whoami
 Start a server
 
 ```
-sbot server
+$ sbot server
 ```
 
-then issue commands from another terminal...
+Then issue commands from another terminal.
+
+Add a simple message (type is required, but freeform):
 
 ```
-# add a simple message (type is required, but freeform)
-sbot add --type post --text "hello world"
+$ sbot add --type post --text "hello world"
+```
 
-# get your id
-sbot whoami
+Get your id:
 
-# set your nickname
-sbot add --type name --name bob
+```
+$ sbot whoami
+```
 
-# follow another user
-sbot add --type follow --feed <id> --rel follows
+Set your nickname:
 
-# add a pub server (this is a server you'll connect to replicate with)
-# (if port is the default, :2000, then that can be leftoff)
-sbot add --type pub --address <domain:port>
+```
+$ sbot add --type name --name bob
+```
 
-# read all messages in order received
-sbot log
+Follow another user:
+
+```
+$ sbot add --type follow --feed <id> --rel follows
+```
+
+Add a pub server (this is a server you'll connect to replicate with)
+(if port is the default, :2000, then that can be leftoff):
+
+```
+$ sbot add --type pub --address <domain:port>
+```
+
+Read all messages in order received:
+
+```
+$ sbot log
 ```
 
 ## Configuration
 
-There are some configuration options for the sysadmins out there.
-All configuration is loaded via [rc](https://github.com/dominictarr/rc)
-you can pass any configuration value in as cli arg, env var, or in a file.
-
-Mostly, you will want to edit `~/.ssb/config`
-```
-{
-  //listen on a non-standard port (it's easiest if you stay on 2000)
-  port: 2000,
-  //disconnect any replication stream after nothing has happened for
-  //this many milliseconds
-  timeout: 30000,
-
-  //replicate with pub servers
-  pub: true,
-
-  //replicate with local servers (discovered on same network via udp)
-  local: true,
-
-  //use the local ui (called phoenix)
-  phoenix: true,
-
-  //where to keep the database & files (default: next to config file)
-  path: ~/.ssb
-
-  //configuration for friends plugin
-  friends: {
-    //replicate first 150 peers
-    dunbar: 150,
-    //replicate 3 hops out from yourself.
-    hops: 3
-  },
-
-  gossip: {
-    //how many other nodes to connect with at one time.
-    connections: 2
-  },
-
-  //if you want to host with a domain, set it here.
-  //otherwise, your public ip is auto detected.
-  host: <auto detects non-private ip>
-}
-
-```
-
+Default configuration should be fine. If you want to know about the details and advanced usage please have a look at [`ssb-config`](https://github.com/ssbc/ssb-config).
