@@ -2,8 +2,7 @@
 
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ssbc/scuttlebot?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-Scuttlebot is a decentralized, distributed database.
-It uses [Secure Scuttlebutt](https://github.com/ssbc/secure-scuttlebutt) to syncronize users' devices over the LAN or net - no central service required.
+Scuttlebot is a decentralized, distributed, p2p, free and open-source database.
 
 Join us in #scuttlebutt on freenode.
 
@@ -11,7 +10,7 @@ Join us in #scuttlebutt on freenode.
 
 **What is Secure Scuttlebutt?**
 
-[Secure Scuttlebutt](https://github.com/ssbc/secure-scuttlebutt) (SSB) is a fully-decentralized data network designed to replace Web services. It uses cryptographic keypairs to gossip unforgeable data-feeds across the network. "Pub" servers aggregate and redistribute the feeds, but SSB has no central authority: every node is equal, and the network is fully open.
+[Secure Scuttlebutt](https://github.com/ssbc/secure-scuttlebutt) (SSB) is a fully-decentralized data network designed to replace centralized databases on the Web. It uses cryptographic keypairs to gossip unforgeable user-feeds across the network. "Pub" servers aggregate and redistribute the feeds, but SSB has no central authority: every node is equal, and the network is fully open.
 
 **What is Phoenix?**
 
