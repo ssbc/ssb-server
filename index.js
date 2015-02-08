@@ -204,9 +204,17 @@ exports = module.exports = function (config, ssb, feed) {
 
   //default handlers
 
+  function stringManifest () {
+    return JSON.stringify(server.getManifest(), null, 2) + '\n'
+  }
+
   server.http.use(function (req, res, next) {
-    if(req.url = '/manifest.json')
-      res.end(JSON.stringify(server.getManifest(), null, 2) + '\n')
+    if(req.url == '/manifest.json')
+      res.end(stringManifest())
+    //return manifest as JS GLOBAL,
+    //so that it can be easily loaded into plugins, without hardcoding.
+    else if(req.url == '/manifest.js')
+      res.end(';SSB_MANIFEST = ' + stringManifest())
     else
       next()
   })
