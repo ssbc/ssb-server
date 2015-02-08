@@ -3,6 +3,7 @@
 var Blobs = require('multiblob')
 var path = require('path')
 var pull = require('pull-stream')
+var toPull = require('stream-to-pull-stream')
 var isHash = require('ssb-keys').isHash
 
 function isFunction (f) {
@@ -89,6 +90,20 @@ module.exports = {
     anonymous: {allow: ['has', 'get']},
   },
   init: function (sbot) {
+
+    sbot.http.use(function (req, res, next) {
+      if(/^[/]ext[/]/.test(req.url))
+        server.blobs.has(req.url.substring(5), function (err) {
+          if (err) next(err)
+          else
+            pull(
+              server.blobs.get(hash),
+              toBuffer(),
+              toPull.sink(res)
+            )
+        })
+      else next()
+    })
 
     var want = {}
     var jobs = []
