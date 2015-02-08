@@ -31,7 +31,7 @@
     "ssb-keys": "~0.4.1",
     "ssb-msgs": "~2.0.0",
     "ssb-msg-schemas": "~1.0.0",
-    "ssbplug-phoenix": "~2.2.10",
+    "ssbplug-phoenix": "~2.3.6",
     "stream-to-pull-stream": "~1.6.0",
     "explain-error": "~1.0.1",
     "map-merge": "~1.1.0",
