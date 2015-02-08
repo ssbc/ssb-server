@@ -9,6 +9,7 @@ var mkdirp     = require('mkdirp')
 var crypto     = require('crypto')
 var ssbKeys    = require('ssb-keys')
 var multicb    = require('multicb')
+var connect    = require('connect')
 var inactive   = require('pull-inactivity')
 var nonPrivate = require('non-private-ip')
 
@@ -189,6 +190,26 @@ exports = module.exports = function (config, ssb, feed) {
   // ======================
   var sessions = {}
 
+
+  // http interface (via connect)
+  // ============================
+  //
+  // http should be considered a legacy interface,
+  // but we need it to work around various legacy
+  // browser things. You should build most of your
+  // app with the rpc api and not the http api.
+
+  server.http = connect()
+  server.on('request', server.http)
+
+  //default handlers
+
+  server.http.use(function (req, res, next) {
+    if(req.url = '/manifest.json')
+      res.end(JSON.stringify(server.getManifest(), null, 2) + '\n')
+    else
+      next()
+  })
 
   // plugin management
   // =================
