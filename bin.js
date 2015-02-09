@@ -109,7 +109,7 @@ var type = get(manifest, cmd)
 
 if(!type) return usage()
 
-var rpc = require('./client')({ host: 'localhost', port: config.port }, manifest, function (err) {
+var rpc = require('./client')(config, manifest, function (err) {
     if(err) throw err
   })
 
