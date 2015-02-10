@@ -251,14 +251,15 @@ module.exports = {
     })
 
     function queue (hash, cb) {
-      sbot.emit('log:info', ['blobs', null, 'want', hash])
       if(want[hash]) {
         want[hash].waiting.push(cb)
       }
-      else
+      else {
+        sbot.emit('log:info', ['blobs', null, 'want', hash])
         jobs.push(want[hash] = {
           id: hash, waiting: [cb], state: 'waiting'
         })
+      }
 
       query()
     }
