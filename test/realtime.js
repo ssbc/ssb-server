@@ -16,14 +16,14 @@ tape('replicate between 3 peers', function (t) {
   var u = require('./util')
 
   var aliceDb = u.createDB('test-alice', {
-      port: 45451, host: 'localhost', timeout: 2000,
+      port: 45451, host: 'localhost', timeout: 2001,
       seeds: [{port: 45452, host: 'localhost'}]
     }).use(gossip).use(friends).use(replicate)
 
   var alice = aliceDb.feed
 
   var bobDb = u.createDB('test-bob', {
-      port: 45452, host: 'localhost', timeout: 2000,
+      port: 45452, host: 'localhost', timeout: 2001
     }).use(friends).use(replicate)
 
   bobDb.on('rpc:authorized', function (_, req) {

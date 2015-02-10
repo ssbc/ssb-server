@@ -6,7 +6,7 @@ var client = require('../client')
 tape('connect remote master', function (t) {
   var keys = ssbKeys.generate()
   var aliceDb = u.createDB('test-alice', {
-      port: 45451, host: 'localhost', timeout: 2000,
+      port: 45451, host: 'localhost', timeout: 2001,
       master: keys.id
    })
 
