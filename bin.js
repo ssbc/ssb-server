@@ -57,7 +57,7 @@ function usage () {
   process.exit(1)
 }
 
-var opts = require('minimist')(process.argv.slice(2))
+var opts = require('minimist')(process.argv.slice(2), { '--': true })
 var cmd = opts._[0]
 var arg = opts._[1]
 delete opts._
@@ -113,7 +113,7 @@ var rpc = require('./client')(config, manifest, function (err) {
     if(err) throw err
   })
 
-var isStdin = ('.' === arg || '--' === arg)
+var isStdin = ('.' === arg || '--' === arg || opts['--'])
 
 if(!process.stdin.isTTY && isStdin) {
   pull(
