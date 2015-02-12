@@ -10,7 +10,7 @@ Join us in #scuttlebutt on freenode.
 
 **What is Secure Scuttlebutt?**
 
-[Secure Scuttlebutt](https://github.com/ssbc/secure-scuttlebutt) (SSB) is a fully-decentralized data network designed to replace centralized databases on the Web. It uses cryptographic keypairs to gossip unforgeable user-feeds across the network. "Pub" servers aggregate and redistribute the feeds, but SSB has no central authority: every node is equal, and the network is fully open.
+[Secure Scuttlebutt](https://github.com/ssbc/secure-scuttlebutt) (SSB) is a data network designed to replace centralized databases on the Web. It uses cryptographic keypairs to gossip unforgeable user-feeds across the network. "Pub" servers aggregate and redistribute the feeds, but SSB has no central authority: every node is equal, and the network is fully open.
 
 **What is Phoenix?**
 
