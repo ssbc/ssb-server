@@ -262,14 +262,18 @@ exports = module.exports = function (config, ssb, feed) {
     return  sec.key
   }
 
+  server.getAccessKey = function (id) {
+    return find(secrets, function (e) {
+      return e.id === id
+    })
+  }
+
   server.getManifest = function () {
     return server.manifest
   }
 
   server.authorize = function (msg) {
-    var secret = find(secrets, function (e) {
-      return e.id === msg.keyId
-    })
+    var secret = this.getAccessKey(msg.keyId)
     if(!secret) return
     return ssbKeys.verifyObjHmac(secret.key, msg)
   }
