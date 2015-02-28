@@ -61,7 +61,7 @@ tape('test invite api', function (t) {
               if(err) throw explain(err, 'bob cannot use invite code')
 
             pull(
-              client.feedsLinkedToFeed({id: bob.id, rel: 'follows'}),
+              client.feedsLinkedToFeed({id: bob.id, rel: 'target'}),
               pull.collect(function (err, ary) {
                 if(err) throw err
                 console.log(ary)
@@ -70,7 +70,7 @@ tape('test invite api', function (t) {
                 delete followed.message
 
                 t.deepEqual(
-                  {source: alice.id, dest: bob.id, rel: 'follows'},
+                  {source: alice.id, dest: bob.id, rel: 'target'},
                   ary[0]
                 )
 

@@ -101,7 +101,8 @@ module.exports = {
 
               server.feed.add({
                 type: 'follow',
-                feed: id, rel: 'follows',
+                target: { feed: id },
+                follow: true,
                 auto: true
               }, cb)
             })
@@ -159,7 +160,8 @@ module.exports = {
             cont.para([
               server.feed.add({
                 type: 'follow',
-                feed: rpc.authorized.id, rel: 'follows',
+                follow: true,
+                target: { feed: rpc.authorized.id }
               }),
               server.feed.add({
                 type: 'pub',

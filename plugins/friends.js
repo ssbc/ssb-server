@@ -27,23 +27,22 @@ exports.init = function (sbot) {
   var config = sbot.config
 
   // view processor
-  var toFeedOpts = { tofeed: true }
-  var toFeedTrustsOpts = { tofeed: true, rel: 'trusts' }
   var awaitSync = memview(sbot.ssb, function (msg) {
-    if (msg.value.content.type == 'follow') {
-      mlib.indexLinks(msg.value.content, toFeedOpts, function (link) {
-        if (msg.value.content.rel === 'follows')
+    var c = msg.value.content
+    if (c.type == 'follow') {
+      mlib.asLinks(c.target).forEach(function (link) {
+        if (c.follow)
           graphs.follow.edge(msg.value.author, link.feed, true)
-        else if (msg.value.content.rel === 'unfollows')
+        else
           graphs.follow.del(msg.value.author, link.feed)
       })
     }
-    else if (msg.value.content.type == 'trust') {
-      mlib.indexLinks(msg.value.content, toFeedTrustsOpts, function (link) {
-        if (+msg.value.content.value != msg.value.content.value) // numeric (or an empty string)?
-          return
-        if (msg.value.content.value != 0)
-          graphs.trust.edge(msg.value.author, link.feed, (+msg.value.content.value > 0) ? 1 : -1)
+    else if (c.type == 'trust') {
+      if (typeof c.trust != 'number')
+        return
+      mlib.asLinks(c.target).forEach(function (link) {
+        if (c.trust != 0)
+          graphs.trust.edge(msg.value.author, link.feed, (+c.trust > 0) ? 1 : -1)
         else
           graphs.trust.del(msg.value.author, link.feed)
       })
