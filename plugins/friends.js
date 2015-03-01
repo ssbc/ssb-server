@@ -29,22 +29,21 @@ exports.init = function (sbot) {
   // view processor
   var awaitSync = memview(sbot.ssb, function (msg) {
     var c = msg.value.content
-    if (c.type == 'follow') {
-      mlib.asLinks(c.target).forEach(function (link) {
-        if (c.follow)
-          graphs.follow.edge(msg.value.author, link.feed, true)
-        else
-          graphs.follow.del(msg.value.author, link.feed)
-      })
-    }
-    else if (c.type == 'trust') {
-      if (typeof c.trust != 'number')
-        return
-      mlib.asLinks(c.target).forEach(function (link) {
-        if (c.trust != 0)
-          graphs.trust.edge(msg.value.author, link.feed, (+c.trust > 0) ? 1 : -1)
-        else
-          graphs.trust.del(msg.value.author, link.feed)
+    if (c.type == 'contact') {
+      mlib.asLinks(c.contact).forEach(function (link) {
+        if ('following' in c) {
+          if (c.following)
+            graphs.follow.edge(msg.value.author, link.feed, true)
+          else
+            graphs.follow.del(msg.value.author, link.feed)
+        }
+        if ('trust' in c) {
+          var trust = c.trust|0
+          if (trust !== 0)
+            graphs.trust.edge(msg.value.author, link.feed, (+trust > 0) ? 1 : -1)
+          else
+            graphs.trust.del(msg.value.author, link.feed)
+        }
       })
     }
   }, function() {})

@@ -20,15 +20,11 @@ tape('construct and analyze graph', function (t) {
   var carol = server.ssb.createFeed(ssbKeys.generate())
 
   cont.para([
-    cont(schemas.addFollow)(server.feed, bob.id),
-    cont(schemas.addFollow)(server.feed, carol.id),
-    cont(schemas.addTrust)(server.feed, bob.id, 1),
-
-    cont(schemas.addFollow)(bob, alice.id),
-    cont(schemas.addTrust)(bob, alice.id, 1),
-    cont(schemas.addTrust)(bob, carol.id, -1),
-
-    cont(schemas.addFollow)(carol, alice.id)
+    cont(schemas.addContact)(server.feed, bob.id,   { following: true, trust: 1 }),
+    cont(schemas.addContact)(server.feed, carol.id, { following: true, trust: 0 }),
+    cont(schemas.addContact)(bob, alice.id, { following: true, trust: 1 }),
+    cont(schemas.addContact)(bob, carol.id, { following: false, trust: -1 }),
+    cont(schemas.addContact)(carol, alice.id, { following: true })
   ]) (function () {
 
     cont.para([
@@ -89,19 +85,15 @@ tape('correctly delete edges', function (t) {
   var carol = server.ssb.createFeed(ssbKeys.generate())
 
   cont.para([
-    cont(schemas.addFollow)(server.feed, bob.id),
-    cont(schemas.addFollow)(server.feed, carol.id),
-    cont(schemas.addTrust)(server.feed, bob.id, 1),
+    cont(schemas.addContact)(server.feed, bob.id,   { following: true, trust: 1 }),
+    cont(schemas.addContact)(server.feed, carol.id, { following: true, trust: 0 }),
+    cont(schemas.addContact)(bob, alice.id, { following: true,  trust: 1 }),
+    cont(schemas.addContact)(bob, carol.id, { following: false, trust: -1 }),
+    cont(schemas.addContact)(carol, alice.id, { following: true }),
 
-    cont(schemas.addFollow)(bob, alice.id),
-    cont(schemas.addTrust)(bob, alice.id, 1),
-    cont(schemas.addTrust)(bob, carol.id, -1),
-
-    cont(schemas.addFollow)(carol, alice.id),
-
-    cont(schemas.addUnfollow)(server.feed, carol.id),
-    cont(schemas.addTrust)(server.feed, bob.id, 0),
-    cont(schemas.addTrust)(bob, carol.id, 0)
+    cont(schemas.addContact)(server.feed, carol.id, { following: false, trust: 0 }),
+    cont(schemas.addContact)(server.feed, bob.id,   { following: true,  trust: 0 }),
+    cont(schemas.addContact)(bob, carol.id, { following: false, trust: 0 })
   ]) (function () {
 
     cont.para([

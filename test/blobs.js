@@ -81,8 +81,8 @@ tape('replicate published blobs between 2 peers', function (t) {
       if(err) throw err
       cont.para([
         alice.add({type: 'post', text: 'this file', js: {ext: hash}}),
-        alice.add({type: 'follow', follow: true, target: { feed: bob.id }}),
-        bob.add({type: 'follow', follow: true, target: {feed: alice.id}})
+        alice.add({type: 'contact', following: true, contact: { feed: bob.id }}),
+        bob.add({type: 'contact', following: true, contact: {feed: alice.id}})
       ])(function (err, data) {
         if(err) throw err
         console.log(data)
@@ -135,8 +135,8 @@ tape('avoid flooding a peer with blob requests', function (t) {
 
       cont.para([
         alice.add({type: 'post', text: 'this file', js: {ext: hash}}),
-        alice.add({type: 'follow', follow: true, target: { feed: bob.id }}),
-        bob.add({type: 'follow', follow: true, target: {feed: alice.id}})
+        alice.add({type: 'contact', following: true, contact: { feed: bob.id }}),
+        bob.add({type: 'contact', following: true, contact: {feed: alice.id}})
       ])(function (err, data) {
         if(err) throw err
       })
@@ -194,8 +194,8 @@ tape('request missing blobs again after reconnect', function (t) {
 
       cont.para([
         alice.add({type: 'post', text: 'this file', js: {ext: hash}}),
-        alice.add({type: 'follow', follow: true, target: { feed: bob.id }}),
-        bob.add({type: 'follow', follow: true, target: {feed: alice.id}})
+        alice.add({type: 'contact', following: true, contact: { feed: bob.id }}),
+        bob.add({type: 'contact', following: true, contact: {feed: alice.id}})
       ])(function (err, data) {
         if(err) throw err
       })
@@ -255,8 +255,8 @@ tape('emit "has" event to let peer know you have blob now', function (t) {
 
       cont.para([
         alice.add({type: 'post', text: 'this file', js: {ext: hash}}),
-        alice.add({type: 'follow', follow: true, target: { feed: bob.id }}),
-        bob.add({type: 'follow', follow: true, target: {feed: alice.id}})
+        alice.add({type: 'contact', following: true, contact: { feed: bob.id }}),
+        bob.add({type: 'contact', following: true, contact: {feed: alice.id}})
       ])(function (err, data) {
         if(err) throw err
       })
