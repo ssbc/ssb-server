@@ -100,9 +100,10 @@ module.exports = {
               server.emit('log:info', ['invite', rpc._sessid, 'use', req])
 
               server.feed.add({
-                type: 'follow',
-                feed: id, rel: 'follows',
-                auto: true
+                type: 'contact',
+                contact: { feed: id },
+                following: true,
+                autofollow: true
               }, cb)
             })
           }) 
@@ -158,8 +159,9 @@ module.exports = {
             }
             cont.para([
               server.feed.add({
-                type: 'follow',
-                feed: rpc.authorized.id, rel: 'follows',
+                type: 'contact',
+                following: true,
+                contact: { feed: rpc.authorized.id }
               }),
               server.feed.add({
                 type: 'pub',

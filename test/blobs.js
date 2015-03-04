@@ -80,9 +80,9 @@ tape('replicate published blobs between 2 peers', function (t) {
     sbotA.blobs.add(null, function (err, hash) {
       if(err) throw err
       cont.para([
-        alice.add({type: 'post', text: 'this file', ext: hash, rel: 'js'}),
-        alice.add({type: 'follow', feed: bob.id, rel: 'follows'}),
-        bob.add({type: 'follow', feed: alice.id, rel: 'follows'})
+        alice.add({type: 'post', text: 'this file', js: {ext: hash}}),
+        alice.add({type: 'contact', following: true, contact: { feed: bob.id }}),
+        bob.add({type: 'contact', following: true, contact: {feed: alice.id}})
       ])(function (err, data) {
         if(err) throw err
         console.log(data)
@@ -134,9 +134,9 @@ tape('avoid flooding a peer with blob requests', function (t) {
       console.log('WANT:', hash)
 
       cont.para([
-        alice.add({type: 'post', text: 'this file', ext: hash, rel: 'js'}),
-        alice.add({type: 'follow', feed: bob.id, rel: 'follows'}),
-        bob.add({type: 'follow', feed: alice.id, rel: 'follows'})
+        alice.add({type: 'post', text: 'this file', js: {ext: hash}}),
+        alice.add({type: 'contact', following: true, contact: { feed: bob.id }}),
+        bob.add({type: 'contact', following: true, contact: {feed: alice.id}})
       ])(function (err, data) {
         if(err) throw err
       })
@@ -193,9 +193,9 @@ tape('request missing blobs again after reconnect', function (t) {
       console.log('WANT:', hash)
 
       cont.para([
-        alice.add({type: 'post', text: 'this file', ext: hash, rel: 'js'}),
-        alice.add({type: 'follow', feed: bob.id, rel: 'follows'}),
-        bob.add({type: 'follow', feed: alice.id, rel: 'follows'})
+        alice.add({type: 'post', text: 'this file', js: {ext: hash}}),
+        alice.add({type: 'contact', following: true, contact: { feed: bob.id }}),
+        bob.add({type: 'contact', following: true, contact: {feed: alice.id}})
       ])(function (err, data) {
         if(err) throw err
       })
@@ -254,9 +254,9 @@ tape('emit "has" event to let peer know you have blob now', function (t) {
       console.log('WANT:', hash)
 
       cont.para([
-        alice.add({type: 'post', text: 'this file', ext: hash, rel: 'js'}),
-        alice.add({type: 'follow', feed: bob.id, rel: 'follows'}),
-        bob.add({type: 'follow', feed: alice.id, rel: 'follows'})
+        alice.add({type: 'post', text: 'this file', js: {ext: hash}}),
+        alice.add({type: 'contact', following: true, contact: { feed: bob.id }}),
+        bob.add({type: 'contact', following: true, contact: {feed: alice.id}})
       ])(function (err, data) {
         if(err) throw err
       })
