@@ -294,21 +294,20 @@ exports.fromConfig = function (config) {
   sbot.ssb.needsRebuild(function (err, b) {
     if (b) {
       rebuild = true
-      console.log('Secure scuttlebutt has undergone a major API change.')
       console.log('Rebuilding indexes to ensure consistency. Please wait...')
       sbot.ssb.rebuildIndex(setup)
-    }
-    setup()
+    } else
+      setup()
   })
 
   function setup (err) {
     if (err) {
       console.error('Error while rebuilding index', err)
-      console.log('Stopping')
+      console.log('Stopping.')
       process.exit(1)
     }
     if (rebuild)
-      console.log('Success!')
+      console.log('Indexes rebuilt.')
 
     sbot
       .use(require('./plugins/logging'))
