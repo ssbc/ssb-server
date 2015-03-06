@@ -262,7 +262,7 @@ exports = module.exports = function (config, ssb, feed) {
   // ===============
 
   var secrets = []
-  server.createAccessKey = function (perms) {
+  server.createAccessKey = function (perms, feed) {
     perms = perms || {}
     var key = crypto.randomBytes(32)
     var ts = Date.now()
@@ -271,7 +271,8 @@ exports = module.exports = function (config, ssb, feed) {
       expires: ts + (perms.ttl || 60*60*1000), //1 hour
       key: key,
       id: ssbKeys.hash(key),
-      perms: perms
+      perms: perms,
+      feed: feed
     }
     secrets.push(sec)
     return  sec.key

@@ -7,15 +7,13 @@ tape('test api', function (t) {
 
   var u = require('./util')
 
-  var dbA = u.createDB('test-alice')
-  var alice = dbA.feed
-
-  var server = scuttlebot({
+  var server = u.createDB('test-alice', {
     port: 45451, host: 'localhost',
-  }, dbA, alice)
+  })
+  var alice = server.feed
 
   //request a secret that with particular permissions.
-  var secret = server.createAccessKey({allow: ['add']})
+  var secret = server.createAccessKey({allow: ['publish']}, server.ssb.createFeed(ssbkeys.generate()))
 
   var client = scuttlebot.createClient({port: 45451, host: 'localhost'})
 
@@ -28,7 +26,7 @@ tape('test api', function (t) {
   client.auth(signed, function (err, authed) {
     if(err) throw err
     t.ok(authed.granted)
-    client.add({type: 'msg', value: 'hello'}, function (err, data) {
+    client.publish({type: 'msg', value: 'hello'}, function (err, data) {
       if(err) throw err
       t.equal(data.value.content.value, 'hello')
       client.close(function() {
