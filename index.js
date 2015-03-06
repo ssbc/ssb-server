@@ -70,10 +70,10 @@ exports = module.exports = function (config, ssb, feed) {
   // server
   // ======
 
-  var server = net.createServer(function (socket) {
+  var server = net.createServer(function (stream) {
     // setup and auth session
-    var rpc = attachSession(socket, true)
-    server.emit('log:info', ['sbot',  rpc._sessid, 'incoming-connection']) // :TODO: would be nice to log remoteAddress
+    var rpc = attachSession(stream, true)
+    server.emit('log:info', ['sbot',  rpc._sessid, 'incoming-connection', stream.remoteAddress])
   })
 
   // peer connection
@@ -92,6 +92,7 @@ exports = module.exports = function (config, ssb, feed) {
     rpc.outgoing = !incoming
 
     rpc._sessid = ++sessCounter
+    rpc._remoteAddress = stream.remoteAddress
     rpc.task = multicb()
     server.emit('rpc:connect', rpc)
     server.emit('rpc:' + (incoming ? 'incoming' : 'outgoing'), rpc)
@@ -170,7 +171,7 @@ exports = module.exports = function (config, ssb, feed) {
 
   server.permissions = {
     master: {allow: null, deny: null},
-    anonymous: {allow: [
+    local: {allow: [
       'getPublicKey',
       'get',
       'getLatest',
@@ -186,7 +187,8 @@ exports = module.exports = function (config, ssb, feed) {
       'feedsLinkedFromFeed',
       'followedUsers',
       'relatedMessages'
-    ], deny: null}
+    ], deny: null},
+    anonymous: {allow: ['createHistoryStream'], deny: null}
   }
   server.getId = function() {
     return server.feed.id
