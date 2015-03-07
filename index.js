@@ -306,19 +306,42 @@ exports = module.exports = function (config, ssb, feed) {
 exports.init =
 exports.fromConfig = function (config) {
   var sbot = module.exports(config)
+
+  var rebuild = false
+  sbot.ssb.needsRebuild(function (err, b) {
+    if (b) {
+      rebuild = true
+      console.log('Rebuilding indexes to ensure consistency. Please wait...')
+      sbot.ssb.rebuildIndex(setup)
+    } else
+      setup()
+  })
+
+  function setup (err) {
+    if (err) {
+      console.error('Error while rebuilding index', err)
+      console.log('Stopping.')
+      process.exit(1)
+    }
+    if (rebuild)
+      console.log('Indexes rebuilt.')
+
+    sbot
       .use(require('./plugins/logging'))
       .use(require('./plugins/replicate'))
       .use(require('./plugins/gossip'))
-
-  if (config.local)
-    sbot.use(require('./plugins/local'))
-  if (config.phoenix)
-    sbot.use(require('ssbplug-phoenix'))
-
-  return sbot
       .use(require('./plugins/blobs'))
       .use(require('./plugins/invite'))
       .use(require('./plugins/friends'))
+
+    if (config.local)
+      sbot.use(require('./plugins/local'))
+    if (config.phoenix)
+      sbot.use(require('ssbplug-phoenix'))
+  }
+
+
+  return sbot
 }
 
 exports.createClient = require('./client')

@@ -131,7 +131,8 @@ else
 
 function next (data) {
   //set $rel as key name if it's missing.
-  defaultRel(data)
+  // defaultRel(data) :TODO: remove? should be outdated
+
   //TODO: USE SOMETHING ACTUALLY SECURE!
   //like, sign the timestamp with the
   //so if the server sees you are using

@@ -33,8 +33,8 @@ tape('replicate between 3 peers', function (t) {
   var bob = bobDb.feed
 
   cont.para([
-    alice.add({type: 'follow', feed: bob.id, rel: 'follows'}),
-    bob.add({type: 'follow', feed: alice.id, rel: 'follows'})
+    alice.add({type: 'contact', contact: {feed: bob.id}, following: true}),
+    bob.add({type: 'contact', contact: {feed: alice.id}, following: true})
   ])(function () {
 
     var ary = []
