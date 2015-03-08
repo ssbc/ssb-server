@@ -93,11 +93,11 @@ module.exports = {
 
     sbot.http.use(function (req, res, next) {
       if(/^[/]ext[/]/.test(req.url))
-        server.blobs.has(req.url.substring(5), function (err) {
+        sbot.blobs.has(req.url.substring(5), function (err) {
           if (err) next(err)
           else
             pull(
-              server.blobs.get(hash),
+              sbot.blobs.get(hash),
               toBuffer(),
               toPull.sink(res)
             )
