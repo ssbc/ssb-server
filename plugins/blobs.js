@@ -92,8 +92,9 @@ module.exports = {
   init: function (sbot) {
 
     sbot.http.use(function (req, res, next) {
-      if(/^[/]ext[/]/.test(req.url))
-        sbot.blobs.has(req.url.substring(5), function (err) {
+      if(/^[/]ext[/]/.test(req.url)) {
+        var hash = req.url.substring(5)
+        sbot.blobs.has(hash, function (err) {
           if (err) next(err)
           else
             pull(
@@ -102,7 +103,7 @@ module.exports = {
               toPull.sink(res)
             )
         })
-      else next()
+      } else next()
     })
 
     var want = {}
