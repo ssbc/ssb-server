@@ -109,7 +109,7 @@ exports = module.exports = function (config, ssb, feed) {
       ts: Date.now(),
     }), function (err, res) {
 
-      if(err) {
+      if(err || !res) {
         server.emit('rpc:unauthorized', err)
         rpc._emit('rpc:unauthorized', err)
         server.emit('log:warning', ['sbot', rpc._sessid, 'unauthed', err])
