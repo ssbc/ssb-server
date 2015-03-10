@@ -173,6 +173,7 @@ exports = module.exports = function (config, ssb, feed) {
     master: {allow: null, deny: null},
     local: {allow: [
       'getPublicKey',
+      'whoami',
       'get',
       'getLatest',
       'add',
