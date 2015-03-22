@@ -18,7 +18,7 @@ tape('connect remote master', function (t) {
   }), function (err, res) {
     if(err) throw err
     t.equal(res.role, 'master')
-    rpc.add({
+    rpc.publish({
       type: 'msg', value: 'written by bob', from: keys.id
     }, function (err) {
       if(err) throw err
