@@ -67,13 +67,15 @@ var manifestFile = path.join(config.path, 'manifest.json')
 cmd = aliases[cmd] || cmd
 
 if(cmd === 'server') {
-  var server = require('./').init(config)
+  require('./').init(config, function (err, server) {
+    if(err) throw err
 
-  fs.writeFileSync(
-    manifestFile,
-    JSON.stringify(server.getManifest(), null, 2)
-  )
+    fs.writeFileSync(
+      manifestFile,
+      JSON.stringify(server.getManifest(), null, 2)
+    )
 
+  })
   return
 }
 
@@ -159,7 +161,7 @@ function next (data) {
     // can be detected, and files uploaded first.
     // then the message is created and everything is in a valid state.
 
-    if(cmd.toString() === 'add' && !isStdin) {
+    if(cmd.toString() === 'publish' && !isStdin) {
       //parse and add ext links before adding message.
       var n = 0
       msgs.indexLinks(data, function (link) {
@@ -193,7 +195,7 @@ function next (data) {
       function next (err) {
         if(err && n > 0) { n = -1; throw err }
         if(--n) return
-        rpc.add(data, function (err, ret) {
+        rpc.publish(data, function (err, ret) {
           if(err) throw err
           console.log(JSON.stringify(ret, null, 2))
           process.exit()

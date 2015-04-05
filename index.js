@@ -305,7 +305,7 @@ exports = module.exports = function (config, ssb, feed) {
 // - `config.path`: string, the path to the directory which contains the keyfile and database
 
 exports.init =
-exports.fromConfig = function (config) {
+exports.fromConfig = function (config, cb) {
   var sbot = module.exports(config)
 
   var rebuild = false
@@ -320,9 +320,7 @@ exports.fromConfig = function (config) {
 
   function setup (err) {
     if (err) {
-      console.error('Error while rebuilding index', err)
-      console.log('Stopping.')
-      process.exit(1)
+      return cb(explain(err, 'error while rebuilding index'))
     }
     if (rebuild)
       console.log('Indexes rebuilt.')
@@ -339,6 +337,8 @@ exports.fromConfig = function (config) {
       sbot.use(require('./plugins/local'))
     if (config.phoenix)
       sbot.use(require('ssbplug-phoenix'))
+
+    cb(null, sbot)
   }
 
 
