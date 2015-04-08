@@ -159,7 +159,7 @@ Then issue commands from another terminal.
 Add a simple message (type is required, but freeform):
 
 ```
-$ sbot add --type post --text "hello world"
+$ sbot publish --type post --text "hello world"
 ```
 
 Get your id:
@@ -171,20 +171,20 @@ $ sbot whoami
 Set your nickname:
 
 ```
-$ sbot add --type name --name bob
+$ sbot publish --type name --name bob
 ```
 
 Follow another user:
 
 ```
-$ sbot add --type follow --feed <id> --rel follows
+$ sbot publish --type follow --feed <id> --rel follows
 ```
 
 Add a pub server (this is a server you'll connect to replicate with)
 (if port is the default, :2000, then that can be leftoff):
 
 ```
-$ sbot add --type pub --address <domain:port>
+$ sbot publish --type pub --address <domain:port>
 ```
 
 Read all messages in order received:
