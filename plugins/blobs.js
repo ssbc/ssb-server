@@ -47,7 +47,7 @@ function isFunction (f) {
 
 function oneTrack(delay, fun) {
   if(isFunction(delay))
-    fun = delay, delay = 1000
+    fun = delay, delay = 200
 
   var doing = false, timeout
 
@@ -63,7 +63,9 @@ function oneTrack(delay, fun) {
         return
       }
       if(timeout) return
-      timeout = setTimeout(job, Math.round(delay*Math.random()))
+      var wait = ~~(delay/2 + delay*Math.random())
+      console.log('waiting...', wait)
+      timeout = setTimeout(job, wait)
     })
 
   }
@@ -90,6 +92,8 @@ module.exports = {
     anonymous: {allow: ['has', 'get']},
   },
   init: function (sbot) {
+
+    var config = sbot.config
 
     sbot.http.use(function (req, res, next) {
       if(/^[/]ext[/]/.test(req.url)) {
@@ -182,7 +186,7 @@ module.exports = {
         .slice(0, n || 20)
     }
 
-    var query = oneTrack(function (done) {
+    var query = oneTrack(config.timeout, function (done) {
       var wantList = getWantList('waiting')
         .map(function (e) { return e.id })
 
@@ -225,7 +229,7 @@ module.exports = {
       if(!n) done()
     })
 
-    var download = oneTrack(function (done) {
+    var download = oneTrack(config.timeout, function (done) {
       var wantList = getWantList('ready')
         .filter(function (e) {
           return first(e.has, function (has, k) {

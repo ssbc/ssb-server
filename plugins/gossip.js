@@ -148,7 +148,9 @@ module.exports = {
       if(server.closed) return
       sched = setTimeout(function () {
         schedule(); connect()
-      }, 500 + ~~(Math.random() * 1000))
+      },
+      ~~(config.timeout/2 + Math.random()*config.timeout)
+      )
     })()
 
     var count = 0
