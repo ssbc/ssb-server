@@ -29,8 +29,6 @@ function rand(array) {
   return array[~~(Math.random()*array.length)]
 }
 
-var DEFAULT_PORT = 2000
-
 function sameHost(e) {
   return function (p) {
       return p.host == e.host && p.port == e.port

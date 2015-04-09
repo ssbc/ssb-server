@@ -13,7 +13,7 @@ var connect    = require('connect')
 var inactive   = require('pull-inactivity')
 var nonPrivate = require('non-private-ip')
 
-var DEFAULT_PORT = 2000
+var DEFAULT_PORT = 8008
 
 var Api       = require('./lib/api')
 var manifest  = require('./lib/manifest')

@@ -51,7 +51,7 @@ The `whoami` command outputs your id and your public key. There are many other c
 
 ### Web UI
 
-Once the scuttlebot server is running, you can access the Web UI at `http://localhost:2000`. It will prompt you to setup your new account, then give you instructions on how to join the network. You can follow them or the instructions below.
+Once the scuttlebot server is running, you can access the Web UI at `http://localhost:8008`. It will prompt you to setup your new account, then give you instructions on how to join the network. You can follow them or the instructions below.
 
 
 ### Joining the Network
@@ -181,7 +181,7 @@ $ sbot publish --type follow --feed <id> --rel follows
 ```
 
 Add a pub server (this is a server you'll connect to replicate with)
-(if port is the default, :2000, then that can be leftoff):
+(if port is the default, :8008, then that can be leftoff):
 
 ```
 $ sbot publish --type pub --address <domain:port>
