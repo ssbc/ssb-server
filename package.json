@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "broadcast-stream": "~0.0.0",
-    "cont": "~1.0.1",
+    "cont": "~1.0.3",
     "daemonize2": "0.4.2",
     "level-memview": "~0.0.0",
     "minimist": "~1.1.0",
@@ -27,9 +27,9 @@
     "pull-stringify": "~1.2.2",
     "pull-ws-server": "~1.1.1",
     "secure-scuttlebutt": "~10.1.0",
-    "ssb-keys": "~0.4.1",
+    "ssb-keys": "~0.6.1",
     "ssb-msgs": "~3.0.0",
-    "ssb-msg-schemas": "~2.0.0",
+    "ssb-msg-schemas": "~3.1.0",
     "ssbplug-phoenix": "~4.4.0",
     "stream-to-pull-stream": "~1.6.0",
     "explain-error": "~1.0.1",
@@ -45,7 +45,7 @@
   },
   "devDependencies": {
     "rimraf": "~2.2.8",
-    "tape": "~3.0.0",
+    "tape": "~4.0.0",
     "level-test": "~1.6.6",
     "deep-equal": "~0.2.1",
     "level-sublevel": "~6.3.15"
