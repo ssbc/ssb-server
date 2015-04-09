@@ -40,7 +40,8 @@
     "non-private-ip": "~1.1.0",
     "ip": "~0.3.2",
     "ssb-config": "~1.0.0",
-    "connect": "~3.3.4"
+    "connect": "~3.3.4",
+    "mynosql-query": "~1.0.0"
   },
   "devDependencies": {
     "rimraf": "~2.2.8",
