@@ -10,6 +10,7 @@ var explain    = require('explain-error')
 var ssbKeys    = require('ssb-keys')
 var stringify  = require('pull-stringify')
 var createHash = require('multiblob/util').createHash
+var parse      = require('mynosql-query')
 
 var config  = require('ssb-config')
 
@@ -60,6 +61,7 @@ function usage () {
 var opts = require('minimist')(process.argv.slice(2))
 var cmd = opts._[0]
 var arg = opts._[1]
+
 delete opts._
 
 var manifestFile = path.join(config.path, 'manifest.json')
@@ -157,6 +159,12 @@ function next (data) {
         throw explain(err, 'auth failed')
     }
 
+    if(cmd.toString() === 'query' && arg) {
+      data = !isObject(data) ? {} : data
+      data.query = parse(arg)
+      console.error(data)
+    }
+
     // handle add specially, so that external links (ext)
     // can be detected, and files uploaded first.
     // then the message is created and everything is in a valid state.
@@ -203,6 +211,7 @@ function next (data) {
       }
 
     }
+
     else if('async' === type || type === 'sync') {
       get(rpc, cmd)(data, function (err, ret) {
         if(err) throw err
