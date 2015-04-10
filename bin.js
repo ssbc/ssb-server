@@ -64,8 +64,6 @@ var arg = opts._[1]
 
 delete opts._
 
-console.error(parse(arg))
-
 var manifestFile = path.join(config.path, 'manifest.json')
 
 cmd = aliases[cmd] || cmd
@@ -160,8 +158,6 @@ function next (data) {
       else
         throw explain(err, 'auth failed')
     }
-
-    console.log(cmd, arg, data)
 
     if(cmd.toString() === 'query' && arg) {
       data = !isObject(data) ? {} : data
