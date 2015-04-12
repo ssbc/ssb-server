@@ -72,6 +72,12 @@ if(cmd === 'server') {
   require('./').init(config, function (err, server) {
     if(err) throw err
 
+    // Ensure the feed is init'd
+    server.ssb.getLatest(keys.id, function (err, msg) {
+      if(err) throw err
+      if(!msg) server.feed.init()
+    });
+
     fs.writeFileSync(
       manifestFile,
       JSON.stringify(server.getManifest(), null, 2)
