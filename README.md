@@ -171,13 +171,13 @@ $ sbot whoami
 Set your nickname:
 
 ```
-$ sbot publish --type name --name bob
+$ sbot publish --type contact --name <name> --contact.feed <your_id>
 ```
 
 Follow another user:
 
 ```
-$ sbot publish --type follow --feed <id> --rel follows
+$ sbot publish --type contact --following --contact.feed <id>
 ```
 
 Add a pub server (this is a server you'll connect to replicate with)
