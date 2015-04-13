@@ -51,7 +51,7 @@ The `whoami` command outputs your id and your public key. There are many other c
 
 ### Web UI
 
-Once the scuttlebot server is running, you can access the Web UI at `http://localhost:8008`.
+Once the scuttlebot server is running, you can access the Web UI at `http://localhost:2000`.
 
 
 ### Joining the Network
