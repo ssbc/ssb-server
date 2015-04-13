@@ -74,7 +74,6 @@ if(cmd === 'server') {
 
     // Ensure the feed is init'd
     server.ssb.getLatest(keys.id, function (err, msg) {
-      if(err) throw err
       if(!msg) server.feed.init()
     });
 
