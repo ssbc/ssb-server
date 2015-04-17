@@ -26,6 +26,7 @@ module.exports = {
     addMe: 'async'
   },
   permissions: {
+    local: {allow: ['use']},
     anonymous: {allow: ['use']}
   },
   init: function (server) {
