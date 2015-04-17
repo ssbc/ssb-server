@@ -1,7 +1,6 @@
 var Graphmitter = require('graphmitter')
 var pull        = require('pull-stream')
 var mlib        = require('ssb-msgs')
-var memview     = require('level-memview')
 
 function isFunction (f) {
   return 'function' === typeof f
@@ -27,7 +26,18 @@ exports.init = function (sbot) {
   var config = sbot.config
 
   // view processor
-  var awaitSync = memview(sbot.ssb, function (msg) {
+  var syncCbs = []
+  function awaitSync (cb) {
+    if (syncCbs) syncCbs.push(cb)
+    else cb()
+  }
+  pull(sbot.ssb.createLogStream({ live: true }), pull.drain(function (msg) {
+    if (msg.sync) {
+      syncCbs.forEach(function (cb) { cb() })
+      syncCbs = null
+      return
+    }
+
     var c = msg.value.content
     if (c.type == 'contact') {
       mlib.asLinks(c.contact).forEach(function (link) {
@@ -46,7 +56,7 @@ exports.init = function (sbot) {
         }
       })
     }
-  }, function() {})
+  }))
 
   return {
     all: function (graph, cb) {
