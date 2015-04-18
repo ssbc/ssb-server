@@ -90,6 +90,7 @@ module.exports = {
   },
   permissions: {
     anonymous: {allow: ['has', 'get']},
+    local: {allow: ['has', 'get']}
   },
   init: function (sbot) {
 
