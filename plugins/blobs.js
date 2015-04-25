@@ -242,7 +242,10 @@ module.exports = {
 
       var f = wantList.shift()
 
-      var id = firstKey(f.has)
+      var id = firstKey(f.has, function (_, id) { return !!remotes[id] })
+      if (!id)
+        return done(true)
+
       sbot.emit('log:info', ['blobs', id, 'downloading', f.id])
       pull(
         remotes[id].blobs.get(f.id),
