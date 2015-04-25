@@ -13,7 +13,7 @@ tape('test api', function (t) {
   var alice = server.feed
 
   //request a secret that with particular permissions.
-  var secret = server.createAccessKey({allow: ['publish']})
+  var secret = server.createAccessKey({allow: ['emit', 'publish']})
 
   var client = scuttlebot.createClient({port: 45451, host: 'localhost'})
 

@@ -172,6 +172,7 @@ exports = module.exports = function (config, ssb, feed) {
   server.permissions = {
     master: {allow: null, deny: null},
     local: {allow: [
+      'emit',
       'getPublicKey',
       'whoami',
       'get',
@@ -189,7 +190,7 @@ exports = module.exports = function (config, ssb, feed) {
       'followedUsers',
       'relatedMessages'
     ], deny: null},
-    anonymous: {allow: ['createHistoryStream'], deny: null}
+    anonymous: {allow: ['emit', 'createHistoryStream'], deny: null}
   }
   server.getId = function() {
     return server.feed.id
