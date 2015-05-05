@@ -110,6 +110,10 @@ exports = module.exports = function (config, ssb, feed) {
       ts: Date.now(),
     }), function (err, res) {
 
+      console.log('AUTH DEBUG -- ERR:', err)
+      console.log('AUTH DEBUG -- RES:', res)
+      console.log('AUTH DEBUG -- RPC:', rpc)
+
       if(err || !res) {
         server.emit('rpc:unauthorized', err)
         rpc._emit('rpc:unauthorized', err)
