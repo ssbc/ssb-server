@@ -42,29 +42,27 @@ function firstKey(obj, iter) {
       return k
 }
 
-// :TODO: reqmove `label`, that's temporary for debugging!!!
 // returns a function which...
 // - only acts if not already acting
 // - automatically requeues if the task is not yet done
-// - `fun`: function(cb(done?)), calls cb(true) when done, cb(false) when needs to requeue
 // - `delay`: ms, amount of time to wait before calling again
-function oneTrack(delay, label, fun) {
-  if(isFunction(delay))
-    fun = delay, delay = 200
-
-  var doing = false, timeout
+// - `n`: number, amount of simultaneous calls allowed
+// - `label`: string, name of the task (for logging)
+// - `fun`: function(cb(done?)), calls cb(true) when done, cb(false) when needs to requeue
+function oneTrack(delay, n, label, fun) {
+  var doing = 0, timeout
 
   function job () {
-    // abort if already doing
-    if(doing) return
-    doing = true
+    // abort if already doing too many
+    if(doing >= n) return
+    doing++
 
     // dont bother waiting anymore
     clearTimeout(timeout); timeout = null
 
     // run the behavior
     fun(function (done) {
-      doing = false
+      doing--
       if(done) {
         // we're done, dont requeue
         clearTimeout(timeout); timeout = null
@@ -289,7 +287,7 @@ module.exports = {
       })
     }
 
-    var download = oneTrack(config.timeout, 'download', function (done) {
+    var download = oneTrack(/*config.timeout*/300, 5, 'download', function (done) {
       // get ready blobs with a connected remote
       var readyBlobs = wantList.subset('ready')
         .filter(function (e) {
