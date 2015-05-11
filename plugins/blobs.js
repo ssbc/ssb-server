@@ -304,13 +304,17 @@ module.exports = {
         return done(true)
 
       // download!
+      f.state = 'downloading'
       sbot.emit('log:info', ['blobs', id, 'downloading', f.id])
       pull(
         remotes[id].blobs.get(f.id),
         toBuffer(),
         //TODO: error if the object is longer than we expected.
         blobs.add(f.id, function (err, hash) {
-          if(err) console.error(err.stack)
+          if(err) {
+            f.state = 'ready'
+            console.error(err.stack)
+          }
           else wantList.got(hash)
           done()
         })
