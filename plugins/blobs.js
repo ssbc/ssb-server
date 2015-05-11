@@ -5,6 +5,7 @@ var path = require('path')
 var pull = require('pull-stream')
 var toPull = require('stream-to-pull-stream')
 var isHash = require('ssb-keys').isHash
+var multicb = require('multicb')
 
 function isFunction (f) {
   return 'function' === typeof f
@@ -131,7 +132,7 @@ module.exports = {
       }
 
       // adds a blob to the want list
-      wL.add = function (hash, cb) {
+      wL.queue = function (hash, cb) {
         if(wL.byId[hash]) {
           wL.byId[hash].waiting.push(cb)
         }
@@ -142,7 +143,14 @@ module.exports = {
           })
         }
 
-        query()
+        for (var remoteid in remotes)
+          query(remoteid)
+      }
+
+      wL.waitFor = function (hash, cb) {
+        if(wL.byId[hash]) {
+          wL.byId[hash].waiting.push(cb)
+        }
       }
 
       // notifies that the blob was got and removes from the wantlist
@@ -192,7 +200,7 @@ module.exports = {
         if(isHash(hash))
           // do we have the referenced blob yet?
           blobs.has(hash, function (_, has) {
-            if(!has) wantList.add(hash) // no, search for it
+            if(!has) wantList.queue(hash) // no, search for it
           })
       })
     )
@@ -224,8 +232,8 @@ module.exports = {
       wantList.each(function (e, k) {
         if(e.has && e.has[id] === false) delete e.has[id]
       })
-      query(); download()
-      // var done = rpc.task() // :TODO: add back in?
+      var done = rpc.task()
+      query(id, done)
       rpc.once('closed', function () {
         delete remotes[id]
       })
@@ -240,45 +248,46 @@ module.exports = {
       })
     })
 
-    var query = oneTrack(config.timeout, 'query', function (done) {
-      var waitingBlobs = wantList.subset('waiting').map(function (e) { return e.id })
-      if(!waitingBlobs.length) return done(true)
+    var queries = {}
+    function query (remoteid, done) {
+      done = done || function (){}
 
-      // query all active remotes
-      var n = 0
-      each(remotes, function (remote, remoteid) {
-        n++
-        // filter bloblist down to blobs not (yet) found at the peer
-        var neededBlobs = waitingBlobs.filter(function (blobhash) {
+      var remote = remotes[remoteid]
+      if (!remote)
+        return done()
+      if (queries[remoteid])
+        return done()
+
+      // filter bloblist down to blobs not (yet) found at the peer
+      var neededBlobs = wantList.subset('waiting')
+        .map(function (e) { return e.id })
+        .filter(function (blobhash) {
           return !wantList.isFoundAt(blobhash, remoteid)
         })
-        if(!neededBlobs.length)
-          return next()
+      if(!neededBlobs.length)
+        return done()
 
-        // does the remote have any of them?
-        remote.blobs.has(neededBlobs, function (err, hasList) {
-          if(hasList) {
-            neededBlobs.forEach(function (blobhash, i) {
-              if (!wantList.wants(blobhash))
-                return // must have been got already
+      // does the remote have any of them?
+      queries[remoteid] = true
+      remote.blobs.has(neededBlobs, function (err, hasList) {
+        delete queries[remoteid]
+        if(hasList) {
+          var downloadDone = multicb()
+          neededBlobs.forEach(function (blobhash, i) {
+            if (!wantList.wants(blobhash))
+              return // must have been got already
 
-              if (hasList[i]) {
-                wantList.setFoundAt(blobhash, remoteid)
-                sbot.emit('log:info', ['blobs', remoteid, 'found', blobhash])
-              }
-            })
-          }
-          next()
-        })
-
-        function next () {
-          if(--n) return
-          done(); download()
+            if (hasList[i]) {
+              wantList.setFoundAt(blobhash, remoteid)
+              wantList.waitFor(blobhash, downloadDone())
+              sbot.emit('log:info', ['blobs', remoteid, 'found', blobhash])
+              download()
+            }
+          })
+          downloadDone(done)
         }
       })
-
-      if(!n) done()
-    })
+    }
 
     var download = oneTrack(config.timeout, 'download', function (done) {
       // get ready blobs with a connected remote
@@ -311,7 +320,6 @@ module.exports = {
     })
 
     sbot.on('close', download.abort)
-    sbot.on('close', query.abort)
 
     return {
       get: function (hash) {
@@ -353,7 +361,7 @@ module.exports = {
 
         blobs.has(hash, function (_, has) {
           if(has) return cb()
-          wantList.add(hash, cb)
+          wantList.queue(hash, cb)
         })
       },
 
