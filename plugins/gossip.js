@@ -52,25 +52,91 @@ module.exports = {
 
     var config = server.config
     var conf = server.config.gossip || {}
+    var host = config.host || nonPrivate.private() || 'localhost'
+    var port = config.port
+
+    // Peer Table
+    // ==========
 
     //current list of known peers.
     var peers = []
-    var seeds = config.seeds
-    seeds =
-      (isArray(seeds)  ? seeds : [seeds])
+    function getPeer(id) {
+      return u.find(peers.filter(Boolean), function (e) {
+        return e.id === id
+      })
+    }
 
+    // track connection-state in peertable
+    server.on('remote:authorized', function (rpc, authed) {
+      //don't track cli/web client connections
+      if(authed.type === 'client') return
+
+      var peer = rpc._peer
+      if(!peer) //incomming connection...
+        peer = getPeer(rpc.authorized.id)
+      if(peer) {
+        peer.id = rpc.authorized.id
+        peer.connected = true
+      }
+    })
+
+    // populate peertable with configured seeds
+    var seeds = config.seeds
+    seeds = (isArray(seeds)  ? seeds : [seeds])
     seeds.forEach(function (e) {
       if(!e) return
       var p = toAddress(e)
       if(p) peers.push(p)
     })
 
-
-    function get(id) {
-      return u.find(peers.filter(Boolean), function (e) {
-        return e.id === id
+    // populate peertable with pub announcements on the feed
+    pull(
+      server.ssb.messagesByType({type: 'pub', live: true, keys: false}),
+      pull.map(function (e) {
+        var o = toAddress(e.content.address)
+        o.announcers = [e.author] // track who has announced this pub addr
+        return o
+      }),
+      pull.filter(function (e) {
+        // filter out announcements for this node
+        if(e.port == port) {
+          if(e.host == host) return false
+          if(e.host == '127.0.0.1' || e.host == 'localhost') return false
+        }
+        return true
+      }),
+      pull.drain(function (e) {
+        var f = u.find(peers, sameHost(e))
+        if(!f) {
+          // new pub
+          peers.push(e)
+        } else {
+          // existing pub, update the announcers list
+          if (!f.announcers)
+            f.announcers = e.announcers
+          else if (f.announcers.indexOf(e.announcers[0]) === -1)
+            f.announcers.push(e.announcers[0])
+        }
       })
-    }
+    )
+
+    // populate peertable with announcements on the LAN mDNS
+    server.on('local', function (_peer) {
+      var peer = getPeer(_peer.id)
+      if(!peer) peers.push(_peer)
+      else {
+        // peer host could change while in use.
+        // currently, there is a DoS vector here
+        // (someone could falsely advertise your id,
+        // but they could not steal they need private key)
+        // since this is only over local network, it's not a big vector.
+        peer.host = _peer.host
+        peer.port = _peer.port
+      }
+    })
+
+    // RPC api
+    // =======
 
     var gossip = {
       peers: function () {
@@ -93,62 +159,15 @@ module.exports = {
       }
     }
 
-    server.on('remote:authorized', function (rpc, authed) {
-      //don't track cli/web client connections
-      if(authed.type === 'client') return
-
-      var peer = rpc._peer
-      if(!peer) //incomming connection...
-        peer = get(rpc.authorized.id)
-      if(peer) {
-        peer.id = rpc.authorized.id
-        peer.connected = true
-      }
-
-    })
-
-    var host = config.host || nonPrivate.private() || 'localhost'
-    var port = config.port
-
-    pull(
-      server.ssb.messagesByType({type: 'pub', live: true, keys: false}),
-      pull.map(function (e) {
-        var o = toAddress(e.content.address)
-        return o
-      }),
-      pull.filter(function (e) {
-        if(e.port == port) {
-          if(e.host == host) return false
-          if(e.host == '127.0.0.1' || e.host == 'localhost') return false
-        }
-        return true
-      }),
-      pull.drain(function (e) {
-        if(!u.find(peers, sameHost(e))) peers.push(e)
-      })
-    )
-
-    server.on('local', function (_peer) {
-      var peer = get(_peer.id)
-      if(!peer) peers.push(_peer)
-      else {
-        // peer host could change while in use.
-        // currently, there is a DoS vector here
-        // (someone could falsely advertise your id,
-        // but they could not steal they need private key)
-        // since this is only over local network, it's not a big vector.
-        peer.host = _peer.host
-        peer.port = _peer.port
-      }
-    })
+    // Gossip
+    // ======
 
     ;(function schedule() {
       if(server.closed) return
+      var delay = ~~(config.timeout/2 + Math.random()*config.timeout)
       sched = setTimeout(function () {
         schedule(); connect()
-      },
-      ~~(config.timeout/2 + Math.random()*config.timeout)
-      )
+      }, delay)
     })()
 
     var count = 0
@@ -160,8 +179,17 @@ module.exports = {
       if(count >= (conf.connections || 2)) return
 
       // connect to this random peer
+      // choice is weighted...
+      // - decrease odds due to failures
+      // - increase odds due to multiple announcements
+      // - if no announcements, it came from config seed or LAN, so given a higher-than-avg weight
+      var default_a = 5 // for seeds and peers (with no failures, lim will be 0.75)
       var p = rand(peers.filter(function (e) {
-        var lim = (1/(1+e.failure)) || 1 // decrease odds of selection due to failures
+        var a = Math.min((e.announcers) ? e.announcers.length : default_a, 10) // cap at 10
+        var f = e.failure || 0
+        var lim = (a+10)/((f+1)*20)
+        // this function increases linearly from 0.5 to 1 with # of announcements
+        // ..and decreases by inversely with # of failures
         return !e.connected && (Math.random() < lim)
       }))
 
