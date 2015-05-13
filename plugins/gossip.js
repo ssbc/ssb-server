@@ -60,6 +60,8 @@ module.exports = {
 
     //current list of known peers.
     var peers = []
+    // ordered list of peers to sync with once at startup
+    var init_synclist = []
     function getPeer(id) {
       return u.find(peers.filter(Boolean), function (e) {
         return e.id === id
@@ -91,7 +93,7 @@ module.exports = {
 
     // populate peertable with pub announcements on the feed
     pull(
-      server.ssb.messagesByType({type: 'pub', live: true, keys: false}),
+      server.ssb.messagesByType({type: 'pub', live: true, keys: false, onSync: onFeedSync }),
       pull.map(function (e) {
         var o = toAddress(e.content.address)
         o.announcers = [e.author] // track who has announced this pub addr
@@ -119,6 +121,18 @@ module.exports = {
         }
       })
     )
+    function onFeedSync () {
+      // create the initial synclist, ordered by # of announcers
+      init_synclist = peers.slice()
+      init_synclist.sort(function (a, b) {
+        var al = (a.announcers) ? a.announcers.length : 5
+        var bl = (b.announcers) ? b.announcers.length : 5
+        return bl - al
+      })
+      init_synclist = init_synclist.slice(0, 50) // limit to top 50
+      // kick off a connection
+      connect()
+    }
 
     // populate peertable with announcements on the LAN mDNS
     server.on('local', function (_peer) {
@@ -165,6 +179,8 @@ module.exports = {
     ;(function schedule() {
       if(server.closed) return
       var delay = ~~(config.timeout/2 + Math.random()*config.timeout)
+      if (init_synclist)
+        delay = 1000 // dont wait long to poll, we're still in our initial sync
       sched = setTimeout(function () {
         schedule(); connect()
       }, delay)
@@ -178,20 +194,29 @@ module.exports = {
       //two concurrent connections.
       if(count >= (conf.connections || 2)) return
 
-      // connect to this random peer
-      // choice is weighted...
-      // - decrease odds due to failures
-      // - increase odds due to multiple announcements
-      // - if no announcements, it came from config seed or LAN, so given a higher-than-avg weight
-      var default_a = 5 // for seeds and peers (with no failures, lim will be 0.75)
-      var p = rand(peers.filter(function (e) {
-        var a = Math.min((e.announcers) ? e.announcers.length : default_a, 10) // cap at 10
-        var f = e.failure || 0
-        var lim = (a+10)/((f+1)*20)
-        // this function increases linearly from 0.5 to 1 with # of announcements
-        // ..and decreases by inversely with # of failures
-        return !e.connected && (Math.random() < lim)
-      }))
+      var p
+      if (init_synclist) {
+        // initial sync, take next in the ordered list
+        p = init_synclist.shift()
+        if (init_synclist.length === 0)
+          init_synclist = null
+      }
+      else {
+        // connect to this random peer
+        // choice is weighted...
+        // - decrease odds due to failures
+        // - increase odds due to multiple announcements
+        // - if no announcements, it came from config seed or LAN, so given a higher-than-avg weight
+        var default_a = 5 // for seeds and peers (with no failures, lim will be 0.75)
+        p = rand(peers.filter(function (e) {
+          var a = Math.min((e.announcers) ? e.announcers.length : default_a, 10) // cap at 10
+          var f = e.failure || 0
+          var lim = (a+10)/((f+1)*20)
+          // this function increases linearly from 0.5 to 1 with # of announcements
+          // ..and decreases by inversely with # of failures
+          return !e.connected && (Math.random() < lim)
+        }))
+      }
 
       if(p) {
         count ++
