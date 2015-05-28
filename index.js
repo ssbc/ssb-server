@@ -84,8 +84,9 @@ exports = module.exports = function (config, ssb, feed) {
   function attachSession (stream, incoming, cb) {
     var rpc = peerApi(server.manifest, api)
                 .permissions({allow: ['auth']})
+    var timeout = server.config.timeout || 30e3
     var rpcStream = rpc.createStream()
-    rpcStream = inactive(rpcStream, server.config.timeout)
+    rpcStream = inactive(rpcStream, timeout)
     pull(stream, rpcStream, stream)
 
     rpc.incoming = incoming
