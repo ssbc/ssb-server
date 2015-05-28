@@ -25,7 +25,6 @@ function generateAnimals (sbot, n, cb) {
       var animal = Math.random() > 0.5 ? 'cat' : 'dog'
       var name   = animal == 'cat' ? cats.random() : dogs.allRandom()
       feed.name = name
-      MSGS ++
       feed.add({
         type: 'contact',
         contact: {feed: feed.id},
