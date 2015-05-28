@@ -27,13 +27,22 @@ function replicate(server, rpc, cb) {
 
     function latest () {
       var ps = pushable()
-      server.friends.hops(null, 'follow', function (err, friends) {
-        if (friends) {
-          for (var k in friends)
-            ps.push(k)
-        }
-        ps.end()
-      })
+      if(false) {
+        server.friends.hops(null, 'follow', function (err, friends) {
+          if (friends) {
+            for (var k in friends)
+              ps.push(k)
+          }
+          //ps.end()
+        })
+      } else {
+        return pull(
+          server.friends.createFriendStream(),
+          pull.unique(),
+          ssb.createLatestLookupStream()
+        )
+      }
+
       return pull(
         ps,
         ssb.createLatestLookupStream()
@@ -47,7 +56,10 @@ function replicate(server, rpc, cb) {
     pull(
       latest(),
       pull.drain(function (upto) {
-        sources.add(rpc.createHistoryStream({id: upto.id, seq: upto.sequence + 1, live: live, keys: false}))
+        sources.add(rpc.createHistoryStream({
+          id: upto.id, seq: upto.sequence + 1,
+          live: live, keys: false
+        }))
       }, function (err) {
         if(err)
           server.emit('log:error', ['replication', rep._sessid, 'error', err])
