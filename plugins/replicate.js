@@ -10,52 +10,16 @@ function replicate(server, rpc, cb) {
 
     var live = !!config.timeout
 
-    function replicated () {
-
-      pull(
-        ssb.latest(),
-        pull.collect(function (err, ary) {
-          if(err) cb(err)
-          var o = {}
-          ary.forEach(function (e) {
-            o[e.id] = e.sequence
-          })
-          cb(null, o)
-        })
-      )
-    }
-
-    function latest () {
-      var ps = pushable()
-      if(false) {
-        server.friends.hops(null, 'follow', function (err, friends) {
-          if (friends) {
-            for (var k in friends)
-              ps.push(k)
-          }
-          //ps.end()
-        })
-      } else {
-        return pull(
-          server.friends.createFriendStream(),
-          pull.unique(),
-          ssb.createLatestLookupStream()
-        )
-      }
-
-      return pull(
-        ps,
-        ssb.createLatestLookupStream()
-      )
-    }
-
     var progress = function () {}
 
     var sources = many()
     var sent = 0
+
     pull(
-      latest(),
+      server.friends.createFriendStream(),
+      ssb.createLatestLookupStream(),
       pull.drain(function (upto) {
+        console.log('get', upto)
         sources.add(rpc.createHistoryStream({
           id: upto.id, seq: upto.sequence + 1,
           live: live, keys: false
@@ -67,10 +31,18 @@ function replicate(server, rpc, cb) {
       })
     )
 
+    var replicated = {}
+
     pull(
       sources,
+      pull.through(function (msg) {
+        replicated[msg.author] = Math.max(
+          replicated[msg.author]||0,
+          msg.sequence
+        )
+      }),
       ssb.createWriteStream(function (err) {
-        replicated()
+        cb(null, replicated)
       })
     )
 }
