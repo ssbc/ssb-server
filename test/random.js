@@ -24,6 +24,7 @@ function generateAnimals (sbot, n, cb) {
     paramap(function (feed, cb) {
       var animal = Math.random() > 0.5 ? 'cat' : 'dog'
       var name   = animal == 'cat' ? cats.random() : dogs.allRandom()
+
       feed.name = name
       feed.add({
         type: 'contact',
@@ -34,28 +35,46 @@ function generateAnimals (sbot, n, cb) {
     pull.drain(null, function (err) {
       if(err) return cb(err)
 
-      console.log('generate FRIENDS')
+      var posts = []
 
       pull(
-        pull.values(a),
-        paramap(function (me, cb) {
-          var friends = []
-          var n = 3
-          while(n --> 0 || Math.random() > 0.2)
-            friends.push(a[~~(Math.random()*a.length)])
+        pull.count(10000),
+        paramap(function (n, cb) {
 
-          pull(
-            pull.values(friends),
-            paramap(function (f, cb) {
-              me.add({
-                type: 'contact',
-                contact: { feed: f.id },
-                following: true,
-                name: f.name
-              }, cb)
-            }, 10),
-            pull.drain(null, cb)
-          )
+          var me = a[~~(Math.random()*a.length)]
+  
+          var r = Math.random()
+
+          //one in 20 messages is a random follow
+          if(r < 0.3) {
+            var f = a[~~(Math.random()*a.length)]
+            me.add({
+              type: 'contact',
+              contact: { feed: f.id },
+              following: true,
+              name: f.name
+            }, cb)
+          } else if(r < 0.6) {
+            me.add({
+              type: 'post',
+              text: me.animal === 'dog' ? 'woof' : 'meow',
+            }, function (err, msg) {
+              posts.push(msg.key)
+              if(posts.length > 100)
+                posts.shift()
+              cb(null, msg)
+            })
+          } else {
+            var post = posts[~~(Math.random()*posts.length)]
+            me.add({
+              type: 'post',
+              repliesTo: {msg: post},
+              text: me.animal === 'dog' ? 'woof woof' : 'purr',
+            }, function (err, msg) {
+              cb(null, msg)
+            })
+
+          }
         }, 10),
         pull.drain(null, cb)
       )
@@ -100,7 +119,7 @@ tape('replicate social network for animals', function (t) {
     if(!animalNetwork.friends)
       throw new Error('missing frineds plugin')
 
-  generateAnimals(animalNetwork, 100, function (err) {
+  generateAnimals(animalNetwork, 500, function (err) {
     if(err) throw err
     console.log('replicate GRAPH')
     var c = 0
@@ -141,7 +160,8 @@ tape('replicate social network for animals', function (t) {
             total += latest[k]
             prog += (seen[k] || 0)
           }
-          console.log("REPLICATED", prog, total, Math.round(100*(prog/total)))
+//          if(Math.random() < 0.01)
+            console.log("REPLICATED", prog, total, Math.round(100*(prog/total)))
           if(total === prog) {
             var seconds = (Date.now() - start)/1000
             t.equal(c, 1)
