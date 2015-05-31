@@ -10,8 +10,6 @@ function replicate(server, rpc, cb) {
 
     var live = !!config.timeout
 
-    var progress = function () {}
-
     var sources = many()
     var sent = 0
 
@@ -19,7 +17,6 @@ function replicate(server, rpc, cb) {
       server.friends.createFriendStream(),
       ssb.createLatestLookupStream(),
       pull.drain(function (upto) {
-        console.log('get', upto)
         sources.add(rpc.createHistoryStream({
           id: upto.id, seq: upto.sequence + 1,
           live: live, keys: false
