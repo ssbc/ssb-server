@@ -5,6 +5,7 @@ var path = require('path')
 var pull = require('pull-stream')
 var toPull = require('stream-to-pull-stream')
 var isHash = require('ssb-keys').isHash
+var multicb = require('multicb')
 
 function isFunction (f) {
   return 'function' === typeof f
@@ -41,30 +42,37 @@ function firstKey(obj, iter) {
       return k
 }
 
-function isFunction (f) {
-  return 'function' === typeof f
-}
-
-function oneTrack(delay, fun) {
-  if(isFunction(delay))
-    fun = delay, delay = 200
-
-  var doing = false, timeout
+// returns a function which...
+// - only acts if not already acting
+// - automatically requeues if the task is not yet done
+// - `delay`: ms, amount of time to wait before calling again
+// - `n`: number, amount of simultaneous calls allowed
+// - `label`: string, name of the task (for logging)
+// - `fun`: function(cb(done?)), calls cb(true) when done, cb(false) when needs to requeue
+function oneTrack(delay, n, label, fun) {
+  var doing = 0, timeout
 
   function job () {
-    if(doing) return
-    doing = true
+    // abort if already doing too many
+    if(doing >= n) return
+    doing++
+
+    // dont bother waiting anymore
     clearTimeout(timeout); timeout = null
 
+    // run the behavior
     fun(function (done) {
-      doing = false
+      doing--
       if(done) {
+        // we're done, dont requeue
         clearTimeout(timeout); timeout = null
         return
       }
+
+      // requeue after a delay
       if(timeout) return
       var wait = ~~(delay/2 + delay*Math.random())
-      console.log('waiting...', wait)
+      console.log(label, 'waiting...', wait)
       timeout = setTimeout(job, wait)
     })
 
@@ -95,12 +103,113 @@ module.exports = {
   init: function (sbot) {
 
     var config = sbot.config
+    var remotes = {} // connected peers (rpc objects)
+    var blobs = sbot._blobs = Blobs(path.join(sbot.config.path, 'blobs'))
+    var wantList = (function (){
+      var wL = {
+        byId: {}, // [hash] => {blob state}
+        jobs: [] // ordered queue of {blob state}
+      }
 
+      // provides a random subset of the current state
+      // - `state` string
+      // - `n` number (default 20) max subset length
+      wL.subset = function (state, n) {
+        return wL.jobs
+          .filter(function (j) { return j.state === state })
+          .sort(function () { return (Math.random()*2) - 1 })
+          .slice(0, n || 20)
+      }
+
+      wL.each = function (iter) { 
+        return each(wL.byId, iter)
+      }
+
+      wL.wants = function (hash) {
+        return (hash in wL.byId)
+      }
+
+      // adds a blob to the want list
+      wL.queue = function (hash, cb) {
+        if(wL.byId[hash]) {
+          wL.byId[hash].waiting.push(cb)
+        }
+        else {
+          sbot.emit('log:info', ['blobs', null, 'want', hash])
+          wL.jobs.push(wL.byId[hash] = {
+            id: hash, waiting: [cb], state: 'waiting'
+          })
+        }
+
+        for (var remoteid in remotes)
+          query(remoteid)
+      }
+
+      wL.waitFor = function (hash, cb) {
+        if(wL.byId[hash]) {
+          wL.byId[hash].waiting.push(cb)
+        }
+      }
+
+      // notifies that the blob was got and removes from the wantlist
+      wL.got = function (hash) {
+        sbot.emit('blobs:got', hash)
+        sbot.emit('log:info', ['blobs', null, 'got', hash])
+        each(remotes, function (rpc) {
+          rpc.emit('blobs:got', hash)
+        })
+
+        if(!wL.byId[hash])
+          return
+
+        var cbs = wL.byId[hash].waiting
+        
+        // stop tracking
+        delete wL.byId[hash]
+        var i = +firstKey(wL.jobs, function (e) { return e.id == hash })
+        wL.jobs.splice(i, 1)
+
+        cbs.forEach(function (cb) {
+          if (isFunction(cb))
+            cb()
+        })
+      }
+
+      // tracks the given peer as a location for the hash
+      wL.setFoundAt = function (hash, peerid) {
+        wL.byId[hash].has = wL.byId[hash].has || {}
+        wL.byId[hash].has[peerid] = true
+        if(wL.byId[hash].state === 'waiting')
+          wL.byId[hash].state = 'ready'
+      }
+
+      wL.isFoundAt = function (hash, peerid) {
+        return wL.byId[hash].has && wL.byId[hash].has[peerid]
+      }
+
+      return wL
+    })()
+
+    // monitor the feed for new links to blobs
+    pull(
+      sbot.ssb.externalsLinkedFromFeed({live: true}),
+      pull.drain(function (data) {
+        var hash = data.dest
+        if(isHash(hash))
+          // do we have the referenced blob yet?
+          blobs.has(hash, function (_, has) {
+            if(!has) wantList.queue(hash) // no, search for it
+          })
+      })
+    )
+
+    // serve blobs over HTTP
+    // /ext/<HASH>
     sbot.http.use(function (req, res, next) {
       if(/^[/]ext[/]/.test(req.url)) {
         var hash = req.url.substring(5)
         sbot.blobs.has(hash, function (err) {
-          if (err) next(err)
+          if (err) next(err) // :TODO: give 404 if doesnt have
           else
             pull(
               sbot.blobs.get(hash),
@@ -111,54 +220,18 @@ module.exports = {
       } else next()
     })
 
-    var want = {}
-    var jobs = []
-
-    function got (hash) {
-      sbot.emit('blobs:got', hash)
-      sbot.emit('log:info', ['blobs', null, 'got', hash])
-
-      each(remotes, function (rpc) {
-        rpc.emit('blobs:got', hash)
-      })
-
-      if(!want[hash]) return
-      var cbs = want[hash].waiting
-      delete want[hash]
-      var i = +firstKey(jobs, function (e) { return e.id == hash })
-      jobs.splice(i, 1)
-      cbs.forEach(function (cb) {
-        cb()
-      })
-    }
-
-    var blobs = sbot._blobs = Blobs(path.join(sbot.config.path, 'blobs'))
-
-    pull(
-      sbot.ssb.externalsLinkedFromFeed({live: true}),
-      pull.drain(function (data) {
-        var hash = data.dest
-        if(isHash(hash))
-          blobs.has(hash, function (_, has) {
-            if(!has) queue(hash, function () {})
-          })
-      })
-    )
-
     // query worker
-
-    var remotes = {}
 
     sbot.on('rpc:authorized', function (rpc) {
       var id = rpc.authorized.id
       remotes[id] = rpc
       //forget any blobs that they did not have
       //in previous requests. they might have them by now.
-      each(want, function (e, k) {
+      wantList.each(function (e, k) {
         if(e.has && e.has[id] === false) delete e.has[id]
       })
-      query(); download()
       var done = rpc.task()
+      query(id, done)
       rpc.once('closed', function () {
         delete remotes[id]
       })
@@ -166,116 +239,89 @@ module.exports = {
       //when the peer gets a blob, if its one we want,
       //then request it.
       rpc.on('blobs:got', function (hash) {
-        if(want[hash]) {
-          want[hash].has = want[hash].has || {}
-          want[hash].has[id] = true
-          if(want[hash].state === 'waiting')
-            want[hash].state = 'ready'
+        if (wantList.wants(hash)) {
+          wantList.setFoundAt(hash, id)
           download()
         }
       })
     })
 
-    function getWantList(state, n) {
-      return jobs
-        .filter(function (j) {
-          return j.state === state
-        })
-        .sort(function () {
-          return (Math.random()*2) - 1
-        })
-        .slice(0, n || 20)
-    }
+    var queries = {}
+    function query (remoteid, done) {
+      done = done || function (){}
 
-    var query = oneTrack(config.timeout, function (done) {
-      var wantList = getWantList('waiting')
+      var remote = remotes[remoteid]
+      if (!remote)
+        return done()
+      if (queries[remoteid])
+        return done()
+
+      // filter bloblist down to blobs not (yet) found at the peer
+      var neededBlobs = wantList.subset('waiting')
         .map(function (e) { return e.id })
-
-      if(!wantList.length) return done(true)
-
-      var n = 0
-      each(remotes, function (remote, id) {
-        n++
-        var thisWantList = wantList.filter(function (key) {
-          return (
-            !want[key].has ||
-            want[key].has[id] == null
-          )
+        .filter(function (blobhash) {
+          return !wantList.isFoundAt(blobhash, remoteid)
         })
+      if(!neededBlobs.length)
+        return done()
 
-        if(!thisWantList.length) next()
-        else {
-          remote.blobs.has(thisWantList, function (err, hasList) {
-            if(hasList)
-              thisWantList.forEach(function (key, i) {
-                if (!want[key])
-                  return
-                want[key].has = want[key].has || {}
-                want[key].has[id] = hasList[i]
-                if(hasList[i] && want[key].state === 'waiting') {
-                  want[key].state = 'ready'
-                  sbot.emit('log:info', ['blobs', id, 'found', key])
-                }
-              })
-            next()
+      // does the remote have any of them?
+      queries[remoteid] = true
+      remote.blobs.has(neededBlobs, function (err, hasList) {
+        delete queries[remoteid]
+        if(hasList) {
+          var downloadDone = multicb()
+          neededBlobs.forEach(function (blobhash, i) {
+            if (!wantList.wants(blobhash))
+              return // must have been got already
+
+            if (hasList[i]) {
+              wantList.setFoundAt(blobhash, remoteid)
+              wantList.waitFor(blobhash, downloadDone())
+              sbot.emit('log:info', ['blobs', remoteid, 'found', blobhash])
+              download()
+            }
           })
-        }
-
-        function next () {
-          if(--n) return
-          done(); download()
+          downloadDone(done)
         }
       })
+    }
 
-      if(!n) done()
-    })
-
-    var download = oneTrack(config.timeout, function (done) {
-      var wantList = getWantList('ready')
+    var download = oneTrack(/*config.timeout*/300, 5, 'download', function (done) {
+      // get ready blobs with a connected remote
+      var readyBlobs = wantList.subset('ready')
         .filter(function (e) {
           return first(e.has, function (has, k) {
             return has && remotes[k]
           })
         })
+      if(!readyBlobs.length) return done(true)
 
-      if(!wantList.length) return done(true)
-
-      var f = wantList.shift()
-
+      // get the first ready blob and the id of an available remote that has it
+      var f = readyBlobs.shift()
       var id = firstKey(f.has, function (_, id) { return !!remotes[id] })
       if (!id)
         return done(true)
 
+      // download!
+      f.state = 'downloading'
       sbot.emit('log:info', ['blobs', id, 'downloading', f.id])
       pull(
         remotes[id].blobs.get(f.id),
         toBuffer(),
         //TODO: error if the object is longer than we expected.
         blobs.add(f.id, function (err, hash) {
-          if(err) console.error(err.stack)
-          else got(hash)
+          if(err) {
+            f.state = 'ready'
+            console.error(err.stack)
+          }
+          else wantList.got(hash)
           done()
         })
       )
     })
 
-    function queue (hash, cb) {
-      if(want[hash]) {
-        want[hash].waiting.push(cb)
-      }
-      else {
-        sbot.emit('log:info', ['blobs', null, 'want', hash])
-        jobs.push(want[hash] = {
-          id: hash, waiting: [cb], state: 'waiting'
-        })
-      }
-
-      query()
-    }
-
     sbot.on('close', download.abort)
-    sbot.on('close', query.abort)
-
 
     return {
       get: function (hash) {
@@ -299,7 +345,7 @@ module.exports = {
           toBuffer(),
           blobs.add(function (err, hash) {
             if(err) console.error(err.stack)
-            else got(hash)
+            else wantList.got(hash)
             // sink cbs are not exposed over rpc
             // so this is only available when using this api locally.
             if(cb) cb(err, hash)
@@ -317,13 +363,13 @@ module.exports = {
 
         blobs.has(hash, function (_, has) {
           if(has) return cb()
-          queue(hash, cb)
+          wantList.queue(hash, cb)
         })
       },
 
       // get current want list
       wants: function () {
-        return jobs
+        return wantList.jobs
       }
     }
   }
