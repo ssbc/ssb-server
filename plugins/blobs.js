@@ -149,7 +149,6 @@ module.exports = {
 
         if (cb)
           wL.byId[hash].waiting.push(cb)
-        wL.byId[hash].requests++ // track # of requests for prioritization
 
         if (isnew) {
           // trigger a query round with the existing connections
@@ -367,12 +366,16 @@ module.exports = {
 
         blobs.has(hash, function (_, has) {
           if (has) return cb(null, true)
+          
+          // update queue
           if (nowait) {
-            wantList.queue(hash)
-            cb(null, false)
+            wantList.queue(hash); cb(null, false)
           } else {
             wantList.queue(hash, cb)
           }
+
+          // track # of requests for prioritization
+          wantList.byId[hash].requests++
         })
       },
 

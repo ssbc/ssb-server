@@ -331,7 +331,7 @@ tape('tracks requests and failed searches', function (t) {
         if(err) throw err
       })
 
-      // bump the number of wants by bob to 5 (4 explicit plus 1 automatic from reading feed)
+      // bump the number of wants by bob to 4
       sbotB.blobs.want(hash, function (err, has) {
         console.log('WANT, WAITED', err, has)
       })
@@ -356,7 +356,7 @@ tape('tracks requests and failed searches', function (t) {
           rpc.on('closed', function () {
             var wants = sbotB.blobs.wants()
             console.log('WANTS', wants)    
-            t.equal(wants[0].requests, 5)
+            t.equal(wants[0].requests, 4)
             t.equal(wants[0].notfounds, 2)        
 
             console.log('CLOSE')
