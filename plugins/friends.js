@@ -29,7 +29,18 @@ exports.init = function (sbot) {
   var config = sbot.config
 
   // view processor
-  var awaitSync = memview(sbot.ssb, function (msg) {
+  var syncCbs = []
+  function awaitSync (cb) {
+    if (syncCbs) syncCbs.push(cb)
+    else cb()
+  }
+  pull(sbot.ssb.createLogStream({ live: true }), pull.drain(function (msg) {
+    if (msg.sync) {
+      syncCbs.forEach(function (cb) { cb() })
+      syncCbs = null
+      return
+    }
+
     var c = msg.value.content
     if (c.type == 'contact') {
       mlib.asLinks(c.contact).forEach(function (link) {
@@ -49,7 +60,7 @@ exports.init = function (sbot) {
         }
       })
     }
-  }, function() {})
+  }))
 
   return {
     all: function (graph, cb) {
@@ -73,6 +84,11 @@ exports.init = function (sbot) {
       var cancel, ps = pushable(function () {
         cancel && cancel()
       })
+
+      //by default, also emit your own key.
+      if(opts.self !== false)
+        ps.push(start)
+
       var conf = config.friends || {}
       cancel = graph.traverse({
         start: start || sbot.feed.id,
