@@ -293,3 +293,79 @@ tape('emit "has" event to let peer know you have blob now', function (t) {
     if(++n > 1) throw new Error('connected twice')
   })
 })
+
+tape('tracks requests and failed searches', function (t) {
+
+  var sbotA = u.createDB('test-blobs-alice6', {
+      port: 45493, host: 'localhost', timeout: 1000,
+    }).use(gossip).use(friends).use(replicate).use(blobs)
+
+  var alice = sbotA.feed
+
+  var sbotB = u.createDB('test-blobs-bob6', {
+      port: 45494, host: 'localhost', timeout: 1000,
+      seeds: [{port: 45493, host: 'localhost'}]
+    }).use(gossip).use(friends).use(replicate).use(blobs)
+
+  var bob = sbotB.feed
+
+  var hasher = Hasher()
+
+  sbotA.on('blobs:has', function (r) {
+    console.log('REQUEST', r)
+  })
+
+  pull(
+    read(__filename),
+    hasher,
+    pull.drain(null, function (err) {
+
+      var hash = hasher.digest
+      console.log('WANT:', hash)
+
+      cont.para([
+        alice.add({type: 'post', text: 'this file', js: {ext: hash}}),
+        alice.add({type: 'contact', following: true, contact: { feed: bob.id }}),
+        bob.add({type: 'contact', following: true, contact: {feed: alice.id}})
+      ])(function (err, data) {
+        if(err) throw err
+      })
+
+      // bump the number of wants by bob to 5 (4 explicit plus 1 automatic from reading feed)
+      sbotB.blobs.want(hash, function (err, has) {
+        console.log('WANT, WAITED', err, has)
+      })
+      sbotB.blobs.want(hash, { nowait: true }, function (err, has) {
+        console.log('WANT, NOWAITED1', err, has)
+      })
+      sbotB.blobs.want(hash, { nowait: true }, function (err, has) {
+        console.log('WANT, NOWAITED2', err, has)
+      })
+      sbotB.blobs.want(hash, { nowait: true }, function (err, has) {
+        console.log('WANT, NOWAITED3', err, has)
+      })
+
+      sbotA.on('blobs:has', function (h) {
+        console.log('HAS', h)
+      })
+
+      sbotB.once('rpc:authorized', function (rpc) {
+        console.log('rpc:authorized - 1')
+        sbotB.once('rpc:authorized', function (rpc) {
+          console.log('rpc:authorized - 2')
+          rpc.on('closed', function () {
+            var wants = sbotB.blobs.wants()
+            console.log('WANTS', wants)    
+            t.equal(wants[0].requests, 5)
+            t.equal(wants[0].notfounds, 2)        
+
+            console.log('CLOSE')
+            sbotA.close()
+            sbotB.close()
+            t.end()
+          })
+        })
+      })
+    })
+  )
+})
