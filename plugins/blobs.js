@@ -1,5 +1,8 @@
 'use strict'
 
+//                 ms    s    m    h    d
+var MONTH_IN_MS = 1000 * 60 * 60 * 24 * 30
+
 var Blobs = require('multiblob')
 var path = require('path')
 var pull = require('pull-stream')
@@ -212,7 +215,14 @@ module.exports = {
         if(isHash(hash))
           // do we have the referenced blob yet?
           blobs.has(hash, function (_, has) {
-            if(!has) wantList.queue(hash) // no, search for it
+            if(!has) { // no...
+              sbot.ssb.get(data.source, function (err, msg) {
+                // was this blob published in the last month?
+                var dT = Math.abs(Date.now() - msg.timestamp)
+                if (dT < MONTH_IN_MS)
+                  wantList.queue(hash) // yes, search for it
+              })
+            }
           })
       })
     )
