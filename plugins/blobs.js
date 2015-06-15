@@ -45,6 +45,10 @@ function firstKey(obj, iter) {
       return k
 }
 
+function clamp (n, lo, hi) {
+  return Math.min(Math.max(n, lo), hi)
+}
+
 // returns a function which...
 // - only acts if not already acting
 // - automatically requeues if the task is not yet done
@@ -124,7 +128,10 @@ module.exports = {
           .slice(0, n || 20)
       }
       function sortSubset (a, b) {
-        return (b.requests - b.notfounds) - (a.requests - a.notfounds)
+        var apriority = clamp(a.requests - a.notfounds, -20, 20)
+        var bpriority = clamp(b.requests - b.notfounds, -20, 20) 
+        var randomization = (Math.random()*5 - 2.5)
+        return apriority - bpriority + randomization
       }
 
       wL.each = function (iter) { 
@@ -287,7 +294,7 @@ module.exports = {
               sbot.emit('log:info', ['blobs', remoteid, 'found', blob.id])
               download()
             } else {
-              blob.notfounds++ // track # of notfounds for prioritization
+              blob.notfounds = clamp(blob.notfounds + 1, 0, 40) // track # of notfounds for prioritization
             }
           })
           downloadDone(done)
@@ -385,7 +392,7 @@ module.exports = {
           }
 
           // track # of requests for prioritization
-          wantList.byId[hash].requests++
+          wantList.byId[hash].requests = clamp(wantList.byId[hash].requests+1, 0, 20)
         })
       },
 
