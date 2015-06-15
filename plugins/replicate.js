@@ -2,12 +2,13 @@ var pull = require('pull-stream')
 var pushable = require('pull-pushable')
 var many = require('pull-many')
 var cat = require('pull-cat')
+var Abort = require('pull-abortable')
 
 function replicate(server, rpc, cb) {
     var ssb = server.ssb
     var feed = server.feed
     var config = server.config
-
+    var aborter = Abort()
     var live = !!config.timeout
 
     var sources = many()
@@ -15,8 +16,10 @@ function replicate(server, rpc, cb) {
 
     pull(
       server.friends.createFriendStream(),
+      aborter,
       ssb.createLatestLookupStream(),
       pull.drain(function (upto) {
+        replicated[upto.id] = upto.sequence
         sources.add(rpc.createHistoryStream({
           id: upto.id, seq: upto.sequence + 1,
           live: live, keys: false
@@ -39,6 +42,7 @@ function replicate(server, rpc, cb) {
         )
       }),
       ssb.createWriteStream(function (err) {
+        aborter.abort()
         cb(null, replicated)
       })
     )

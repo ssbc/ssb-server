@@ -234,7 +234,7 @@ module.exports = {
         p.time.connect = 0
       p.time.attempt = Date.now()
       p.connected = true
-      
+
       var rpc = server.connect(p)
       rpc._peer = p
       rpc.on('remote:authorized', function () {
