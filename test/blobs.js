@@ -6,6 +6,7 @@ var pull      = require('pull-stream')
 var u         = require('./util')
 var cont      = require('cont')
 var Hasher    = require('multiblob/util').createHash
+var ssbKeys   = require('ssb-keys')
 
 // create 3 servers
 // give them all pub servers (on localhost)
@@ -14,6 +15,7 @@ var gossip    = require('../plugins/gossip')
 var blobs     = require('../plugins/blobs')
 var friends   = require('../plugins/friends')
 var replicate = require('../plugins/replicate')
+var client    = require('../client')
 
 function read (filename) {
   return toPull.source(fs.createReadStream(filename))
@@ -366,6 +368,79 @@ tape('tracks requests and failed searches', function (t) {
           })
         })
       })
+    })
+  )
+})
+
+tape('limit usage for non-master clients', function (t) {
+
+  var u = require('./util')
+
+  var sbot = u.createDB('test-blobs-alice7', {
+    port: 45450, host: 'localhost', timeout: 1000,
+    limits: {
+      blobs: {
+        // config limits to 1 call of each
+        queries: 1,
+        transfers: 1
+      }
+    }
+  }).use(gossip).use(blobs)
+
+  // read in a file (this file)
+  var hasher = Hasher()
+  pull(
+    read(__filename),
+    hasher,
+    pull.drain(null, function (err) {
+
+      var hash = hasher.digest
+
+      // add to server's blobstore
+      pull(read(__filename), sbot.blobs.add(hash, function (err) {
+
+        // connect a non-master RPC client
+        var clientKeys = ssbKeys.generate()
+        var rpc = client({port: 45450}, sbot.manifest)
+
+        rpc.auth(ssbKeys.signObj(clientKeys, {
+          role: 'peer',
+          ts: Date.now(),
+          public: clientKeys.public
+        }), function (err, res) {
+          if(err) throw err
+          t.notEqual(res.role, 'master')
+          
+          // first has() call, will allow
+          rpc.blobs.has(hash, function (err, res) {
+            t.ok(!err)
+            console.log('first has', err, res)
+
+            // second has() call, will deny
+            rpc.blobs.has(hash, function (err, res) {
+              t.ok(!!err)
+              console.log('second has', err.message)
+
+              // first get() call, will allow
+              pull(rpc.blobs.get(hash), pull.onEnd(function (err) {
+                t.ok(!err)
+                console.log('first get', err)
+
+                // second get() call, will deny
+                pull(rpc.blobs.get(hash), pull.onEnd(function (err) {
+                  t.ok(!!err)
+                  console.log('second get', err.message)
+
+                  rpc.close()
+                  sbot.close(function () {
+                    t.end()
+                  })
+                }))
+              }))
+            })
+          })
+        })
+      }))
     })
   )
 })
