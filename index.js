@@ -90,6 +90,13 @@ exports = module.exports = function (config, ssb, feed) {
 
     rpc.incoming = incoming
     rpc.outgoing = !incoming
+    rpc.usage = {
+      blobs: {
+        queries: 0,
+        transfers: 0,
+        bytes: 0
+      }
+    }
 
     rpc._sessid = ++sessCounter
     rpc._remoteAddress = stream.remoteAddress

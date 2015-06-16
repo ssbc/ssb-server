@@ -49,6 +49,16 @@ function clamp (n, lo, hi) {
   return Math.min(Math.max(n, lo), hi)
 }
 
+function opt (obj, path, fallback) {
+  path = path.split('.')
+  while (path.length) {
+    obj = obj[path.shift()]
+    if (!obj)
+      return fallback
+  }
+  return obj
+}
+
 // returns a function which...
 // - only acts if not already acting
 // - automatically requeues if the task is not yet done
@@ -337,12 +347,28 @@ module.exports = {
 
     sbot.on('close', download.abort)
 
+    var maxqueries = opt(sbot.config, 'limits.blobs.queries', 5)
+    var maxtransfers = opt(sbot.config, 'limits.blobs.transfers', 50)
     return {
       get: function (hash) {
+        // rate limit
+        if (this.usage) {
+          if (this.authorized.role != 'master' && this.usage.blobs.transfers >= maxtransfers)
+            return pull.error(new Error('get() rate limit exceeded for this connection'))
+          this.usage.blobs.transfers++
+        }
+
         return pull(blobs.get(hash), toBase64())
       },
 
       has: function (hash, cb) {
+        // rate limit
+        if (this.usage) {
+          if (this.authorized.role != 'master' && this.usage.blobs.queries >= maxqueries)
+            return cb(new Error('has() rate limit exceeded for this connection'))
+          this.usage.blobs.queries++
+        }
+
         sbot.emit('blobs:has', hash)
         blobs.has(hash, cb)
       },
