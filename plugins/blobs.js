@@ -1,5 +1,8 @@
 'use strict'
 
+//                 ms    s    m    h    d
+var MONTH_IN_MS = 1000 * 60 * 60 * 24 * 30
+
 var Blobs = require('multiblob')
 var path = require('path')
 var pull = require('pull-stream')
@@ -40,6 +43,10 @@ function firstKey(obj, iter) {
   for(var k in obj)
     if(iter(obj[k], k, obj))
       return k
+}
+
+function clamp (n, lo, hi) {
+  return Math.min(Math.max(n, lo), hi)
 }
 
 // returns a function which...
@@ -112,13 +119,19 @@ module.exports = {
       }
 
       // provides a random subset of the current state
-      // - `state` string
+      // - `filter` function
       // - `n` number (default 20) max subset length
-      wL.subset = function (state, n) {
+      wL.subset = function (filter, n) {
         return wL.jobs
-          .filter(function (j) { return j.state === state })
-          .sort(function () { return (Math.random()*2) - 1 })
+          .filter(filter)
+          .sort(sortSubset)
           .slice(0, n || 20)
+      }
+      function sortSubset (a, b) {
+        var apriority = clamp(a.requests - a.notfounds, -20, 20)
+        var bpriority = clamp(b.requests - b.notfounds, -20, 20) 
+        var randomization = (Math.random()*5 - 2.5)
+        return apriority - bpriority + randomization
       }
 
       wL.each = function (iter) { 
@@ -131,27 +144,37 @@ module.exports = {
 
       // adds a blob to the want list
       wL.queue = function (hash, cb) {
-        if(wL.byId[hash]) {
-          wL.byId[hash].waiting.push(cb)
-        }
-        else {
+        var isnew = false
+        if (!wL.byId[hash]) {
+          isnew = true
           sbot.emit('log:info', ['blobs', null, 'want', hash])
           wL.jobs.push(wL.byId[hash] = {
-            id: hash, waiting: [cb], state: 'waiting'
+            id: hash,
+            waiting: [], // cb queue
+            requests: 0, // # of times want()ed
+            notfounds: 0, // # of times failed to find at a peer
+            state: 'waiting'
           })
         }
 
-        for (var remoteid in remotes)
-          query(remoteid)
+        if (cb)
+          wL.byId[hash].waiting.push(cb)
+
+        if (isnew) {
+          // trigger a query round with the existing connections
+          for (var remoteid in remotes)
+            query(remoteid)
+        }
       }
 
+      // queues a callback for when a particular blob arrives
       wL.waitFor = function (hash, cb) {
         if(wL.byId[hash]) {
           wL.byId[hash].waiting.push(cb)
         }
       }
 
-      // notifies that the blob was got and removes from the wantlist
+      // notifies that the blob was got and removes it from the wantlist
       wL.got = function (hash) {
         sbot.emit('blobs:got', hash)
         sbot.emit('log:info', ['blobs', null, 'got', hash])
@@ -169,9 +192,10 @@ module.exports = {
         var i = +firstKey(wL.jobs, function (e) { return e.id == hash })
         wL.jobs.splice(i, 1)
 
+        // notify queued cbs
         cbs.forEach(function (cb) {
           if (isFunction(cb))
-            cb()
+            cb(null, true)
         })
       }
 
@@ -198,27 +222,17 @@ module.exports = {
         if(isHash(hash))
           // do we have the referenced blob yet?
           blobs.has(hash, function (_, has) {
-            if(!has) wantList.queue(hash) // no, search for it
+            if(!has) { // no...
+              sbot.ssb.get(data.source, function (err, msg) {
+                // was this blob published in the last month?
+                var dT = Math.abs(Date.now() - msg.timestamp)
+                if (dT < MONTH_IN_MS)
+                  wantList.queue(hash) // yes, search for it
+              })
+            }
           })
       })
     )
-
-    // serve blobs over HTTP
-    // /ext/<HASH>
-    sbot.http.use(function (req, res, next) {
-      if(/^[/]ext[/]/.test(req.url)) {
-        var hash = req.url.substring(5)
-        sbot.blobs.has(hash, function (err) {
-          if (err) next(err) // :TODO: give 404 if doesnt have
-          else
-            pull(
-              sbot.blobs.get(hash),
-              toBuffer(),
-              toPull.sink(res)
-            )
-        })
-      } else next()
-    })
 
     // query worker
 
@@ -257,29 +271,30 @@ module.exports = {
         return done()
 
       // filter bloblist down to blobs not (yet) found at the peer
-      var neededBlobs = wantList.subset('waiting')
-        .map(function (e) { return e.id })
-        .filter(function (blobhash) {
-          return !wantList.isFoundAt(blobhash, remoteid)
-        })
+      var neededBlobs = wantList.subset(function (e) {
+        return e.state == 'waiting' && !wantList.isFoundAt(e.id, remoteid)
+      })
       if(!neededBlobs.length)
         return done()
 
       // does the remote have any of them?
       queries[remoteid] = true
-      remote.blobs.has(neededBlobs, function (err, hasList) {
+      var neededBlobIds = neededBlobs.map(function (e) { return e.id })
+      remote.blobs.has(neededBlobIds, function (err, hasList) {
         delete queries[remoteid]
         if(hasList) {
           var downloadDone = multicb()
-          neededBlobs.forEach(function (blobhash, i) {
-            if (!wantList.wants(blobhash))
+          neededBlobs.forEach(function (blob, i) {
+            if (!wantList.wants(blob.id))
               return // must have been got already
 
             if (hasList[i]) {
-              wantList.setFoundAt(blobhash, remoteid)
-              wantList.waitFor(blobhash, downloadDone())
-              sbot.emit('log:info', ['blobs', remoteid, 'found', blobhash])
+              wantList.setFoundAt(blob.id, remoteid)
+              wantList.waitFor(blob.id, downloadDone())
+              sbot.emit('log:info', ['blobs', remoteid, 'found', blob.id])
               download()
+            } else {
+              blob.notfounds = clamp(blob.notfounds + 1, 0, 40) // track # of notfounds for prioritization
             }
           })
           downloadDone(done)
@@ -289,12 +304,11 @@ module.exports = {
 
     var download = oneTrack(/*config.timeout*/300, 5, 'download', function (done) {
       // get ready blobs with a connected remote
-      var readyBlobs = wantList.subset('ready')
-        .filter(function (e) {
-          return first(e.has, function (has, k) {
-            return has && remotes[k]
-          })
+      var readyBlobs = wantList.subset(function (e) {
+        return e.state == 'ready' && first(e.has, function (has, k) {
+          return has && remotes[k]
         })
+      })
       if(!readyBlobs.length) return done(true)
 
       // get the first ready blob and the id of an available remote that has it
@@ -356,14 +370,29 @@ module.exports = {
       ls: function () {
         return blobs.ls()
       },
-      // request to retrive a blob,
+      // request to retrieve a blob,
       // calls back when that file is available.
-      want: function (hash, cb) {
+      // - `opts.nowait`: call cb immediately if not found (dont register for callback)
+      want: function (hash, opts, cb) {
+        if (typeof opts == 'function') {
+          cb = opts
+          opts = null
+        }
+        var nowait = (opts && opts.nowait)
         if(!isHash(hash)) return cb(new Error('not a hash:' + hash))
 
         blobs.has(hash, function (_, has) {
-          if(has) return cb()
-          wantList.queue(hash, cb)
+          if (has) return cb(null, true)
+          
+          // update queue
+          if (nowait) {
+            wantList.queue(hash); cb(null, false)
+          } else {
+            wantList.queue(hash, cb)
+          }
+
+          // track # of requests for prioritization
+          wantList.byId[hash].requests = clamp(wantList.byId[hash].requests+1, 0, 20)
         })
       },
 
