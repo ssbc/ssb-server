@@ -220,44 +220,50 @@ module.exports = {
 
       if(p) {
         count ++
-        var rpc = connectTo(p)
-        rpc.on('closed', function () {
-          count = Math.max(count - 1, 0)
+        connectTo(p, function (err, rpc) {
+          if(err) return console.error(err)
+          rpc.on('closed', function () {
+            count = Math.max(count - 1, 0)
+          })
         })
 
       }
     }
 
-    function connectTo (p) {
+    function connectTo (p, cb) {
       p.time = p.time || {}
       if (!p.time.connect)
         p.time.connect = 0
       p.time.attempt = Date.now()
       p.connected = true
 
-      var rpc = server.connect(p)
-      rpc._peer = p
-      rpc.on('remote:authorized', function () {
-        p.id = rpc.authorized.id
-        p.time = p.time || {}
-        p.time.connect = Date.now()
+      server.connect(p, function (err, rpc) {
+        if(err) return cb(err)
+
+
+        console.log(rpc)
+        rpc._peer = p
+        rpc.on('remote:authorized', function () {
+          p.id = rpc.authorized.id
+          p.time = p.time || {}
+          p.time.connect = Date.now()
+        })
+
+        rpc.on('closed', function () {
+          //track whether we have successfully connected.
+          //or how many failures there have been.
+          p.connected = false
+          server.emit('log:info', ['SBOT', rpc._sessid, 'disconnect'])
+
+          var fail = !p.time || (p.time.attempt > p.time.connect)
+
+          if(fail) p.failure = (p.failure || 0) + 1
+          else     p.failure = 0
+
+          // :TODO: delete local peers if failure > N
+        })
+        cb(null, rpc)
       })
-
-      rpc.on('closed', function () {
-        //track whether we have successfully connected.
-        //or how many failures there have been.
-        p.connected = false
-        server.emit('log:info', ['SBOT', rpc._sessid, 'disconnect'])
-
-        var fail = !p.time || (p.time.attempt > p.time.connect)
-
-        if(fail) p.failure = (p.failure || 0) + 1
-        else     p.failure = 0
-
-        // :TODO: delete local peers if failure > N
-      })
-
-      return rpc
     }
 
     return gossip

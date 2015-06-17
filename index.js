@@ -11,6 +11,7 @@ var ssbKeys    = require('ssb-keys')
 var multicb    = require('multicb')
 var connect    = require('connect')
 var inactive   = require('pull-inactivity')
+var handshake  = require('secret-handshake')
 var nonPrivate = require('non-private-ip')
 
 var DEFAULT_PORT = 8008
@@ -19,6 +20,8 @@ var Api       = require('./lib/api')
 var manifest  = require('./lib/manifest')
 var peerApi   = require('./lib/rpc')
 var u         = require('./lib/util')
+var ssbCap    = require('./lib/ssb-cap')
+
 var clone     = u.clone
 var toAddress = u.toAddress
 
@@ -55,6 +58,18 @@ function find(ary, test) {
 // - `feed`: object, the ssb feed instance
 // - `config.port`: number, port to serve on
 // - `config.path`: string, the path to the directory which contains the keyfile and database
+
+function toBuffer(base64) {
+  return new Buffer(base64.substring(0, base64.indexOf('.')), 'base64')
+}
+
+function toSodiumKeys (keys) {
+  return {
+    publicKey: toBuffer(keys.public),
+    secretKey: toBuffer(keys.private)
+  }
+}
+
 exports = module.exports = function (config, ssb, feed) {
   if(!config)
     throw new Error('must have config')
@@ -70,10 +85,26 @@ exports = module.exports = function (config, ssb, feed) {
   // server
   // ======
 
+  var createServerStream = handshake.server(toSodiumKeys(keys), function (pub, cb) {
+    console.log('connection from:', pub.toString('base64'))
+    cb()
+  }, ssbCap)
+
   var server = net.createServer(function (stream) {
     // setup and auth session
-    var rpc = attachSession(stream, true)
-    server.emit('log:info', ['sbot',  rpc._sessid, 'incoming-connection', stream.remoteAddress])
+    pull(
+      stream,
+      createServerStream(function (err, secure) {
+        //drop the stream if a client fails to authenticate.
+        if(err) return console.error(err.message)
+        secure.remoteAddress = stream.remoteAddress
+        var rpc = attachSession(secure, true)
+        server.emit('log:info', ['sbot',  rpc._sessid, 'incoming-connection', stream.remoteAddress])
+
+      }),
+      pull.through(console.log),
+      stream
+    )
   })
 
   // peer connection
@@ -87,7 +118,7 @@ exports = module.exports = function (config, ssb, feed) {
     var timeout = server.config.timeout || 30e3
     var rpcStream = rpc.createStream()
     rpcStream = inactive(rpcStream, timeout)
-    pull(stream, rpcStream, stream)
+    pull(stream, rpcStream, pull.through(console.log), stream)
 
     rpc.incoming = incoming
     rpc.outgoing = !incoming
@@ -147,16 +178,31 @@ exports = module.exports = function (config, ssb, feed) {
         done()
       })
 
-      if (cb) cb(err, res)
+      if (cb) cb(err, rpc)
     })
 
     return rpc
   }
 
+  var createClientStream = handshake.client(toSodiumKeys(keys), ssbCap)
+
   server.connect = function (address, cb) {
-    var rpc = attachSession(net.connect(toAddress(address)), false, cb)
-    server.emit('log:info', ['sbot', rpc._sessid, 'connect', address])
-    return rpc
+    var stream = net.connect(toAddress(address))
+    console.log('dialing:', address.key)
+    pull(
+      stream,
+      pull.through(function (d) {
+        console.log('>>', d.toString('hex'))
+      }),
+      createClientStream(toBuffer(address.key), function (err, secure) {
+        if(err) return cb(err)
+        console.log('client connected', secure.remote.toString('base64'))
+        secure.remoteAddress = stream.remoteAddress
+        var rpc = attachSession(secure, false, cb)
+        server.emit('log:info', ['sbot', rpc._sessid, 'connect', address])
+      }),
+      stream
+    )
   }
 
   if(config.port)

@@ -21,23 +21,29 @@ tape('replicate between 3 peers', function (t) {
 
   var alice = dbA.feed
 
+  var seed_alice = {port: 45451, host: 'localhost', key: alice.keys.public}
+
+  console.log(alice)
+
   var dbB = u.createDB('test-bob', {
       port: 45452, host: 'localhost', timeout: 1000,
-      seeds: [{port: 45451, host: 'localhost'}]
+      seeds: [seed_alice]
     })
   var bob = dbB.feed
+  var seed_bob = {port: 45452, host: 'localhost', key: bob.keys.public}
 
   var dbC = u.createDB('test-carol', {
       port: 45453, host: 'localhost', timeout: 1000,
-      seeds: [{port: 45451, host: 'localhost'}]
+      seeds: [seed_alice]
     })
   var carol = dbC.feed
+  var seed_carol = {port: 45453, host: 'localhost', key: carol.keys.public}
 
 
   cont.para([
-    alice.add('pub', {address: {host: 'localhost', port: 45451}}),
-    bob  .add('pub', {address: {host: 'localhost', port: 45452}}),
-    carol.add('pub', {address: {host: 'localhost', port: 45453}}),
+    alice.add('pub', {address: seed_alice}),
+    bob  .add('pub', {address: seed_bob}),
+    carol.add('pub', {address: seed_carol}),
 
     alice.add('contact', {contact: {feed: bob.id},   following: true}),
     alice.add('contact', {contact: {feed: carol.id}, following: true}),
