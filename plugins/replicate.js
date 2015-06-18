@@ -43,15 +43,15 @@ function replicate(server, rpc, cb) {
       }),
       ssb.createWriteStream(function (err) {
         aborter.abort()
-        cb(null, replicated)
+        cb(err, replicated)
       })
     )
 }
 
 module.exports = function (server) {
-  server.on('rpc:authorized', function(rpc, res) {
+  server.on('rpc:connect', function(rpc) {
     //do not replicate if we are authorize as server.
-    if(res.type === 'server') return
+    //if(res.type === 'server') return
 
     var done = rpc.task()
     server.emit('log:info', ['replicate', rpc._sessid, 'start'])

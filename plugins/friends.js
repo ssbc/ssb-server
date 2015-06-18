@@ -91,11 +91,11 @@ exports.init = function (sbot) {
 
       var conf = config.friends || {}
       cancel = graph.traverse({
-        start: start || sbot.feed.id,
+        start: start,
         hops: opts.hops || conf.hops || 3,
         max: opts.dunbar || conf.dunbar || 150,
         each: function (_, to) {
-          ps.push(to)
+          if(to !== start) ps.push(to)
         }
       })
       return ps

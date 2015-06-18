@@ -69,15 +69,18 @@ module.exports = {
     }
 
     // track connection-state in peertable
-    server.on('remote:authorized', function (rpc, authed) {
+    server.on('rpc:connect', function (rpc) {
+      //************************************
+      //TODO. DISTINGUISH CLIENT CONNECTIONS.
+
       //don't track cli/web client connections
-      if(authed.type === 'client') return
+      if(rpc.auth.type === 'client') return
 
       var peer = rpc._peer
       if(!peer) //incomming connection...
-        peer = getPeer(rpc.authorized.id)
+        peer = getPeer(rpc.id)
       if(peer) {
-        peer.id = rpc.authorized.id
+        peer.id = rpc.id
         peer.connected = true
       }
     })
@@ -92,6 +95,8 @@ module.exports = {
     })
 
     // populate peertable with pub announcements on the feed
+
+    //TODO! pubs posts must contain public keys.
     pull(
       server.ssb.messagesByType({type: 'pub', live: true, keys: false, onSync: onFeedSync }),
       pull.map(function (e) {
@@ -238,11 +243,11 @@ module.exports = {
         if(err) return cb(err)
 
         rpc._peer = p
-        rpc.on('remote:authorized', function () {
-          p.id = rpc.authorized.id
+//        rpc.on('remote:authorized', function () {
+          p.id = rpc.id
           p.time = p.time || {}
           p.time.connect = Date.now()
-        })
+  //      })
 
         rpc.on('closed', function () {
           //track whether we have successfully connected.
