@@ -23,8 +23,6 @@ tape('replicate between 3 peers', function (t) {
 
   var seed_alice = {port: 45451, host: 'localhost', key: alice.keys.public}
 
-  console.log(alice)
-
   var dbB = u.createDB('test-bob', {
       port: 45452, host: 'localhost', timeout: 600,
       seeds: [seed_alice]
