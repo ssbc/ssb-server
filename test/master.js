@@ -14,20 +14,12 @@ tape('connect remote master', function (t) {
 
   client({port: 45451, key: alice}, function (err, rpc) {
     if(err) throw err
-    rpc.auth(ssbKeys.signObj(keys, {
-      role: 'client',
-      ts: Date.now(),
-      public: keys.public
-    }), function (err, res) {
+    rpc.publish({
+      type: 'msg', value: 'written by bob', from: keys.id
+    }, function (err) {
       if(err) throw err
-      t.equal(res.role, 'master')
-      rpc.publish({
-        type: 'msg', value: 'written by bob', from: keys.id
-      }, function (err) {
-        if(err) throw err
-        aliceDb.close(function () {
-          t.end()
-        })
+      aliceDb.close(function () {
+        t.end()
       })
     })
   })
