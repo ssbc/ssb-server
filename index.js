@@ -16,11 +16,12 @@ var nonPrivate = require('non-private-ip')
 
 var DEFAULT_PORT = 8008
 
-var Api       = require('./lib/api')
-var manifest  = require('./lib/manifest')
-var peerApi   = require('./lib/rpc')
-var u         = require('./lib/util')
-var ssbCap    = require('./lib/ssb-cap')
+var Api        = require('./lib/api')
+var manifest   = require('./lib/manifest')
+var peerApi    = require('./lib/rpc')
+var u          = require('./lib/util')
+var ssbCap     = require('./lib/ssb-cap')
+var createAuth = require('./lib/auth')
 
 var clone     = u.clone
 var toAddress = u.toAddress
@@ -85,9 +86,13 @@ exports = module.exports = function (config, ssb, feed) {
   // server
   // ======
 
+  var auth;
+
   var createServerStream = handshake.server(toSodiumKeys(keys), function (pub, cb) {
-    console.log('connection from:', pub.toString('base64'))
-    cb(null,    server.permissions.anonymous)
+    //CONVERT to SSB format. (fix this so it's just an ed25519)
+    var id = ssbKeys.hash(pub.toString('base64')+'.ed25519')
+    console.log('ID', id)
+    auth(id, cb)
   }, ssbCap)
 
   var server = net.createServer(function (stream) {
@@ -111,8 +116,6 @@ exports = module.exports = function (config, ssb, feed) {
 
   function attachSession (stream, incoming) {
     var rpc = peerApi(server.manifest, api)
-      //.permissions({allow: null, deny: null})
-//                .permissions({allow: ['auth']})
     var timeout = server.config.timeout || 30e3
     var rpcStream = rpc.createStream()
     rpcStream = inactive(rpcStream, timeout)
@@ -123,29 +126,17 @@ exports = module.exports = function (config, ssb, feed) {
       stream
     )
 
-    console.log('AUTH', stream.auth)
-    rpc.permissions(stream.auth)
-//    rpc.permissions({allow: null, deny: null})
-
+    //CONVERT to SSB format. (fix this so it's just an ed25519)
     rpc.id = ssbKeys.hash(stream.remote.toString('base64')+'.ed25519')
+    console.log(rpc.id)
+    console.log('PERMS', stream.auth)
+    rpc.permissions(stream.auth)
 
-//    rpc.incoming = incoming
-//    rpc.outgoing = !incoming
-//
     rpc._sessid = ++sessCounter
     rpc._remoteAddress = stream.remoteAddress
 
     rpc.task = multicb()
     server.emit('rpc:connect', rpc)
-//    server.emit('rpc:' + (incoming ? 'incoming' : 'outgoing'), rpc)
-//
-//    rpc.on('remote:authorized', function (authed) {
-//      server.emit('remote:authorized', rpc, authed)
-//      server.emit('log:info', ['remote', rpc._sessid, 'remote-authed', authed])
-//      if(authed.type === 'client')
-//        rpcStream.setTTL(null) //don't abort the stream on timeout.
-//    })
-//
 
     //TODO: put this stuff somewhere else...?
 
@@ -183,7 +174,7 @@ exports = module.exports = function (config, ssb, feed) {
       createClientStream(toBuffer(address.key), function (err, secure) {
         if(err) return console.error(err.stack), cb(err)
         secure.remoteAddress = stream.remoteAddress
-        secure.auth = server.permissions.anonymous
+        secure.auth = createAuth.permissions.anonymous
         var rpc = attachSession(secure, false)
         server.emit('log:info', ['sbot', rpc._sessid, 'connect', address])
         cb(null, rpc)
@@ -203,29 +194,8 @@ exports = module.exports = function (config, ssb, feed) {
   server.options = ssbKeys
   server.manifest = merge({}, manifest)
 
-  server.permissions = {
-    master: {allow: null, deny: null},
-    local: {allow: [
-      'emit',
-      'getPublicKey',
-      'whoami',
-      'get',
-      'getLatest',
-      'add',
-      'createFeedStream',
-      'createHistoryStream',
-      'createLogStream',
-      'messagesByType',
-      'messagesLinkedToMessage',
-      'messagesLinkedToFeed',
-      'messagesLinkedFromFeed',
-      'feedsLinkedToFeed',
-      'feedsLinkedFromFeed',
-      'followedUsers',
-      'relatedMessages'
-    ], deny: null},
-    anonymous: {allow: ['emit', 'createHistoryStream'], deny: null}
-  }
+  auth = createAuth(server)
+
   server.getId = function() {
     return server.feed.id
   }
