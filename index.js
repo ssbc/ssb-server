@@ -87,7 +87,7 @@ exports = module.exports = function (config, ssb, feed) {
 
   var createServerStream = handshake.server(toSodiumKeys(keys), function (pub, cb) {
     console.log('connection from:', pub.toString('base64'))
-    cb()
+    cb(null,    server.permissions.anonymous)
   }, ssbCap)
 
   var server = net.createServer(function (stream) {
@@ -96,11 +96,9 @@ exports = module.exports = function (config, ssb, feed) {
       stream,
       createServerStream(function (err, secure) {
         //drop the stream if a client fails to authenticate.
-        if(err) return console.error(err.message)
+        if(err) return console.error(err.stack)
         secure.remoteAddress = stream.remoteAddress
         attachSession(secure, true)
-//        server.emit('log:info', ['sbot',  rpc._sessid, 'incoming-connection', stream.remoteAddress])
-
       }),
       stream
     )
@@ -111,73 +109,66 @@ exports = module.exports = function (config, ssb, feed) {
 
   // sets up RPC session on a stream (used by {in,out}going streams)
 
-  function attachSession (stream, incoming, cb) {
+  function attachSession (stream, incoming) {
     var rpc = peerApi(server.manifest, api)
-                .permissions({allow: ['auth']})
+      //.permissions({allow: null, deny: null})
+//                .permissions({allow: ['auth']})
     var timeout = server.config.timeout || 30e3
     var rpcStream = rpc.createStream()
     rpcStream = inactive(rpcStream, timeout)
-    pull(stream, rpcStream, stream)
 
-    rpc.incoming = incoming
-    rpc.outgoing = !incoming
+    pull(
+      stream,
+      rpcStream,
+      stream
+    )
 
+    console.log('AUTH', stream.auth)
+    rpc.permissions(stream.auth)
+//    rpc.permissions({allow: null, deny: null})
+
+    rpc.id = ssbKeys.hash(stream.remote.toString('base64')+'.ed25519')
+
+//    rpc.incoming = incoming
+//    rpc.outgoing = !incoming
+//
     rpc._sessid = ++sessCounter
     rpc._remoteAddress = stream.remoteAddress
+
     rpc.task = multicb()
     server.emit('rpc:connect', rpc)
-    server.emit('rpc:' + (incoming ? 'incoming' : 'outgoing'), rpc)
+//    server.emit('rpc:' + (incoming ? 'incoming' : 'outgoing'), rpc)
+//
+//    rpc.on('remote:authorized', function (authed) {
+//      server.emit('remote:authorized', rpc, authed)
+//      server.emit('log:info', ['remote', rpc._sessid, 'remote-authed', authed])
+//      if(authed.type === 'client')
+//        rpcStream.setTTL(null) //don't abort the stream on timeout.
+//    })
+//
 
-    rpc.on('remote:authorized', function (authed) {
-      server.emit('remote:authorized', rpc, authed)
-      server.emit('log:info', ['remote', rpc._sessid, 'remote-authed', authed])
-      if(authed.type === 'client')
-        rpcStream.setTTL(null) //don't abort the stream on timeout.
+    //TODO: put this stuff somewhere else...?
+
+    //when the client connects (not a peer) we will be unable
+    //to authorize with it. In this case, we shouldn't close
+    //the connection...
+
+    var n = 2
+    function done () {
+      if(--n) return
+      server.emit('log:info', ['sbot', rpc._sessid, 'done'])
+      rpc.close()
+    }
+
+    rpc.once('done', function () {
+      server.emit('log:info', ['sbot', rpc._sessid, 'remote-done'])
+      done()
     })
 
-    rpc.auth(ssbKeys.signObj(keys, {
-      ToS: 'be excellent to each other',
-      public: keys.public,
-      ts: Date.now(),
-    }), function (err, res) {
-
-      if(err || !res) {
-        server.emit('rpc:unauthorized', err)
-        rpc._emit('rpc:unauthorized', err)
-        server.emit('log:warning', ['sbot', rpc._sessid, 'unauthed', err])
-        return
-      }
-      else {
-        server.emit('rpc:authorized', rpc, res)
-        rpc._emit('rpc:authorized', rpc, res)
-        server.emit('log:info', ['sbot', rpc._sessid, 'authed', res])
-      }
-
-      //TODO: put this stuff somewhere else...?
-
-      //when the client connects (not a peer) we will be unable
-      //to authorize with it. In this case, we shouldn't close
-      //the connection...
-
-      var n = 2
-      function done () {
-        if(--n) return
-        server.emit('log:info', ['sbot', rpc._sessid, 'done'])
-        rpc.close()
-      }
-
-      rpc.once('done', function () {
-        server.emit('log:info', ['sbot', rpc._sessid, 'remote-done'])
-        done()
-      })
-
-      rpc.task(function () {
-        server.emit('log:info', ['sbot', rpc._sessid, 'local-done'])
-        rpc.emit('done')
-        done()
-      })
-
-      if (cb) cb(err, rpc)
+    rpc.task(function () {
+      server.emit('log:info', ['sbot', rpc._sessid, 'local-done'])
+      rpc.emit('done')
+      done()
     })
 
     return rpc
@@ -190,10 +181,12 @@ exports = module.exports = function (config, ssb, feed) {
     pull(
       stream,
       createClientStream(toBuffer(address.key), function (err, secure) {
-        if(err) return cb(err)
+        if(err) return console.error(err.stack), cb(err)
         secure.remoteAddress = stream.remoteAddress
-        var rpc = attachSession(secure, false, cb)
+        secure.auth = server.permissions.anonymous
+        var rpc = attachSession(secure, false)
         server.emit('log:info', ['sbot', rpc._sessid, 'connect', address])
+        cb(null, rpc)
       }),
       stream
     )
