@@ -180,7 +180,7 @@ module.exports = {
       if(server.closed) return
       var delay = ~~(config.timeout/2 + Math.random()*config.timeout)
       if (init_synclist)
-        delay = 1000 // dont wait long to poll, we're still in our initial sync
+        delay = ~~(Math.random()*1000) // dont wait long to poll, we're still in our initial sync
       sched = setTimeout(function () {
         schedule(); connect()
       }, delay)
@@ -219,18 +219,15 @@ module.exports = {
       }
 
       if(p) {
-        count ++
         connectTo(p, function (err, rpc) {
           if(err) return console.error(err)
-          rpc.on('closed', function () {
-            count = Math.max(count - 1, 0)
-          })
         })
 
       }
     }
 
     function connectTo (p, cb) {
+      count ++
       p.time = p.time || {}
       if (!p.time.connect)
         p.time.connect = 0
@@ -240,8 +237,6 @@ module.exports = {
       server.connect(p, function (err, rpc) {
         if(err) return cb(err)
 
-
-        console.log(rpc)
         rpc._peer = p
         rpc.on('remote:authorized', function () {
           p.id = rpc.authorized.id
@@ -251,6 +246,7 @@ module.exports = {
 
         rpc.on('closed', function () {
           //track whether we have successfully connected.
+          count = Math.max(count - 1, 0)
           //or how many failures there have been.
           p.connected = false
           server.emit('log:info', ['SBOT', rpc._sessid, 'disconnect'])
