@@ -31,7 +31,7 @@ tape('replicate blobs between 2 peers - explicit want request', function (t) {
 
   var sbotB = u.createDB('test-blobs-bob1', {
       port: 45452, host: 'localhost', timeout: 1000,
-      seeds: [{port: 45451, host: 'localhost'}]
+      seeds: [{port: 45451, host: 'localhost', key: sbotA.feed.keys.public}]
     }).use(gossip).use(blobs)
 
   var bob = sbotB.feed
@@ -69,7 +69,7 @@ tape('replicate published blobs between 2 peers', function (t) {
 
   var sbotB = u.createDB('test-blobs-bob2', {
       port: 45452, host: 'localhost', timeout: 1000,
-      seeds: [{port: 45451, host: 'localhost'}]
+      seeds: [{port: 45451, host: 'localhost', key: sbotA.feed.keys.public}]
     }).use(gossip).use(friends).use(replicate).use(blobs)
 
   var bob = sbotB.feed
@@ -114,7 +114,7 @@ tape('avoid flooding a peer with blob requests', function (t) {
 
   var sbotB = u.createDB('test-blobs-bob3', {
       port: 45452, host: 'localhost', timeout: 1000,
-      seeds: [{port: 45451, host: 'localhost'}]
+      seeds: [{port: 45451, host: 'localhost', key: sbotA.feed.keys.public}]
     }).use(gossip).use(friends).use(replicate).use(blobs)
 
   var bob = sbotB.feed
@@ -173,7 +173,7 @@ tape('request missing blobs again after reconnect', function (t) {
 
   var sbotB = u.createDB('test-blobs-bob4', {
       port: 45454, host: 'localhost', timeout: 1000,
-      seeds: [{port: 45453, host: 'localhost'}]
+      seeds: [{port: 45453, host: 'localhost', key: sbotA.feed.keys.public}]
     }).use(gossip).use(friends).use(replicate).use(blobs)
 
   var bob = sbotB.feed
@@ -234,7 +234,7 @@ tape('emit "has" event to let peer know you have blob now', function (t) {
 
   var sbotB = u.createDB('test-blobs-bob5', {
       port: 45456, host: 'localhost', timeout: 1000,
-      seeds: [{port: 45455, host: 'localhost'}]
+      seeds: [{port: 45455, host: 'localhost', key: sbotA.feed.keys.public}]
     }).use(gossip).use(friends).use(replicate).use(blobs)
 
   var bob = sbotB.feed
