@@ -98,11 +98,10 @@ exports = module.exports = function (config, ssb, feed) {
         //drop the stream if a client fails to authenticate.
         if(err) return console.error(err.message)
         secure.remoteAddress = stream.remoteAddress
-        var rpc = attachSession(secure, true)
-        server.emit('log:info', ['sbot',  rpc._sessid, 'incoming-connection', stream.remoteAddress])
+        attachSession(secure, true)
+//        server.emit('log:info', ['sbot',  rpc._sessid, 'incoming-connection', stream.remoteAddress])
 
       }),
-      pull.through(console.log),
       stream
     )
   })
@@ -118,7 +117,7 @@ exports = module.exports = function (config, ssb, feed) {
     var timeout = server.config.timeout || 30e3
     var rpcStream = rpc.createStream()
     rpcStream = inactive(rpcStream, timeout)
-    pull(stream, rpcStream, pull.through(console.log), stream)
+    pull(stream, rpcStream, stream)
 
     rpc.incoming = incoming
     rpc.outgoing = !incoming
@@ -188,15 +187,10 @@ exports = module.exports = function (config, ssb, feed) {
 
   server.connect = function (address, cb) {
     var stream = net.connect(toAddress(address))
-    console.log('dialing:', address.key)
     pull(
       stream,
-      pull.through(function (d) {
-        console.log('>>', d.toString('hex'))
-      }),
       createClientStream(toBuffer(address.key), function (err, secure) {
         if(err) return cb(err)
-        console.log('client connected', secure.remote.toString('base64'))
         secure.remoteAddress = stream.remoteAddress
         var rpc = attachSession(secure, false, cb)
         server.emit('log:info', ['sbot', rpc._sessid, 'connect', address])
