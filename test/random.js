@@ -113,7 +113,7 @@ function latest (sbot, cb) {
 tape('replicate social network for animals', function (t) {
 
   var animalNetwork = u.createDB('test-random-animals', {
-    port: 45451, host: 'localhost', //timeout: 2001
+    port: 45451, host: 'localhost', timeout: 2001
   }).use(friends).use(replicate)
 
     if(!animalNetwork.friends)
@@ -128,8 +128,8 @@ tape('replicate social network for animals', function (t) {
       var seen = {}
       var start = Date.now()
       var animalFriends = u.createDB('test-random-animals2', {
-        port: 45452, host: 'localhost', //timeout: 2001,
-        seeds: [{port: 45451, host: 'localhost'}]
+        port: 45452, host: 'localhost', timeout: 2001,
+        seeds: [{port: 45451, host: 'localhost', key: animalNetwork.feed.keys.public}]
       }).use(friends).use(replicate).use(gossip)
 
       animalFriends.on('rpc:connect', function () {
@@ -148,8 +148,6 @@ tape('replicate social network for animals', function (t) {
         console.log("friended")
       })
 
-
-      console.log('LIVE stream...')
       pull(
         animalFriends.ssb.createLogStream({live: true}),
         pull.drain(function (data) {
@@ -160,8 +158,7 @@ tape('replicate social network for animals', function (t) {
             total += latest[k]
             prog += (seen[k] || 0)
           }
-//          if(Math.random() < 0.01)
-            console.log("REPLICATED", prog, total, Math.round(100*(prog/total)))
+          console.log("REPLICATED", prog, total, Math.round(100*(prog/total)))
           if(total === prog) {
             var seconds = (Date.now() - start)/1000
             t.equal(c, 1)
@@ -172,10 +169,6 @@ tape('replicate social network for animals', function (t) {
             animalNetwork.close()
             t.end()
 
-            //UGLY! TODO: make test close down properly.
-            //******************************************
-            process.exit(0)
-            //******************************************
           }
 
         })

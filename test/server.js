@@ -16,7 +16,7 @@ tape('replicate between 3 peers', function (t) {
   var u = require('./util')
 
   var dbA = u.createDB('test-alice', {
-      port: 45451, host: 'localhost', timeout: 1000,
+      port: 45451, host: 'localhost', timeout: 1400,
     })
 
   var alice = dbA.feed
@@ -26,14 +26,14 @@ tape('replicate between 3 peers', function (t) {
   console.log(alice)
 
   var dbB = u.createDB('test-bob', {
-      port: 45452, host: 'localhost', timeout: 1000,
+      port: 45452, host: 'localhost', timeout: 600,
       seeds: [seed_alice]
     })
   var bob = dbB.feed
   var seed_bob = {port: 45452, host: 'localhost', key: bob.keys.public}
 
   var dbC = u.createDB('test-carol', {
-      port: 45453, host: 'localhost', timeout: 1000,
+      port: 45453, host: 'localhost', timeout: 2000,
       seeds: [seed_alice]
     })
   var carol = dbC.feed
