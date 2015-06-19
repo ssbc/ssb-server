@@ -48,13 +48,8 @@ module.exports = function (keys, manf) {
       createClientStream(publicKey, function (err, secure) {
         if(err) return cb(err)
 
-        console.log('SECURE', secure.remote.toString('hex'))
-        var rpc = peerApi.clientApi(manf, {auth: 'async'}, {
-          auth: function (req, cb) {
-            cb(null, {type: 'server'})
-          }
-        })
-        .permissions({allow: ['auth'], deny: null})
+        var rpc = peerApi.clientApi(manf, {}, {})
+        .permissions({allow: ['emit'], deny: null})
         rpc.client = true
         //match the server's way of tracking rpc direction.
         //I don't know if we'll need this, but for consistency.

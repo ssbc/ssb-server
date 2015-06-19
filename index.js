@@ -128,8 +128,6 @@ exports = module.exports = function (config, ssb, feed) {
 
     //CONVERT to SSB format. (fix this so it's just an ed25519)
     rpc.id = ssbKeys.hash(stream.remote.toString('base64')+'.ed25519')
-    console.log(rpc.id)
-    console.log('PERMS', stream.auth)
     rpc.permissions(stream.auth)
 
     rpc._sessid = ++sessCounter
@@ -174,7 +172,7 @@ exports = module.exports = function (config, ssb, feed) {
       createClientStream(toBuffer(address.key), function (err, secure) {
         if(err) return console.error(err.stack), cb(err)
         secure.remoteAddress = stream.remoteAddress
-        secure.auth = createAuth.permissions.anonymous
+        secure.auth = server.permissions.anonymous
         var rpc = attachSession(secure, false)
         server.emit('log:info', ['sbot', rpc._sessid, 'connect', address])
         cb(null, rpc)
@@ -193,7 +191,29 @@ exports = module.exports = function (config, ssb, feed) {
   server.config = config
   server.options = ssbKeys
   server.manifest = merge({}, manifest)
-
+  server.permissions = {
+    master: {allow: null, deny: null},
+    local: {allow: [
+      'emit',
+      'getPublicKey',
+      'whoami',
+      'get',
+      'getLatest',
+      'add',
+      'createFeedStream',
+      'createHistoryStream',
+      'createLogStream',
+      'messagesByType',
+      'messagesLinkedToMessage',
+      'messagesLinkedToFeed',
+      'messagesLinkedFromFeed',
+      'feedsLinkedToFeed',
+      'feedsLinkedFromFeed',
+      'followedUsers',
+      'relatedMessages'
+    ], deny: null},
+    anonymous: {allow: ['emit', 'createHistoryStream'], deny: null}
+  }
   auth = createAuth(server)
 
   server.getId = function() {
@@ -263,6 +283,7 @@ exports = module.exports = function (config, ssb, feed) {
 
       server[plugin.name] = api[plugin.name] = plugin.init(server)
     }
+
     return this
   }
 

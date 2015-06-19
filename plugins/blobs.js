@@ -222,8 +222,8 @@ module.exports = {
 
     // query worker
 
-    sbot.on('rpc:authorized', function (rpc) {
-      var id = rpc.authorized.id
+    sbot.on('rpc:connect', function (rpc) {
+      var id = rpc.id
       remotes[id] = rpc
       //forget any blobs that they did not have
       //in previous requests. they might have them by now.
@@ -268,6 +268,7 @@ module.exports = {
       // does the remote have any of them?
       queries[remoteid] = true
       remote.blobs.has(neededBlobs, function (err, hasList) {
+        if(err) console.error(err.stack)
         delete queries[remoteid]
         if(hasList) {
           var downloadDone = multicb()
