@@ -26,7 +26,7 @@ module.exports = {
     addMe: 'async'
   },
   permissions: {
-    master: {allow: ['create']},
+//    master: {allow: ['create']},
     //temp: {allow: ['use']}
   },
   init: function (server) {
