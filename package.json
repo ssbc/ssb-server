@@ -22,7 +22,7 @@
     "mkdirp": "~0.5.0",
     "multiblob": "~1.4.3",
     "multicb": "^1.0.0",
-    "muxrpc": "~4.0.2",
+    "muxrpc": "~5.0.1",
     "mynosql-query": "~1.0.0",
     "nomnom": "1.8.0",
     "non-private-ip": "~1.1.0",
