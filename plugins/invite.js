@@ -5,6 +5,7 @@ var toAddress = require('../lib/util').toAddress
 var cont = require('cont')
 var explain = require('explain-error')
 var ip = require('ip')
+var capClient = require('../cap-client')
 //okay this plugin adds a method
 //invite(seal({code, public})
 
@@ -23,7 +24,8 @@ module.exports = {
   manifest: {
     create: 'async',
     use: 'async',
-    addMe: 'async'
+    addMe: 'async',
+    accept: 'async'
   },
   permissions: {
 //    master: {allow: ['create']},
@@ -61,19 +63,21 @@ module.exports = {
           permissions: {allow: ['emit', 'invite.use'], deny: null}
         }, function (err) {
           if(err) cb(err)
-          else cb(null, [addr, owner, seed.toString('base64')].join(','))
+          else cb(null, addr + '@' + seed.toString('base64'))
         })
 
       },
       use: function (req, cb) {
         var rpc = this
 
-        server.friends.all('follow', function(err, follows) {
-          if (follows && follows[server.feed.id] && follows[server.feed.id][id])
-            return cb(new Error('already following'))
 
-          codesDB.get(rpc.id, function(err, invite) {
-            if(err) return cb(err)
+        codesDB.get(rpc.id, function(err, invite) {
+          if(err) return cb(err)
+
+          server.friends.all('follow', function(err, follows) {
+            if (follows && follows[server.feed.id] && follows[server.feed.id][id])
+              return cb(new Error('already following'))
+
             // although we already know the current feed
             // it's included so that request cannot be replayed.
             if(!req.feed)
@@ -106,70 +110,30 @@ module.exports = {
           })
         })
       },
-      addMe: function (req, cb) {
-//        if(isString(req)) {
-//          req = req.split(',')
-//          req = {
-//            address: req[0],
-//            id: req[1],
-//            invite: req[2]
-//          }
-//        }
-//        var rpc = server.connect(toAddress(req.address))
-//
-//        rpc.once('rpc:unauthorized', function (err) {
-//          rpc.close(); cb(err)
-//        })
-//
-//        var remote, auth, done
-//
-//        rpc.once('remote:authorized', function (res) {
-//          remote = true
-//          if(remote && done) next()
-//        })
-//
-//        rpc.once('rpc:authorized', function (res) {
-//          auth = true; done = rpc.task()
-//          if(remote && done) next()
-//        })
-//
-//        function next () {
-//          if(rpc.authorized.id !== req.id) {
-//            rpc.close()
-//            return cb(new Error('pub server did not have correct public key'))
-//          }
-//          var secret = req.secret || req.invite
-//          delete req.invite
-//          delete req.secret
-//          req.feed = req.feed || server.feed.id
-//
-//          var invite = ssbKeys.signObjHmac(secret, {
-//            keyId: ssbKeys.hash(secret, 'base64'),
-//            feed: server.feed.id,
-//            ts: Date.now()
-//          })
-//
-//          rpc.invite.use(invite, function (err, res) {
-//            if(err) {
-//              done(); cb(explain(err, 'invite not accepted'))
-//              return
-//            }
-//            cont.para([
-//              server.feed.add({
-//                type: 'contact',
-//                following: true,
-//                contact: { feed: rpc.authorized.id }
-//              }),
-//              server.feed.add({
-//                type: 'pub',
-//                address: req.address
-//              })
-//            ])(function (err, results) {
-//              done()
-//              cb(err, results)
-//            })
-//          })
-//        }
+      addMe: function (invite, cb) {
+        return this.accept(invite, cb)
+      },
+      accept: function (invite, cb) {
+        capClient(invite, server.getManifest(), function (err, rpc) {
+          rpc.invite.use({feed: server.feed.id}, function (err, msg) {
+            if(err) return cb(explain(err, 'invite not accepted'))
+            cont.para([
+              server.feed.add({
+                type: 'contact',
+                following: true,
+                autofollow: true,
+                contact: { feed: rpc.id }
+              }),
+              server.feed.add({
+                type: 'pub',
+                address: rpc.address,
+              })
+            ])(function (err, results) {
+              rpc.close()
+              cb(err, results)
+            })
+          })
+        })
       }
     }
   }

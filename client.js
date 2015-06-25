@@ -7,6 +7,7 @@ var toAddress = require('./lib/util').toAddress
 
 var handshake = require('secret-handshake')
 var ssbCap    = require('./lib/ssb-cap')
+var hash      = require('ssb-keys').hash
 
 // createClient  to a peer as a client
 // - `address.host`: string, hostname of the target
@@ -50,6 +51,9 @@ module.exports = function (keys, manf) {
 
         var rpc = peerApi.clientApi(manf, {}, {})
         .permissions({allow: ['emit'], deny: null})
+        rpc.id = hash(address.key)
+        rpc.address = address
+
         rpc.client = true
         //match the server's way of tracking rpc direction.
         //I don't know if we'll need this, but for consistency.

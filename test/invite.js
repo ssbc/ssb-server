@@ -35,6 +35,8 @@ tape('test invite api', function (t) {
     aliceC.invite.create(1, function (err, invite) {
       if(err) throw explain(err, 'cannot create invite code')
 
+      console.log('INVITE', invite)
+
       capClient(invite, manf, function (err, capC) {
         if(err) throw err
 
@@ -69,20 +71,22 @@ tape('test invite api', function (t) {
     })
   })
 })
-return
-//THIS TEST DISABLED FOR NOW.
+
+//THIS TEST DISABLED FOR NOW. YOLO
 //need to rewrite whole invite system.
-tape('test invite.addMe api', function (t) {
+tape('test invite.accept api', function (t) {
 
   var u = require('./util')
 
   var sbotA = u.createDB('test-invite-alice2', {
     port: 45451, host: '127.0.0.1',
+    timeout: 100,
     allowPrivate: true
   })
 
   var sbotB = u.createDB('test-invite-bob2', {
-    port: 45452, host: '127.0.0.1'
+    port: 45452, host: '127.0.0.1',
+    timeout: 100,
   })
 
   var alice = sbotA.feed
@@ -98,10 +102,7 @@ tape('test invite.addMe api', function (t) {
 
   sbotA.invite.create(1, function (err, invite) {
     if(err) throw err
-    console.log('INVITE', invite)
-//    invite.feed = sbotB.feed.id
-    return t.end()
-    sbotB.invite.addMe(invite, function (err) {
+    sbotB.invite.accept(invite, function (err) {
       if(err) throw err
       sbotA.friends.hops(sbotA.feed.id, function (err, hops) {
         console.log(hops)
