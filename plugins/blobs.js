@@ -213,7 +213,7 @@ module.exports = {
           else
             pull(
               sbot.blobs.get(hash),
-              toBuffer(),
+//              toBuffer(),
               toPull.sink(res)
             )
         })
@@ -309,7 +309,7 @@ module.exports = {
       sbot.emit('log:info', ['blobs', id, 'downloading', f.id])
       pull(
         remotes[id].blobs.get(f.id),
-        toBuffer(),
+   //     toBuffer(),
         //TODO: error if the object is longer than we expected.
         blobs.add(f.id, function (err, hash) {
           if(err) {
@@ -326,7 +326,7 @@ module.exports = {
 
     return {
       get: function (hash) {
-        return pull(blobs.get(hash), toBase64())
+        return blobs.get(hash)
       },
 
       has: function (hash, cb) {
@@ -343,7 +343,7 @@ module.exports = {
         if(isFunction(hash)) cb = hash, hash = null
 
         return pull(
-          toBuffer(),
+     //     toBuffer(),
           blobs.add(function (err, hash) {
             if(err) console.error(err.stack)
             else wantList.got(hash)

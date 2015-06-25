@@ -36,10 +36,6 @@ function isString (s) {
   return 'string' === typeof s
 }
 
-function toBase64() {
-  return pull.map(function (b) { return b.toString('base64') })
-}
-
 function defaultRel (o, r) {
   if(!isObject(o)) return o
   for(var k in o) {
@@ -187,7 +183,6 @@ function next (data) {
           pull(
             source,
             hasher,
-            toBase64(),
             rpc.blobs.add(function (err) {
               if(err) return next(err)
               link.ext = hasher.digest
@@ -234,7 +229,6 @@ function next (data) {
     else if('sink' === type)
       pull(
         toPull.source(process.stdin),
-        toBase64(),
         get(rpc, cmd)(data, function (err, res) {
           if(err) throw explain(err, 'writing stream failed')
           console.log(JSON.stringify(res, null, 2))
