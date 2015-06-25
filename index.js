@@ -221,10 +221,9 @@ exports = module.exports = function (config, ssb, feed) {
   }
 
   server.getAddress = function() {
-    var address = server.config.host || nonPrivate.private() || 'localhost'
-    if (server.config.port != DEFAULT_PORT)
-      address += ':' + server.config.port
-    return address
+    var host = server.config.host || nonPrivate.private() || 'localhost'
+    //always provite the port.
+    return host + ':' + server.config.port + ':'+server.feed.keys.public
   }
 
   var api = Api(server)
