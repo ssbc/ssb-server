@@ -1,7 +1,6 @@
 #! /usr/bin/env node
 
 var fs           = require('fs')
-var ws           = require('pull-ws-server')
 var path         = require('path')
 var msgs         = require('ssb-msgs')
 var pull         = require('pull-stream')
