@@ -203,23 +203,6 @@ module.exports = {
       })
     )
 
-    // serve blobs over HTTP
-    // /ext/<HASH>
-    sbot.http.use(function (req, res, next) {
-      if(/^[/]ext[/]/.test(req.url)) {
-        var hash = req.url.substring(5)
-        sbot.blobs.has(hash, function (err) {
-          if (err) next(err) // :TODO: give 404 if doesnt have
-          else
-            pull(
-              sbot.blobs.get(hash),
-//              toBuffer(),
-              toPull.sink(res)
-            )
-        })
-      } else next()
-    })
-
     // query worker
 
     sbot.on('rpc:connect', function (rpc) {

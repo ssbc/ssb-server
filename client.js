@@ -1,4 +1,5 @@
-var net       = require('pull-ws-server')
+var net       = require('./lib/net')
+                //require('pull-ws-server')
 var Api       = require('./lib/api')
 var manifest  = require('./lib/manifest')
 var peerApi   = require('./lib/rpc')
@@ -57,7 +58,6 @@ module.exports = function (keys, manf) {
         rpc.client = true
         //match the server's way of tracking rpc direction.
         //I don't know if we'll need this, but for consistency.
-        rpc.outgoing = true; rpc.incoming = false
         pull(secure, rpc.createStream(), secure)
         cb(null, rpc)
       }),

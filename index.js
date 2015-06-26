@@ -1,12 +1,11 @@
 var fs         = require('fs')
-var net        = require('pull-ws-server')
-var url        = require('url')
+var net        = require('./lib/net')
+                //require('pull-ws-server')
 var pull       = require('pull-stream')
 var path       = require('path')
 var merge      = require('map-merge')
 var create     = require('secure-scuttlebutt/create')
 var mkdirp     = require('mkdirp')
-var crypto     = require('crypto')
 var ssbKeys    = require('ssb-keys')
 var multicb    = require('multicb')
 var connect    = require('connect')
@@ -25,10 +24,6 @@ var createAuth = require('./lib/auth')
 
 var clone     = u.clone
 var toAddress = u.toAddress
-
-//I made this global so that when you run tests with multiple
-//servers each connection gets it's own id..
-var sessCounter = 0
 
 function loadSSB (config) {
   var dbPath  = path.join(config.path, 'db')
@@ -70,6 +65,8 @@ function toSodiumKeys (keys) {
     secretKey: toBuffer(keys.private)
   }
 }
+
+var sessid = 0
 
 exports = module.exports = function (config, ssb, feed) {
   if(!config)
@@ -130,9 +127,8 @@ exports = module.exports = function (config, ssb, feed) {
     rpc.id = ssbKeys.hash(stream.remote.toString('base64')+'.ed25519')
     rpc.permissions(stream.auth)
 
-    rpc._sessid = ++sessCounter
     rpc._remoteAddress = stream.remoteAddress
-
+    rpc._sessid = sessid++
     rpc.task = multicb()
     server.emit('rpc:connect', rpc)
 
@@ -214,6 +210,7 @@ exports = module.exports = function (config, ssb, feed) {
     ], deny: null},
     anonymous: {allow: ['emit', 'createHistoryStream'], deny: null}
   }
+
   auth = createAuth(server)
 
   server.getId = function() {
@@ -232,34 +229,6 @@ exports = module.exports = function (config, ssb, feed) {
   // ======================
   var sessions = {}
 
-
-  // http interface (via connect)
-  // ============================
-  //
-  // http should be considered a legacy interface,
-  // but we need it to work around various legacy
-  // browser things. You should build most of your
-  // app with the rpc api and not the http api.
-
-  server.http = connect()
-  server.on('request', server.http)
-
-  //default handlers
-
-  function stringManifest () {
-    return JSON.stringify(server.getManifest(), null, 2) + '\n'
-  }
-
-  server.http.use(function (req, res, next) {
-    if(req.url == '/manifest.json')
-      res.end(stringManifest())
-    //return manifest as JS GLOBAL,
-    //so that it can be easily loaded into plugins, without hardcoding.
-    else if(req.url == '/manifest.js')
-      res.end(';SSB_MANIFEST = ' + stringManifest())
-    else
-      next()
-  })
 
   // plugin management
   // =================
@@ -286,39 +255,9 @@ exports = module.exports = function (config, ssb, feed) {
     return this
   }
 
-  // auth management
-  // ===============
-
-  var secrets = []
-  server.createAccessKey = function (perms) {
-    perms = perms || {}
-    var key = crypto.randomBytes(32)
-    var ts = Date.now()
-    var sec = {
-      created: ts,
-      expires: ts + (perms.ttl || 60*60*1000), //1 hour
-      key: key,
-      id: ssbKeys.hash(key),
-      perms: perms
-    }
-    secrets.push(sec)
-    return  sec.key
-  }
-
-  server.getAccessKey = function (id) {
-    return find(secrets, function (e) {
-      return e.id === id
-    })
-  }
 
   server.getManifest = function () {
     return server.manifest
-  }
-
-  server.authorize = function (msg) {
-    var secret = this.getAccessKey(msg.keyId)
-    if(!secret) return
-    return ssbKeys.verifyObjHmac(secret.key, msg)
   }
 
   return server
@@ -330,49 +269,13 @@ exports = module.exports = function (config, ssb, feed) {
 // - `config.path`: string, the path to the directory which contains the keyfile and database
 
 exports.init =
-exports.fromConfig = function (config, cb) {
-  var sbot = module.exports(config)
-
-  var rebuild = false
-  sbot.ssb.needsRebuild(function (err, b) {
-    if (b) {
-      rebuild = true
-      console.log('Rebuilding indexes to ensure consistency. Please wait...')
-      sbot.ssb.rebuildIndex(setup)
-    } else
-      setup()
-  })
-
-  function setup (err) {
-    if (err) {
-      return cb(explain(err, 'error while rebuilding index'))
-    }
-    if (rebuild)
-      console.log('Indexes rebuilt.')
-
-    sbot
-      .use(require('./plugins/logging'))
-      .use(require('./plugins/replicate'))
-      .use(require('./plugins/gossip'))
-      .use(require('./plugins/blobs'))
-      .use(require('./plugins/invite'))
-      .use(require('./plugins/friends'))
-
-    if (config.local)
-      sbot.use(require('./plugins/local'))
-    if (config.phoenix)
-      sbot.use(require('ssbplug-phoenix'))
-
-    cb(null, sbot)
-  }
-
-
-  return sbot
-}
+exports.fromConfig = require('./create')
 
 exports.createClient = require('./client')
 
 if(!module.parent) {
   //start a server
-  exports.init(require('ssb-config'))
+  exports.init(require('ssb-config'), function (err) {
+    if(err) throw err
+  })
 }

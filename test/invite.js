@@ -35,8 +35,6 @@ tape('test invite api', function (t) {
     aliceC.invite.create(1, function (err, invite) {
       if(err) throw explain(err, 'cannot create invite code')
 
-      console.log('INVITE', invite)
-
       capClient(invite, manf, function (err, capC) {
         if(err) throw err
 
