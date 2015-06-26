@@ -91,7 +91,7 @@ module.exports = {
     seeds.forEach(function (e) {
       if(!e) return
       var p = toAddress(e)
-      if(p) peers.push(p)
+      if(p && p.key) peers.push(p)
     })
 
     // populate peertable with pub announcements on the feed
@@ -110,6 +110,7 @@ module.exports = {
           if(e.host == host) return false
           if(e.host == '127.0.0.1' || e.host == 'localhost') return false
         }
+        if(!e.key) return false
         return true
       }),
       pull.drain(function (e) {
@@ -166,13 +167,14 @@ module.exports = {
         if (!addr || typeof addr != 'object')
           return cb(new Error('first param must be an address'))
 
+        if(!addr.key) return cb(new Error('address must have ed25519 key'))
         // find the peer
         var p = u.find(peers.filter(Boolean), function (e) {
           return e.host === addr.host && e.port === addr.port
         })
         if (!p) // only connect to known peers
           return cb(new Error('address not a known peer'))
-
+        
         connectTo(p)
         cb()
       }
@@ -213,6 +215,7 @@ module.exports = {
         // - increase odds due to multiple announcements
         // - if no announcements, it came from config seed or LAN, so given a higher-than-avg weight
         var default_a = 5 // for seeds and peers (with no failures, lim will be 0.75)
+        console.log(peers)
         p = rand(peers.filter(function (e) {
           var a = Math.min((e.announcers) ? e.announcers.length : default_a, 10) // cap at 10
           var f = e.failure || 0
