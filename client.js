@@ -1,5 +1,4 @@
 var net       = require('./lib/net')
-                //require('pull-ws-server')
 var Api       = require('./lib/api')
 var manifest  = require('./lib/manifest')
 var peerApi   = require('./lib/rpc')
