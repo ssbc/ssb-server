@@ -136,25 +136,12 @@ exports = module.exports = function (config, ssb, feed) {
     //to authorize with it. In this case, we shouldn't close
     //the connection...
 
-    var n = 2
-    function done () {
-      if(--n) return
-      server.emit('log:info', ['sbot', rpc._sessid, 'done'])
-      rpc.close()
-    }
-
-    rpc.once('done', function () {
-      server.emit('log:info', ['sbot', rpc._sessid, 'remote-done'])
-      done()
-    })
-
     rpc.task(function () {
-      server.emit('log:info', ['sbot', rpc._sessid, 'local-done'])
-      rpc.emit('done')
-      done()
+      //Actually, this does nothing!
+      //removed this and all tests still passed...
     })
 
-    return rpc
+   return rpc
   }
 
   var createClientStream = handshake.client(toSodiumKeys(keys), ssbCap)

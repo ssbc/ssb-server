@@ -215,7 +215,6 @@ module.exports = {
         // - increase odds due to multiple announcements
         // - if no announcements, it came from config seed or LAN, so given a higher-than-avg weight
         var default_a = 5 // for seeds and peers (with no failures, lim will be 0.75)
-        console.log(peers)
         p = rand(peers.filter(function (e) {
           var a = Math.min((e.announcers) ? e.announcers.length : default_a, 10) // cap at 10
           var f = e.failure || 0
@@ -246,11 +245,9 @@ module.exports = {
         if(err) return cb(err)
 
         rpc._peer = p
-//        rpc.on('remote:authorized', function () {
-          p.id = rpc.id
-          p.time = p.time || {}
-          p.time.connect = Date.now()
-  //      })
+        p.id = rpc.id
+        p.time = p.time || {}
+        p.time.connect = Date.now()
 
         rpc.on('closed', function () {
           //track whether we have successfully connected.
