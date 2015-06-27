@@ -38,7 +38,8 @@
     "ssb-keys": "~1.0.1",
     "ssb-msgs": "~3.0.0",
     "stream-to-pull-stream": "~1.6.0",
-    "packet-stream-codec": "~1.1.0"
+    "packet-stream-codec": "~1.1.0",
+    "pull-notify": "~0.0.0"
   },
   "devDependencies": {
     "rimraf": "~2.2.8",

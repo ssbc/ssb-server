@@ -6,6 +6,7 @@ var pull = require('pull-stream')
 var toPull = require('stream-to-pull-stream')
 var isHash = require('ssb-keys').isHash
 var multicb = require('multicb')
+var Notify = require('pull-notify')
 
 function isFunction (f) {
   return 'function' === typeof f
@@ -94,14 +95,16 @@ module.exports = {
     add: 'sink',
     ls: 'source',
     want: 'async',
-    wants: 'sync'
+    wants: 'sync',
+    changes: 'source',
   },
   permissions: {
-    anonymous: {allow: ['has', 'get']},
-    local: {allow: ['has', 'get']}
+    anonymous: {allow: ['has', 'get', 'changes']},
+    local: {allow: ['has', 'get', 'changes']}
   },
   init: function (sbot) {
 
+    var notify = Notify()
     var config = sbot.config
     var remotes = {} // connected peers (rpc objects)
     var blobs = sbot._blobs = Blobs(path.join(sbot.config.path, 'blobs'))
@@ -156,14 +159,13 @@ module.exports = {
         sbot.emit('blobs:got', hash)
         sbot.emit('log:info', ['blobs', null, 'got', hash])
         each(remotes, function (rpc) {
-          rpc.emit('blobs:got', hash)
+          notify(hash)
         })
 
-        if(!wL.byId[hash])
-          return
+        if(!wL.byId[hash]) return
 
         var cbs = wL.byId[hash].waiting
-        
+
         // stop tracking
         delete wL.byId[hash]
         var i = +firstKey(wL.jobs, function (e) { return e.id == hash })
@@ -221,12 +223,19 @@ module.exports = {
 
       //when the peer gets a blob, if its one we want,
       //then request it.
-      rpc.on('blobs:got', function (hash) {
-        if (wantList.wants(hash)) {
-          wantList.setFoundAt(hash, id)
-          download()
-        }
-      })
+      pull(
+        rpc.blobs.changes({}),
+        pull.drain(function (hash) {
+          if (wantList.wants(hash)) {
+            wantList.setFoundAt(hash, id)
+            download()
+          }
+        }, function (err) {
+          //Ignore errors.
+          //these will either be from a cli client that doesn't have
+          //blobs plugin, or because stream has terminated.
+        })
+      )
     })
 
     var queries = {}
@@ -349,6 +358,10 @@ module.exports = {
           if(has) return cb()
           wantList.queue(hash, cb)
         })
+      },
+
+      changes: function () {
+        return notify.listen()
       },
 
       // get current want list
