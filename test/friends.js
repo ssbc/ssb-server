@@ -25,8 +25,8 @@ tape('construct and analyze graph', function (t) {
     cont(schemas.addContact)(bob, alice.id, { following: true, trust: 1 }),
     cont(schemas.addContact)(bob, carol.id, { following: false, trust: -1 }),
     cont(schemas.addContact)(carol, alice.id, { following: true })
-  ]) (function () {
-
+  ]) (function (err) {
+    if(err) throw err
     cont.para([
       cont(server.friends.all)(),
       cont(server.friends.all)('follow'),
