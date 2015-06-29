@@ -31,7 +31,7 @@ tape('tracks requests and failed searches', function (t) {
 
   var sbotB = u.createDB('test-blobs-bob6', {
       port: 45494, host: 'localhost', timeout: 100,
-      seeds: [{port: 45493, host: 'localhost'}]
+      seeds: [{port: 45493, host: 'localhost', key: sbotA.feed.keys.public}]
     }).use(gossip).use(friends).use(replicate).use(blobs)
 
   var bob = sbotB.feed
@@ -56,6 +56,7 @@ tape('tracks requests and failed searches', function (t) {
         bob.add({type: 'contact', following: true, contact: {feed: alice.id}})
       ])(function (err, data) {
         if(err) throw err
+        console.log('msgs added')
       })
 
       // bump the number of wants by bob to 4
@@ -79,7 +80,7 @@ tape('tracks requests and failed searches', function (t) {
       sbotB.once('rpc:connect', function (rpc) {
         console.log('rpc:connect - 1')
         sbotB.once('rpc:connect', function (rpc) {
-          console.log('rpc:connec - 2')
+          console.log('rpc:connect - 2')
           rpc.on('closed', function () {
             var wants = sbotB.blobs.wants()
             console.log('WANTS', wants)    

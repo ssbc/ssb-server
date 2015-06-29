@@ -80,8 +80,6 @@ tape('avoid flooding a peer with blob requests', function (t) {
   )
 })
 
-return
-
 tape('emit "has" event to let peer know you have blob now', function (t) {
 
   var sbotA = u.createDB('test-blobs-alice5', {
