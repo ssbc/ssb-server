@@ -11,6 +11,7 @@ var stringify    = require('pull-stringify')
 var createHash   = require('multiblob/util').createHash
 var createClient = require('./client')
 var parse        = require('mynosql-query')
+var isRef        = require('ssb-ref')
 
 var config  = require('ssb-config')
 
@@ -30,8 +31,6 @@ function isObject (o) {
   return o && 'object' === typeof o && !Buffer.isBuffer(o)
 }
 
-var isHash = ssbKeys.isHash
-
 function isString (s) {
   return 'string' === typeof s
 }
@@ -41,7 +40,7 @@ function defaultRel (o, r) {
   for(var k in o) {
     if(isObject(o[k]))
       defaultRel(o[k], k)
-    else if(isHash(o[k]) && ~['msg', 'ext', 'feed'].indexOf(k)) {
+    else if(isRef(o[k]) && ~['msg', 'ext', 'feed'].indexOf(k)) {
       if(!o.rel)
         o.rel = r ? r : o.type
     }
