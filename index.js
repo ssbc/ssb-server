@@ -85,7 +85,7 @@ exports = module.exports = function (config, ssb, feed) {
 
   var createServerStream = handshake.server(toSodiumKeys(keys), function (pub, cb) {
     //CONVERT to SSB format. (fix this so it's just an ed25519)
-    var id = ssbKeys.hash(pub.toString('base64')+'.ed25519')
+    var id = pub.toString('base64')+'.ed25519'
     console.log('ID', id)
     auth(id, cb)
   }, ssbCap)
@@ -122,7 +122,7 @@ exports = module.exports = function (config, ssb, feed) {
     )
 
     //CONVERT to SSB format. (fix this so it's just an ed25519)
-    rpc.id = ssbKeys.hash(stream.remote.toString('base64')+'.ed25519')
+    rpc.id = stream.remote.toString('base64')+'.ed25519'
     rpc.permissions(stream.auth)
 
     rpc._remoteAddress = stream.remoteAddress
