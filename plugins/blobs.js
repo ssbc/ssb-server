@@ -9,17 +9,10 @@ var pull = require('pull-stream')
 var toPull = require('stream-to-pull-stream')
 var isHash = require('ssb-keys').isHash
 var multicb = require('multicb')
+var Notify = require('pull-notify')
 
 function isFunction (f) {
   return 'function' === typeof f
-}
-
-function toBase64() {
-  return pull.map(function (b) { return b.toString('base64') })
-}
-
-function toBuffer() {
-  return pull.map(function (s) { return Buffer.isBuffer(s) ? s : new Buffer(s, 'base64') })
 }
 
 function each (obj, iter) {
@@ -47,6 +40,10 @@ function firstKey(obj, iter) {
 
 function clamp (n, lo, hi) {
   return Math.min(Math.max(n, lo), hi)
+}
+
+function isString (s) {
+  return 'string' === typeof s
 }
 
 // returns a function which...
@@ -101,14 +98,16 @@ module.exports = {
     add: 'sink',
     ls: 'source',
     want: 'async',
-    wants: 'sync'
+    wants: 'sync',
+    changes: 'source',
   },
   permissions: {
-    anonymous: {allow: ['has', 'get']},
-    local: {allow: ['has', 'get']}
+    anonymous: {allow: ['has', 'get', 'changes']},
+    local: {allow: ['has', 'get', 'changes']}
   },
   init: function (sbot) {
 
+    var notify = Notify()
     var config = sbot.config
     var remotes = {} // connected peers (rpc objects)
     var blobs = sbot._blobs = Blobs(path.join(sbot.config.path, 'blobs'))
@@ -179,14 +178,13 @@ module.exports = {
         sbot.emit('blobs:got', hash)
         sbot.emit('log:info', ['blobs', null, 'got', hash])
         each(remotes, function (rpc) {
-          rpc.emit('blobs:got', hash)
+          notify(hash)
         })
 
-        if(!wL.byId[hash])
-          return
+        if(!wL.byId[hash]) return
 
         var cbs = wL.byId[hash].waiting
-        
+
         // stop tracking
         delete wL.byId[hash]
         var i = +firstKey(wL.jobs, function (e) { return e.id == hash })
@@ -236,8 +234,8 @@ module.exports = {
 
     // query worker
 
-    sbot.on('rpc:authorized', function (rpc) {
-      var id = rpc.authorized.id
+    sbot.on('rpc:connect', function (rpc) {
+      var id = rpc.id
       remotes[id] = rpc
       //forget any blobs that they did not have
       //in previous requests. they might have them by now.
@@ -252,12 +250,19 @@ module.exports = {
 
       //when the peer gets a blob, if its one we want,
       //then request it.
-      rpc.on('blobs:got', function (hash) {
-        if (wantList.wants(hash)) {
-          wantList.setFoundAt(hash, id)
-          download()
-        }
-      })
+      pull(
+        rpc.blobs.changes({}),
+        pull.drain(function (hash) {
+          if (wantList.wants(hash)) {
+            wantList.setFoundAt(hash, id)
+            download()
+          }
+        }, function (err) {
+          //Ignore errors.
+          //these will either be from a cli client that doesn't have
+          //blobs plugin, or because stream has terminated.
+        })
+      )
     })
 
     var queries = {}
@@ -281,6 +286,8 @@ module.exports = {
       queries[remoteid] = true
       var neededBlobIds = neededBlobs.map(function (e) { return e.id })
       remote.blobs.has(neededBlobIds, function (err, hasList) {
+        if(err) console.error(err.stack)
+
         delete queries[remoteid]
         if(hasList) {
           var downloadDone = multicb()
@@ -322,7 +329,7 @@ module.exports = {
       sbot.emit('log:info', ['blobs', id, 'downloading', f.id])
       pull(
         remotes[id].blobs.get(f.id),
-        toBuffer(),
+   //     toBuffer(),
         //TODO: error if the object is longer than we expected.
         blobs.add(f.id, function (err, hash) {
           if(err) {
@@ -339,7 +346,7 @@ module.exports = {
 
     return {
       get: function (hash) {
-        return pull(blobs.get(hash), toBase64())
+        return blobs.get(hash)
       },
 
       has: function (hash, cb) {
@@ -356,7 +363,7 @@ module.exports = {
         if(isFunction(hash)) cb = hash, hash = null
 
         return pull(
-          toBuffer(),
+     //     toBuffer(),
           blobs.add(function (err, hash) {
             if(err) console.error(err.stack)
             else wantList.got(hash)
@@ -394,6 +401,10 @@ module.exports = {
           // track # of requests for prioritization
           wantList.byId[hash].requests = clamp(wantList.byId[hash].requests+1, 0, 20)
         })
+      },
+
+      changes: function () {
+        return notify.listen()
       },
 
       // get current want list

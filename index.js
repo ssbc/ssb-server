@@ -1,30 +1,27 @@
 var fs         = require('fs')
-var net        = require('pull-ws-server')
-var url        = require('url')
+var net        = require('./lib/net')
 var pull       = require('pull-stream')
 var path       = require('path')
 var merge      = require('map-merge')
 var create     = require('secure-scuttlebutt/create')
 var mkdirp     = require('mkdirp')
-var crypto     = require('crypto')
 var ssbKeys    = require('ssb-keys')
 var multicb    = require('multicb')
-var connect    = require('connect')
 var inactive   = require('pull-inactivity')
+var handshake  = require('secret-handshake')
 var nonPrivate = require('non-private-ip')
 
 var DEFAULT_PORT = 8008
 
-var Api       = require('./lib/api')
-var manifest  = require('./lib/manifest')
-var peerApi   = require('./lib/rpc')
-var u         = require('./lib/util')
+var Api        = require('./lib/api')
+var manifest   = require('./lib/manifest')
+var peerApi    = require('./lib/rpc')
+var u          = require('./lib/util')
+var ssbCap     = require('./lib/ssb-cap')
+var createAuth = require('./lib/auth')
+
 var clone     = u.clone
 var toAddress = u.toAddress
-
-//I made this global so that when you run tests with multiple
-//servers each connection gets it's own id..
-var sessCounter = 0
 
 function loadSSB (config) {
   var dbPath  = path.join(config.path, 'db')
@@ -55,6 +52,20 @@ function find(ary, test) {
 // - `feed`: object, the ssb feed instance
 // - `config.port`: number, port to serve on
 // - `config.path`: string, the path to the directory which contains the keyfile and database
+
+function toBuffer(base64) {
+  return new Buffer(base64.substring(0, base64.indexOf('.')), 'base64')
+}
+
+function toSodiumKeys (keys) {
+  return {
+    publicKey: toBuffer(keys.public),
+    secretKey: toBuffer(keys.private)
+  }
+}
+
+var sessid = 0
+
 exports = module.exports = function (config, ssb, feed) {
   if(!config)
     throw new Error('must have config')
@@ -70,10 +81,27 @@ exports = module.exports = function (config, ssb, feed) {
   // server
   // ======
 
+  var auth;
+
+  var createServerStream = handshake.server(toSodiumKeys(keys), function (pub, cb) {
+    //CONVERT to SSB format. (fix this so it's just an ed25519)
+    var id = pub.toString('base64')+'.ed25519'
+    console.log('ID', id)
+    auth(id, cb)
+  }, ssbCap)
+
   var server = net.createServer(function (stream) {
     // setup and auth session
-    var rpc = attachSession(stream, true)
-    server.emit('log:info', ['sbot',  rpc._sessid, 'incoming-connection', stream.remoteAddress])
+    pull(
+      stream,
+      createServerStream(function (err, secure) {
+        //drop the stream if a client fails to authenticate.
+        if(err) return console.error(err.stack)
+        secure.remoteAddress = stream.remoteAddress
+        attachSession(secure, true)
+      }),
+      stream
+    )
   })
 
   // peer connection
@@ -81,81 +109,57 @@ exports = module.exports = function (config, ssb, feed) {
 
   // sets up RPC session on a stream (used by {in,out}going streams)
 
-  function attachSession (stream, incoming, cb) {
+  function attachSession (stream, incoming) {
     var rpc = peerApi(server.manifest, api)
-                .permissions({allow: ['auth']})
+    var timeout = server.config.timeout || 30e3
     var rpcStream = rpc.createStream()
-    rpcStream = inactive(rpcStream, server.config.timeout)
-    pull(stream, rpcStream, stream)
+    rpcStream = inactive(rpcStream, timeout)
 
-    rpc.incoming = incoming
-    rpc.outgoing = !incoming
+    pull(
+      stream,
+      rpcStream,
+      stream
+    )
 
-    rpc._sessid = ++sessCounter
+    //CONVERT to SSB format. (fix this so it's just an ed25519)
+    rpc.id = stream.remote.toString('base64')+'.ed25519'
+    rpc.permissions(stream.auth)
+
     rpc._remoteAddress = stream.remoteAddress
+    rpc._sessid = sessid++
     rpc.task = multicb()
     server.emit('rpc:connect', rpc)
-    server.emit('rpc:' + (incoming ? 'incoming' : 'outgoing'), rpc)
 
-    rpc.on('remote:authorized', function (authed) {
-      server.emit('remote:authorized', rpc, authed)
-      server.emit('log:info', ['remote', rpc._sessid, 'remote-authed', authed])
-      if(authed.type === 'client')
-        rpcStream.setTTL(null) //don't abort the stream on timeout.
+    //TODO: put this stuff somewhere else...?
+
+    //when the client connects (not a peer) we will be unable
+    //to authorize with it. In this case, we shouldn't close
+    //the connection...
+
+    rpc.task(function () {
+      //Actually, this does nothing!
+      //removed this and all tests still passed...
     })
 
-    rpc.auth(ssbKeys.signObj(keys, {
-      ToS: 'be excellent to each other',
-      public: keys.public,
-      ts: Date.now(),
-    }), function (err, res) {
-
-      if(err || !res) {
-        server.emit('rpc:unauthorized', err)
-        rpc._emit('rpc:unauthorized', err)
-        server.emit('log:warning', ['sbot', rpc._sessid, 'unauthed', err])
-        return
-      }
-      else {
-        server.emit('rpc:authorized', rpc, res)
-        rpc._emit('rpc:authorized', rpc, res)
-        server.emit('log:info', ['sbot', rpc._sessid, 'authed', res])
-      }
-
-      //TODO: put this stuff somewhere else...?
-
-      //when the client connects (not a peer) we will be unable
-      //to authorize with it. In this case, we shouldn't close
-      //the connection...
-
-      var n = 2
-      function done () {
-        if(--n) return
-        server.emit('log:info', ['sbot', rpc._sessid, 'done'])
-        rpc.close()
-      }
-
-      rpc.once('done', function () {
-        server.emit('log:info', ['sbot', rpc._sessid, 'remote-done'])
-        done()
-      })
-
-      rpc.task(function () {
-        server.emit('log:info', ['sbot', rpc._sessid, 'local-done'])
-        rpc.emit('done')
-        done()
-      })
-
-      if (cb) cb(err, res)
-    })
-
-    return rpc
+   return rpc
   }
 
+  var createClientStream = handshake.client(toSodiumKeys(keys), ssbCap)
+
   server.connect = function (address, cb) {
-    var rpc = attachSession(net.connect(toAddress(address)), false, cb)
-    server.emit('log:info', ['sbot', rpc._sessid, 'connect', address])
-    return rpc
+    var stream = net.connect(toAddress(address))
+    pull(
+      stream,
+      createClientStream(toBuffer(address.key), function (err, secure) {
+        if(err) return console.error(err.stack), cb(err)
+        secure.remoteAddress = stream.remoteAddress
+        secure.auth = server.permissions.anonymous
+        var rpc = attachSession(secure, false)
+        server.emit('log:info', ['sbot', rpc._sessid, 'connect', address])
+        cb(null, rpc)
+      }),
+      stream
+    )
   }
 
   if(config.port)
@@ -168,11 +172,9 @@ exports = module.exports = function (config, ssb, feed) {
   server.config = config
   server.options = ssbKeys
   server.manifest = merge({}, manifest)
-
   server.permissions = {
     master: {allow: null, deny: null},
     local: {allow: [
-      'emit',
       'getPublicKey',
       'whoami',
       'get',
@@ -190,17 +192,19 @@ exports = module.exports = function (config, ssb, feed) {
       'followedUsers',
       'relatedMessages'
     ], deny: null},
-    anonymous: {allow: ['emit', 'createHistoryStream'], deny: null}
+    anonymous: {allow: ['createHistoryStream'], deny: null}
   }
+
+  auth = createAuth(server)
+
   server.getId = function() {
     return server.feed.id
   }
 
   server.getAddress = function() {
-    var address = server.config.host || nonPrivate.private() || 'localhost'
-    if (server.config.port != DEFAULT_PORT)
-      address += ':' + server.config.port
-    return address
+    var host = server.config.host || nonPrivate.private() || 'localhost'
+    //always provite the port.
+    return host + ':' + server.config.port + ':'+server.feed.keys.public
   }
 
   var api = Api(server)
@@ -209,34 +213,6 @@ exports = module.exports = function (config, ssb, feed) {
   // ======================
   var sessions = {}
 
-
-  // http interface (via connect)
-  // ============================
-  //
-  // http should be considered a legacy interface,
-  // but we need it to work around various legacy
-  // browser things. You should build most of your
-  // app with the rpc api and not the http api.
-
-  server.http = connect()
-  server.on('request', server.http)
-
-  //default handlers
-
-  function stringManifest () {
-    return JSON.stringify(server.getManifest(), null, 2) + '\n'
-  }
-
-  server.http.use(function (req, res, next) {
-    if(req.url == '/manifest.json')
-      res.end(stringManifest())
-    //return manifest as JS GLOBAL,
-    //so that it can be easily loaded into plugins, without hardcoding.
-    else if(req.url == '/manifest.js')
-      res.end(';SSB_MANIFEST = ' + stringManifest())
-    else
-      next()
-  })
 
   // plugin management
   // =================
@@ -259,42 +235,13 @@ exports = module.exports = function (config, ssb, feed) {
 
       server[plugin.name] = api[plugin.name] = plugin.init(server)
     }
+
     return this
   }
 
-  // auth management
-  // ===============
-
-  var secrets = []
-  server.createAccessKey = function (perms) {
-    perms = perms || {}
-    var key = crypto.randomBytes(32)
-    var ts = Date.now()
-    var sec = {
-      created: ts,
-      expires: ts + (perms.ttl || 60*60*1000), //1 hour
-      key: key,
-      id: ssbKeys.hash(key),
-      perms: perms
-    }
-    secrets.push(sec)
-    return  sec.key
-  }
-
-  server.getAccessKey = function (id) {
-    return find(secrets, function (e) {
-      return e.id === id
-    })
-  }
 
   server.getManifest = function () {
     return server.manifest
-  }
-
-  server.authorize = function (msg) {
-    var secret = this.getAccessKey(msg.keyId)
-    if(!secret) return
-    return ssbKeys.verifyObjHmac(secret.key, msg)
   }
 
   return server
@@ -306,49 +253,13 @@ exports = module.exports = function (config, ssb, feed) {
 // - `config.path`: string, the path to the directory which contains the keyfile and database
 
 exports.init =
-exports.fromConfig = function (config, cb) {
-  var sbot = module.exports(config)
-
-  var rebuild = false
-  sbot.ssb.needsRebuild(function (err, b) {
-    if (b) {
-      rebuild = true
-      console.log('Rebuilding indexes to ensure consistency. Please wait...')
-      sbot.ssb.rebuildIndex(setup)
-    } else
-      setup()
-  })
-
-  function setup (err) {
-    if (err) {
-      return cb(explain(err, 'error while rebuilding index'))
-    }
-    if (rebuild)
-      console.log('Indexes rebuilt.')
-
-    sbot
-      .use(require('./plugins/logging'))
-      .use(require('./plugins/replicate'))
-      .use(require('./plugins/gossip'))
-      .use(require('./plugins/blobs'))
-      .use(require('./plugins/invite'))
-      .use(require('./plugins/friends'))
-
-    if (config.local)
-      sbot.use(require('./plugins/local'))
-    if (config.phoenix)
-      sbot.use(require('ssbplug-phoenix'))
-
-    cb(null, sbot)
-  }
-
-
-  return sbot
-}
+exports.fromConfig = require('./create')
 
 exports.createClient = require('./client')
 
 if(!module.parent) {
   //start a server
-  exports.init(require('ssb-config'))
+  exports.init(require('ssb-config'), function (err) {
+    if(err) throw err
+  })
 }

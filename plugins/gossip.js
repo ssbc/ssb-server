@@ -69,15 +69,18 @@ module.exports = {
     }
 
     // track connection-state in peertable
-    server.on('remote:authorized', function (rpc, authed) {
+    server.on('rpc:connect', function (rpc) {
+      //************************************
+      //TODO. DISTINGUISH CLIENT CONNECTIONS.
+
       //don't track cli/web client connections
-      if(authed.type === 'client') return
+      if(rpc.auth.type === 'client') return
 
       var peer = rpc._peer
       if(!peer) //incomming connection...
-        peer = getPeer(rpc.authorized.id)
+        peer = getPeer(rpc.id)
       if(peer) {
-        peer.id = rpc.authorized.id
+        peer.id = rpc.id
         peer.connected = true
       }
     })
@@ -88,10 +91,12 @@ module.exports = {
     seeds.forEach(function (e) {
       if(!e) return
       var p = toAddress(e)
-      if(p) peers.push(p)
+      if(p && p.key) peers.push(p)
     })
 
     // populate peertable with pub announcements on the feed
+
+    //TODO! pubs posts must contain public keys.
     pull(
       server.ssb.messagesByType({type: 'pub', live: true, keys: false, onSync: onFeedSync }),
       pull.map(function (e) {
@@ -105,6 +110,7 @@ module.exports = {
           if(e.host == host) return false
           if(e.host == '127.0.0.1' || e.host == 'localhost') return false
         }
+        if(!e.key) return false
         return true
       }),
       pull.drain(function (e) {
@@ -161,13 +167,14 @@ module.exports = {
         if (!addr || typeof addr != 'object')
           return cb(new Error('first param must be an address'))
 
+        if(!addr.key) return cb(new Error('address must have ed25519 key'))
         // find the peer
         var p = u.find(peers.filter(Boolean), function (e) {
           return e.host === addr.host && e.port === addr.port
         })
         if (!p) // only connect to known peers
           return cb(new Error('address not a known peer'))
-
+        
         connectTo(p)
         cb()
       }
@@ -180,7 +187,7 @@ module.exports = {
       if(server.closed) return
       var delay = ~~(config.timeout/2 + Math.random()*config.timeout)
       if (init_synclist)
-        delay = 1000 // dont wait long to poll, we're still in our initial sync
+        delay = ~~(Math.random()*1000) // dont wait long to poll, we're still in our initial sync
       sched = setTimeout(function () {
         schedule(); connect()
       }, delay)
@@ -219,45 +226,45 @@ module.exports = {
       }
 
       if(p) {
-        count ++
-        var rpc = connectTo(p)
-        rpc.on('closed', function () {
-          count = Math.max(count - 1, 0)
+        connectTo(p, function (err, rpc) {
+          if(err) return console.error(err)
         })
 
       }
     }
 
-    function connectTo (p) {
+    function connectTo (p, cb) {
+      count ++
       p.time = p.time || {}
       if (!p.time.connect)
         p.time.connect = 0
       p.time.attempt = Date.now()
       p.connected = true
-      
-      var rpc = server.connect(p)
-      rpc._peer = p
-      rpc.on('remote:authorized', function () {
-        p.id = rpc.authorized.id
+
+      server.connect(p, function (err, rpc) {
+        if(err) return cb(err)
+
+        rpc._peer = p
+        p.id = rpc.id
         p.time = p.time || {}
         p.time.connect = Date.now()
+
+        rpc.on('closed', function () {
+          //track whether we have successfully connected.
+          count = Math.max(count - 1, 0)
+          //or how many failures there have been.
+          p.connected = false
+          server.emit('log:info', ['SBOT', rpc._sessid, 'disconnect'])
+
+          var fail = !p.time || (p.time.attempt > p.time.connect)
+
+          if(fail) p.failure = (p.failure || 0) + 1
+          else     p.failure = 0
+
+          // :TODO: delete local peers if failure > N
+        })
+        cb(null, rpc)
       })
-
-      rpc.on('closed', function () {
-        //track whether we have successfully connected.
-        //or how many failures there have been.
-        p.connected = false
-        server.emit('log:info', ['SBOT', rpc._sessid, 'disconnect'])
-
-        var fail = !p.time || (p.time.attempt > p.time.connect)
-
-        if(fail) p.failure = (p.failure || 0) + 1
-        else     p.failure = 0
-
-        // :TODO: delete local peers if failure > N
-      })
-
-      return rpc
     }
 
     return gossip

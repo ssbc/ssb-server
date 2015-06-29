@@ -1,6 +1,8 @@
 var Graphmitter = require('graphmitter')
 var pull        = require('pull-stream')
 var mlib        = require('ssb-msgs')
+var memview     = require('level-memview')
+var pushable    = require('pull-pushable')
 
 function isFunction (f) {
   return 'function' === typeof f
@@ -14,7 +16,8 @@ exports.name = 'friends'
 exports.version = '1.0.0'
 exports.manifest = {
   all  : 'async',
-  hops : 'async'
+  hops : 'async',
+  createFriendStream: 'source',
 }
 
 exports.init = function (sbot) {
@@ -46,6 +49,7 @@ exports.init = function (sbot) {
             graphs.follow.edge(msg.value.author, link.feed, true)
           else
             graphs.follow.del(msg.value.author, link.feed)
+
         }
         if ('trust' in c) {
           var trust = c.trust|0
@@ -70,6 +74,33 @@ exports.init = function (sbot) {
         cb(null, graphs[graph] ? graphs[graph].toJSON() : null)
       })
     },
+
+    createFriendStream: function (opts) {
+      opts = opts || {}
+      var start = opts.start || sbot.feed.id
+      var graph = graphs[opts.graph || 'follow']
+      if(!graph)
+        return pull.error(new Error('unknown graph:' + opts.graph))
+      var cancel, ps = pushable(function () {
+        cancel && cancel()
+      })
+
+      //by default, also emit your own key.
+      if(opts.self !== false)
+        ps.push(start)
+
+      var conf = config.friends || {}
+      cancel = graph.traverse({
+        start: start,
+        hops: opts.hops || conf.hops || 3,
+        max: opts.dunbar || conf.dunbar || 150,
+        each: function (_, to) {
+          if(to !== start) ps.push(to)
+        }
+      })
+      return ps
+    },
+
     hops: function (start, graph, opts, cb) {
       if (typeof opts == 'function') { // (start|opts, graph, cb)
         cb = opts
