@@ -25,6 +25,7 @@
     "nomnom": "1.8.0",
     "non-private-ip": "~1.1.0",
     "packet-stream-codec": "~1.1.0",
+    "phoenix-api": "~8.0.0",
     "pull-abortable": "~4.0.0",
     "pull-cat": "~1.1.5",
     "pull-inactivity": "~2.1.1",

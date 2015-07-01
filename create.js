@@ -30,6 +30,9 @@ module.exports = function (config, cb) {
     if (config.local)
       sbot.use(require('./plugins/local'))
 
+    if (config.phoenix)
+      sbot.use(require('phoenix-api'))
+
     cb(null, sbot)
   }
 
