@@ -54,13 +54,16 @@ module.exports = function (server) {
     //if(res.type === 'server') return
 
     var done = rpc.task()
+    rpc._emit('replicate:start')
     server.emit('log:info', ['replicate', rpc._sessid, 'start'])
     server.emit('replicate:start', rpc)
     replicate(server, rpc, function (err, progress) {
       if(err) {
+        rpc._emit('replicate:fail', err)
         server.emit('replicate:fail', err)
         server.emit('log:warning', ['replicate', rpc._sessid, 'error', err])
       } else {
+        rpc._emit('replicate:finish', progress)
         server.emit('log:info', ['replicate', rpc._sessid, 'success', progress])
         server.emit('replicate:finish', progress)
       }
