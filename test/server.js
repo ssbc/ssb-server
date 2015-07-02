@@ -75,9 +75,9 @@ tape('replicate between 3 peers', function (t) {
     var serverC = check(dbC, 'CAROL')
       .use(replicate).use(gossip).use(friends)
 
-    pull(serverA.gossip.events(), pull.drain(function (e) { console.log('serverA event', e) }))
-    pull(serverB.gossip.events(), pull.drain(function (e) { console.log('serverB event', e) }))
-    pull(serverC.gossip.events(), pull.drain(function (e) { console.log('serverC event', e) }))
+    pull(serverA.gossip.changes(), pull.drain(function (e) { console.log('serverA event', e) }))
+    pull(serverB.gossip.changes(), pull.drain(function (e) { console.log('serverB event', e) }))
+    pull(serverC.gossip.changes(), pull.drain(function (e) { console.log('serverC event', e) }))
 
     var n = 2
 
