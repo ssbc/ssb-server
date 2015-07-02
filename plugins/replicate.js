@@ -44,7 +44,7 @@ function replicate(server, rpc, cb) {
       ssb.createLatestLookupStream(),
       pull.drain(function (upto) {
         to_recv[upto.id] = upto.sequence
-        //replicated[upto.id] = upto.sequence
+        replicated[upto.id] = upto.sequence
         sources.add(rpc.createHistoryStream({
           id: upto.id, seq: upto.sequence + 1,
           live: live, keys: false
