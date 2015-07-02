@@ -43,7 +43,7 @@ module.exports = {
     seeds: 'async',
     peers: 'sync',
     connect: 'async',
-    state: 'source'
+    changes: 'source'
   },
   init: function (server) {
     var sched
