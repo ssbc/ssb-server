@@ -43,7 +43,7 @@ module.exports = {
     seeds: 'async',
     peers: 'sync',
     connect: 'async',
-    events: 'source'
+    state: 'source'
   },
   init: function (server) {
     var sched
@@ -52,7 +52,7 @@ module.exports = {
       clearTimeout(sched)
     })
 
-    var eventsNotify = Notify()
+    var notify = Notify()
     var config = server.config
     var conf = server.config.gossip || {}
     var host = config.host || nonPrivate.private() || 'localhost'
@@ -98,7 +98,7 @@ module.exports = {
       var p = toAddress(e)
       if(p && p.key) {
         peers.push(p)
-        eventsNotify({ type: 'peer:discover', peer: p, source: 'seed' })
+        notify({ type: 'discover', peer: p, source: 'seed' })
       }
     })
 
@@ -126,7 +126,7 @@ module.exports = {
         if(!f) {
           // new pub
           peers.push(e)
-          eventsNotify({ type: 'peer:discover', peer: e, source: 'pub' })
+          notify({ type: 'discover', peer: e, source: 'pub' })
         } else {
           // existing pub, update the announcers list
           if (!f.announcers)
@@ -153,7 +153,7 @@ module.exports = {
     server.on('local', function (_peer) {
       var peer = getPeer(_peer.id)
       if(!peer) {
-        eventsNotify({ type: 'peer:discover', peer: peer, source: 'local' })
+        notify({ type: 'discover', peer: peer, source: 'local' })
         peers.push(_peer)
       } else {
         // peer host could change while in use.
@@ -168,18 +168,9 @@ module.exports = {
 
     // helper to emit and emit events for a connection
     function setupEvents (rpc, peer) {
-      eventsNotify({ type: 'rpc:connect', peer: peer })
+      notify({ type: 'connect', peer: peer })
       rpc.on('closed', function () {
-        eventsNotify({ type: 'rpc:disconnect', peer: peer })
-      })
-      rpc.on('replicate:start', function () {
-        eventsNotify({ type: 'replicate:start', peer: peer })
-      })
-      rpc.on('replicate:fail', function (err) {
-        eventsNotify({ type: 'replicate:fail', peer: peer, err: err })
-      })
-      rpc.on('replicate:finish', function (progress) {
-        eventsNotify({ type: 'replicate:finish', peer: peer, progress: progress })
+        notify({ type: 'disconnect', peer: peer })
       })
     }
 
@@ -206,8 +197,8 @@ module.exports = {
         connectTo(p)
         cb()
       },
-      events: function () {
-        return eventsNotify.listen()
+      changes: function () {
+        return notify.listen()
       }
     }
 
