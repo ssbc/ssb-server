@@ -70,6 +70,7 @@ function replicate(server, rpc, cb) {
         }
       }
       set_progress({total: d, progress: r})
+      notify({ type: 'progress', peerid: rpc.id, total: d, progress: r })
     })
     var progress = debounce.set
 
@@ -108,15 +109,18 @@ module.exports = {
       rpc._emit('replicate:start')
       server.emit('log:info', ['replicate', rpc._sessid, 'start'])
       server.emit('replicate:start', rpc)
+      notify({ type: 'start', peerid: rpc.id })
       replicate(server, rpc, function (err, progress) {
         if(err) {
           rpc._emit('replicate:fail', err)
           server.emit('replicate:fail', err)
           server.emit('log:warning', ['replicate', rpc._sessid, 'error', err])
+          notify({ type: 'fail', peerid: rpc.id, err: err })
         } else {
           rpc._emit('replicate:finish', progress)
           server.emit('log:info', ['replicate', rpc._sessid, 'success', progress])
           server.emit('replicate:finish', progress)
+          notify({ type: 'finish', peerid: rpc.id, results: progress })
         }
         done()
       })
