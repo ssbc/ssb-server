@@ -9,6 +9,12 @@ var cats = require('cat-names')
 var dogs = require('dog-names')
 
 //build a random network, with n members.
+function bar (r) {
+var s = '\r', M = 50
+  for(var i = 0; i < M; i++)
+    s += i < M*r ? '*' : '.'
+  return s
+}
 
 function generateAnimals (sbot, n, cb) {
   var ssb = sbot.ssb
@@ -94,6 +100,8 @@ function latest (sbot, cb) {
   sbot.friends.hops({hops: 2}, function (err, keys) {
     if(err) return cb(err)
 
+    console.log(keys)
+
     var get = 
         sbot.ssb.sublevel('lst').get
     var n = 0, map = {}
@@ -113,7 +121,8 @@ function latest (sbot, cb) {
 tape('replicate social network for animals', function (t) {
 
   var animalNetwork = u.createDB('test-random-animals', {
-    port: 45451, host: 'localhost', timeout: 2001
+    port: 45451, host: 'localhost', timeout: 2001,
+    replication: {hops: 3},
   }).use(friends).use(replicate)
 
     if(!animalNetwork.friends)
@@ -129,10 +138,18 @@ tape('replicate social network for animals', function (t) {
       var start = Date.now()
       var animalFriends = u.createDB('test-random-animals2', {
         port: 45452, host: 'localhost', timeout: 2001,
+        replication: {hops: 3},
+        progress: true,
         seeds: [{port: 45451, host: 'localhost', key: animalNetwork.feed.keys.public}]
       }).use(friends).use(replicate).use(gossip)
 
-      animalFriends.on('rpc:connect', function () {
+      var progress = []
+
+      animalFriends.once('rpc:connect', function (rpc) {
+        rpc.progress(function (prog) {
+          progress.push(prog)
+          process.stdout.write(bar(prog.progress/prog.total))
+        })
         console.log('CONNECTION', Date.now(), c++)
       })
 
@@ -158,11 +175,27 @@ tape('replicate social network for animals', function (t) {
             total += latest[k]
             prog += (seen[k] || 0)
           }
-          console.log("REPLICATED", prog, total, Math.round(100*(prog/total)))
+//          console.log("REPLICATED", prog, total, Math.round(100*(prog/total)))
           if(total === prog) {
             var seconds = (Date.now() - start)/1000
             t.equal(c, 1)
             t.equal(prog, total)
+
+            animalNetwork.friends.hops({}, function (err, hops1) {
+
+              animalFriends.friends.hops({}, function (err, hops2) {
+                t.ok(progress.length)
+                var last = progress.pop()
+                t.ok(last.total, total)
+                t.ok(last.progress, total)
+
+//                console.log('FROM', hops1)
+//                console.log('TO  ', hops2)
+//                t.deepEqual(hops1, hops2)
+
+              })
+
+            })
 
             console.log("DONE", seconds, c, total/seconds)
             animalFriends.close()
