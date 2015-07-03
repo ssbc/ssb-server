@@ -86,7 +86,11 @@ module.exports = {
       if(peer) {
         peer.id = rpc.id
         peer.connected = true
-        setupEvents(rpc, peer)
+
+        notify({ type: 'connect', peer: peer })
+        rpc.on('closed', function () {
+          notify({ type: 'disconnect', peer: peer })
+        })
       }
     })
 
@@ -165,14 +169,6 @@ module.exports = {
         peer.port = _peer.port
       }
     })
-
-    // helper to emit and emit events for a connection
-    function setupEvents (rpc, peer) {
-      notify({ type: 'connect', peer: peer })
-      rpc.on('closed', function () {
-        notify({ type: 'disconnect', peer: peer })
-      })
-    }
 
     // RPC api
     // =======
@@ -264,13 +260,12 @@ module.exports = {
       p.connected = true
 
       server.connect(p, function (err, rpc) {
-        if(err) return cb(err)
+        if(err) return (cb && cb(err))
 
         rpc._peer = p
         p.id = rpc.id
         p.time = p.time || {}
         p.time.connect = Date.now()
-        setupEvents(rpc, p)
 
         rpc.on('closed', function () {
           //track whether we have successfully connected.
@@ -286,7 +281,7 @@ module.exports = {
 
           // :TODO: delete local peers if failure > N
         })
-        cb(null, rpc)
+        cb && cb(null, rpc)
       })
     }
 
