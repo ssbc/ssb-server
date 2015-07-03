@@ -51,7 +51,7 @@ module.exports = function (keys, manf) {
 
         var rpc = peerApi.clientApi(manf, {}, {})
         .permissions({allow: ['emit'], deny: null})
-        rpc.id = hash(address.key)
+        rpc.id = address.key
         rpc.address = address
 
         rpc.client = true
