@@ -176,7 +176,7 @@ tape('replicate social network for animals', function (t) {
             prog += (seen[k] || 0)
           }
 //          console.log("REPLICATED", prog, total, Math.round(100*(prog/total)))
-          if(total === prog) {
+          if(total === prog && total !== 0) {
             var seconds = (Date.now() - start)/1000
             t.equal(c, 1)
             t.equal(prog, total)
