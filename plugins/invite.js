@@ -75,7 +75,7 @@ module.exports = {
           if(err) return cb(err)
 
           server.friends.all('follow', function(err, follows) {
-            if (follows && follows[server.feed.id] && follows[server.feed.id][id])
+            if (follows && follows[server.feed.id] && follows[server.feed.id][req.feed])
               return cb(new Error('already following'))
 
             // although we already know the current feed
@@ -84,7 +84,7 @@ module.exports = {
               return cb(new Error('feed to follow is missing'))
 
             if(invite.used >= invite.total)
-              return cb(new Error('invite code:'+id+' has expired'))
+              return cb(new Error('invite has expired'))
 
             invite.used ++
 
