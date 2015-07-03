@@ -70,8 +70,6 @@ tape('test invite api', function (t) {
   })
 })
 
-//THIS TEST DISABLED FOR NOW. YOLO
-//need to rewrite whole invite system.
 tape('test invite.accept api', function (t) {
 
   var u = require('./util')
@@ -113,3 +111,51 @@ tape('test invite.accept api', function (t) {
   })
 })
 
+
+tape('test invite.accept doesnt follow if already followed', function (t) {
+
+  var u = require('./util')
+
+  var sbotA = u.createDB('test-invite-alice3', {
+    port: 45451, host: '127.0.0.1',
+    timeout: 100,
+    allowPrivate: true
+  })
+
+  var sbotB = u.createDB('test-invite-bob3', {
+    port: 45452, host: '127.0.0.1',
+    timeout: 100,
+  })
+
+  var alice = sbotA.feed
+  var bob = sbotA.ssb.createFeed() //bob
+
+  sbotA
+    .use(require('../plugins/invite'))
+    .use(require('../plugins/friends'))
+
+  sbotB.use(require('../plugins/invite')).use(require('../plugins/friends'))
+
+  //request a secret that with particular permissions.
+
+  sbotA.invite.create(2, function (err, invite) {
+    if(err) throw err
+    sbotB.invite.accept(invite, function (err) {
+      if(err) throw err
+      sbotA.friends.hops(sbotA.feed.id, function (err, hops) {
+        console.log(hops)
+        t.equal(hops[sbotB.feed.id], 1)
+        sbotB.invite.accept(invite, function (err) {
+          t.ok(err)
+          sbotA.friends.hops(sbotA.feed.id, function (err, hops) {
+            console.log(hops)
+            t.equal(hops[sbotB.feed.id], 1)
+            sbotA.close()
+            sbotB.close()
+            t.end()
+          })
+        })
+      })
+    })
+  })
+})
