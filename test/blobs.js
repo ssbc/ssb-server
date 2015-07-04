@@ -5,7 +5,6 @@ var toPull    = require('stream-to-pull-stream')
 var pull      = require('pull-stream')
 var u         = require('./util')
 var cont      = require('cont')
-var Hasher    = require('multiblob/util').createHash
 var createClient = require('../client')
 var ssbKeys   = require('ssb-keys')
 
