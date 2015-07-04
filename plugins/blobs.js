@@ -7,7 +7,7 @@ var Blobs = require('multiblob')
 var path = require('path')
 var pull = require('pull-stream')
 var toPull = require('stream-to-pull-stream')
-var isHash = require('ssb-keys').isHash
+var isHash = require('ssb-ref').isHash
 var multicb = require('multicb')
 var Notify = require('pull-notify')
 
@@ -110,7 +110,10 @@ module.exports = {
     var notify = Notify()
     var config = sbot.config
     var remotes = {} // connected peers (rpc objects)
-    var blobs = sbot._blobs = Blobs(path.join(sbot.config.path, 'blobs'))
+    var blobs = sbot._blobs = Blobs({
+      dir: path.join(sbot.config.path, 'blobs'),
+      hash: 'sha256'
+    })
     var wantList = (function (){
       var wL = {
         byId: {}, // [hash] => {blob state}
