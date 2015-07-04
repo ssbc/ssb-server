@@ -55,7 +55,7 @@
     "osenv": "~0.1.0",
     "pull-paramap": "~1.1.1",
     "rimraf": "~2.2.8",
-    "ssb-msg-schemas": "~3.1.0",
+    "ssb-msg-schemas": "~3.2.0",
     "tape": "~4.0.0"
   },
   "bin": {

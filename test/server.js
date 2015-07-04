@@ -2,6 +2,7 @@
 var cont      = require('cont')
 var deepEqual = require('deep-equal')
 var tape      = require('tape')
+var pull      = require('pull-stream')
 
 // create 3 servers
 // give them all pub servers (on localhost)
@@ -37,7 +38,6 @@ tape('replicate between 3 peers', function (t) {
   var carol = dbC.feed
   var seed_carol = {port: 45453, host: 'localhost', key: carol.keys.public}
 
-
   cont.para([
     alice.add('pub', {address: seed_alice}),
     bob  .add('pub', {address: seed_bob}),
@@ -53,11 +53,7 @@ tape('replicate between 3 peers', function (t) {
     carol.add('contact', {contact: {feed: bob.id},   following: true})
   ]) (function () {
 
-    //TODO: detect when everything has been replicated
-    //and end the test.
-
     var expected = {}
-
     expected[alice.id] = expected[bob.id] = expected[carol.id] = 4
 
     function check(server, name) {
@@ -78,6 +74,10 @@ tape('replicate between 3 peers', function (t) {
 
     var serverC = check(dbC, 'CAROL')
       .use(replicate).use(gossip).use(friends)
+
+    pull(serverA.gossip.changes(), pull.drain(function (e) { console.log('serverA event', e) }))
+    pull(serverB.gossip.changes(), pull.drain(function (e) { console.log('serverB event', e) }))
+    pull(serverC.gossip.changes(), pull.drain(function (e) { console.log('serverC event', e) }))
 
     var n = 2
 
