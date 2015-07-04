@@ -18,12 +18,13 @@
     "map-merge": "~1.1.0",
     "minimist": "~1.1.0",
     "mkdirp": "~0.5.0",
-    "multiblob": "~1.4.3",
+    "multiblob": "^1.5.0",
     "multicb": "^1.0.0",
     "muxrpc": "~5.0.1",
     "mynosql-query": "~1.0.0",
     "nomnom": "1.8.0",
     "non-private-ip": "~1.1.0",
+    "observ": "~0.2.0",
     "observ-debounce": "^1.0.0",
     "packet-stream-codec": "~1.1.0",
     "pull-abortable": "~4.0.0",
@@ -43,8 +44,7 @@
     "ssb-msg-schemas": "~3.2.1",
     "ssb-msgs": "~3.1.2",
     "ssb-ref": "0.0.0",
-    "stream-to-pull-stream": "~1.6.0",
-    "observ": "~0.2.0"
+    "stream-to-pull-stream": "~1.6.0"
   },
   "devDependencies": {
     "cat-names": "~1.0.2",
