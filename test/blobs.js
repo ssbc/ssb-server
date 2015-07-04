@@ -44,9 +44,7 @@ tape('a client can request a blob', function (t) {
             rpc.blobs.get(hash),
             pull.collect(function (err, ary) {
               if(err) throw err
-              var data = Buffer.concat(ary.map(function (e) {
-                return new Buffer(e, 'base64')
-              }))
+              var data = Buffer.concat(ary)
               sbotA.close()
               t.equal(ssbKeys.hash(data), hash)
               t.end()
