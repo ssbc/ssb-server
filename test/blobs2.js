@@ -21,6 +21,7 @@ function read (filename) {
   return toPull.source(fs.createReadStream(filename))
 }
 
+var alg = 'sha256'
 
 tape('avoid flooding a peer with blob requests', function (t) {
   var sbotA = u.createDB('test-blobs-alice3', {
@@ -36,7 +37,7 @@ tape('avoid flooding a peer with blob requests', function (t) {
 
   var bob = sbotB.feed
 
-  var hasher = Hasher()
+  var hasher = Hasher(alg)
 
   sbotA.on('blobs:has', function (r) {
     console.log('REQUEST', r)
@@ -95,7 +96,7 @@ tape('emit "has" event to let peer know you have blob now', function (t) {
 
   var bob = sbotB.feed
 
-  var hasher = Hasher()
+  var hasher = Hasher(alg)
 
   sbotA.on('blobs:has', function (r) {
     console.log('REQUEST', r)
@@ -166,7 +167,7 @@ tape('request missing blobs again after reconnect', function (t) {
 
   var bob = sbotB.feed
 
-  var hasher = Hasher()
+  var hasher = Hasher(alg)
 
   sbotA.on('blobs:has', function (r) {
     console.log('REQUEST', r)

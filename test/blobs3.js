@@ -17,6 +17,8 @@ var blobs     = require('../plugins/blobs')
 var friends   = require('../plugins/friends')
 var replicate = require('../plugins/replicate')
 
+var alg = 'sha256'
+
 function read (filename) {
   return toPull.source(fs.createReadStream(filename))
 }
@@ -36,7 +38,7 @@ tape('tracks requests and failed searches', function (t) {
 
   var bob = sbotB.feed
 
-  var hasher = Hasher()
+  var hasher = Hasher(alg)
 
   sbotA.on('blobs:has', function (r) {
     console.log('REQUEST', r)
