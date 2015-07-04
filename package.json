@@ -1,7 +1,7 @@
 {
   "name": "scuttlebot",
   "description": "A bot-server for the phoenix network",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "homepage": "https://github.com/pfraze/scuttlebot",
   "repository": {
     "type": "git",
