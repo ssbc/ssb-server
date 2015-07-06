@@ -39,10 +39,6 @@ tape('avoid flooding a peer with blob requests', function (t) {
 
   var hasher = Hasher(alg)
 
-  sbotA.on('blobs:has', function (r) {
-    console.log('REQUEST', r)
-  })
-
   pull(
     read(__filename),
     hasher,

@@ -58,7 +58,7 @@ tape('replicate between 3 peers', function (t) {
 
     var expected = {}
 
-    expected[alice.id] = expected[bob.id] = expected[carol.id] = 4
+    expected[alice.id] = expected[bob.id] = expected[carol.id] = 3
 
     function check(server, name) {
       var closed = false
