@@ -147,7 +147,10 @@ exports = module.exports = function (config, ssb, feed) {
   var createClientStream = handshake.client(toSodiumKeys(keys), ssbCap)
 
   server.connect = function (address, cb) {
-    var stream = net.connect(toAddress(address))
+    //coearse to {port, host, key} object
+    address = toAddress(address)
+    var stream = net.connect(address)
+
     pull(
       stream,
       createClientStream(toBuffer(address.key), function (err, secure) {
