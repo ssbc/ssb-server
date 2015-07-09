@@ -217,7 +217,8 @@ module.exports = {
 
     // monitor the feed for new links to blobs
     pull(
-      sbot.ssb.externalsLinkedFromFeed({live: true}),
+      sbot.ssb.links({type: 'ext', live: true}),
+
       pull.drain(function (data) {
         var hash = data.dest
         if(isHash(hash))

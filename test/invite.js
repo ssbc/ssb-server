@@ -44,7 +44,7 @@ tape('test invite api', function (t) {
             if(err) throw explain(err, 'bob cannot use invite code')
 
           pull(
-            aliceC.feedsLinkedToFeed({id: bob.id, rel: 'contact'}),
+            aliceC.links({dest: bob.id, rel: 'contact', type: 'feed', keys: false}),
             pull.collect(function (err, ary) {
               if(err) throw err
 
@@ -52,8 +52,8 @@ tape('test invite api', function (t) {
               delete followed.message
 
               t.deepEqual(
-                {source: alice.id, dest: bob.id, rel: 'contact'},
-                ary[0]
+                ary[0],
+                {source: alice.id, dest: bob.id, rel: 'contact'}
               )
 
               capC.close()
