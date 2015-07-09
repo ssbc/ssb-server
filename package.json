@@ -39,7 +39,7 @@
     "secure-scuttlebutt": "^11.2.0",
     "ssb-config": "~1.0.0",
     "ssb-feed": "~0.1.2",
-    "ssb-keys": "~2.0.1",
+    "ssb-keys": "~3.0.1",
     "ssb-msg-schemas": "~3.2.1",
     "ssb-msgs": "~3.1.2",
     "ssb-ref": "0.0.0",
