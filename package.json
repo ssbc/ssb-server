@@ -37,7 +37,7 @@
     "pull-stream-to-stream": "~1.3.0",
     "pull-stringify": "~1.2.2",
     "secret-handshake": "0.1.1",
-    "secure-scuttlebutt": "^12.0.1",
+    "secure-scuttlebutt": "^13.0.0",
     "ssb-config": "~1.0.0",
     "ssb-feed": "~0.1.2",
     "ssb-keys": "^3.0.1",
