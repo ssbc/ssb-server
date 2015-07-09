@@ -65,11 +65,38 @@ tape('alice blocks bob, and bob cannot connect to alice', function (t) {
 
     function next () {
       if(--n) return
-      rpc.close(); dbA.close(); dbB.close()
-      t.end()
+      rpc.close();
+      aliceCancel(); bobCancel()
+      alice.add({type: 'contact', contact: {feed: bob.id}, flag: true})
+      (function (err) {
+
+      pull(
+        dbA.ssb.links({
+          source: alice.id,
+          //
+          rel: 'contact',
+          values: true
+        }),
+        pull.filter(function (op) {
+          return op.value.content.flag != null
+        }),
+        pull.collect(function (err, ary) {
+          if(err) throw err
+          flagged = ary.pop()
+          if(flagged && flagged.value.content.flag)
+
+          dbA.close(); dbB.close()
+          t.end()
+        })
+      )
+//        dbB.connect(dbA.getAddress(), function (err) {
+//          //since bob is blocked, he should not be able to connect
+//          t.ok(err)
+//          dbA.close(); dbB.close()
+//          t.end()
+//        })
+      })
     }
   })
 
-
 })
-
