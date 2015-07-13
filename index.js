@@ -18,7 +18,6 @@ var manifest   = require('./lib/manifest')
 var peerApi    = require('./lib/rpc')
 var u          = require('./lib/util')
 var ssbCap     = require('./lib/ssb-cap')
-var createAuth = require('./lib/auth')
 
 var clone     = u.clone
 var toAddress = u.toAddress
@@ -45,6 +44,26 @@ function isFunction (f) {
 function find(ary, test) {
   for(var i in ary)
     if(test(ary[i], i, ary)) return ary[i]
+}
+
+function firstAsync(pub, ary, cb) {
+  if(!isString(pub))
+    throw new Error('id *must be provided')
+  if(!Array.isArray(ary))
+    throw new Error('ary *must* be provided')
+  if(!isFunction(cb))
+    throw new Error('cb *must* be provided')
+
+  ;(function next (i) {
+    if(i >= ary.length) cb(new Error('not authenticated'))
+    else if(!ary[i]) next(i+1)
+    else
+      ary[i](pub, function (err, value) {
+        if(err)        cb(err)
+        else if(value) cb(null, value)
+        else           next(i+1)
+      })
+  })(0)
 }
 
 // create the server with the given ssb and feed
@@ -88,10 +107,11 @@ exports = module.exports = function (config, ssb, feed) {
   var auth;
 
   var createServerStream = handshake.server(toSodiumKeys(keys), function (pub, cb) {
-    //CONVERT to SSB format. (fix this so it's just an ed25519)
-    var id = pub.toString('base64')+'.ed25519'
-    console.log('ID', id)
-    auth(id, cb)
+    var id = pub.toString('base64') + '.ed25519'
+    server.auth(id, function (err, auth) {
+      console.log('auth', err, auth)
+      cb(err, auth)
+    })
   }, ssbCap)
 
   var server = net.createServer(function (stream) {
@@ -174,6 +194,15 @@ exports = module.exports = function (config, ssb, feed) {
       server.emit('log:info', ['sbot', null, 'listening', server.getAddress()])
     })
 
+  var authorizers = []
+  server.auth = function (pub, cb) {
+    firstAsync(pub, authorizers, cb)
+  }
+
+  server.auth.use = function (auth) {
+    authorizers.push(auth); return server.auth
+  }
+
   server.ssb = ssb
   server.feed = feed
   server.config = config
@@ -201,8 +230,6 @@ exports = module.exports = function (config, ssb, feed) {
     ], deny: null},
     anonymous: {allow: ['createHistoryStream'], deny: null}
   }
-
-  auth = createAuth(server)
 
   server.getId = function() {
     return server.feed.id
@@ -246,6 +273,44 @@ exports = module.exports = function (config, ssb, feed) {
     return this
   }
 
+  server.auth
+    .use(function (pub, cb) {
+      var masters =
+        [server.feed.id]
+        .concat(server.config.master)
+        .filter(Boolean)
+
+      cb(null, ~masters.indexOf(pub) && server.permissions.master)
+    })
+    .use(function (pub, cb) {
+      pull(
+        server.ssb.links({
+          source: server.feed.id,
+          rel: 'contact',
+          type: 'feed',
+          values: true
+        }),
+        pull.filter(function (op) {
+          return op.value.content.flag != null
+        }),
+        pull.collect(function (err, ary) {
+          if(err) throw err
+          flagged = ary.pop()
+          if(flagged && flagged.value.content.flag)
+            cb(new Error('client is blocked!'))
+          else
+            cb()
+        })
+      )
+    })
+    .use(function (pub, cb) {
+      server.ssb.sublevel('codes').get(pub, function (err, code) {
+          return cb(null, code && code.permissions)
+      })
+    })
+    .use(function (pub, cb) {
+      cb(null, server.permissions.anonymous)
+    })
 
   server.getManifest = function () {
     return server.manifest
