@@ -134,7 +134,7 @@ exports = module.exports = function (config, ssb, feed) {
   // sets up RPC session on a stream (used by {in,out}going streams)
 
   function attachSession (stream, incoming) {
-    var rpc = peerApi(server.manifest, api)
+    var rpc = peerApi(server.manifest, api, stream.auth)
     var timeout = server.config.timeout || 30e3
     var rpcStream = rpc.createStream()
     rpcStream = inactive(rpcStream, timeout)
@@ -147,7 +147,6 @@ exports = module.exports = function (config, ssb, feed) {
 
     //CONVERT to SSB format. (fix this so it's just an ed25519)
     rpc.id = stream.remote.toString('base64')+'.ed25519'
-    rpc.permissions(stream.auth)
 
     rpc._remoteAddress = stream.remoteAddress
     rpc._sessid = sessid++
