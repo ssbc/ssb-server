@@ -1,5 +1,6 @@
 'use strict'
 var pull = require('pull-stream')
+var Notify = require('pull-notify')
 var toAddress = require('../lib/util').toAddress
 var nonPrivate = require('non-private-ip')
 var u = require('../lib/util')
@@ -31,7 +32,7 @@ function rand(array) {
 
 function sameHost(e) {
   return function (p) {
-      return p.host == e.host && p.port == e.port
+      return p.host == e.host && p.port == e.port && p.key == e.key
     }
 }
 
@@ -41,7 +42,8 @@ module.exports = {
   manifest: {
     seeds: 'async',
     peers: 'sync',
-    connect: 'async'
+    connect: 'async',
+    changes: 'source'
   },
   init: function (server) {
     var sched
@@ -50,6 +52,7 @@ module.exports = {
       clearTimeout(sched)
     })
 
+    var notify = Notify()
     var config = server.config
     var conf = server.config.gossip || {}
     var host = config.host || nonPrivate.private() || 'localhost'
@@ -69,6 +72,7 @@ module.exports = {
     }
 
     // track connection-state in peertable
+    // :TODO: need to update on rpc.on('closed') ?
     server.on('rpc:connect', function (rpc) {
       //************************************
       //TODO. DISTINGUISH CLIENT CONNECTIONS.
@@ -82,6 +86,11 @@ module.exports = {
       if(peer) {
         peer.id = rpc.id
         peer.connected = true
+
+        notify({ type: 'connect', peer: peer })
+        rpc.on('closed', function () {
+          notify({ type: 'disconnect', peer: peer })
+        })
       }
     })
 
@@ -91,7 +100,10 @@ module.exports = {
     seeds.forEach(function (e) {
       if(!e) return
       var p = toAddress(e)
-      if(p && p.key) peers.push(p)
+      if(p && p.key) {
+        peers.push(p)
+        notify({ type: 'discover', peer: p, source: 'seed' })
+      }
     })
 
     // populate peertable with pub announcements on the feed
@@ -118,6 +130,7 @@ module.exports = {
         if(!f) {
           // new pub
           peers.push(e)
+          notify({ type: 'discover', peer: e, source: 'pub' })
         } else {
           // existing pub, update the announcers list
           if (!f.announcers)
@@ -140,11 +153,13 @@ module.exports = {
       connect()
     }
 
-    // populate peertable with announcements on the LAN mDNS
+    // populate peertable with announcements on the LAN multicast
     server.on('local', function (_peer) {
       var peer = getPeer(_peer.id)
-      if(!peer) peers.push(_peer)
-      else {
+      if(!peer) {
+        notify({ type: 'discover', peer: peer, source: 'local' })
+        peers.push(_peer)
+      } else {
         // peer host could change while in use.
         // currently, there is a DoS vector here
         // (someone could falsely advertise your id,
@@ -170,13 +185,16 @@ module.exports = {
         if(!addr.key) return cb(new Error('address must have ed25519 key'))
         // find the peer
         var p = u.find(peers.filter(Boolean), function (e) {
-          return e.host === addr.host && e.port === addr.port
+          return e.host === addr.host && e.port === addr.port && e.key === addr.key
         })
         if (!p) // only connect to known peers
           return cb(new Error('address not a known peer'))
         
         connectTo(p)
         cb()
+      },
+      changes: function () {
+        return notify.listen()
       }
     }
 
@@ -242,7 +260,7 @@ module.exports = {
       p.connected = true
 
       server.connect(p, function (err, rpc) {
-        if(err) return cb(err)
+        if(err) return (cb && cb(err))
 
         rpc._peer = p
         p.id = rpc.id
@@ -263,7 +281,7 @@ module.exports = {
 
           // :TODO: delete local peers if failure > N
         })
-        cb(null, rpc)
+        cb && cb(null, rpc)
       })
     }
 

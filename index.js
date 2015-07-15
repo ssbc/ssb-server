@@ -23,10 +23,10 @@ var createAuth = require('./lib/auth')
 var clone     = u.clone
 var toAddress = u.toAddress
 
-function loadSSB (config) {
+function loadSSB (config, keys) {
   var dbPath  = path.join(config.path, 'db')
   //load/create  secure scuttlebutt.
-  return create(dbPath)
+  return create(dbPath, null, keys)
 }
 
 function loadKeys (config) {
@@ -74,9 +74,9 @@ exports = module.exports = function (config, ssb, feed) {
     throw new Error('if ssb and feed are not provided, config must have path')
 
   if(config.path) mkdirp.sync(config.path)
-  ssb = ssb || loadSSB(config)
-  feed = feed || ssb.createFeed(loadKeys(config))
-  var keys = feed.keys
+  var keys = (feed) ? feed.keys : loadKeys(config)
+  ssb = ssb || loadSSB(config, keys)
+  feed = feed || ssb.createFeed(keys)
 
   // server
   // ======

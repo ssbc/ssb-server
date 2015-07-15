@@ -1,7 +1,5 @@
 # Scuttlebot
 
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ssbc/scuttlebot?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 Scuttlebot is a personal server for the SSB distributed network. It includes a database, networking stack, command-line interface, and the phoenix web frontend. Install scuttlebot on your computer to join the network.
 
 Join us in #scuttlebutt on freenode.
@@ -16,6 +14,14 @@ Join us in #scuttlebutt on freenode.
 
 [Phoenix](https://github.com/ssbc/phoenix) is the web interface which is bundled with scuttlebot.
 
+
+### Documentation/wiki/FAQ
+
+[documentation is here](https://github.com/ssbc/ssb-docs)
+We have shifted documentation from a github wiki to a repo,
+which means you can ask make pull requests, get notifications,
+ask questions in issues. If you have questions or get confused
+please post an issue!
 
 ### Installing
 
