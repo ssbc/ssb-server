@@ -73,66 +73,71 @@ tape('alice blocks bob, and bob cannot connect to alice', function (t) {
 
     function next () {
       if(--n) return
-      rpc.close();
-      aliceCancel(); bobCancel()
-      console.log('ALICE BLOCKS BOB', {
-        source: alice.id, dest: bob.id
-      })
-      alice.add({type: 'contact', contact: {feed: bob.id}, flag: true})
-      (function (err) {
-        if(err) throw err
-        pull(
-          dbA.ssb.links({
-            source: alice.id,
-            dest: bob.id,
-            type: 'feed',
-            rel: 'contact',
-            values: true
-          }),
-          pull.filter(function (op) {
-            return op.value.content.flag != null
-          }),
-          pull.collect(function (err, ary) {
-            if(err) throw err
-            t.ok(flagged = ary.pop().value.content.flag, 'alice did block bob')
+      rpc.close(function () {
+        aliceCancel(); bobCancel()
+        console.log('ALICE BLOCKS BOB', {
+          source: alice.id, dest: bob.id
+        })
+        alice.add({type: 'contact', contact: {feed: bob.id}, flag: true})
+        (function (err) {
+          if(err) throw err
+          pull(
+            dbA.ssb.links({
+              source: alice.id,
+              dest: bob.id,
+              type: 'feed',
+              rel: 'contact',
+              values: true
+            }),
+            pull.filter(function (op) {
+              return op.value.content.flag != null
+            }),
+            pull.collect(function (err, ary) {
+              if(err) throw err
+              t.ok(flagged = ary.pop().value.content.flag, 'alice did block bob')
 
-            //since bob is blocked, he should not be able to connect
-            dbB.connect(dbA.getAddress(), function (err) {
-              t.ok(err, 'bob is blocked, should fail to connect to alice')
-
-              //but carol, should, because she is not blocked.
-              dbC.connect(dbA.getAddress(), function (err) {
-                t.notOk(err)
-                t.end()
+              //since bob is blocked, he should not be able to connect
+              dbB.connect(dbA.getAddress(), function (err, rpc) {
+                t.ok(err, 'bob is blocked, should fail to connect to alice')
+                //but carol, should, because she is not blocked.
+                dbC.connect(dbA.getAddress(), function (err) {
+                  t.notOk(err)
+                  console.log('CONNECTED')
+                })
+                dbC.once('replicate:finish', function (vclock) {
+                  console.log('replicated', vclock)
+                  t.equal(vclock[alice.id], 2)
+                  t.end()
+                })
               })
             })
-
-          })
-        )
+          )
+        })
       })
     }
   })
 })
 
 tape('carol does not let bob replicate with alice', function (t) {
-  return t.end()
+//  return t.end()
   //first, carol should have already replicated with alice.
-
   //emits this event when did not allow bob to get this data.
-  dbC.on('replicate:blocked', function (data) {
-
-  })
-
-  dbB.on('replicate:finish', function (vclock) {
+  dbB.once('replicate:finish', function (vclock) {
     console.log('BOB REPLICATED FROM CAROL')
-    console.log(vclock)
+    t.equal(vclock[alice.id], 1)
+    console.log('ALICE:', alice.id)
+    t.end()
   })
-
   dbB.connect(dbC.getAddress(), function(err) {
-
+    if(err) throw err
   })
-
 })
+
+//TODO test that bob is disconnected from alice if he is connected
+//     and she blocks him.
+
+//TODO test that blocks work in realtime. if alice blocks him
+//     when he is already connected to alice's friend.
 
 tape('cleanup!', function (t) {
   dbA.close(); dbB.close(); dbC.close()
