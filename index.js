@@ -263,7 +263,8 @@ exports = module.exports = function (config, ssb, feed) {
           server.permissions,
           clone(plugin.permissions, function (v) {
             return plugin.name + '.' + v
-          }))
+          })
+        )
       }
 
       server[plugin.name] = api[plugin.name] = plugin.init(server)
@@ -285,6 +286,7 @@ exports = module.exports = function (config, ssb, feed) {
       pull(
         server.ssb.links({
           source: server.feed.id,
+          dest: pub,
           rel: 'contact',
           type: 'feed',
           values: true
