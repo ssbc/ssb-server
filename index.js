@@ -128,6 +128,8 @@ exports = module.exports = function (config, ssb, feed) {
     )
   })
 
+  server.peers = {}
+
   // peer connection
   // ===============
 
@@ -146,7 +148,15 @@ exports = module.exports = function (config, ssb, feed) {
     )
 
     //CONVERT to SSB format. (fix this so it's just an ed25519)
-    rpc.id = stream.remote.toString('base64')+'.ed25519'
+    var id = rpc.id = stream.remote.toString('base64')+'.ed25519'
+
+    //keep track of current connections.
+    if(!server.peers[id]) server.peers[id] = []
+    server.peers[id].push(rpc)
+    rpc.on('closed', function () {
+      server.peers[id]
+        .splice(server.peers[id].indexOf(rpc), 1)
+    })
 
     rpc._remoteAddress = stream.remoteAddress
     rpc._sessid = sessid++
@@ -283,25 +293,11 @@ exports = module.exports = function (config, ssb, feed) {
       cb(null, ~masters.indexOf(pub) && server.permissions.master)
     })
     .use(function (pub, cb) {
-      pull(
-        server.ssb.links({
-          source: server.feed.id,
-          dest: pub,
-          rel: 'contact',
-          type: 'feed',
-          values: true
-        }),
-        pull.filter(function (op) {
-          return op.value.content.flag != null
-        }),
-        pull.collect(function (err, ary) {
-          if(err) throw err
-          flagged = ary.pop()
-          if(flagged && flagged.value.content.flag)
-            cb(new Error('client is blocked!'))
-          else
-            cb()
-        })
+      cb(
+        server.block && server.block.isBlocked(pub)
+        //.get({source: server.feed.id, dest: pub, graph: 'flag'})
+        ? new Error('client is blocked')
+        : null
       )
     })
     .use(function (pub, cb) {
