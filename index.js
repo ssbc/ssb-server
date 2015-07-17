@@ -160,7 +160,9 @@ exports = module.exports = function (config, ssb, feed) {
 
     rpc._remoteAddress = stream.remoteAddress
     rpc._sessid = sessid++
-    rpc.task = multicb()
+    rpc.task = multicb(function () {
+      rpc.close()
+    })
     server.emit('rpc:connect', rpc)
 
     //TODO: put this stuff somewhere else...?
@@ -219,24 +221,6 @@ exports = module.exports = function (config, ssb, feed) {
   server.manifest = merge({}, manifest)
   server.permissions = {
     master: {allow: null, deny: null},
-    local: {allow: [
-      'getPublicKey',
-      'whoami',
-      'get',
-      'getLatest',
-      'add',
-      'createFeedStream',
-      'createHistoryStream',
-      'createLogStream',
-      'messagesByType',
-      'messagesLinkedToMessage',
-      'messagesLinkedToFeed',
-      'messagesLinkedFromFeed',
-      'feedsLinkedToFeed',
-      'feedsLinkedFromFeed',
-      'followedUsers',
-      'relatedMessages'
-    ], deny: null},
     anonymous: {allow: ['createHistoryStream'], deny: null}
   }
 
