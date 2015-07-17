@@ -24,7 +24,7 @@ exports.init = function (sbot) {
 
   var graphs = {
     follow: new Graphmitter(),
-    trust: new Graphmitter()
+    flag: new Graphmitter()
   }
   var config = sbot.config
 
@@ -51,12 +51,11 @@ exports.init = function (sbot) {
             graphs.follow.del(msg.value.author, link.feed)
 
         }
-        if ('trust' in c) {
-          var trust = c.trust|0
-          if (trust !== 0)
-            graphs.trust.edge(msg.value.author, link.feed, (+trust > 0) ? 1 : -1)
+        if ('flagged' in c) {
+          if (c.flagged)
+            graphs.flag.edge(msg.value.author, link.feed, c.flagged)
           else
-            graphs.trust.del(msg.value.author, link.feed)
+            graphs.flag.del(msg.value.author, link.feed)
         }
       })
     }
