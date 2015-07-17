@@ -18,6 +18,7 @@ exports.manifest = {
   all  : 'async',
   hops : 'async',
   createFriendStream: 'source',
+  get  : 'sync',
 }
 
 exports.init = function (sbot) {
@@ -62,6 +63,11 @@ exports.init = function (sbot) {
   }))
 
   return {
+    get: function (opts) {
+      var g = graphs[opts.graph || 'follow']
+      if(!g) throw new Error('opts.graph must be provided')
+      return g.get(opts.source, opts.dest)
+    },
     all: function (graph, cb) {
       if (typeof graph == 'function') {
         cb = graph
