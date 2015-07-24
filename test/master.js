@@ -1,39 +1,66 @@
 var tape = require('tape')
 var u = require('./util')
+var util = require('../lib/util')
 var ssbKeys = require('ssb-keys')
 var createClient = require('../client')
-var util = require('../lib/util')
+
+var alice = ssbKeys.generate()
+var bob   = ssbKeys.generate()
+var carol = ssbKeys.generate()
+
+var createSbot = require('../core')
+  .use(require('../plugins/master'))
+
+console.log(createSbot)
+
+var aliceDb = createSbot({
+  port: 45451, timeout: 2001,
+  temp: 'master',
+  host: 'localhost',
+  master: bob.id,
+  keys: alice
+})
 
 tape('connect remote master', function (t) {
-  var keys = ssbKeys.generate()
-  var aliceDb = u.createDB('test-alice', {
-      port: 45451, host: 'localhost', timeout: 2001,
-      master: keys.id
-   })
-  var alice = aliceDb.feed.keys.public
 
-  console.log()
-
-  t.equal(aliceDb.getAddress(), 'localhost:45451:'+aliceDb.feed.keys.public)
+  t.equal(aliceDb.getAddress(), 'localhost:45451:'+aliceDb.id)
 
   t.deepEqual(
     util.parseAddress(aliceDb.getAddress()), {
     host: 'localhost',
     port: 45451,
-    key: aliceDb.feed.keys.public
+    key: aliceDb.id
   })
 
-  var client = createClient(keys)
+  t.end()
 
-  client({port: 45451, key: alice}, function (err, rpc) {
+
+})
+
+tape('connect remote master', function (t) {
+  var client = createClient(bob)
+
+  client({port: 45451, key: aliceDb.id}, function (err, rpc) {
     if(err) throw err
     rpc.publish({
-      type: 'msg', value: 'written by bob', from: keys.id
+      type: 'msg', value: 'written by bob', from: bob.id
     }, function (err) {
       if(err) throw err
-      aliceDb.close(function () {
-        t.end()
-      })
+      t.end()
+    })
+  })
+})
+
+tape('non-master cannot use same methods', function (t) {
+  var client = createClient(carol)
+  client({port: 45451, key: aliceDb.id}, function (err, rpc) {
+    if(err) throw err
+    rpc.publish({
+      type: 'msg', value: 'written by ca', from: bob.id
+    }, function (err) {
+      t.ok(err)
+      aliceDb.close(true)
+      t.end()
     })
   })
 
