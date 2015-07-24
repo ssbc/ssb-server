@@ -88,7 +88,8 @@ function replicate(sbot, config, rpc, cb) {
 
 module.exports = function (sbot, config) {
   sbot.createHistoryStream.hook(function (fn, args) {
-    this._emit('call:createHistoryStream', args[0])
+    if(this._emit)
+      this._emit('call:createHistoryStream', args[0])
     return fn.apply(this, args)
   })
 
