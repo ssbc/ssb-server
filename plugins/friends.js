@@ -84,7 +84,7 @@ exports.init = function (sbot, config) {
 
     createFriendStream: function (opts) {
       opts = opts || {}
-      var start = opts.start || sbot.feed.id
+      var start = opts.start || sbot.id
       var graph = graphs[opts.graph || 'follow']
       if(!graph)
         return pull.error(new Error('unknown graph:' + opts.graph))
