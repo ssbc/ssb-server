@@ -6,10 +6,7 @@ var Abort = require('pull-abortable')
 var Debounce = require('observ-debounce')
 var Observ = require('observ')
 
-function replicate(server, rpc, cb) {
-    var ssb = server.ssb
-    var feed = server.feed
-    var config = server.config
+function replicate(sbot, config, rpc, cb) {
     var aborter = Abort()
     var live = !!config.timeout
 
@@ -36,12 +33,12 @@ function replicate(server, rpc, cb) {
     opts.dunbar = opts.dunbar || 150
 
     pull(
-      server.friends.createFriendStream(opts),
+      sbot.friends.createFriendStream(opts),
       aborter,
       pull.through(function (s) {
         to_recv[s] = 0
       }),
-      ssb.createLatestLookupStream(),
+      sbot.createLatestLookupStream(),
       pull.drain(function (upto) {
         to_recv[upto.id] = upto.sequence
         replicated[upto.id] = upto.sequence
@@ -51,7 +48,7 @@ function replicate(server, rpc, cb) {
         }))
       }, function (err) {
         if(err)
-          server.emit('log:error', ['replication', rep._sessid, 'error', err])
+          sbot.emit('log:error', ['replication', rep._sessid, 'error', err])
         sources.cap()
       })
     )
@@ -81,7 +78,7 @@ function replicate(server, rpc, cb) {
         )
         progress()
       }),
-      ssb.createWriteStream(function (err) {
+      sbot.createWriteStream(function (err) {
         aborter.abort()
         progress ()
         cb(err, replicated)
@@ -89,23 +86,19 @@ function replicate(server, rpc, cb) {
     )
 }
 
-module.exports = function (server) {
-  server.on('rpc:connect', function(rpc) {
-    //do not replicate if we are authorize as server.
-    //if(res.type === 'server') return
+module.exports = function (sbot, config) {
+  sbot.on('rpc:connect', function(rpc) {
 
-    var done = rpc.task()
-    server.emit('log:info', ['replicate', rpc._sessid, 'start'])
-    server.emit('replicate:start', rpc)
-    replicate(server, rpc, function (err, progress) {
+    sbot.emit('log:info', ['replicate', rpc._sessid, 'start'])
+    sbot.emit('replicate:start', rpc)
+    replicate(sbot, config, rpc, function (err, progress) {
       if(err) {
-        server.emit('replicate:fail', err)
-        server.emit('log:warning', ['replicate', rpc._sessid, 'error', err])
+        sbot.emit('replicate:fail', err)
+        sbot.emit('log:warning', ['replicate', rpc._sessid, 'error', err])
       } else {
-        server.emit('log:info', ['replicate', rpc._sessid, 'success', progress])
-        server.emit('replicate:finish', progress)
+        sbot.emit('log:info', ['replicate', rpc._sessid, 'success', progress])
+        sbot.emit('replicate:finish', progress)
       }
-      done()
     })
   })
 }
