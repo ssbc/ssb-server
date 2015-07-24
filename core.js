@@ -46,7 +46,7 @@ var SSB = {
     'createHistoryStream'    : 'source',
     'createLogStream'        : 'source',
     'links'                  : 'source',
-    'messagesByType'         : 'source'
+    'messagesByType'         : 'source',
   },
   permissions: {
     master: {allow: null, deny: null},
@@ -70,19 +70,23 @@ var SSB = {
     var ssb = create(opts.path, null, opts.keys)
     var feed = ssb.createFeed(opts.keys)
     return {
-      id                   : feed.id,
-      publish              : feed.add,
-      add                  : ssb.add,
-      get                  : ssb.get,
-      getPublicKey         : ssb.getPublicKey,
-      getLatest            : ssb.getLatest,
-      relatedMessages      : ssb.relatedMessages,
-      query                : ssb.query,
-      createFeedStream     : ssb.createFeedStream,
-      createHistoryStream  : ssb.createHistoryStream,
-      createLogStream      : ssb.createLogStream,
-      links                : ssb.links,
-      messagesByType       : ssb.messagesByType
+      id                       : feed.id,
+      publish                  : feed.add,
+      add                      : ssb.add,
+      get                      : ssb.get,
+      getPublicKey             : ssb.getPublicKey,
+      getLatest                : ssb.getLatest,
+      relatedMessages          : ssb.relatedMessages,
+      query                    : ssb.query,
+      createFeed               : ssb.createFeed,
+      createFeedStream         : ssb.createFeedStream,
+      createHistoryStream      : ssb.createHistoryStream,
+      createLogStream          : ssb.createLogStream,
+      links                    : ssb.links,
+      sublevel                 : ssb.sublevel,
+      messagesByType           : ssb.messagesByType,
+      createWriteStream        : ssb.createWriteStream,
+      createLatestLookupStream : ssb.createLatestLookupStream,
     }
   }
 }
@@ -91,20 +95,4 @@ module.exports = Illuminati({
   appKey: require('./lib/ssb-cap')
 })
 .use(SSB)
-//.use(require('./plugins/logging'))
 
-//var Scuttlebot = function (opts) {
-//  if(!opts.keys) {
-//    var keyPath = path.join(opts.path, 'secret')
-//    opts.keys = ssbKeys.loadOrCreateSync(keyPath)
-//  }
-//
-//  opts._keys = opts.keys
-//  opts.keys = toSodiumKeys(opts.keys)
-//
-//  return createSbot(opts)
-//}
-//
-//if(!module.parent)
-//  Scuttlebot(require('ssb-config'))
-//
