@@ -87,6 +87,11 @@ function replicate(sbot, config, rpc, cb) {
 }
 
 module.exports = function (sbot, config) {
+  sbot.createHistoryStream.hook(function (fn, args) {
+    this._emit('call:createHistoryStream', args[0])
+    return fn.apply(this, args)
+  })
+
   sbot.on('rpc:connect', function(rpc) {
 
     sbot.emit('log:info', ['replicate', rpc._sessid, 'start'])
