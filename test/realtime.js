@@ -3,48 +3,43 @@ var cont      = require('cont')
 var deepEqual = require('deep-equal')
 var tape      = require('tape')
 var pull      = require('pull-stream')
-// create 3 servers
-// give them all pub servers (on localhost)
-// and get them to follow each other...
-var replicate = require('../plugins/replicate')
-var gossip    = require('../plugins/gossip')
-var friends   = require('../plugins/friends')
-var logging   = require('../plugins/logging')
+
+var ssbKeys = require('ssb-keys')
+
+var createSbot = require('../core')
+  .use(require('../plugins/friends'))
+  .use(require('../plugins/replicate'))
+  .use(require('../plugins/gossip'))
+  .use(require('../plugins/logging'))
 
 tape('replicate between 3 peers', function (t) {
 
   var u = require('./util')
 
-  var bobDb = u.createDB('test-bob', {
-      port: 45452, host: 'localhost', timeout: 2001
-    }).use(friends).use(replicate)
+  var bob = createSbot({
+      temp: 'test-bob',
+      port: 45452, host: 'localhost',
+      keys: ssbKeys.generate()
+    })
 
-  var bob = bobDb.feed
-
-  bobDb.on('rpc:authorized', function (_, req) {
-    console.log('AUTH', req)
-  })
-
-  var aliceDb = u.createDB('test-alice', {
-      port: 45451, host: 'localhost', timeout: 2001,
-      seeds: [{port: 45452, host: 'localhost', key: bob.keys.public}]
-    }).use(gossip).use(friends).use(replicate)
-
-  var alice = aliceDb.feed
+  var alice = u.createDB('test-alice', {
+      port: 45451, host: 'localhost',
+      seeds: [bob.getAddress()],
+      keys: ssbKeys.generate()
+    })
 
   cont.para([
-    alice.add({type: 'contact', contact: {feed: bob.id}, following: true}),
-    bob.add({type: 'contact', contact: {feed: alice.id}, following: true})
-  ])(function () {
+    alice.publish({type: 'contact', contact: {feed: bob.id}, following: true}),
+    bob.publish({type: 'contact', contact: {feed: alice.id}, following: true})
+  ])(function (err) {
+    if(err) throw err
 
     var ary = []
     pull(
-      bobDb.ssb.createHistoryStream({id: alice.id, seq: 0, keys: false, live: true}),
-      pull.through(function (data) {
-        console.log(data)
+      bob.createHistoryStream({id: alice.id, seq: 0, keys: false, live: true}),
+      pull.drain(function (data) {
         ary.push(data);
-      }),
-      pull.drain()
+      })
     )
     var l = 12
     var int = setInterval(function () {
@@ -52,24 +47,20 @@ tape('replicate between 3 peers', function (t) {
         clearInterval(int)
         var _ary = []
           pull(
-            bobDb.ssb.createHistoryStream({id: alice.id, sequence: 0, keys: false, live: true}),
-            pull.through(function (msg) {
-              _ary.push(msg)
-              if(_ary.length < 12) return
-
-              bobDb.close()
-              aliceDb.close()
-
+            bob.createHistoryStream({id: alice.id, sequence: 0, keys: false}),
+            pull.collect(function (err, _ary) {
               t.equal(_ary.length, 12)
               t.deepEqual(ary,_ary)
+              bob.close(true); alice.close(true)
+
               t.end()
-            }),
-            pull.drain()
+            })
           )
       }
       else
-        alice.add({type: 'test', value: new Date()},
+        alice.publish({type: 'test', value: new Date()},
           function (err, msg){
+            if(err) throw err
             console.log('added', msg.key, msg.value.sequence)
           })
     }, 200)
