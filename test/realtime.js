@@ -14,16 +14,15 @@ var createSbot = require('../core')
 
 tape('replicate between 3 peers', function (t) {
 
-  var u = require('./util')
-
   var bob = createSbot({
       temp: 'test-bob',
       port: 45452, host: 'localhost',
       keys: ssbKeys.generate()
     })
 
-  var alice = u.createDB('test-alice', {
-      port: 45451, host: 'localhost',
+  var alice = createSbot({
+      temp: 'test-alice',
+      port: 45453, host: 'localhost',
       seeds: [bob.getAddress()],
       keys: ssbKeys.generate()
     })

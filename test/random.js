@@ -4,7 +4,6 @@ var ssbKeys   = require('ssb-keys')
 
 var tape      = require('tape')
 
-var u    = require('./util')
 var cats = require('cat-names')
 var dogs = require('dog-names')
 

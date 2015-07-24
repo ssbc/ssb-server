@@ -1,5 +1,4 @@
 var tape = require('tape')
-var u = require('./util')
 var util = require('../lib/util')
 var ssbKeys = require('ssb-keys')
 var createClient = require('../client')
@@ -10,8 +9,6 @@ var carol = ssbKeys.generate()
 
 var createSbot = require('../core')
   .use(require('../plugins/master'))
-
-console.log(createSbot)
 
 var aliceDb = createSbot({
   port: 45451, timeout: 2001,
@@ -33,13 +30,10 @@ tape('connect remote master', function (t) {
   })
 
   t.end()
-
-
 })
 
 tape('connect remote master', function (t) {
   var client = createClient(bob)
-
   client({port: 45451, key: aliceDb.id}, function (err, rpc) {
     if(err) throw err
     rpc.publish({
@@ -63,5 +57,5 @@ tape('non-master cannot use same methods', function (t) {
       t.end()
     })
   })
-
 })
+

@@ -18,7 +18,6 @@ var createSbot = require('../core')
 
 tape('replicate between 3 peers', function (t) {
 
-  var u = require('./util')
   var alice, bob, carol
   var dbA = createSbot({
     temp: 'server-alice',

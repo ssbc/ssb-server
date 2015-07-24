@@ -1,6 +1,5 @@
 var tape = require('tape')
 var pull = require('pull-stream')
-var u = require('./util')
 var ssbKeys = require('ssb-keys')
 var createClient = require('../client')
 var util = require('../lib/util')
