@@ -127,7 +127,7 @@ exports.init = function (sbot, config) {
       }
 
       var conf = config.friends || {}
-      opts.start  = opts.start  || sbot.feed.id
+      opts.start  = opts.start  || sbot.id
       opts.dunbar = opts.dunbar || conf.dunbar || 150
       opts.hops   = opts.hops   || conf.hops   || 3
 
