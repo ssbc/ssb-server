@@ -21,13 +21,12 @@ exports.manifest = {
   get  : 'sync',
 }
 
-exports.init = function (sbot) {
+exports.init = function (sbot, config) {
 
   var graphs = {
     follow: new Graphmitter(),
     flag: new Graphmitter()
   }
-  var config = sbot.config
 
   // view processor
   var syncCbs = []
@@ -35,7 +34,9 @@ exports.init = function (sbot) {
     if (syncCbs) syncCbs.push(cb)
     else cb()
   }
-  pull(sbot.ssb.createLogStream({ live: true }), pull.drain(function (msg) {
+
+  pull(sbot.createLogStream({ live: true }), pull.drain(function (msg) {
+
     if (msg.sync) {
       syncCbs.forEach(function (cb) { cb() })
       syncCbs = null
@@ -68,6 +69,7 @@ exports.init = function (sbot) {
       if(!g) throw new Error('opts.graph must be provided')
       return g.get(opts.source, opts.dest)
     },
+
     all: function (graph, cb) {
       if (typeof graph == 'function') {
         cb = graph
