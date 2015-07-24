@@ -8,8 +8,6 @@ var Observ = require('observ')
 
 function replicate(sbot, config, rpc, cb) {
     var aborter = Abort()
-    var live = !!config.timeout
-
     var sources = many()
     var sent = 0
 
@@ -44,7 +42,7 @@ function replicate(sbot, config, rpc, cb) {
         replicated[upto.id] = upto.sequence
         sources.add(rpc.createHistoryStream({
           id: upto.id, seq: upto.sequence + 1,
-          live: live, keys: false
+          live: true, keys: false
         }))
       }, function (err) {
         if(err)
