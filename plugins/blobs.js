@@ -56,34 +56,44 @@ function isString (s) {
 function oneTrack(delay, n, label, fun) {
   var doing = 0, timeout
 
+  var timers = []
+
+  function clear (timer) {
+    var i = timers.indexOf(timer)
+    clearTimeout(timer[i])
+    times.splice(i, 1)
+  }
+
+  function delay (job, d) {
+    var i
+    var timer = setTimeout(function () {
+      timers.splice(timers.indexOf(timer), 1); job()
+    }, d)
+    timers.push(timer)
+    return timer
+  }
+
   function job () {
     // abort if already doing too many
     if(doing >= n) return
     doing++
-
-    // dont bother waiting anymore
-    clearTimeout(timeout); timeout = null
 
     // run the behavior
     fun(function (done) {
       doing--
       if(done) {
         // we're done, dont requeue
-        clearTimeout(timeout); timeout = null
         return
       }
 
       // requeue after a delay
-      if(timeout) return
       var wait = ~~(delay/2 + delay*Math.random())
-      console.log(label, 'waiting...', wait)
-      timeout = setTimeout(job, wait)
+      delay(job, wait)
     })
-
   }
 
   job.abort = function () {
-    clearTimeout(timeout)
+    timers.forEach(function (timer) { clearTimeout(timer) })
   }
 
   return job
@@ -250,6 +260,7 @@ module.exports = {
       query(id, function (err) {
         if(err) console.error(err.stack)
       })
+
       rpc.once('closed', function () {
         delete remotes[id]
       })
@@ -291,9 +302,9 @@ module.exports = {
       // does the remote have any of them?
       queries[remoteid] = true
       var neededBlobIds = neededBlobs.map(function (e) { return e.id })
+
       remote.blobs.has(neededBlobIds, function (err, hasList) {
         if(err) console.error(err.stack)
-
         delete queries[remoteid]
         if(hasList) {
           var downloadDone = multicb()
@@ -335,7 +346,6 @@ module.exports = {
       sbot.emit('log:info', ['blobs', id, 'downloading', f.id])
       pull(
         remotes[id].blobs.get(f.id),
-   //     toBuffer(),
         //TODO: error if the object is longer than we expected.
         blobs.add(f.id, function (err, hash) {
           if(err) {
@@ -369,7 +379,6 @@ module.exports = {
         if(isFunction(hash)) cb = hash, hash = null
 
         return pull(
-     //     toBuffer(),
           blobs.add(function (err, hash) {
             if(err) console.error(err.stack)
             else wantList.got(hash)
@@ -394,6 +403,7 @@ module.exports = {
         var nowait = (opts && opts.nowait)
         if(!isHash(hash)) return cb(new Error('not a hash:' + hash))
 
+        sbot.emit('blobs:wants', hash)
         blobs.has(hash, function (_, has) {
           if (has) return cb(null, true)
           
