@@ -38,6 +38,7 @@ module.exports = function (keys, manf) {
   var createClientStream = handshake.client(toSodiumKeys(keys), ssbCap)
   manf = manf || manifest
   return function (address, cb) {
+    address = toAddress(address)
     var publicKey = toBuffer(address.key)
     if(!isBuffer(publicKey))
       return cb(new Error('*must* have remote public key'))
