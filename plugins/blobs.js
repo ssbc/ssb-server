@@ -104,13 +104,14 @@ module.exports = {
   permissions: {
     anonymous: {allow: ['has', 'get', 'changes']},
   },
-  init: function (sbot) {
+  init: function (sbot, opts) {
 
     var notify = Notify()
-    var config = sbot.config
+    var config = opts
+    //NOW PROVIDED BY CORE. REFACTOR THIS AWAY.
     var remotes = {} // connected peers (rpc objects)
     var blobs = sbot._blobs = Blobs({
-      dir: path.join(sbot.config.path, 'blobs'),
+      dir: path.join(config.path, 'blobs'),
       hash: 'sha256'
     })
     var wantList = (function (){
@@ -216,7 +217,7 @@ module.exports = {
 
     // monitor the feed for new links to blobs
     pull(
-      sbot.ssb.links({type: 'ext', live: true}),
+      sbot.links({type: 'ext', live: true}),
 
       pull.drain(function (data) {
         var hash = data.dest
@@ -224,7 +225,7 @@ module.exports = {
           // do we have the referenced blob yet?
           blobs.has(hash, function (_, has) {
             if(!has) { // no...
-              sbot.ssb.get(data.source, function (err, msg) {
+              sbot.get(data.source, function (err, msg) {
                 // was this blob published in the last month?
                 var dT = Math.abs(Date.now() - msg.timestamp)
                 if (dT < MONTH_IN_MS)
@@ -245,8 +246,10 @@ module.exports = {
       wantList.each(function (e, k) {
         if(e.has && e.has[id] === false) delete e.has[id]
       })
-      var done = rpc.task()
-      query(id, done)
+
+      query(id, function (err) {
+        if(err) console.error(err.stack)
+      })
       rpc.once('closed', function () {
         delete remotes[id]
       })
