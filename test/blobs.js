@@ -25,8 +25,7 @@ var createSbot = require('../core')
 tape('a client can request a blob', function (t) {
 
   var sbotA = createSbot({
-    temp: 'test-blobs-alice0',
-    port: 45450, host: 'localhost', timeout: 1000,
+    temp: 'test-blobs-alice0', timeout: 1000,
     keys: ssbKeys.generate()
   })
 
@@ -39,7 +38,7 @@ tape('a client can request a blob', function (t) {
       console.log(sbotA.getAddress())
       createClient(bob, sbotA.getManifest())
       (sbotA.getAddress(), function (err, rpc) {
-
+        if(err) throw err
         rpc.blobs.has(hash, function (err) {
           if(err) throw err
           pull(
@@ -62,15 +61,13 @@ tape('replicate blobs between 2 peers - explicit want request', function (t) {
 
   var alice
   var sbotA = createSbot({
-    temp: 'test-blobs-alice1',
-    port: 45450, host: 'localhost', timeout: 1000,
+    temp: 'test-blobs-alice1',  timeout: 1000,
     keys: alice = ssbKeys.generate()
   })
 
   var bob
   var sbotB = createSbot({
-    temp: 'test-blobs-bob1',
-    port: 45451, host: 'localhost', timeout: 1000,
+    temp: 'test-blobs-bob1', timeout: 1000,
     keys: bob = ssbKeys.generate()
   })
 
@@ -108,14 +105,12 @@ tape('replicate published blobs between 2 peers', function (t) {
   createSbot.use(friends).use(replicate).use(gossip)
 
   var alice = createSbot({
-      temp: 'test-blobs-alice2',
-      port: 45451, host: 'localhost', timeout: 1000,
+      temp: 'test-blobs-alice2', timeout: 1000,
       keys: ssbKeys.generate()
     })
 
   var bob = createSbot({
-      temp: 'test-bobs-alice2',
-      port: 45452, host: 'localhost', timeout: 1000,
+      temp: 'test-bobs-alice2', timeout: 1000,
       keys: ssbKeys.generate(),
       seeds: [alice.getAddress()]
     })

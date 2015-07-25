@@ -3,11 +3,10 @@ var tape      = require('tape')
 var path      = require('path')
 var toPull    = require('stream-to-pull-stream')
 var pull      = require('pull-stream')
-var u         = require('./util')
 var cont      = require('cont')
 var Hasher    = require('multiblob/util').createHash
-var createClient = require('../client')
 var ssbKeys   = require('ssb-keys')
+var createClient = require('../client')
 
 // create 3 servers
 // give them all pub servers (on localhost)
@@ -17,6 +16,10 @@ var blobs     = require('../plugins/blobs')
 var friends   = require('../plugins/friends')
 var replicate = require('../plugins/replicate')
 
+var createSbot = require('../core')
+  .use(friends).use(gossip)
+  .use(replicate).use(blobs).use(require('../plugins/logging'))
+
 function read (filename) {
   return toPull.source(fs.createReadStream(filename))
 }
@@ -24,18 +27,17 @@ function read (filename) {
 var alg = 'sha256'
 
 tape('avoid flooding a peer with blob requests', function (t) {
-  var sbotA = u.createDB('test-blobs-alice3', {
-      port: 45451, host: 'localhost', timeout: 1000,
-    }).use(gossip).use(friends).use(replicate).use(blobs)
 
-  var alice = sbotA.feed
+  var alice = createSbot({
+      temp: 'test-blobs-alice3', timeout: 1000,
+      keys: ssbKeys.generate()
+    })
 
-  var sbotB = u.createDB('test-blobs-bob3', {
-      port: 45452, host: 'localhost', timeout: 1000,
-      seeds: [{port: 45451, host: 'localhost', key: sbotA.feed.keys.public}]
-    }).use(gossip).use(friends).use(replicate).use(blobs)
-
-  var bob = sbotB.feed
+  var bob = createSbot({
+      temp: 'test-blobs-bob3', timeout: 1000,
+      seeds: [alice.getAddress()],
+      keys: ssbKeys.generate()
+    })
 
   var hasher = Hasher(alg)
 
@@ -48,9 +50,9 @@ tape('avoid flooding a peer with blob requests', function (t) {
       console.log('WANT:', hash)
 
       cont.para([
-        alice.add({type: 'post', text: 'this file', js: {ext: hash}}),
-        alice.add({type: 'contact', following: true, contact: { feed: bob.id }}),
-        bob.add({type: 'contact', following: true, contact: {feed: alice.id}})
+        alice.publish({type: 'post', text: 'this file', js: {ext: hash}}),
+        alice.publish({type: 'contact', following: true, contact: { feed: bob.id }}),
+        bob.publish({type: 'contact', following: true, contact: {feed: alice.id}})
       ])(function (err, data) {
         if(err) throw err
       })
@@ -58,20 +60,16 @@ tape('avoid flooding a peer with blob requests', function (t) {
 
       t.plan(1)
 
-      sbotA.on('blobs:has', function (h) {
+      var has = 0
+
+      alice.on('blobs:has', function (h) {
         console.log('HAS', h)
         t.deepEqual(h, [hash])
-      })
 
-      sbotB.once('rpc:connect', function (rpc) {
-        console.log('rpc:connect')
-        rpc.on('closed', function () {
-          console.log('CLOSE???')
-          rpc.close()
-          sbotA.close()
-          sbotB.close()
+        if(has++==0) {
+          alice.close(true); bob.close(true)
           t.end()
-        })
+        }
       })
     })
   )
@@ -79,22 +77,20 @@ tape('avoid flooding a peer with blob requests', function (t) {
 
 tape('emit "has" event to let peer know you have blob now', function (t) {
 
-  var sbotA = u.createDB('test-blobs-alice5', {
-      port: 45455, host: 'localhost', timeout: 1000,
-    }).use(gossip).use(friends).use(replicate).use(blobs)
+  var alice = createSbot({
+      temp: 'test-blobs-alice5', timeout: 1000,
+      keys: ssbKeys.generate()
+    })
 
-  var alice = sbotA.feed
-
-  var sbotB = u.createDB('test-blobs-bob5', {
-      port: 45456, host: 'localhost', timeout: 1000,
-      seeds: [{port: 45455, host: 'localhost', key: sbotA.feed.keys.public}]
-    }).use(gossip).use(friends).use(replicate).use(blobs)
-
-  var bob = sbotB.feed
+  var bob = createSbot({
+      temp: 'test-blobs-bob5', timeout: 1000,
+      seeds: [alice.getAddress()],
+      keys: ssbKeys.generate()
+    })
 
   var hasher = Hasher(alg)
 
-  sbotA.on('blobs:has', function (r) {
+  alice.on('blobs:has', function (r) {
     console.log('REQUEST', r)
   })
 
@@ -107,9 +103,9 @@ tape('emit "has" event to let peer know you have blob now', function (t) {
       console.log('WANT:', hash)
 
       cont.para([
-        alice.add({type: 'post', text: 'this file', js: {ext: hash}}),
-        alice.add({type: 'contact', following: true, contact: { feed: bob.id }}),
-        bob.add({type: 'contact', following: true, contact: {feed: alice.id}})
+        alice.publish({type: 'post', text: 'this file', js: {ext: hash}}),
+        alice.publish({type: 'contact', following: true, contact: { feed: bob.id }}),
+        bob.publish({type: 'contact', following: true, contact: {feed: alice.id}})
       ])(function (err, data) {
         if(err) throw err
       })
@@ -117,23 +113,22 @@ tape('emit "has" event to let peer know you have blob now', function (t) {
 
       t.plan(2)
 
-      sbotB.on('blobs:got', function (h) {
+      bob.on('blobs:got', function (h) {
         console.log('BLOBS GOT', h)
         t.equal(h, hash)
-        sbotA.close()
-        sbotB.close()
+        alice.close(); bob.close()
         t.end()
       })
 
       //wait for bob to request the hash
       //then add that file.
-      sbotA.on('blobs:has', function (h) {
+      alice.on('blobs:has', function (h) {
         console.log('BLOBS HAS', h)
         t.deepEqual(h, [hash])
 
         pull(
           read(__filename),
-          sbotA.blobs.add(null, function (err, hash) {
+          bob.blobs.add(null, function (err, hash) {
             //have now added the blob to 
           })
         )
@@ -143,31 +138,25 @@ tape('emit "has" event to let peer know you have blob now', function (t) {
 
   //this test should only require one connection.
   var n = 0
-  sbotB.on('rpc:connect', function (rpc) {
-    console.log('CONNECTED', n)
+  bob.on('rpc:connect', function (rpc) {
     if(++n > 1) throw new Error('connected twice')
   })
 })
 
 tape('request missing blobs again after reconnect', function (t) {
-  var sbotA = u.createDB('test-blobs-alice4', {
-      port: 45453, host: 'localhost', timeout: 1000,
-    }).use(gossip).use(friends).use(replicate).use(blobs)
 
-  var alice = sbotA.feed
+  var alice = createSbot({
+      temp: 'test-blobs-alice4', timeout: 2000,
+      keys: ssbKeys.generate()
+    })
 
-  var sbotB = u.createDB('test-blobs-bob4', {
-      port: 45454, host: 'localhost', timeout: 1000,
-      seeds: [{port: 45453, host: 'localhost', key: sbotA.feed.keys.public}]
-    }).use(gossip).use(friends).use(replicate).use(blobs)
-
-  var bob = sbotB.feed
+  var bob = createSbot({
+      temp: 'test-blobs-bob4', timeout: 2000,
+      seeds: [alice.getAddress()],
+      keys: ssbKeys.generate()
+    })
 
   var hasher = Hasher(alg)
-
-  sbotA.on('blobs:has', function (r) {
-    console.log('REQUEST', r)
-  })
 
   pull(
     read(__filename),
@@ -175,36 +164,33 @@ tape('request missing blobs again after reconnect', function (t) {
     pull.drain(null, function (err) {
 
       var hash = hasher.digest
-      console.log('WANT:', hash)
 
       cont.para([
-        alice.add({type: 'post', text: 'this file', js: {ext: hash}}),
-        alice.add({type: 'contact', following: true, contact: { feed: bob.id }}),
-        bob.add({type: 'contact', following: true, contact: {feed: alice.id}})
+        alice.publish({type: 'post', text: 'this file', js: {ext: hash}}),
+        alice.publish({type: 'contact', following: true, contact: { feed: bob.id }}),
+        bob.publish({type: 'contact', following: true, contact: {feed: alice.id}})
       ])(function (err, data) {
         if(err) throw err
       })
       // bob should not request `hash` more than once.
 
-      t.plan(2)
+      var has = 0, connects = 0
 
-      sbotA.on('blobs:has', function (h) {
+      alice.on('blobs:has', function (h) {
         console.log('HAS', h)
         t.deepEqual(h, [hash])
+
+        if(has++ == 1) {
+          t.equal(has, connects)
+          alice.close(true); bob.close(true)
+          t.end()
+        }
       })
 
-      sbotB.once('rpc:connect', function (rpc) {
-        console.log('rpc:connect - 1')
-        sbotB.once('rpc:connect', function (rpc) {
-          console.log('rpc:connect - 2')
-          rpc.on('closed', function () {
-            console.log('CLOSE - request missing blobs')
-            sbotA.close()
-            sbotB.close()
-            t.end()
-          })
-        })
+      bob.on('rpc:connect', function () {
+        connects ++
       })
+
     })
   )
 })
