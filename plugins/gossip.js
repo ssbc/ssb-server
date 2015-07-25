@@ -194,7 +194,7 @@ module.exports = {
       }, delay)
     })()
 
-    server.once('closed', function () { clearTimeout(sched) })
+    server.once('close', function () { clearTimeout(sched) })
 
     var count = 0
 
