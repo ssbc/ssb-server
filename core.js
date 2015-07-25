@@ -64,6 +64,9 @@ var SSB = {
       mkdirp.sync(path.join(opts.path, 'db'))
     }
 
+    if(!opts.keys)
+      opts.keys = ssbKeys.generate('ed25519', opts.seed && new Buffer(opts.seed, 'base64'))
+
     if(!opts.path)
       throw new Error('opts.path *must* be provided, or use opts.temp=sname to create a test instance')
 
@@ -74,6 +77,10 @@ var SSB = {
       publish                  : feed.add,
       add                      : ssb.add,
       get                      : ssb.get,
+
+      pre                      : ssb.pre,
+      post                     : ssb.post,
+
       getPublicKey             : ssb.getPublicKey,
       getLatest                : ssb.getLatest,
       relatedMessages          : ssb.relatedMessages,
