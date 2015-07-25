@@ -10,7 +10,7 @@ var toAddr    = require('../lib/util').toAddress
 // give them all pub servers (on localhost)
 // and get them to follow each other...
 
-var createSbot = require('../core')
+var createSbot = require('../')
   .use(require('../plugins/friends'))
   .use(require('../plugins/replicate'))
   .use(require('../plugins/gossip'))

@@ -19,7 +19,7 @@ function read (filename) {
   return toPull.source(fs.createReadStream(filename))
 }
 
-var createSbot = require('../core')
+var createSbot = require('../')
   .use(require('../plugins/blobs'))
 
 tape('a client can request a blob', function (t) {

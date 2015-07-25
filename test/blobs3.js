@@ -18,7 +18,7 @@ function read (filename) {
   return toPull.source(fs.createReadStream(filename))
 }
 
-var createSbot = require('../core')
+var createSbot = require('../')
   .use(require('../plugins/friends'))
   .use(require('../plugins/gossip'))
   .use(require('../plugins/replicate'))

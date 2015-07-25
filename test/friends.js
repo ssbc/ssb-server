@@ -7,7 +7,7 @@ var tape    = require('tape')
 // add some of friend edges (follow, flag)
 // make sure the friends plugin analyzes correctly
 
-var createSbot = require('../core')
+var createSbot = require('../')
   .use(require('../plugins/friends'))
 
 tape('construct and analyze graph', function (t) {

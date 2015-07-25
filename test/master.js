@@ -7,7 +7,7 @@ var alice = ssbKeys.generate()
 var bob   = ssbKeys.generate()
 var carol = ssbKeys.generate()
 
-var createSbot = require('../core')
+var createSbot = require('../')
   .use(require('../plugins/master'))
 
 var aliceDb = createSbot({

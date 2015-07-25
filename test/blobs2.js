@@ -16,7 +16,7 @@ var blobs     = require('../plugins/blobs')
 var friends   = require('../plugins/friends')
 var replicate = require('../plugins/replicate')
 
-var createSbot = require('../core')
+var createSbot = require('../')
   .use(friends).use(gossip)
   .use(replicate).use(blobs).use(require('../plugins/logging'))
 

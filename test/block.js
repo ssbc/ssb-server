@@ -3,7 +3,7 @@ var tape = require('tape')
 var pull = require('pull-stream')
 var ssbKeys = require('ssb-keys')
 
-var createSbot = require('../core')
+var createSbot = require('../')
   .use(require('../plugins/friends'))
   .use(require('../plugins/block'))
   .use(require('../plugins/replicate'))

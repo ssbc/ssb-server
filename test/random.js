@@ -15,7 +15,7 @@ var s = '\r', M = 50
   return s
 }
 
-var createSbot = require('../core')
+var createSbot = require('../')
   .use(require('../plugins/friends'))
   .use(require('../plugins/replicate'))
   .use(require('../plugins/gossip'))

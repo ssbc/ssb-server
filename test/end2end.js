@@ -4,7 +4,7 @@ var ssbKeys = require('ssb-keys')
 var createClient = require('../client')
 var util = require('../lib/util')
 
-var createSbot = require('../core')
+var createSbot = require('../')
   .use(require('../plugins/master'))
 
 var alice = ssbKeys.generate()
