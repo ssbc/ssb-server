@@ -1,5 +1,5 @@
 
-var Illuminati = require('illuminati')
+var SecretStack = require('secret-stack')
 var create     = require('secure-scuttlebutt/create')
 var ssbKeys    = require('ssb-keys')
 var path       = require('path')
@@ -98,7 +98,7 @@ var SSB = {
   }
 }
 
-module.exports = Illuminati({
+module.exports = SecretStack({
   appKey: require('./lib/ssb-cap')
 })
 .use(SSB)
