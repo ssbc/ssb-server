@@ -1,8 +1,6 @@
 var tape = require('tape')
 var pull = require('pull-stream')
 var ssbKeys = require('ssb-keys')
-var createClient = require('../client')
-var util = require('../lib/util')
 
 var createSbot = require('../')
   .use(require('../plugins/master'))

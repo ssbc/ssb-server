@@ -1,43 +1,42 @@
 var tape = require('tape')
 var util = require('../lib/util')
 var ssbKeys = require('ssb-keys')
-var createClient = require('../client')
 
-var alice = ssbKeys.generate()
-var bob   = ssbKeys.generate()
-var carol = ssbKeys.generate()
+var aliceKeys = ssbKeys.generate()
+var bobKeys   = ssbKeys.generate()
+var carolKeys = ssbKeys.generate()
 
 var createSbot = require('../')
   .use(require('../plugins/master'))
 
-var aliceDb = createSbot({
+var alice = createSbot({
   port: 45451, timeout: 2001,
   temp: 'master',
   host: 'localhost',
-  master: bob.id,
-  keys: alice
+  master: bobKeys.id,
+  keys: aliceKeys
 })
 
 tape('connect remote master', function (t) {
 
-  t.equal(aliceDb.getAddress(), 'localhost:45451:'+aliceDb.id)
+  t.equal(alice.getAddress(), 'localhost:45451:'+alice.id)
 
   t.deepEqual(
-    util.parseAddress(aliceDb.getAddress()), {
+    util.parseAddress(alice.getAddress()), {
     host: 'localhost',
     port: 45451,
-    key: aliceDb.id
+    key: alice.id
   })
 
   t.end()
 })
 
 tape('connect remote master', function (t) {
-  var client = createClient(bob)
-  client({port: 45451, key: aliceDb.id}, function (err, rpc) {
+  createSbot.createClient({keys: bobKeys})
+  (alice.getAddress(), function (err, rpc) {
     if(err) throw err
     rpc.publish({
-      type: 'msg', value: 'written by bob', from: bob.id
+      type: 'msg', value: 'written by bob', from: bobKeys.id
     }, function (err) {
       if(err) throw err
       t.end()
@@ -46,14 +45,14 @@ tape('connect remote master', function (t) {
 })
 
 tape('non-master cannot use same methods', function (t) {
-  var client = createClient(carol)
-  client({port: 45451, key: aliceDb.id}, function (err, rpc) {
+  createSbot.createClient({keys: carolKeys})
+  (alice.getAddress(), function (err, rpc) {
     if(err) throw err
     rpc.publish({
-      type: 'msg', value: 'written by ca', from: bob.id
+      type: 'msg', value: 'written by ca', from: bobKeys.id
     }, function (err) {
       t.ok(err)
-      aliceDb.close(true)
+      alice.close(true)
       t.end()
     })
   })

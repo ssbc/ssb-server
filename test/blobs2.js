@@ -6,7 +6,6 @@ var pull      = require('pull-stream')
 var cont      = require('cont')
 var Hasher    = require('multiblob/util').createHash
 var ssbKeys   = require('ssb-keys')
-var createClient = require('../client')
 
 // create 3 servers
 // give them all pub servers (on localhost)

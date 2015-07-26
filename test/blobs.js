@@ -4,7 +4,6 @@ var path      = require('path')
 var toPull    = require('stream-to-pull-stream')
 var pull      = require('pull-stream')
 var cont      = require('cont')
-var createClient = require('../client')
 var ssbKeys   = require('ssb-keys')
 
 // create 3 servers
@@ -35,8 +34,8 @@ tape('a client can request a blob', function (t) {
     read(path.join(__filename)),
     sbotA.blobs.add(function (err, hash) {
       if(err) throw err
-      console.log(sbotA.getAddress())
-      createClient(bob, sbotA.getManifest())
+
+      createSbot.createClient({keys: bob})
       (sbotA.getAddress(), function (err, rpc) {
         if(err) throw err
         rpc.blobs.has(hash, function (err) {
