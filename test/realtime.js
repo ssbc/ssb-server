@@ -46,7 +46,7 @@ tape('replicate between 3 peers', function (t) {
       }),
       pull.drain()
     )
-    var l = 11
+    var l = 12
     var int = setInterval(function () {
       if(!--l) {
         clearInterval(int)
