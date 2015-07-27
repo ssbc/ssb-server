@@ -18,13 +18,14 @@ exports.manifest = {
   all  : 'async',
   hops : 'async',
   createFriendStream: 'source',
+  get  : 'sync',
 }
 
 exports.init = function (sbot) {
 
   var graphs = {
     follow: new Graphmitter(),
-    trust: new Graphmitter()
+    flag: new Graphmitter()
   }
   var config = sbot.config
 
@@ -51,18 +52,22 @@ exports.init = function (sbot) {
             graphs.follow.del(msg.value.author, link.feed)
 
         }
-        if ('trust' in c) {
-          var trust = c.trust|0
-          if (trust !== 0)
-            graphs.trust.edge(msg.value.author, link.feed, (+trust > 0) ? 1 : -1)
+        if ('flagged' in c) {
+          if (c.flagged)
+            graphs.flag.edge(msg.value.author, link.feed, c.flagged)
           else
-            graphs.trust.del(msg.value.author, link.feed)
+            graphs.flag.del(msg.value.author, link.feed)
         }
       })
     }
   }))
 
   return {
+    get: function (opts) {
+      var g = graphs[opts.graph || 'follow']
+      if(!g) throw new Error('opts.graph must be provided')
+      return g.get(opts.source, opts.dest)
+    },
     all: function (graph, cb) {
       if (typeof graph == 'function') {
         cb = graph

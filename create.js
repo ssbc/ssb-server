@@ -26,6 +26,7 @@ module.exports = function (config, cb) {
       .use(require('./plugins/blobs'))
       .use(require('./plugins/invite'))
       .use(require('./plugins/friends'))
+      .use(require('./plugins/block'))
 
     if (config.local)
       sbot.use(require('./plugins/local'))

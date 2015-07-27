@@ -49,8 +49,7 @@ module.exports = function (keys, manf) {
       createClientStream(publicKey, function (err, secure) {
         if(err) return cb(err)
 
-        var rpc = peerApi.clientApi(manf, {}, {})
-        .permissions({allow: ['emit'], deny: null})
+        var rpc = peerApi.clientApi(manf, {}, {allow: ['emit'], deny: null})
         rpc.id = address.key
         rpc.address = address
 
