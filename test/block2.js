@@ -22,8 +22,8 @@ tape('alice blocks bob while he is connected, she should disconnect him', functi
 
   //in the beginning alice and bob follow each other
   cont.para([
-    alice.publish('contact', {contact: {feed: bob.id},   following: true}),
-    bob  .publish('contact', {contact: {feed: alice.id}, following: true})
+    alice.publish('contact', {contact: bob.id,   following: true}),
+    bob  .publish('contact', {contact: alice.id, following: true})
   ]) (function (err) {
     if(err) throw err
 
@@ -49,10 +49,10 @@ tape('alice blocks bob while he is connected, she should disconnect him', functi
       once = true
       //should be the alice's follow(bob) message.
 
-      t.equal(op.value.content.contact.feed, bob.id)
+      t.equal(op.value.content.contact, bob.id)
       alice.publish({
         type: 'contact',
-        contact: {feed: bob.id},
+        contact: bob.id,
         flagged: true
       })
       (function (err) { if(err) throw err })

@@ -37,13 +37,25 @@ var carol = createSbot({
     keys: ssbKeys.generate()
   })
 
+function follow(id) {
+  return {
+    type: 'contact', contact: id, following: true
+  }
+}
+function unfollow(id) {
+  return {
+    type: 'contact', contact: id, flagged: true
+  }
+}
+
+
 tape('alice blocks bob while he is connected, she should disconnect him', function (t) {
 
   //in the beginning alice and bob follow each other
   cont.para([
-    alice.publish({type: 'contact', contact: {feed: bob.id},   following: true}),
-    bob  .publish({type: 'contact', contact: {feed: alice.id}, following: true}),
-    carol.publish({type: 'contact', contact: {feed: alice.id}, following: true})
+    alice.publish(follow(bob.id)),
+    bob  .publish(follow(alice.id)),
+    carol.publish(follow(alice.id))
   ]) (function (err) {
     if(err) throw err
 
@@ -72,12 +84,8 @@ tape('alice blocks bob while he is connected, she should disconnect him', functi
       //should be the alice's follow(bob) message.
 
       t.equal(op.value.author, alice.id)
-      t.equal(op.value.content.contact.feed, bob.id)
-      alice.publish({
-        type: 'contact',
-        contact: {feed: bob.id},
-        flagged: true
-      })
+      t.equal(op.value.content.contact, bob.id)
+      alice.publish(unfollow(bob.id))
       (function (err) { if(err) throw err })
     })
   })

@@ -37,9 +37,9 @@ tape('alice blocks bob, and bob cannot connect to alice', function (t) {
 
   //in the beginning alice and bob follow each other
   cont.para([
-    cont(alice.publish)({type: 'contact', contact: {feed: bob.id},   following: true}),
-    cont(bob  .publish)({type: 'contact', contact: {feed: alice.id}, following: true}),
-    cont(carol.publish)({type: 'contact', contact: {feed: alice.id}, following: true})
+    cont(alice.publish)({type: 'contact', contact: bob.id,   following: true}),
+    cont(bob  .publish)({type: 'contact', contact: alice.id, following: true}),
+    cont(carol.publish)({type: 'contact', contact: alice.id, following: true})
   ]) (function (err) {
     if(err) throw err
 
@@ -57,14 +57,14 @@ tape('alice blocks bob, and bob cannot connect to alice', function (t) {
     var bobCancel = bob.post(function (op) {
       //should be the alice's follow(bob) message.
       t.equal(op.value.author, alice.id)
-      t.equal(op.value.content.contact.feed, bob.id)
+      t.equal(op.value.content.contact, bob.id)
       next()
     })
 
     var aliceCancel = alice.post(function (op) {
       //should be the bob's follow(alice) message.
       t.equal(op.value.author, bob.id)
-      t.equal(op.value.content.contact.feed, alice.id)
+      t.equal(op.value.content.contact, alice.id)
       next()
     })
 
@@ -78,7 +78,7 @@ tape('alice blocks bob, and bob cannot connect to alice', function (t) {
         })
         alice.publish({
           type: 'contact',
-          contact: {feed: bob.id},
+          contact: bob.id,
           flagged: true
         })
         (function (err) {
@@ -90,7 +90,6 @@ tape('alice blocks bob, and bob cannot connect to alice', function (t) {
             alice.links({
               source: alice.id,
               dest: bob.id,
-              type: 'feed',
               rel: 'contact',
               values: true
             }),
