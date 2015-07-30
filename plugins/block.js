@@ -49,7 +49,7 @@ exports.init = function (sbot) {
           if(msg.content.type !== 'contact') return true
           return !(
             msg.content.flagged &&
-            msg.content.contact.feed === id
+            msg.content.contact === id
           )
         })
       )
