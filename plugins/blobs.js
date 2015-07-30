@@ -7,7 +7,7 @@ var Blobs = require('multiblob')
 var path = require('path')
 var pull = require('pull-stream')
 var toPull = require('stream-to-pull-stream')
-var isHash = require('ssb-ref').isHash
+var isBlob = require('ssb-ref').isBlobId
 var multicb = require('multicb')
 var Notify = require('pull-notify')
 
@@ -227,11 +227,11 @@ module.exports = {
 
     // monitor the feed for new links to blobs
     pull(
-      sbot.links({type: 'ext', live: true}),
+      sbot.links({dest: '&', live: true}),
 
       pull.drain(function (data) {
         var hash = data.dest
-        if(isHash(hash))
+        if(isBlob(hash))
           // do we have the referenced blob yet?
           blobs.has(hash, function (_, has) {
             if(!has) { // no...
@@ -347,12 +347,12 @@ module.exports = {
       pull(
         remotes[id].blobs.get(f.id),
         //TODO: error if the object is longer than we expected.
-        blobs.add(f.id, function (err, hash) {
+        blobs.add(desigil(f.id), function (err, hash) {
           if(err) {
             f.state = 'ready'
             console.error(err.stack)
           }
-          else wantList.got(hash)
+          else wantList.got(resigil(hash))
           done()
         })
       )
@@ -360,19 +360,27 @@ module.exports = {
 
     sbot.on('close', download.abort)
 
+    function desigil (hash) {
+      return isBlob(hash) ? hash.substring(1) : hash
+    }
+
+    function resigil (hash) {
+      return '&' + hash
+    }
+
     return {
       get: function (hash) {
-        return blobs.get(hash)
+        return blobs.get(desigil(hash))
       },
 
       has: function (hash, cb) {
         sbot.emit('blobs:has', hash)
-        blobs.has(hash, cb)
+        blobs.has(desigil(hash), cb)
       },
 
       size: function (hash, cb) {
         sbot.emit('blobs:size', hash)
-        blobs.size(hash, cb)
+        blobs.size(desigil(hash), cb)
       },
 
       add: function (hash, cb) {
@@ -381,16 +389,16 @@ module.exports = {
         return pull(
           blobs.add(function (err, hash) {
             if(err) console.error(err.stack)
-            else wantList.got(hash)
+            else wantList.got(resigil(hash))
             // sink cbs are not exposed over rpc
             // so this is only available when using this api locally.
-            if(cb) cb(err, hash)
+            if(cb) cb(err, resigil(hash))
           })
         )
       },
 
       ls: function () {
-        return blobs.ls()
+        return pull(blobs.ls(), pull.map(resigil))
       },
       // request to retrieve a blob,
       // calls back when that file is available.
@@ -401,10 +409,10 @@ module.exports = {
           opts = null
         }
         var nowait = (opts && opts.nowait)
-        if(!isHash(hash)) return cb(new Error('not a hash:' + hash))
+        if(!isBlob(hash)) return cb(new Error('not a hash:' + hash))
 
         sbot.emit('blobs:wants', hash)
-        blobs.has(hash, function (_, has) {
+        blobs.has(desigil(hash), function (_, has) {
           if (has) return cb(null, true)
           
           // update queue
