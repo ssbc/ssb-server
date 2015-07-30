@@ -31,7 +31,7 @@ tape('test invite api', function (t) {
     rpc.invite.create(1, function (err, invite) {
       if(err) throw explain(err, 'cannot create invite code')
 
-      var parts = invite.split('@')
+      var parts = invite.split('~')
       console.log(parts)
       createSbot.createClient({seed: parts[1]})
       (parts[0], function (err, rpc2) {
@@ -43,7 +43,7 @@ tape('test invite api', function (t) {
             if(err) throw explain(err, 'bob cannot use invite code')
 
           pull(
-            rpc.links({dest: bob.id, rel: 'contact', type: 'feed', keys: false}),
+            rpc.links({dest: bob.id, rel: 'contact', source: '@', keys: false}),
             pull.collect(function (err, ary) {
               if(err) throw err
 
