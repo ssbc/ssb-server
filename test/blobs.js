@@ -46,7 +46,7 @@ tape('a client can request a blob', function (t) {
               if(err) throw err
               var data = Buffer.concat(ary)
               sbotA.close()
-              t.equal(ssbKeys.hash(data), hash)
+              t.equal('&'+ssbKeys.hash(data), hash)
               t.end()
             })
           )
@@ -99,7 +99,6 @@ tape('replicate blobs between 2 peers - explicit want request', function (t) {
 
 })
 
-
 tape('replicate published blobs between 2 peers', function (t) {
   createSbot.use(friends).use(replicate).use(gossip)
 
@@ -119,9 +118,9 @@ tape('replicate published blobs between 2 peers', function (t) {
     alice.blobs.add(null, function (err, hash) {
       if(err) throw err
       cont.para([
-        alice.publish({type: 'post', text: 'this file', js: {ext: hash}}),
-        alice.publish({type: 'contact', following: true, contact: { feed: bob.id }}),
-        bob.publish({type: 'contact', following: true, contact: {feed: alice.id}})
+        alice.publish({type: 'post', text: 'this file', js: hash}),
+        alice.publish({type: 'contact', following: true, contact: bob.id}),
+        bob.publish({type: 'contact', following: true, contact: alice.id})
       ])(function (err, data) {
         if(err) throw err
         console.log(data)

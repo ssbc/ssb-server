@@ -45,14 +45,13 @@ tape('avoid flooding a peer with blob requests', function (t) {
     hasher,
     pull.drain(null, function (err) {
 
-      var hash = hasher.digest
+      var hash = '&'+hasher.digest
       console.log('WANT:', hash)
 
       cont.para([
-        alice.publish({type: 'post', text: 'this file', js: {ext: hash}}),
-        alice.publish({type: 'contact', following: true, contact: { feed: bob.id }}),
-        bob.publish({type: 'contact', following: true, contact: {feed: alice.id}})
-      ])(function (err, data) {
+        alice.publish({type: 'post', text: 'this file', js: hash}),
+        alice.publish({type: 'contact', following: true, contact: bob.id}),
+        bob.publish({type: 'contact', following: true, contact: alice.id}),      ])(function (err, data) {
         if(err) throw err
       })
       // bob should not request `hash` more than once.
@@ -98,13 +97,13 @@ tape('emit "has" event to let peer know you have blob now', function (t) {
     hasher,
     pull.drain(null, function (err) {
 
-      var hash = hasher.digest
+      var hash = '&'+hasher.digest
       console.log('WANT:', hash)
 
       cont.para([
-        alice.publish({type: 'post', text: 'this file', js: {ext: hash}}),
-        alice.publish({type: 'contact', following: true, contact: { feed: bob.id }}),
-        bob.publish({type: 'contact', following: true, contact: {feed: alice.id}})
+        alice.publish({type: 'post', text: 'this file', js: hash}),
+        alice.publish({type: 'contact', following: true, contact: bob.id}),
+        bob.publish({type: 'contact', following: true, contact: alice.id})
       ])(function (err, data) {
         if(err) throw err
       })
@@ -162,12 +161,12 @@ tape('request missing blobs again after reconnect', function (t) {
     hasher,
     pull.drain(null, function (err) {
 
-      var hash = hasher.digest
+      var hash = '&'+hasher.digest
 
       cont.para([
-        alice.publish({type: 'post', text: 'this file', js: {ext: hash}}),
-        alice.publish({type: 'contact', following: true, contact: { feed: bob.id }}),
-        bob.publish({type: 'contact', following: true, contact: {feed: alice.id}})
+        alice.publish({type: 'post', text: 'this file', js: hash}),
+        alice.publish({type: 'contact', following: true, contact: bob.id}),
+        bob.publish({type: 'contact', following: true, contact: alice.id})
       ])(function (err, data) {
         if(err) throw err
       })
