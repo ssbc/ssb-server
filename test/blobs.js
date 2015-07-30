@@ -36,6 +36,7 @@ tape('a client can request a blob', function (t) {
     sbotA.blobs.add(function (err, hash) {
       if(err) throw err
 
+      console.log('alice.address', sbotA.getAddress())
       createSbot.createClient({keys: bob})
       (sbotA.getAddress(), function (err, rpc) {
         if(err) throw err
