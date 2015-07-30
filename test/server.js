@@ -46,22 +46,14 @@ tape('replicate between 3 peers', function (t) {
     bpub({type: 'pub', address: toAddr(dbB.getAddress())}),
     cpub({type: 'pub', address: toAddr(dbC.getAddress())}),
 
-    apub({type: 'contact',
-      contact: {feed: bob.id}, following: true
-    }),
-    apub({type: 'contact',
-      contact: {feed: carol.id}, following: true
-    }),
+    apub({type: 'contact', contact: bob.id,   following: true}),
+    apub({type: 'contact', contact: carol.id, following: true}),
 
-    bpub({type: 'contact',
-      contact: {feed: alice.id}, following: true
-    }),
-    bpub({type: 'contact', content: {
-      contact: {feed: carol.id}, following: true}
-    }),
+    bpub({type: 'contact', contact: alice.id, following: true}),
+    bpub({type: 'contact', contact: carol.id, following: true}),
 
-    cpub({type: 'contact', contact: {feed: alice.id}, following: true}),
-    cpub({type: 'contact', contact: {feed: bob.id},   following: true})
+    cpub({type: 'contact', contact: alice.id, following: true}),
+    cpub({type: 'contact', contact: bob.id,   following: true})
   ]) (function (err, ary) {
     if(err) throw err
 

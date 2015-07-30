@@ -37,7 +37,7 @@ function generateAnimals (sbot, feed, n, cb) {
       feed.name = name
       feed.add({
         type: 'contact',
-        contact: {feed: feed.id},
+        contact: feed.id,
         name: name, animal: animal
       }, cb)
     }, 10),
@@ -58,7 +58,7 @@ function generateAnimals (sbot, feed, n, cb) {
             var f = a[~~(Math.random()*a.length)]
             me.add({
               type: 'contact',
-              contact: { feed: f.id },
+              contact: f.id,
               following: true,
               name: f.name
             }, cb)
@@ -76,7 +76,7 @@ function generateAnimals (sbot, feed, n, cb) {
             var post = posts[~~(Math.random()*posts.length)]
             me.add({
               type: 'post',
-              repliesTo: {msg: post},
+              repliesTo: post,
               text: me.animal === 'dog' ? 'woof woof' : 'purr',
             }, function (err, msg) {
               cb(null, msg)
@@ -155,7 +155,7 @@ tape('replicate social network for animals', function (t) {
 
       animalFriends.publish({
         type: 'contact',
-        contact: {feed: animalNetwork.id},
+        contact: animalNetwork.id,
         following: true
       }, function (err, msg) {
         if(err) throw err

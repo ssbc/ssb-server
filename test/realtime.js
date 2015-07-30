@@ -28,8 +28,8 @@ tape('replicate between 3 peers', function (t) {
     })
 
   cont.para([
-    alice.publish({type: 'contact', contact: {feed: bob.id}, following: true}),
-    bob.publish({type: 'contact', contact: {feed: alice.id}, following: true})
+    alice.publish({type: 'contact', contact: bob.id, following: true}),
+    bob.publish({type: 'contact', contact: alice.id, following: true})
   ])(function (err) {
     if(err) throw err
 

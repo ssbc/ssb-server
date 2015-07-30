@@ -30,7 +30,7 @@ tape('construct and analyze graph', function (t) {
     cont(schemas.addContact)(bob, alice.id, { following: true }),
     cont(schemas.addContact)(bob, carol.id, { following: false, flagged: true }),
     cont(schemas.addContact)(carol, alice.id, { following: true })
-  ]) (function (err) {
+  ]) (function (err, results) {
     if(err) throw err
 
     cont.para([
@@ -54,6 +54,7 @@ tape('construct and analyze graph', function (t) {
       aliasMap[alice.id] = 'alice'
       aliasMap[bob.id]   = 'bob'
       aliasMap[carol.id] = 'carol'
+
       a = toAliases(aliasMap)
 
       results = results.map(a)
