@@ -42,6 +42,7 @@ module.exports = {
       fn(pub, function (err, auth) {
         if(err || auth) return cb(err, auth)
         codesDB.get(pub, function (_, code) {
+          console.log(pub, code, _)
           return cb(null, code && code.permissions)
         })
       })
@@ -70,13 +71,11 @@ module.exports = {
 
         var owner = server.id
         codesDB.put(keyCap.id,  {
-          public: keyCap.public, total: +n, used: 0,
-                              //TODO: kill "emit"
-                              //(need to figure out what its used for)
-          permissions: {allow: ['emit', 'invite.use'], deny: null}
+          id: keyCap.id, total: +n, used: 0,
+          permissions: {allow: ['invite.use'], deny: null}
         }, function (err) {
           if(err) cb(err)
-          else cb(null, addr + '@' + seed.toString('base64'))
+          else cb(null, addr + '~' + seed.toString('base64'))
         })
 
       },
@@ -115,7 +114,7 @@ module.exports = {
 
               server.publish({
                 type: 'contact',
-                contact: { feed: req.feed },
+                contact: req.feed,
                 following: true,
                 autofollow: true
               }, cb)
@@ -127,7 +126,7 @@ module.exports = {
         return this.accept(invite, cb)
       },
       accept: function (invite, cb) {
-        var parts = invite.split('@')
+        var parts = invite.split('~')
         createClient({seed: parts[1]})
         (parts[0], function (err, rpc) {
           rpc.invite.use({feed: server.id}, function (err, msg) {
@@ -137,7 +136,7 @@ module.exports = {
                 type: 'contact',
                 following: true,
                 autofollow: true,
-                contact: { feed: rpc.id }
+                contact: rpc.id
               }),
               server.publish({
                 type: 'pub',

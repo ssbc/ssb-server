@@ -48,16 +48,16 @@ exports.init = function (sbot, config) {
       mlib.asLinks(c.contact).forEach(function (link) {
         if ('following' in c) {
           if (c.following)
-            graphs.follow.edge(msg.value.author, link.feed, true)
+            graphs.follow.edge(msg.value.author, link.link, true)
           else
-            graphs.follow.del(msg.value.author, link.feed)
+            graphs.follow.del(msg.value.author, link.link)
 
         }
         if ('flagged' in c) {
           if (c.flagged)
-            graphs.flag.edge(msg.value.author, link.feed, c.flagged)
+            graphs.flag.edge(msg.value.author, link.link, c.flagged)
           else
-            graphs.flag.del(msg.value.author, link.feed)
+            graphs.flag.del(msg.value.author, link.link)
         }
       })
     }
