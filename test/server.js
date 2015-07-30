@@ -4,6 +4,8 @@ var deepEqual = require('deep-equal')
 var tape      = require('tape')
 var ssbKeys   = require('ssb-keys')
 
+var u = require('./util')
+
 var toAddr    = require('../lib/util').toAddress
 
 // create 3 servers
@@ -42,18 +44,18 @@ tape('replicate between 3 peers', function (t) {
   var cpub = cont(dbC.publish)
 
   cont.para([
-    apub({type: 'pub', address: toAddr(dbA.getAddress())}),
-    bpub({type: 'pub', address: toAddr(dbB.getAddress())}),
-    cpub({type: 'pub', address: toAddr(dbC.getAddress())}),
+    apub(u.pub(dbA.getAddress())),
+    bpub(u.pub(dbB.getAddress())),
+    cpub(u.pub(dbC.getAddress())),
 
-    apub({type: 'contact', contact: bob.id,   following: true}),
-    apub({type: 'contact', contact: carol.id, following: true}),
+    apub(u.follow(bob.id)),
+    apub(u.follow(carol.id)),
 
-    bpub({type: 'contact', contact: alice.id, following: true}),
-    bpub({type: 'contact', contact: carol.id, following: true}),
+    bpub(u.follow(alice.id)),
+    bpub(u.follow(carol.id)),
 
-    cpub({type: 'contact', contact: alice.id, following: true}),
-    cpub({type: 'contact', contact: bob.id,   following: true})
+    cpub(u.follow(alice.id)),
+    cpub(u.follow(bob.id))
   ]) (function (err, ary) {
     if(err) throw err
 

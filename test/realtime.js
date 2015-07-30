@@ -3,6 +3,7 @@ var cont      = require('cont')
 var deepEqual = require('deep-equal')
 var tape      = require('tape')
 var pull      = require('pull-stream')
+var u         = require('./util')
 
 var ssbKeys = require('ssb-keys')
 
@@ -28,8 +29,8 @@ tape('replicate between 3 peers', function (t) {
     })
 
   cont.para([
-    alice.publish({type: 'contact', contact: bob.id, following: true}),
-    bob.publish({type: 'contact', contact: alice.id, following: true})
+    alice.publish(u.follow(bob.id)),
+    bob.publish(u.follow(alice.id))
   ])(function (err) {
     if(err) throw err
 

@@ -2,6 +2,7 @@ var cont = require('cont')
 var tape = require('tape')
 var pull = require('pull-stream')
 var ssbKeys = require('ssb-keys')
+var u = require('./util')
 
 var createSbot = require('../')
     .use(require('../plugins/friends'))
@@ -22,8 +23,8 @@ tape('alice blocks bob while he is connected, she should disconnect him', functi
 
   //in the beginning alice and bob follow each other
   cont.para([
-    alice.publish('contact', {contact: bob.id,   following: true}),
-    bob  .publish('contact', {contact: alice.id, following: true})
+    alice.publish(u.follow(bob.id)),
+    bob  .publish(u.follow(alice.id))
   ]) (function (err) {
     if(err) throw err
 
@@ -50,11 +51,7 @@ tape('alice blocks bob while he is connected, she should disconnect him', functi
       //should be the alice's follow(bob) message.
 
       t.equal(op.value.content.contact, bob.id)
-      alice.publish({
-        type: 'contact',
-        contact: bob.id,
-        flagged: true
-      })
+      alice.publish(u.block(bob.id))
       (function (err) { if(err) throw err })
     })
 

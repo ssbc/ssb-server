@@ -6,6 +6,7 @@ var pull      = require('pull-stream')
 var cont      = require('cont')
 var Hasher    = require('multiblob/util').createHash
 var ssbKeys   = require('ssb-keys')
+var u         = require('./util')
 
 // create 3 servers
 // give them all pub servers (on localhost)
@@ -51,9 +52,9 @@ tape('tracks requests and failed searches', function (t) {
       console.log('WANT:', hash)
 
       cont.para([
-        alice.publish({type: 'post', text: 'this file', js: hash}),
-        alice.publish({type: 'contact', following: true, contact: bob.id }),
-        bob.publish({type: 'contact', following: true, contact: alice.id})
+        alice.publish(u.file(hash)),
+        alice.publish(u.follow(bob.id)),
+        bob.publish(u.follow(alice.id))
       ])(function (err, data) {
         if(err) throw err
         console.log('msgs added')

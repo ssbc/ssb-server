@@ -7,6 +7,8 @@ var cont      = require('cont')
 var Hasher    = require('multiblob/util').createHash
 var ssbKeys   = require('ssb-keys')
 
+var u         = require('./util')
+
 // create 3 servers
 // give them all pub servers (on localhost)
 // and get them to follow each other...
@@ -49,9 +51,10 @@ tape('avoid flooding a peer with blob requests', function (t) {
       console.log('WANT:', hash)
 
       cont.para([
-        alice.publish({type: 'post', text: 'this file', js: hash}),
-        alice.publish({type: 'contact', following: true, contact: bob.id}),
-        bob.publish({type: 'contact', following: true, contact: alice.id}),      ])(function (err, data) {
+        alice.publish(u.file(hash)),
+        alice.publish(u.follow(bob.id)),
+        bob.publish(u.follow(alice.id))
+      ])(function (err, data) {
         if(err) throw err
       })
       // bob should not request `hash` more than once.
@@ -101,9 +104,9 @@ tape('emit "has" event to let peer know you have blob now', function (t) {
       console.log('WANT:', hash)
 
       cont.para([
-        alice.publish({type: 'post', text: 'this file', js: hash}),
-        alice.publish({type: 'contact', following: true, contact: bob.id}),
-        bob.publish({type: 'contact', following: true, contact: alice.id})
+        alice.publish(u.file(hash)),
+        alice.publish(u.follow(bob.id)),
+        bob.publish(u.follow(alice.id))
       ])(function (err, data) {
         if(err) throw err
       })
@@ -164,9 +167,9 @@ tape('request missing blobs again after reconnect', function (t) {
       var hash = '&'+hasher.digest
 
       cont.para([
-        alice.publish({type: 'post', text: 'this file', js: hash}),
-        alice.publish({type: 'contact', following: true, contact: bob.id}),
-        bob.publish({type: 'contact', following: true, contact: alice.id})
+        alice.publish(u.file(hash)),
+        alice.publish(u.follow(bob.id)),
+        bob.publish(u.follow(alice.id))
       ])(function (err, data) {
         if(err) throw err
       })

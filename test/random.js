@@ -1,6 +1,7 @@
 var pull      = require('pull-stream')
 var paramap   = require('pull-paramap')
 var ssbKeys   = require('ssb-keys')
+var u         = require('./util')
 
 var tape      = require('tape')
 
@@ -35,11 +36,7 @@ function generateAnimals (sbot, feed, n, cb) {
       var name   = animal == 'cat' ? cats.random() : dogs.allRandom()
 
       feed.name = name
-      feed.add({
-        type: 'contact',
-        contact: feed.id,
-        name: name, animal: animal
-      }, cb)
+      feed.add(u.follow(feed.id), cb)
     }, 10),
     pull.drain(null, function (err) {
       if(err) return cb(err)
@@ -56,12 +53,7 @@ function generateAnimals (sbot, feed, n, cb) {
           //one in 20 messages is a random follow
           if(r < 0.3) {
             var f = a[~~(Math.random()*a.length)]
-            me.add({
-              type: 'contact',
-              contact: f.id,
-              following: true,
-              name: f.name
-            }, cb)
+            me.add(u.follow(f.id), cb)
           } else if(r < 0.6) {
             me.add({
               type: 'post',

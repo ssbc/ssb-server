@@ -1,8 +1,7 @@
 var ssbKeys = require('ssb-keys')
-var schemas = require('ssb-msg-schemas')
 var cont    = require('cont')
 var tape    = require('tape')
-
+var u       = require('./util')
 // create 3 feeds
 // add some of friend edges (follow, flag)
 // make sure the friends plugin analyzes correctly
@@ -25,11 +24,18 @@ tape('construct and analyze graph', function (t) {
   var carol = sbot.createFeed()
 
   cont.para([
-    cont(schemas.addContact)(alice, bob.id,   { following: true, flagged: { reason: 'foo' } }),
-    cont(schemas.addContact)(alice, carol.id, { following: true }),
-    cont(schemas.addContact)(bob, alice.id, { following: true }),
-    cont(schemas.addContact)(bob, carol.id, { following: false, flagged: true }),
-    cont(schemas.addContact)(carol, alice.id, { following: true })
+    alice.add({
+      type: 'contact', contact: bob.id,
+      following: true,
+      flagged: { reason: 'foo' }
+    }),
+    alice.add(u.follow(carol.id)),
+    bob.add(u.follow(alice.id)),
+    bob.add({
+      type: 'contact', contact: carol.id,
+      following: false, flagged: true
+    }),
+    carol.add(u.follow(alice.id))
   ]) (function (err, results) {
     if(err) throw err
 
@@ -95,15 +101,26 @@ tape('correctly delete edges', function (t) {
   var carol = sbot.createFeed()
 
   cont.para([
-    cont(schemas.addContact)(alice, bob.id,   { following: true, flagged: true }),
-    cont(schemas.addContact)(alice, carol.id, { following: true }),
-    cont(schemas.addContact)(bob, alice.id, { following: true }),
-    cont(schemas.addContact)(bob, carol.id, { following: false, flagged: { reason: 'foo' } }),
-    cont(schemas.addContact)(carol, alice.id, { following: true }),
-
-    cont(schemas.addContact)(alice, carol.id, { following: false, flagged: true }),
-    cont(schemas.addContact)(alice, bob.id,   { following: true,  flagged: false }),
-    cont(schemas.addContact)(bob, carol.id, { following: false })
+    alice.add({
+      type:'contact', contact:bob.id,
+      following: true, flagged: true
+    }),
+    alice.add(u.follow(carol.id)),
+    bob.add(u.follow(alice.id)),
+    bob.add({
+      type: 'contact', contact: carol.id,
+      following: false, flagged: { reason: 'foo' }
+    }),
+    carol.add(u.follow(alice.id)),
+    alice.add({
+      type:'contact', contact: carol.id,
+      following: false,  flagged: true
+    }),
+    alice.add({
+      type:'contact', contact: bob.id,
+      following: true,  flagged: false
+    }),
+    bob.add(u.unfollow(carol.id))
   ]) (function () {
 
     cont.para([

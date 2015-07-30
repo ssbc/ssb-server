@@ -5,6 +5,7 @@ var toPull    = require('stream-to-pull-stream')
 var pull      = require('pull-stream')
 var cont      = require('cont')
 var ssbKeys   = require('ssb-keys')
+var u         = require('./util')
 
 // create 3 servers
 // give them all pub servers (on localhost)
@@ -118,9 +119,9 @@ tape('replicate published blobs between 2 peers', function (t) {
     alice.blobs.add(null, function (err, hash) {
       if(err) throw err
       cont.para([
-        alice.publish({type: 'post', text: 'this file', js: hash}),
-        alice.publish({type: 'contact', following: true, contact: bob.id}),
-        bob.publish({type: 'contact', following: true, contact: alice.id})
+        alice.publish(u.file(hash)),
+        alice.publish(u.follow(bob.id)),
+        bob.publish(u.follow(alice.id))
       ])(function (err, data) {
         if(err) throw err
         console.log(data)

@@ -1,6 +1,7 @@
 var cont = require('cont')
 var tape = require('tape')
 var pull = require('pull-stream')
+var u    = require('./util')
 
 var replicate = require('../plugins/replicate')
 var friends   = require('../plugins/friends')
@@ -37,25 +38,15 @@ var carol = createSbot({
     keys: ssbKeys.generate()
   })
 
-function follow(id) {
-  return {
-    type: 'contact', contact: id, following: true
-  }
-}
-function unfollow(id) {
-  return {
-    type: 'contact', contact: id, flagged: true
-  }
-}
 
 
 tape('alice blocks bob while he is connected, she should disconnect him', function (t) {
 
   //in the beginning alice and bob follow each other
   cont.para([
-    alice.publish(follow(bob.id)),
-    bob  .publish(follow(alice.id)),
-    carol.publish(follow(alice.id))
+    alice.publish(u.follow(bob.id)),
+    bob  .publish(u.follow(alice.id)),
+    carol.publish(u.follow(alice.id))
   ]) (function (err) {
     if(err) throw err
 
@@ -85,16 +76,8 @@ tape('alice blocks bob while he is connected, she should disconnect him', functi
 
       t.equal(op.value.author, alice.id)
       t.equal(op.value.content.contact, bob.id)
-      alice.publish(unfollow(bob.id))
+      alice.publish(u.block(bob.id))
       (function (err) { if(err) throw err })
     })
   })
 })
-
-//TODO test that blocks work in realtime. if alice blocks him
-//     when he is already connected to alice's friend.
-
-//tape('cleanup!', function (t) {
-//  alice.close(); bob.close(); carol.close()
-//  t.end()
-//})
