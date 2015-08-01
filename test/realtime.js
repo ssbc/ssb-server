@@ -1,4 +1,3 @@
-
 var cont      = require('cont')
 var deepEqual = require('deep-equal')
 var tape      = require('tape')
@@ -10,20 +9,20 @@ var ssbKeys = require('ssb-keys')
 var createSbot = require('../')
   .use(require('../plugins/friends'))
   .use(require('../plugins/replicate'))
-  .use(require('../plugins/gossip'))
-  .use(require('../plugins/logging'))
+//  .use(require('../plugins/gossip'))
+//  .use(require('../plugins/logging'))
 
 tape('replicate between 3 peers', function (t) {
 
   var bob = createSbot({
       temp: 'test-bob',
-      port: 45452, host: 'localhost',
+//      port: 45452, host: 'localhost',
       keys: ssbKeys.generate()
     })
 
   var alice = createSbot({
       temp: 'test-alice',
-      port: 45453, host: 'localhost',
+  //    port: 45453, host: 'localhost',
       seeds: [bob.getAddress()],
       keys: ssbKeys.generate()
     })
@@ -34,10 +33,16 @@ tape('replicate between 3 peers', function (t) {
   ])(function (err) {
     if(err) throw err
 
+    var rpc
+    alice.connect(bob.getAddress(), function (_, _rpc) {
+      rpc = _rpc
+    })
+
     var ary = []
     pull(
       bob.createHistoryStream({id: alice.id, seq: 0, keys: false, live: true}),
       pull.drain(function (data) {
+        console.log(data)
         ary.push(data);
       })
     )
@@ -51,9 +56,7 @@ tape('replicate between 3 peers', function (t) {
             pull.collect(function (err, _ary) {
               t.equal(_ary.length, 12)
               t.deepEqual(ary,_ary)
-              bob.close(true); alice.close(true)
-
-              t.end()
+              bob.close(true); alice.close(true); t.end()
             })
           )
       }
