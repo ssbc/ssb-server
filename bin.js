@@ -79,16 +79,13 @@ cmd = aliases[cmd] || cmd
 
 if(cmd === 'server') {
   config.keys = keys
-  createSbot(config)
-//  require('./').init(config, function (err, server) {
-//    if(err) throw err
-//
-//    fs.writeFileSync(
-//      manifestFile,
-//      JSON.stringify(server.getManifest(), null, 2)
-//    )
-//
-//  })
+  var server = createSbot(config)
+
+  fs.writeFileSync(
+    manifestFile,
+    JSON.stringify(server.getManifest(), null, 2)
+  )
+
   return
 }
 
@@ -130,9 +127,8 @@ var type = get(manifest, cmd)
 if(!type) return usage()
 var rpc
 
-console.log(keys, {port: config.port, host: config.host, key: keys.public})
 createSbot.createClient({keys: keys})
-  ({port: config.port, host: config.host||'localhost', key: keys.public}, function (err, rpc) {
+  ({port: config.port, host: config.host||'localhost', key: keys.id}, function (err, rpc) {
     if(err) throw err
 
     next1(rpc)
