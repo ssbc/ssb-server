@@ -60,9 +60,11 @@ var SSB = {
       opts.path = path.join(osenv.tmpdir(), name)
       rimraf.sync(opts.path)
 
-      //load/create  secure scuttlebutt.
-      mkdirp.sync(path.join(opts.path, 'db'))
     }
+
+    var dbPath = path.join(opts.path, 'db')
+    //load/create  secure scuttlebutt.
+    mkdirp.sync(dbPath)
 
     if(!opts.keys)
       opts.keys = ssbKeys.generate('ed25519', opts.seed && new Buffer(opts.seed, 'base64'))
