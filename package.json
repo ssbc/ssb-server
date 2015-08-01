@@ -43,7 +43,8 @@
     "ssb-feed": "~2.0.0",
     "ssb-keys": "^4.0.3",
     "ssb-msgs": "~5.0.0",
-    "ssb-ref": "^2.0.0"
+    "ssb-ref": "^2.0.0",
+    "stream-to-pull-stream": "^1.6.2"
   },
   "devDependencies": {
     "cat-names": "~1.0.2",
@@ -54,7 +55,6 @@
     "pull-paramap": "~1.1.1",
     "rimraf": "~2.2.8",
     "ssb-msg-schemas": "~3.2.0",
-    "stream-to-pull-stream": "^1.6.2",
     "tape": "~4.0.0"
   },
   "bin": {
