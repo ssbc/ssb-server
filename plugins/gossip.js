@@ -185,7 +185,8 @@ module.exports = {
     ;(function schedule() {
 
       if(server.closed) return
-      var delay = ~~(config.timeout/2 + Math.random()*config.timeout)
+      var timeout = Math.max(config.timeout||0, 1000)
+      var delay = ~~(timeout/2 + Math.random()*timeout)
       if (init_synclist)
         delay = ~~(Math.random()*1000) // dont wait long to poll, we're still in our initial sync
 
