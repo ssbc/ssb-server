@@ -9,13 +9,8 @@ var Observ = require('observ')
 
 var notify = Notify()
 
-function replicate(server, rpc, cb) {
-    var ssb = server.ssb
-    var feed = server.feed
-    var config = server.config
+function replicate(sbot, config, rpc, cb) {
     var aborter = Abort()
-    var live = !!config.timeout
-
     var sources = many()
     var sent = 0
 
@@ -39,22 +34,22 @@ function replicate(server, rpc, cb) {
     opts.dunbar = opts.dunbar || 150
 
     pull(
-      server.friends.createFriendStream(opts),
+      sbot.friends.createFriendStream(opts),
       aborter,
       pull.through(function (s) {
         to_recv[s] = 0
       }),
-      ssb.createLatestLookupStream(),
+      sbot.createLatestLookupStream(),
       pull.drain(function (upto) {
         to_recv[upto.id] = upto.sequence
         replicated[upto.id] = upto.sequence
         sources.add(rpc.createHistoryStream({
           id: upto.id, seq: upto.sequence + 1,
-          live: live, keys: false
+          live: true, keys: false
         }))
       }, function (err) {
         if(err)
-          server.emit('log:error', ['replication', rep._sessid, 'error', err])
+          sbot.emit('log:error', ['replication', rep._sessid, 'error', err])
         sources.cap()
       })
     )
@@ -85,7 +80,7 @@ function replicate(server, rpc, cb) {
         )
         progress()
       }),
-      ssb.createWriteStream(function (err) {
+      sbot.createWriteStream(function (err) {
         aborter.abort()
         progress ()
         cb(err, replicated)
@@ -100,36 +95,32 @@ module.exports = {
     changes: 'source'
   },
   replicate: replicate,
-  init: function (server) {
-    server.on('rpc:connect', function(rpc) {
-      //do not replicate if we are authorize as server.
-      //if(res.type === 'server') return
-
-      var done = rpc.task()
-      rpc._emit('replicate:start')
-      server.emit('log:info', ['replicate', rpc._sessid, 'start'])
-      server.emit('replicate:start', rpc)
-      notify({ type: 'start', peerid: rpc.id })
-      replicate(server, rpc, function (err, progress) {
-        if(err) {
-          rpc._emit('replicate:fail', err)
-          server.emit('replicate:fail', err)
-          server.emit('log:warning', ['replicate', rpc._sessid, 'error', err])
-          notify({ type: 'fail', peerid: rpc.id, err: err })
-        } else {
-          rpc._emit('replicate:finish', progress)
-          server.emit('log:info', ['replicate', rpc._sessid, 'success', progress])
-          server.emit('replicate:finish', progress)
-          notify({ type: 'finish', peerid: rpc.id, results: progress })
-        }
-        done()
-      })
+  init: function (sbot, config) {
+    sbot.createHistoryStream.hook(function (fn, args) {
+      if(this._emit)
+        this._emit('call:createHistoryStream', args[0])
+      return fn.apply(this, args)
     })
 
-    return {
-      changes: function () {
-        return notify.listen()
+    sbot.on('rpc:connect', function(rpc) {
+
+      sbot.emit('log:info', ['replicate', rpc._sessid, 'start'])
+      sbot.emit('replicate:start', rpc)
+      replicate(sbot, config, rpc, function (err, progress) {
+        if(err) {
+          sbot.emit('replicate:fail', err)
+          sbot.emit('log:warning', ['replicate', rpc._sessid, 'error', err])
+        } else {
+          sbot.emit('log:info', ['replicate', rpc._sessid, 'success', progress])
+          sbot.emit('replicate:finish', progress)
+        }
+      })
+
+      return {
+        changes: function () {
+          return notify.listen()
+        }
       }
-    }
+    })
   }
 }

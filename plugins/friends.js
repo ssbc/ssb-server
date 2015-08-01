@@ -21,13 +21,12 @@ exports.manifest = {
   get  : 'sync',
 }
 
-exports.init = function (sbot) {
+exports.init = function (sbot, config) {
 
   var graphs = {
     follow: new Graphmitter(),
     flag: new Graphmitter()
   }
-  var config = sbot.config
 
   // view processor
   var syncCbs = []
@@ -35,7 +34,9 @@ exports.init = function (sbot) {
     if (syncCbs) syncCbs.push(cb)
     else cb()
   }
-  pull(sbot.ssb.createLogStream({ live: true }), pull.drain(function (msg) {
+
+  pull(sbot.createLogStream({ live: true }), pull.drain(function (msg) {
+
     if (msg.sync) {
       syncCbs.forEach(function (cb) { cb() })
       syncCbs = null
@@ -47,16 +48,16 @@ exports.init = function (sbot) {
       mlib.asLinks(c.contact).forEach(function (link) {
         if ('following' in c) {
           if (c.following)
-            graphs.follow.edge(msg.value.author, link.feed, true)
+            graphs.follow.edge(msg.value.author, link.link, true)
           else
-            graphs.follow.del(msg.value.author, link.feed)
+            graphs.follow.del(msg.value.author, link.link)
 
         }
         if ('flagged' in c) {
           if (c.flagged)
-            graphs.flag.edge(msg.value.author, link.feed, c.flagged)
+            graphs.flag.edge(msg.value.author, link.link, c.flagged)
           else
-            graphs.flag.del(msg.value.author, link.feed)
+            graphs.flag.del(msg.value.author, link.link)
         }
       })
     }
@@ -68,6 +69,7 @@ exports.init = function (sbot) {
       if(!g) throw new Error('opts.graph must be provided')
       return g.get(opts.source, opts.dest)
     },
+
     all: function (graph, cb) {
       if (typeof graph == 'function') {
         cb = graph
@@ -82,7 +84,7 @@ exports.init = function (sbot) {
 
     createFriendStream: function (opts) {
       opts = opts || {}
-      var start = opts.start || sbot.feed.id
+      var start = opts.start || sbot.id
       var graph = graphs[opts.graph || 'follow']
       if(!graph)
         return pull.error(new Error('unknown graph:' + opts.graph))
@@ -125,7 +127,7 @@ exports.init = function (sbot) {
       }
 
       var conf = config.friends || {}
-      opts.start  = opts.start  || sbot.feed.id
+      opts.start  = opts.start  || sbot.id
       opts.dunbar = opts.dunbar || conf.dunbar || 150
       opts.hops   = opts.hops   || conf.hops   || 3
 

@@ -3,48 +3,47 @@ var ssbKeys = require('ssb-keys')
 var tape = require('tape')
 var explain = require('explain-error')
 var pull = require('pull-stream')
-var capClient = require('../cap-client')
+
+var createSbot = require('../')
+  .use(require('../plugins/master'))
+  .use(require('../plugins/invite'))
+  .use(require('../plugins/friends'))
+
 tape('test invite api', function (t) {
 
-  var u = require('./util')
+  var aliceKeys = ssbKeys.generate()
 
-  var sbotA = u.createDB('test-invite-alice', {
-    port: 45451, host: '127.0.0.1',
-    timeout: 200,
-    allowPrivate: true
+  var alice = createSbot({
+    temp: 'test-invite-alice', timeout: 200,
+    allowPrivate: true,
+    keys: aliceKeys
   })
 
-  var alice = sbotA.feed
-  var bob = sbotA.ssb.createFeed() //bob
-
-  var server = sbotA
-    .use(require('../plugins/invite'))
-    .use(require('../plugins/friends'))
+  var bobKeys = ssbKeys.generate()
+  var bob = alice.createFeed(bobKeys) //bob
 
   //request a secret that with particular permissions.
 
-  var manf = server.getManifest()
-  var client = sbot.createClient(alice.keys, manf)
-
-  console.log(alice.keys.public)
-  console.log(ssbKeys.hash(alice.keys.public))
-  client({port: 45451, host: 'localhost', key: alice.keys.public},
-    function (err, aliceC) {
+  createSbot.createClient({keys: aliceKeys})
+  (alice.getAddress(), function (err, rpc) {
     if(err) throw err
 
-    aliceC.invite.create(1, function (err, invite) {
+    rpc.invite.create(1, function (err, invite) {
       if(err) throw explain(err, 'cannot create invite code')
 
-      capClient(invite, manf, function (err, capC) {
+      var parts = invite.split('~')
+      console.log(parts)
+      createSbot.createClient({seed: parts[1]})
+      (parts[0], function (err, rpc2) {
         if(err) throw err
 
-        capC.invite.use({
+        rpc2.invite.use({
           feed: bob.id
         }, function (err, msg) {
             if(err) throw explain(err, 'bob cannot use invite code')
 
           pull(
-            aliceC.links({dest: bob.id, rel: 'contact', type: 'feed', keys: false}),
+            rpc.links({dest: bob.id, rel: 'contact', source: '@', keys: false}),
             pull.collect(function (err, ary) {
               if(err) throw err
 
@@ -56,9 +55,7 @@ tape('test invite api', function (t) {
                 {source: alice.id, dest: bob.id, rel: 'contact'}
               )
 
-              capC.close()
-              aliceC.close()
-              server.close()
+              alice.close(true)
               console.log('done')
               t.end()
 
@@ -72,86 +69,66 @@ tape('test invite api', function (t) {
 
 tape('test invite.accept api', function (t) {
 
-  var u = require('./util')
-
-  var sbotA = u.createDB('test-invite-alice2', {
-    port: 45451, host: '127.0.0.1',
-    timeout: 100,
-    allowPrivate: true
+  var alice = createSbot({
+    temp: 'test-invite-alice2', timeout: 100,
+    allowPrivate: true,
+    keys: ssbKeys.generate()
   })
 
-  var sbotB = u.createDB('test-invite-bob2', {
-    port: 45452, host: '127.0.0.1',
-    timeout: 100,
+  var bob = createSbot({
+    temp: 'test-invite-bob2', timeout: 100,
+    keys: ssbKeys.generate()
   })
-
-  var alice = sbotA.feed
-  var bob = sbotA.ssb.createFeed() //bob
-
-  sbotA
-    .use(require('../plugins/invite'))
-    .use(require('../plugins/friends'))
-
-  sbotB.use(require('../plugins/invite')).use(require('../plugins/friends'))
 
   //request a secret that with particular permissions.
 
-  sbotA.invite.create(1, function (err, invite) {
+  alice.invite.create(1, function (err, invite) {
     if(err) throw err
-    sbotB.invite.accept(invite, function (err) {
+    bob.invite.accept(invite, function (err) {
       if(err) throw err
-      sbotA.friends.hops(sbotA.feed.id, function (err, hops) {
-        console.log(hops)
-        t.equal(hops[sbotB.feed.id], 1)
-        sbotA.close()
-        sbotB.close()
+      alice.friends.hops({
+        source: alice.id, dest: bob.id
+      }, function (err, hops) {
+        t.equal(hops[bob.id], 1, 'alice follows bob')
+        alice.close(true)
+        bob.close(true)
         t.end()
       })
     })
   })
 })
 
-
 tape('test invite.accept doesnt follow if already followed', function (t) {
 
-  var u = require('./util')
-
-  var sbotA = u.createDB('test-invite-alice3', {
-    port: 45451, host: '127.0.0.1',
+  var alice = createSbot({
+    temp: 'test-invite-alice3',
     timeout: 100,
-    allowPrivate: true
+    allowPrivate: true,
+    keys: ssbKeys.generate()
   })
 
-  var sbotB = u.createDB('test-invite-bob3', {
-    port: 45452, host: '127.0.0.1',
+  var bob = createSbot({
+    temp: 'test-invite-bob3',
     timeout: 100,
+    keys: ssbKeys.generate()
   })
-
-  var alice = sbotA.feed
-  var bob = sbotA.ssb.createFeed() //bob
-
-  sbotA
-    .use(require('../plugins/invite'))
-    .use(require('../plugins/friends'))
-
-  sbotB.use(require('../plugins/invite')).use(require('../plugins/friends'))
 
   //request a secret that with particular permissions.
 
-  sbotA.invite.create(2, function (err, invite) {
+  alice.invite.create(2, function (err, invite) {
     if(err) throw err
-    sbotB.invite.accept(invite, function (err) {
+    bob.invite.accept(invite, function (err) {
       if(err) throw err
-      sbotA.friends.hops(sbotA.feed.id, function (err, hops) {
+      alice.friends.hops(alice.id, function (err, hops) {
         console.log(hops)
-        t.equal(hops[sbotB.feed.id], 1)
-        sbotB.invite.accept(invite, function (err) {
+        t.equal(hops[bob.id], 1)
+        bob.invite.accept(invite, function (err) {
           t.ok(err)
-          sbotA.friends.hops(sbotA.feed.id, function (err, hops) {
+          alice.friends.hops(alice.id, function (err, hops) {
             console.log(hops)
-            t.equal(hops[sbotB.feed.id], 1)
-            sbotA.close()
-            sbotB.close()
+            t.equal(hops[bob.id], 1)
+            alice.close()
+            bob.close()
             t.end()
           })
         })

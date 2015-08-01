@@ -5,7 +5,6 @@ var toAddress = require('../lib/util').toAddress
 var cont = require('cont')
 var explain = require('explain-error')
 var ip = require('ip')
-var capClient = require('../cap-client')
 //okay this plugin adds a method
 //invite(seal({code, public})
 
@@ -28,12 +27,27 @@ module.exports = {
     accept: 'async'
   },
   permissions: {
-//    master: {allow: ['create']},
+    master: {allow: ['create']},
     //temp: {allow: ['use']}
   },
-  init: function (server) {
+  init: function (server, config) {
     var codes = {}
-    var codesDB = server.ssb.sublevel('codes')
+    var codesDB = server.sublevel('codes')
+
+    var createClient = this.createClient
+
+    //add an auth hook.
+    server.auth.hook(function (fn, args) {
+      var pub = args[0], cb = args[1]
+      fn(pub, function (err, auth) {
+        if(err || auth) return cb(err, auth)
+        codesDB.get(pub, function (_, code) {
+          console.log(pub, code, _)
+          return cb(null, code && code.permissions)
+        })
+      })
+    })
+
     return {
       create: function (n, cb) {
         if(isFunction(n) || n == null || isNaN(n))
@@ -41,7 +55,7 @@ module.exports = {
 
         var addr = server.getAddress()
         var host = addr.split(':')[0]
-        if(!server.config.allowPrivate && (
+        if(!config.allowPrivate && (
           ip.isPrivate(host) || 'localhost' === host)
         )
           return cb(new Error('Server has no public ip address,'
@@ -55,15 +69,13 @@ module.exports = {
         var seed = crypto.randomBytes(32)
         var keyCap = ssbKeys.generate('ed25519', seed)
 
-        var owner = server.feed.keys.public
+        var owner = server.id
         codesDB.put(keyCap.id,  {
-          public: keyCap.public, total: +n, used: 0,
-                              //TODO: kill "emit"
-                              //(need to figure out what its used for)
-          permissions: {allow: ['emit', 'invite.use'], deny: null}
+          id: keyCap.id, total: +n, used: 0,
+          permissions: {allow: ['invite.use'], deny: null}
         }, function (err) {
           if(err) cb(err)
-          else cb(null, addr + '@' + seed.toString('base64'))
+          else cb(null, addr + '~' + seed.toString('base64'))
         })
 
       },
@@ -75,7 +87,7 @@ module.exports = {
           if(err) return cb(err)
 
           server.friends.all('follow', function(err, follows) {
-            if (follows && follows[server.feed.id] && follows[server.feed.id][req.feed])
+            if (follows && follows[server.id] && follows[server.id][req.feed])
               return cb(new Error('already following'))
 
             // although we already know the current feed
@@ -100,9 +112,9 @@ module.exports = {
             codesDB.put(req.keyId, invite, function (err) {
               server.emit('log:info', ['invite', rpc._sessid, 'use', req])
 
-              server.feed.add({
+              server.publish({
                 type: 'contact',
-                contact: { feed: req.feed },
+                contact: req.feed,
                 following: true,
                 autofollow: true
               }, cb)
@@ -114,17 +126,19 @@ module.exports = {
         return this.accept(invite, cb)
       },
       accept: function (invite, cb) {
-        capClient(invite, server.getManifest(), function (err, rpc) {
-          rpc.invite.use({feed: server.feed.id}, function (err, msg) {
+        var parts = invite.split('~')
+        createClient({seed: parts[1]})
+        (parts[0], function (err, rpc) {
+          rpc.invite.use({feed: server.id}, function (err, msg) {
             if(err) return cb(explain(err, 'invite not accepted'))
             cont.para([
-              server.feed.add({
+              server.publish({
                 type: 'contact',
                 following: true,
                 autofollow: true,
-                contact: { feed: rpc.id }
+                contact: rpc.id
               }),
-              server.feed.add({
+              server.publish({
                 type: 'pub',
                 address: rpc.address,
               })

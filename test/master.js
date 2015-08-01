@@ -1,40 +1,60 @@
 var tape = require('tape')
-var u = require('./util')
-var ssbKeys = require('ssb-keys')
-var createClient = require('../client')
 var util = require('../lib/util')
+var ssbKeys = require('ssb-keys')
+
+var aliceKeys = ssbKeys.generate()
+var bobKeys   = ssbKeys.generate()
+var carolKeys = ssbKeys.generate()
+
+var createSbot = require('../')
+  .use(require('../plugins/master'))
+
+var alice = createSbot({
+  port: 45451, timeout: 2001,
+  temp: 'master',
+  host: 'localhost',
+  master: bobKeys.id,
+  keys: aliceKeys
+})
 
 tape('connect remote master', function (t) {
-  var keys = ssbKeys.generate()
-  var aliceDb = u.createDB('test-alice', {
-      port: 45451, host: 'localhost', timeout: 2001,
-      master: keys.id
-   })
-  var alice = aliceDb.feed.keys.public
 
-  console.log()
-
-  t.equal(aliceDb.getAddress(), 'localhost:45451:'+aliceDb.feed.keys.public)
+  t.equal(alice.getAddress(), 'localhost:45451:'+alice.id)
 
   t.deepEqual(
-    util.parseAddress(aliceDb.getAddress()), {
+    util.parseAddress(alice.getAddress()), {
     host: 'localhost',
     port: 45451,
-    key: aliceDb.feed.keys.public
+    key: alice.id
   })
 
-  var client = createClient(keys)
+  t.end()
+})
 
-  client({port: 45451, key: alice}, function (err, rpc) {
+tape('connect remote master', function (t) {
+  createSbot.createClient({keys: bobKeys})
+  (alice.getAddress(), function (err, rpc) {
     if(err) throw err
     rpc.publish({
-      type: 'msg', value: 'written by bob', from: keys.id
+      type: 'msg', value: 'written by bob', from: bobKeys.id
     }, function (err) {
       if(err) throw err
-      aliceDb.close(function () {
-        t.end()
-      })
+      t.end()
     })
   })
-
 })
+
+tape('non-master cannot use same methods', function (t) {
+  createSbot.createClient({keys: carolKeys})
+  (alice.getAddress(), function (err, rpc) {
+    if(err) throw err
+    rpc.publish({
+      type: 'msg', value: 'written by ca', from: bobKeys.id
+    }, function (err) {
+      t.ok(err)
+      alice.close(true)
+      t.end()
+    })
+  })
+})
+

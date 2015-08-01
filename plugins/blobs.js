@@ -7,7 +7,7 @@ var Blobs = require('multiblob')
 var path = require('path')
 var pull = require('pull-stream')
 var toPull = require('stream-to-pull-stream')
-var isHash = require('ssb-ref').isHash
+var isBlob = require('ssb-ref').isBlobId
 var multicb = require('multicb')
 var Notify = require('pull-notify')
 
@@ -56,34 +56,44 @@ function isString (s) {
 function oneTrack(delay, n, label, fun) {
   var doing = 0, timeout
 
+  var timers = []
+
+  function clear (timer) {
+    var i = timers.indexOf(timer)
+    clearTimeout(timer[i])
+    times.splice(i, 1)
+  }
+
+  function delay (job, d) {
+    var i
+    var timer = setTimeout(function () {
+      timers.splice(timers.indexOf(timer), 1); job()
+    }, d)
+    timers.push(timer)
+    return timer
+  }
+
   function job () {
     // abort if already doing too many
     if(doing >= n) return
     doing++
-
-    // dont bother waiting anymore
-    clearTimeout(timeout); timeout = null
 
     // run the behavior
     fun(function (done) {
       doing--
       if(done) {
         // we're done, dont requeue
-        clearTimeout(timeout); timeout = null
         return
       }
 
       // requeue after a delay
-      if(timeout) return
       var wait = ~~(delay/2 + delay*Math.random())
-      console.log(label, 'waiting...', wait)
-      timeout = setTimeout(job, wait)
+      delay(job, wait)
     })
-
   }
 
   job.abort = function () {
-    clearTimeout(timeout)
+    timers.forEach(function (timer) { clearTimeout(timer) })
   }
 
   return job
@@ -104,13 +114,14 @@ module.exports = {
   permissions: {
     anonymous: {allow: ['has', 'get', 'changes']},
   },
-  init: function (sbot) {
+  init: function (sbot, opts) {
 
     var notify = Notify()
-    var config = sbot.config
+    var config = opts
+    //NOW PROVIDED BY CORE. REFACTOR THIS AWAY.
     var remotes = {} // connected peers (rpc objects)
     var blobs = sbot._blobs = Blobs({
-      dir: path.join(sbot.config.path, 'blobs'),
+      dir: path.join(config.path, 'blobs'),
       hash: 'sha256'
     })
     var wantList = (function (){
@@ -216,15 +227,15 @@ module.exports = {
 
     // monitor the feed for new links to blobs
     pull(
-      sbot.ssb.links({type: 'ext', live: true}),
+      sbot.links({dest: '&', live: true}),
 
       pull.drain(function (data) {
         var hash = data.dest
-        if(isHash(hash))
+        if(isBlob(hash))
           // do we have the referenced blob yet?
           blobs.has(hash, function (_, has) {
             if(!has) { // no...
-              sbot.ssb.get(data.source, function (err, msg) {
+              sbot.get(data.source, function (err, msg) {
                 // was this blob published in the last month?
                 var dT = Math.abs(Date.now() - msg.timestamp)
                 if (dT < MONTH_IN_MS)
@@ -245,8 +256,11 @@ module.exports = {
       wantList.each(function (e, k) {
         if(e.has && e.has[id] === false) delete e.has[id]
       })
-      var done = rpc.task()
-      query(id, done)
+
+      query(id, function (err) {
+        if(err) console.error(err.stack)
+      })
+
       rpc.once('closed', function () {
         delete remotes[id]
       })
@@ -288,9 +302,9 @@ module.exports = {
       // does the remote have any of them?
       queries[remoteid] = true
       var neededBlobIds = neededBlobs.map(function (e) { return e.id })
+
       remote.blobs.has(neededBlobIds, function (err, hasList) {
         if(err) console.error(err.stack)
-
         delete queries[remoteid]
         if(hasList) {
           var downloadDone = multicb()
@@ -332,14 +346,13 @@ module.exports = {
       sbot.emit('log:info', ['blobs', id, 'downloading', f.id])
       pull(
         remotes[id].blobs.get(f.id),
-   //     toBuffer(),
         //TODO: error if the object is longer than we expected.
-        blobs.add(f.id, function (err, hash) {
+        blobs.add(desigil(f.id), function (err, hash) {
           if(err) {
             f.state = 'ready'
             console.error(err.stack)
           }
-          else wantList.got(hash)
+          else wantList.got(resigil(hash))
           done()
         })
       )
@@ -347,38 +360,45 @@ module.exports = {
 
     sbot.on('close', download.abort)
 
+    function desigil (hash) {
+      return isBlob(hash) ? hash.substring(1) : hash
+    }
+
+    function resigil (hash) {
+      return '&' + hash
+    }
+
     return {
       get: function (hash) {
-        return blobs.get(hash)
+        return blobs.get(desigil(hash))
       },
 
       has: function (hash, cb) {
         sbot.emit('blobs:has', hash)
-        blobs.has(hash, cb)
+        blobs.has(desigil(hash), cb)
       },
 
       size: function (hash, cb) {
         sbot.emit('blobs:size', hash)
-        blobs.size(hash, cb)
+        blobs.size(desigil(hash), cb)
       },
 
       add: function (hash, cb) {
         if(isFunction(hash)) cb = hash, hash = null
 
         return pull(
-     //     toBuffer(),
           blobs.add(function (err, hash) {
             if(err) console.error(err.stack)
-            else wantList.got(hash)
+            else wantList.got(resigil(hash))
             // sink cbs are not exposed over rpc
             // so this is only available when using this api locally.
-            if(cb) cb(err, hash)
+            if(cb) cb(err, resigil(hash))
           })
         )
       },
 
       ls: function () {
-        return blobs.ls()
+        return pull(blobs.ls(), pull.map(resigil))
       },
       // request to retrieve a blob,
       // calls back when that file is available.
@@ -389,9 +409,10 @@ module.exports = {
           opts = null
         }
         var nowait = (opts && opts.nowait)
-        if(!isHash(hash)) return cb(new Error('not a hash:' + hash))
+        if(!isBlob(hash)) return cb(new Error('not a hash:' + hash))
 
-        blobs.has(hash, function (_, has) {
+        sbot.emit('blobs:wants', hash)
+        blobs.has(desigil(hash), function (_, has) {
           if (has) return cb(null, true)
           
           // update queue

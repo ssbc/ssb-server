@@ -3,10 +3,9 @@ var tape      = require('tape')
 var path      = require('path')
 var toPull    = require('stream-to-pull-stream')
 var pull      = require('pull-stream')
-var u         = require('./util')
 var cont      = require('cont')
-var createClient = require('../client')
 var ssbKeys   = require('ssb-keys')
+var u         = require('./util')
 
 // create 3 servers
 // give them all pub servers (on localhost)
@@ -20,24 +19,27 @@ function read (filename) {
   return toPull.source(fs.createReadStream(filename))
 }
 
+var createSbot = require('../')
+  .use(require('../plugins/blobs'))
+
 tape('a client can request a blob', function (t) {
 
-  var u = require('./util')
+  var sbotA = createSbot({
+    temp: 'test-blobs-alice0', timeout: 1000,
+    keys: ssbKeys.generate()
+  })
 
-  var sbotA = u.createDB('test-blobs-alice0', {
-      port: 45450, host: 'localhost', timeout: 1000,
-    }).use(blobs)
-
-  var alice = sbotA.feed
+  var bob = ssbKeys.generate()
 
   pull(
     read(path.join(__filename)),
     sbotA.blobs.add(function (err, hash) {
       if(err) throw err
-      createClient(sbotA.feed.keys, sbotA.manifest)({
-        port: 45450, key: sbotA.feed.keys.public
-      }, function (err, rpc) {
 
+      console.log('alice.address', sbotA.getAddress())
+      createSbot.createClient({keys: bob})
+      (sbotA.getAddress(), function (err, rpc) {
+        if(err) throw err
         rpc.blobs.has(hash, function (err) {
           if(err) throw err
           pull(
@@ -46,7 +48,7 @@ tape('a client can request a blob', function (t) {
               if(err) throw err
               var data = Buffer.concat(ary)
               sbotA.close()
-              t.equal(ssbKeys.hash(data), hash)
+              t.equal('&'+ssbKeys.hash(data), hash)
               t.end()
             })
           )
@@ -57,20 +59,18 @@ tape('a client can request a blob', function (t) {
 })
 
 tape('replicate blobs between 2 peers - explicit want request', function (t) {
-  var u = require('./util')
 
-  var sbotA = u.createDB('test-blobs-alice1', {
-      port: 45451, host: 'localhost', timeout: 1000,
-    }).use(gossip).use(blobs)
+  var alice
+  var sbotA = createSbot({
+    temp: 'test-blobs-alice1',  timeout: 1000,
+    keys: alice = ssbKeys.generate()
+  })
 
-  var alice = sbotA.feed
-
-  var sbotB = u.createDB('test-blobs-bob1', {
-      port: 45452, host: 'localhost', timeout: 1000,
-      seeds: [{port: 45451, host: 'localhost', key: sbotA.feed.keys.public}]
-    }).use(gossip).use(blobs)
-
-  var bob = sbotB.feed
+  var bob
+  var sbotB = createSbot({
+    temp: 'test-blobs-bob1', timeout: 1000,
+    keys: bob = ssbKeys.generate()
+  })
 
   pull(
     read(path.join(__filename)),
@@ -93,34 +93,36 @@ tape('replicate blobs between 2 peers - explicit want request', function (t) {
         console.log('TEST ENDED')
       })
     })
+  })
 
+  sbotA.connect(sbotB.getAddress(), function (err) {
+    if(err) throw err
   })
 
 })
 
 tape('replicate published blobs between 2 peers', function (t) {
-  var sbotA = u.createDB('test-blobs-alice2', {
-      port: 45451, host: 'localhost', timeout: 1000,
-    }).use(gossip).use(friends).use(replicate).use(blobs)
+  createSbot.use(friends).use(replicate).use(gossip)
 
-  var alice = sbotA.feed
+  var alice = createSbot({
+      temp: 'test-blobs-alice2', timeout: 1000,
+      keys: ssbKeys.generate()
+    })
 
-  var sbotB = u.createDB('test-blobs-bob2', {
-      port: 45452, host: 'localhost', timeout: 1000,
-      seeds: [{port: 45451, host: 'localhost', key: sbotA.feed.keys.public}]
-    }).use(gossip).use(friends).use(replicate).use(blobs)
-
-  var bob = sbotB.feed
-
+  var bob = createSbot({
+      temp: 'test-bobs-alice2', timeout: 1000,
+      keys: ssbKeys.generate(),
+      seeds: [alice.getAddress()]
+    })
 
   pull(
     read(__filename),
-    sbotA.blobs.add(null, function (err, hash) {
+    alice.blobs.add(null, function (err, hash) {
       if(err) throw err
       cont.para([
-        alice.add({type: 'post', text: 'this file', js: {ext: hash}}),
-        alice.add({type: 'contact', following: true, contact: { feed: bob.id }}),
-        bob.add({type: 'contact', following: true, contact: {feed: alice.id}})
+        alice.publish(u.file(hash)),
+        alice.publish(u.follow(bob.id)),
+        bob.publish(u.follow(alice.id))
       ])(function (err, data) {
         if(err) throw err
         console.log(data)
@@ -129,14 +131,13 @@ tape('replicate published blobs between 2 peers', function (t) {
       // bob should request the blob,
       // and then emit this event.
 
-      sbotB.on('blobs:got', function (_hash) {
+      bob.on('blobs:got', function (_hash) {
         console.log("BLOBS GOT", _hash)
         t.equal(_hash, hash)
-        sbotB.blobs.has(hash, function (err, okay) {
+        bob.blobs.has(hash, function (err, okay) {
           t.ok(okay, 'file replicated:' + hash)
           t.end()
-          sbotA.close()
-          sbotB.close()
+          alice.close(); bob.close()
         })
       })
     })

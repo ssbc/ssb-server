@@ -1,76 +1,11 @@
-var fs         = require('fs')
-var net        = require('./lib/net')
-var pull       = require('pull-stream')
-var path       = require('path')
-var merge      = require('map-merge')
+
+var SecretStack = require('secret-stack')
 var create     = require('secure-scuttlebutt/create')
-var mkdirp     = require('mkdirp')
 var ssbKeys    = require('ssb-keys')
-var multicb    = require('multicb')
-var inactive   = require('pull-inactivity')
-var handshake  = require('secret-handshake')
-var nonPrivate = require('non-private-ip')
-
-var DEFAULT_PORT = 8008
-
-var Api        = require('./lib/api')
-var manifest   = require('./lib/manifest')
-var peerApi    = require('./lib/rpc')
-var u          = require('./lib/util')
-var ssbCap     = require('./lib/ssb-cap')
-
-var clone     = u.clone
-var toAddress = u.toAddress
-
-function loadSSB (config, keys) {
-  var dbPath  = path.join(config.path, 'db')
-  //load/create  secure scuttlebutt.
-  return create(dbPath, null, keys)
-}
-
-function loadKeys (config) {
-  var keyPath = path.join(config.path, 'secret')
-  return ssbKeys.loadOrCreateSync(keyPath)
-}
-
-function isString (s) {
-  return 'string' === typeof s
-}
-
-function isFunction (f) {
-  return 'function' === typeof f
-}
-
-function find(ary, test) {
-  for(var i in ary)
-    if(test(ary[i], i, ary)) return ary[i]
-}
-
-function firstAsync(pub, ary, cb) {
-  if(!isString(pub))
-    throw new Error('id *must be provided')
-  if(!Array.isArray(ary))
-    throw new Error('ary *must* be provided')
-  if(!isFunction(cb))
-    throw new Error('cb *must* be provided')
-
-  ;(function next (i) {
-    if(i >= ary.length) cb(new Error('not authenticated'))
-    else if(!ary[i]) next(i+1)
-    else
-      ary[i](pub, function (err, value) {
-        if(err)        cb(err)
-        else if(value) cb(null, value)
-        else           next(i+1)
-      })
-  })(0)
-}
-
-// create the server with the given ssb and feed
-// - `ssb`: object, the secure-scuttlebutt instance
-// - `feed`: object, the ssb feed instance
-// - `config.port`: number, port to serve on
-// - `config.path`: string, the path to the directory which contains the keyfile and database
+var path       = require('path')
+var osenv      = require('osenv')
+var mkdirp     = require('mkdirp')
+var rimraf     = require('rimraf')
 
 function toBuffer(base64) {
   return new Buffer(base64.substring(0, base64.indexOf('.')), 'base64')
@@ -83,236 +18,88 @@ function toSodiumKeys (keys) {
   }
 }
 
-var sessid = 0
+function isString(s) { return 'string' === typeof s }
 
-exports = module.exports = function (config, ssb, feed) {
-  if(!config)
-    throw new Error('must have config')
+function copy (o) {
+  var O = {}
+  for(var k in o)
+    if(o[k] && 'object' !== typeof o[k]) O[k] = o[k]
+  return O
+}
 
-  if((!ssb || !feed) && !config.path)
-    throw new Error('if ssb and feed are not provided, config must have path')
+var SSB = {
+  manifest: {
+    'add'             : 'async',
+    'publish'         : 'async',
+    'get'             : 'async',
+    'getPublicKey'    : 'async',
+    'getLatest'       : 'async',
+    'whoami'          : 'async',
+    'auth'            : 'async',
+    'relatedMessages' : 'async',
 
-  var keys
+    //local nodes
+    'getLocal'    : 'async',
 
-  if(config.path)
-    mkdirp.sync(config.path)
-
-    var keys
-    keys = feed ? feed.keys : loadKeys(config)
-    ssb = ssb || loadSSB(config, null, keys)
-    feed = feed || ssb.createFeed(keys)
-  // server
-  // ======
-
-  var auth;
-
-  var createServerStream = handshake.server(toSodiumKeys(keys), function (pub, cb) {
-    var id = pub.toString('base64') + '.ed25519'
-    server.auth(id, function (err, auth) {
-      console.log('auth', err, auth)
-      cb(err, auth)
-    })
-  }, ssbCap)
-
-  var server = net.createServer(function (stream) {
-    // setup and auth session
-    pull(
-      stream,
-      createServerStream(function (err, secure) {
-        //drop the stream if a client fails to authenticate.
-        if(err) return console.error(err.stack)
-        secure.remoteAddress = stream.remoteAddress
-        attachSession(secure, true)
-      }),
-      stream
-    )
-  })
-
-  server.peers = {}
-
-  // peer connection
-  // ===============
-
-  // sets up RPC session on a stream (used by {in,out}going streams)
-
-  function attachSession (stream, incoming) {
-    var rpc = peerApi(server.manifest, api, stream.auth)
-    var timeout = server.config.timeout || 30e3
-    var rpcStream = rpc.createStream()
-    rpcStream = inactive(rpcStream, timeout)
-
-    pull(
-      stream,
-      rpcStream,
-      stream
-    )
-
-    //CONVERT to SSB format. (fix this so it's just an ed25519)
-    var id = rpc.id = stream.remote.toString('base64')+'.ed25519'
-
-    //keep track of current connections.
-    if(!server.peers[id]) server.peers[id] = []
-    server.peers[id].push(rpc)
-    rpc.on('closed', function () {
-      server.peers[id]
-        .splice(server.peers[id].indexOf(rpc), 1)
-    })
-
-    rpc._remoteAddress = stream.remoteAddress
-    rpc._sessid = sessid++
-    rpc.task = multicb(function () {
-      rpc.close()
-    })
-    server.emit('rpc:connect', rpc)
-
-    //TODO: put this stuff somewhere else...?
-
-    //when the client connects (not a peer) we will be unable
-    //to authorize with it. In this case, we shouldn't close
-    //the connection...
-
-    rpc.task(function () {
-      //Actually, this does nothing!
-      //removed this and all tests still passed...
-    })
-
-   return rpc
-  }
-
-  var createClientStream = handshake.client(toSodiumKeys(keys), ssbCap)
-
-  server.connect = function (address, cb) {
-    //coearse to {port, host, key} object
-    address = toAddress(address)
-    var stream = net.connect(address)
-
-    pull(
-      stream,
-      createClientStream(toBuffer(address.key), function (err, secure) {
-        if(err) return console.error(err.stack), cb(err)
-        secure.remoteAddress = stream.remoteAddress
-        secure.auth = server.permissions.anonymous
-        var rpc = attachSession(secure, false)
-        server.emit('log:info', ['sbot', rpc._sessid, 'connect', address])
-        cb(null, rpc)
-      }),
-      stream
-    )
-  }
-
-  if(config.port)
-    server.listen(config.port, function () {
-      server.emit('log:info', ['sbot', null, 'listening', server.getAddress()])
-    })
-
-  var authorizers = []
-  server.auth = function (pub, cb) {
-    firstAsync(pub, authorizers, cb)
-  }
-
-  server.auth.use = function (auth) {
-    authorizers.push(auth); return server.auth
-  }
-
-  server.ssb = ssb
-  server.feed = feed
-  server.config = config
-  server.options = ssbKeys
-  server.manifest = merge({}, manifest)
-  server.permissions = {
+    'query'                  : 'source',
+    'createFeedStream'       : 'source',
+    'createHistoryStream'    : 'source',
+    'createLogStream'        : 'source',
+    'links'                  : 'source',
+    'messagesByType'         : 'source',
+  },
+  permissions: {
     master: {allow: null, deny: null},
     anonymous: {allow: ['createHistoryStream'], deny: null}
-  }
+  },
+  init: function (api, opts) {
 
-  server.getId = function() {
-    return server.feed.id
-  }
+    //useful for testing
+    if(opts.temp) {
+      var name = isString(opts.temp) ? opts.temp : ''+Date.now()
+      opts.path = path.join(osenv.tmpdir(), name)
+      rimraf.sync(opts.path)
 
-  server.getAddress = function() {
-    var host = server.config.host || nonPrivate.private() || 'localhost'
-    //always provite the port.
-    return host + ':' + server.config.port + ':'+server.feed.keys.public
-  }
-
-  var api = Api(server)
-
-  // rpc session management
-  // ======================
-  var sessions = {}
-
-
-  // plugin management
-  // =================
-
-  server.use = function (plugin) {
-    server.emit('log:info', [
-      'sbot', null, 'use-plugin',
-      plugin.name + (plugin.version ? '@'+plugin.version : '')
-    ])
-    if(isFunction(plugin)) plugin(server)
-    else if(isString(plugin.name)) {
-      server.manifest[plugin.name] = plugin.manifest
-      if(plugin.permissions) {
-        server.permissions = merge(
-          server.permissions,
-          clone(plugin.permissions, function (v) {
-            return plugin.name + '.' + v
-          })
-        )
-      }
-
-      server[plugin.name] = api[plugin.name] = plugin.init(server)
+      //load/create  secure scuttlebutt.
+      mkdirp.sync(path.join(opts.path, 'db'))
     }
 
-    return this
+    if(!opts.keys)
+      opts.keys = ssbKeys.generate('ed25519', opts.seed && new Buffer(opts.seed, 'base64'))
+
+    if(!opts.path)
+      throw new Error('opts.path *must* be provided, or use opts.temp=sname to create a test instance')
+
+    var ssb = create(opts.path, null, opts.keys)
+    var feed = ssb.createFeed(opts.keys)
+    return {
+      id                       : feed.id,
+      publish                  : feed.add,
+      add                      : ssb.add,
+      get                      : ssb.get,
+
+      pre                      : ssb.pre,
+      post                     : ssb.post,
+
+      getPublicKey             : ssb.getPublicKey,
+      getLatest                : ssb.getLatest,
+      relatedMessages          : ssb.relatedMessages,
+      query                    : ssb.query,
+      createFeed               : ssb.createFeed,
+      createFeedStream         : ssb.createFeedStream,
+      createHistoryStream      : ssb.createHistoryStream,
+      createLogStream          : ssb.createLogStream,
+      links                    : ssb.links,
+      sublevel                 : ssb.sublevel,
+      messagesByType           : ssb.messagesByType,
+      createWriteStream        : ssb.createWriteStream,
+      createLatestLookupStream : ssb.createLatestLookupStream,
+    }
   }
-
-  server.auth
-    .use(function (pub, cb) {
-      var masters =
-        [server.feed.id]
-        .concat(server.config.master)
-        .filter(Boolean)
-
-      cb(null, ~masters.indexOf(pub) && server.permissions.master)
-    })
-    .use(function (pub, cb) {
-      cb(
-        server.block && server.block.isBlocked(pub)
-        //.get({source: server.feed.id, dest: pub, graph: 'flag'})
-        ? new Error('client is blocked')
-        : null
-      )
-    })
-    .use(function (pub, cb) {
-      server.ssb.sublevel('codes').get(pub, function (err, code) {
-          return cb(null, code && code.permissions)
-      })
-    })
-    .use(function (pub, cb) {
-      cb(null, server.permissions.anonymous)
-    })
-
-  server.getManifest = function () {
-    return server.manifest
-  }
-
-  return server
 }
 
-// load keys, ssb database, and create the server
-// - `config.port`: number, port to serve on
-// - `config.pass`: string, password for full admin access to the rpc api
-// - `config.path`: string, the path to the directory which contains the keyfile and database
+module.exports = SecretStack({
+  appKey: require('./lib/ssb-cap')
+})
+.use(SSB)
 
-exports.init =
-exports.fromConfig = require('./create')
-
-exports.createClient = require('./client')
-
-if(!module.parent) {
-  //start a server
-  exports.init(require('ssb-config'), function (err) {
-    if(err) throw err
-  })
-}

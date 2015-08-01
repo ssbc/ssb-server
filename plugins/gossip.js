@@ -45,7 +45,7 @@ module.exports = {
     connect: 'async',
     changes: 'source'
   },
-  init: function (server) {
+  init: function (server, config) {
     var sched
     server.on('close', function () {
       server.closed = true
@@ -53,8 +53,7 @@ module.exports = {
     })
 
     var notify = Notify()
-    var config = server.config
-    var conf = server.config.gossip || {}
+    var conf = config.gossip || {}
     var host = config.host || nonPrivate.private() || 'localhost'
     var port = config.port
 
@@ -110,7 +109,7 @@ module.exports = {
 
     //TODO! pubs posts must contain public keys.
     pull(
-      server.ssb.messagesByType({type: 'pub', live: true, keys: false, onSync: onFeedSync }),
+      server.messagesByType({type: 'pub', live: true, keys: false, onSync: onFeedSync }),
       pull.map(function (e) {
         var o = toAddress(e.content.address)
         o.announcers = [e.author] // track who has announced this pub addr
@@ -189,7 +188,7 @@ module.exports = {
         })
         if (!p) // only connect to known peers
           return cb(new Error('address not a known peer'))
-        
+
         connectTo(p)
         cb()
       },
@@ -202,14 +201,19 @@ module.exports = {
     // ======
 
     ;(function schedule() {
+
       if(server.closed) return
-      var delay = ~~(config.timeout/2 + Math.random()*config.timeout)
+      var timeout = Math.max(config.timeout||0, 1000)
+      var delay = ~~(timeout/2 + Math.random()*timeout)
       if (init_synclist)
         delay = ~~(Math.random()*1000) // dont wait long to poll, we're still in our initial sync
+
       sched = setTimeout(function () {
         schedule(); connect()
       }, delay)
     })()
+
+    server.once('close', function () { clearTimeout(sched) })
 
     var count = 0
 

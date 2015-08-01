@@ -1,10 +1,10 @@
 var pull      = require('pull-stream')
-
 var paramap   = require('pull-paramap')
+var ssbKeys   = require('ssb-keys')
+var u         = require('./util')
 
 var tape      = require('tape')
 
-var u    = require('./util')
 var cats = require('cat-names')
 var dogs = require('dog-names')
 
@@ -16,12 +16,16 @@ var s = '\r', M = 50
   return s
 }
 
-function generateAnimals (sbot, n, cb) {
-  var ssb = sbot.ssb
-  var a = [sbot.feed]
-  while(n --> 0) {
-    a.push(ssb.createFeed())
-  }
+var createSbot = require('../')
+  .use(require('../plugins/friends'))
+  .use(require('../plugins/replicate'))
+  .use(require('../plugins/gossip'))
+
+function generateAnimals (sbot, feed, n, cb) {
+  var a = [feed]
+
+  while(n --> 0)
+    a.push(sbot.createFeed())
 
   console.log('generate NAMES')
 
@@ -32,11 +36,7 @@ function generateAnimals (sbot, n, cb) {
       var name   = animal == 'cat' ? cats.random() : dogs.allRandom()
 
       feed.name = name
-      feed.add({
-        type: 'contact',
-        contact: {feed: feed.id},
-        name: name, animal: animal
-      }, cb)
+      feed.add(u.follow(feed.id), cb)
     }, 10),
     pull.drain(null, function (err) {
       if(err) return cb(err)
@@ -48,18 +48,12 @@ function generateAnimals (sbot, n, cb) {
         paramap(function (n, cb) {
 
           var me = a[~~(Math.random()*a.length)]
-  
           var r = Math.random()
 
           //one in 20 messages is a random follow
           if(r < 0.3) {
             var f = a[~~(Math.random()*a.length)]
-            me.add({
-              type: 'contact',
-              contact: { feed: f.id },
-              following: true,
-              name: f.name
-            }, cb)
+            me.add(u.follow(f.id), cb)
           } else if(r < 0.6) {
             me.add({
               type: 'post',
@@ -74,7 +68,7 @@ function generateAnimals (sbot, n, cb) {
             var post = posts[~~(Math.random()*posts.length)]
             me.add({
               type: 'post',
-              repliesTo: {msg: post},
+              repliesTo: post,
               text: me.animal === 'dog' ? 'woof woof' : 'purr',
             }, function (err, msg) {
               cb(null, msg)
@@ -90,20 +84,11 @@ function generateAnimals (sbot, n, cb) {
 
 }
 
-var friends = require('../plugins/friends')
-var gossip = require('../plugins/gossip')
-var replicate = require('../plugins/replicate')
-
-
 function latest (sbot, cb) {
-
   sbot.friends.hops({hops: 2}, function (err, keys) {
     if(err) return cb(err)
+    var get = sbot.sublevel('lst').get
 
-    console.log(keys)
-
-    var get = 
-        sbot.ssb.sublevel('lst').get
     var n = 0, map = {}
     for(var k in keys) (function (key) {
       n++
@@ -113,22 +98,24 @@ function latest (sbot, cb) {
         cb(null, map)
       })
     })(k)
-
   })
-
 }
 
 tape('replicate social network for animals', function (t) {
 
-  var animalNetwork = u.createDB('test-random-animals', {
+  var alice = ssbKeys.generate()
+  var bob   = ssbKeys.generate()
+
+  var animalNetwork = createSbot({
+    temp: 'test-random-animals',
     port: 45451, host: 'localhost', timeout: 2001,
-    replication: {hops: 3},
-  }).use(friends).use(replicate)
+    replication: {hops: 3}, keys: alice
+  })
 
-    if(!animalNetwork.friends)
-      throw new Error('missing frineds plugin')
+  if(!animalNetwork.friends)
+    throw new Error('missing frineds plugin')
 
-  generateAnimals(animalNetwork, 500, function (err) {
+  generateAnimals(animalNetwork, {add: animalNetwork.publish}, 500, function (err) {
     if(err) throw err
     console.log('replicate GRAPH')
     var c = 0
@@ -136,12 +123,14 @@ tape('replicate social network for animals', function (t) {
 
       var seen = {}
       var start = Date.now()
-      var animalFriends = u.createDB('test-random-animals2', {
+      var animalFriends = createSbot({
+        temp: 'test-random-animals2',
         port: 45452, host: 'localhost', timeout: 2001,
         replication: {hops: 3},
         progress: true,
-        seeds: [{port: 45451, host: 'localhost', key: animalNetwork.feed.keys.public}]
-      }).use(friends).use(replicate).use(gossip)
+        seeds: [animalNetwork.getAddress()],
+        keys: bob
+      })
 
       var progress = []
 
@@ -156,17 +145,16 @@ tape('replicate social network for animals', function (t) {
       if(!animalFriends.friends)
         throw new Error('missing friends plugin')
 
-      animalFriends.feed.add({
+      animalFriends.publish({
         type: 'contact',
-        contact: {feed: animalNetwork.feed.id},
+        contact: animalNetwork.id,
         following: true
-      }, function (err) {
+      }, function (err, msg) {
         if(err) throw err
-        console.log("friended")
       })
 
       pull(
-        animalFriends.ssb.createLogStream({live: true}),
+        animalFriends.createLogStream({live: true}),
         pull.drain(function (data) {
           if(data.sync) return
           seen[data.value.author] = data.value.sequence
@@ -175,35 +163,28 @@ tape('replicate social network for animals', function (t) {
             total += latest[k]
             prog += (seen[k] || 0)
           }
-//          console.log("REPLICATED", prog, total, Math.round(100*(prog/total)))
+
+          //console.log("REPLICATED", prog, total, Math.round(100*(prog/total)))
           if(total === prog && total !== 0) {
             var seconds = (Date.now() - start)/1000
-            t.equal(c, 1)
+            t.equal(c, 1, 'counter is as expected')
             t.equal(prog, total)
 
-            animalNetwork.friends.hops({}, function (err, hops1) {
+            //WAIT FOR THE LAST PROGRESS UPDATE... (100ms)
+            setTimeout(function () {
 
-              animalFriends.friends.hops({}, function (err, hops2) {
-                t.ok(progress.length)
-                var last = progress.pop()
-                t.ok(last.total, total)
-                t.ok(last.progress, total)
+              t.ok(progress.length)
+              var last = progress.pop()
+              t.equal(last.total, total, 'last.total')
+              t.equal(last.progress, total, 'last.total')
 
-//                console.log('FROM', hops1)
-//                console.log('TO  ', hops2)
-//                t.deepEqual(hops1, hops2)
+              console.log("DONE", seconds, c, total/seconds)
+              animalFriends.close()
+              animalNetwork.close()
+              t.end()
 
-              })
-
-            })
-
-            console.log("DONE", seconds, c, total/seconds)
-            animalFriends.close()
-            animalNetwork.close()
-            t.end()
-
+            }, 200)
           }
-
         })
       )
     })

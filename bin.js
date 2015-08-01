@@ -9,13 +9,27 @@ var explain      = require('explain-error')
 var ssbKeys      = require('ssb-keys')
 var stringify    = require('pull-stringify')
 var createHash   = require('multiblob/util').createHash
-var createClient = require('./client')
 var parse        = require('mynosql-query')
 var isRef        = require('ssb-ref')
+
+var createSbot   = require('./')
+  .use(require('./plugins/master'))
+  .use(require('./plugins/gossip'))
+  .use(require('./plugins/friends'))
+  .use(require('./plugins/replicate'))
+  .use(require('./plugins/blobs'))
+  .use(require('./plugins/invite'))
+  .use(require('./plugins/block'))
+  .use(require('./plugins/logging'))
+  //TODO fix plugins/local
 
 var config  = require('ssb-config')
 
 var keys = ssbKeys.loadOrCreateSync(path.join(config.path, 'secret'))
+
+if(keys.curve === 'k256')
+  throw new Error('k256 curves are no longer supported,'+
+                  'please delete' + path.join(config.path, 'secret'))
 
 var aliases = {
   feed: 'createFeedStream',
@@ -64,15 +78,17 @@ var manifestFile = path.join(config.path, 'manifest.json')
 cmd = aliases[cmd] || cmd
 
 if(cmd === 'server') {
-  require('./').init(config, function (err, server) {
-    if(err) throw err
-
-    fs.writeFileSync(
-      manifestFile,
-      JSON.stringify(server.getManifest(), null, 2)
-    )
-
-  })
+  config.keys = keys
+  createSbot(config)
+//  require('./').init(config, function (err, server) {
+//    if(err) throw err
+//
+//    fs.writeFileSync(
+//      manifestFile,
+//      JSON.stringify(server.getManifest(), null, 2)
+//    )
+//
+//  })
   return
 }
 
@@ -114,12 +130,13 @@ var type = get(manifest, cmd)
 if(!type) return usage()
 var rpc
 
-createClient(keys, manifest)
-({port: config.port, host: config.host, key: keys.public}, function (err, rpc) {
-  if(err) throw err
+console.log(keys, {port: config.port, host: config.host, key: keys.public})
+createSbot.createClient({keys: keys})
+  ({port: config.port, host: config.host||'localhost', key: keys.public}, function (err, rpc) {
+    if(err) throw err
 
-  next1(rpc)
-})
+    next1(rpc)
+  })
 
 function next1(rpc) {
 
