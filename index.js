@@ -73,8 +73,8 @@ var SSB = {
     var ssb = create(opts.path, null, opts.keys)
     var feed = ssb.createFeed(opts.keys)
     return {
-      ssb                      : ssb,
-      
+      getSSB                   : function () { return ssb },
+
       id                       : feed.id,
       publish                  : feed.add,
       add                      : ssb.add,
