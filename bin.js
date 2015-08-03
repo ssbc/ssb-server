@@ -79,7 +79,19 @@ cmd = aliases[cmd] || cmd
 
 if(cmd === 'server') {
   config.keys = keys
-  createSbot(config)
+  var sbot = createSbot(config)
+  sbot.getSSB().needsRebuild(function (err, b) {
+    if (b) {
+      console.log('Rebuilding indexes to ensure consistency. Please wait...')
+      sbot.getSSB().rebuildIndex(function (err) {
+        if (err)
+          console.log(explain(err, 'error while rebuilding index'))
+        else
+          console.log('Indexes rebuilt.')
+      })
+    }
+  })
+
 //  require('./').init(config, function (err, server) {
 //    if(err) throw err
 //
