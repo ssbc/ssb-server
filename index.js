@@ -77,7 +77,7 @@ var SSB = {
     if(!opts.path)
       throw new Error('opts.path *must* be provided, or use opts.temp=sname to create a test instance')
 
-    var ssb = create(opts.path, null, opts.keys)
+    var ssb = create(path.join(opts.path, 'db'), null, opts.keys)
     var feed = ssb.createFeed(opts.keys)
     return {
       id                       : feed.id,
