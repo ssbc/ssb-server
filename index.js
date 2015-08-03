@@ -111,6 +111,7 @@ var SSB = {
 
       getPublicKey             : ssb.getPublicKey,
       getLatest                : ssb.getLatest,
+      whoami                   : function (cb) { cb(null, { id: feed.id }) },
       relatedMessages          : ssb.relatedMessages,
       query                    : ssb.query,
       createFeed               : ssb.createFeed,
