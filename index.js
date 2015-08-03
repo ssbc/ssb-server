@@ -6,6 +6,7 @@ var path       = require('path')
 var osenv      = require('osenv')
 var mkdirp     = require('mkdirp')
 var rimraf     = require('rimraf')
+var explain    = require('explain-error')
 
 function toBuffer(base64) {
   return new Buffer(base64.substring(0, base64.indexOf('.')), 'base64')
@@ -31,6 +32,11 @@ var SSB = {
   manifest: {
     'add'             : 'async',
     'publish'         : 'async',
+    'publishBoxed'    : 'async',
+
+    'box'             : 'async',
+    'unbox'           : 'async',
+
     'get'             : 'async',
     'getPublicKey'    : 'async',
     'getLatest'       : 'async',
@@ -75,6 +81,27 @@ var SSB = {
     return {
       id                       : feed.id,
       publish                  : feed.add,
+      publishBoxed             : function (data, recps, cb) {
+        var ciphertext
+        try { ciphertext = ssbKeys.box(data, recps) }
+        catch (e) { return cb(explain(e, 'failed to encrypt')) }
+
+        feed.add(ciphertext, cb)
+      },
+
+      box                      : function (data, recps, cb) {
+        var ciphertext
+        try { ciphertext = ssbKeys.box(data, recps) }
+        catch (e) { return cb(explain(e, 'failed to encrypt')) }
+        cb(null, ciphertext)
+      },
+      unbox                    : function (ciphertext, cb) {
+        var data
+        try { data = ssbKeys.unbox(ciphertext, feed.keys.private) }
+        catch (e) { return cb(explain(e, 'failed to decrypt')) }
+        cb(null, data)
+      },
+
       add                      : ssb.add,
       get                      : ssb.get,
 
