@@ -81,6 +81,7 @@ var SSB = {
     var feed = ssb.createFeed(opts.keys)
     return {
       id                       : feed.id,
+      keys                     : opts.keys,
       publish                  : feed.add,
       publishBoxed             : function (data, recps, cb) {
         var ciphertext
