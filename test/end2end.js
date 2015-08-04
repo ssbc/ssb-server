@@ -4,7 +4,7 @@ var ssbKeys = require('ssb-keys')
 
 var createSbot = require('../')
   .use(require('../plugins/master'))
-  .use(require('../plugins/crypto'))
+  .use(require('../plugins/private'))
 
 var alice = ssbKeys.generate()
 var bob = ssbKeys.generate()
@@ -42,9 +42,9 @@ tape('end2end a message, and test that indexes work', function (t) {
     })
 })
 
-tape('crypto.publishBoxed', function (t) {
+tape('private.publish', function (t) {
 
-  aliceDb.crypto.publishBoxed(
+  aliceDb.private.publish(
     {
       type: 'post',
       text: 'a scary secret'
@@ -52,7 +52,7 @@ tape('crypto.publishBoxed', function (t) {
     function (err, msg) {
       console.log(msg)
 
-      aliceDb.crypto.publishBoxed(
+      aliceDb.private.publish(
         {
           type: 'post',
           reply: msg.key,
@@ -70,9 +70,9 @@ tape('crypto.publishBoxed', function (t) {
     })
 })
 
-tape('crypto.unbox', function (t) {
+tape('private.unbox', function (t) {
 
-  aliceDb.crypto.publishBoxed(
+  aliceDb.private.publish(
     {
       type: 'post',
       text: 'a scary secret'
@@ -80,7 +80,7 @@ tape('crypto.unbox', function (t) {
     function (err, msg) {
       console.log(msg)
 
-      var plain = aliceDb.crypto.unbox(msg.value.content)
+      var plain = aliceDb.private.unbox(msg.value.content)
       t.equal(plain.type, 'post')
       t.equal(plain.text, 'a scary secret')
       t.end()

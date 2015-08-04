@@ -2,18 +2,18 @@ var ssbKeys = require('ssb-keys')
 var explain = require('explain-error')
 
 module.exports = {
-  name: 'crypto',
+  name: 'private',
   version: '0.0.0',
   manifest: {
-    unbox: 'sync',
-    publishBoxed: 'async'
+    publish: 'async',
+    unbox: 'sync'
   },
   permissions: {
     anonymous: {},
   },
   init: function (sbot, opts) {
     return {
-      publishBoxed: function (data, recps, cb) {
+      publish: function (data, recps, cb) {
         var ciphertext
         try { ciphertext = ssbKeys.box(data, recps) }
         catch (e) { return cb(explain(e, 'failed to encrypt')) }
