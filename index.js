@@ -81,8 +81,8 @@ var SSB = {
     return {
       id                       : feed.id,
       keys                     : opts.keys,
-      publish                  : feed.add,
 
+      publish                  : feed.add,
       add                      : ssb.add,
       get                      : ssb.get,
 
@@ -91,6 +91,7 @@ var SSB = {
 
       getPublicKey             : ssb.getPublicKey,
       getLatest                : ssb.getLatest,
+      createFeed               : ssb.createFeed,
       whoami                   : function (cb) { cb(null, { id: feed.id }) },
       relatedMessages          : ssb.relatedMessages,
       query                    : ssb.query,
