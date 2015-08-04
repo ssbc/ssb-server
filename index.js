@@ -31,6 +31,11 @@ var SSB = {
   manifest: {
     'add'             : 'async',
     'publish'         : 'async',
+    'publishBoxed'    : 'async',
+
+    'box'             : 'async',
+    'unbox'           : 'async',
+
     'get'             : 'async',
     'getPublicKey'    : 'async',
     'getLatest'       : 'async',
@@ -45,6 +50,7 @@ var SSB = {
     'createFeedStream'       : 'source',
     'createHistoryStream'    : 'source',
     'createLogStream'        : 'source',
+    'createUserStream'       : 'source',
     'links'                  : 'source',
     'messagesByType'         : 'source',
   },
@@ -72,10 +78,12 @@ var SSB = {
     if(!opts.path)
       throw new Error('opts.path *must* be provided, or use opts.temp=sname to create a test instance')
 
-    var ssb = create(opts.path, null, opts.keys)
+    var ssb = create(path.join(opts.path, 'db'), null, opts.keys)
     var feed = ssb.createFeed(opts.keys)
     return {
       id                       : feed.id,
+      keys                     : opts.keys,
+
       publish                  : feed.add,
       add                      : ssb.add,
       get                      : ssb.get,
@@ -85,12 +93,15 @@ var SSB = {
 
       getPublicKey             : ssb.getPublicKey,
       getLatest                : ssb.getLatest,
+      createFeed               : ssb.createFeed,
+      whoami                   : function (cb) { cb(null, { id: feed.id }) },
       relatedMessages          : ssb.relatedMessages,
       query                    : ssb.query,
       createFeed               : ssb.createFeed,
       createFeedStream         : ssb.createFeedStream,
       createHistoryStream      : ssb.createHistoryStream,
       createLogStream          : ssb.createLogStream,
+      createUserStream         : ssb.createUserStream,
       links                    : ssb.links,
       sublevel                 : ssb.sublevel,
       messagesByType           : ssb.messagesByType,
