@@ -115,12 +115,12 @@ module.exports = {
           sbot.emit('replicate:finish', progress)
         }
       })
-
-      return {
-        changes: function () {
-          return notify.listen()
-        }
-      }
     })
+    
+    return {
+      changes: function () {
+        return notify.listen()
+      }
+    }
   }
 }
