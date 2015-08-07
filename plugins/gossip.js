@@ -131,6 +131,7 @@ module.exports = {
         type: 'pub', live: true, keys: false, onSync: onFeedSync
       }),
       pull.drain(function (msg) {
+        if(!msg.content.address) return
         var addr = toAddress(msg.content.address)
         addr.announcers = [msg.author] // track who has announced this pub addr
         gossip.add(addr, 'pub')
