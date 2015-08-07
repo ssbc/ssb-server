@@ -140,7 +140,7 @@ module.exports = {
               }),
               server.publish({
                 type: 'pub',
-                address: rpc.address,
+                address: toAddress(parts[0]),
               })
             ])(function (err, results) {
               rpc.close()

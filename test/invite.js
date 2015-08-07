@@ -3,6 +3,7 @@ var ssbKeys = require('ssb-keys')
 var tape = require('tape')
 var explain = require('explain-error')
 var pull = require('pull-stream')
+var u = require('../lib/util')
 
 var createSbot = require('../')
   .use(require('../plugins/master'))
@@ -122,16 +123,30 @@ tape('test invite.accept doesnt follow if already followed', function (t) {
       alice.friends.hops(alice.id, function (err, hops) {
         console.log(hops)
         t.equal(hops[bob.id], 1)
-        bob.invite.accept(invite, function (err) {
-          t.ok(err)
-          alice.friends.hops(alice.id, function (err, hops) {
-            console.log(hops)
-            t.equal(hops[bob.id], 1)
-            alice.close()
-            bob.close()
-            t.end()
+        pull(
+          bob.messagesByType('pub'),
+          pull.collect(function (err, ary) {
+            if(err) throw err
+            t.equal(ary.length, 1)
+
+            t.deepEqual({
+              type: 'pub',
+              address: u.toAddress(alice.address()),
+            }, ary[0].value.content)
+
+            console.log(ary[0].value)
+            bob.invite.accept(invite, function (err) {
+              t.ok(err)
+              alice.friends.hops(alice.id, function (err, hops) {
+                console.log(hops)
+                t.equal(hops[bob.id], 1)
+                alice.close()
+                bob.close()
+                t.end()
+              })
+            })
           })
-        })
+        )
       })
     })
   })
