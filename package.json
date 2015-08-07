@@ -13,6 +13,7 @@
     "cont": "~1.0.3",
     "explain-error": "~1.0.1",
     "graphmitter": "^1.5.0",
+    "ip": "^0.3.3",
     "ip-regex": "^1.0.3",
     "is-valid-domain": "0.0.1",
     "level-memview": "~0.0.0",
