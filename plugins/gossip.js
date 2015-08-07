@@ -69,8 +69,10 @@ module.exports = {
       add: function (addr, source) {
         if(!addr) return
         addr = u.toAddress(addr)
-
+        if(!u.isAddress(addr))
+          throw new Error('not a valid address:' + JSON.stringify(addr))
         // check that this is a valid address, and not pointing at self.
+        
         if(addr.key === home.key) return
         if(addr.host === home.host && addr.port === home.port) return
 
