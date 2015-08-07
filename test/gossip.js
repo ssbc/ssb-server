@@ -67,6 +67,16 @@ tape('gossip: errors on invalid peers', function (t) {
 
 })
 
+tape('ignore invalid pub messages', function (t) {
+
+  //missing address
+  sbot.publish({type: 'pub'}, function (err) {
+    if(err) throw err
+    t.end()
+  })
+
+})
+
 tape('cleanup', function (t) {
   sbot.close(true)
   t.end()
