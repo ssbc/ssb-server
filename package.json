@@ -27,7 +27,7 @@
     "nomnom": "1.8.0",
     "non-private-ip": "~1.1.0",
     "observ": "~0.2.0",
-    "observ-debounce": "^1.0.0",
+    "observ-debounce": "^1.1.1",
     "osenv": "~0.1.0",
     "packet-stream-codec": "~1.1.0",
     "pull-abortable": "~4.0.0",
