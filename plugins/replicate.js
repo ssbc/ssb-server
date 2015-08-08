@@ -57,7 +57,6 @@ function replicate(sbot, config, rpc, cb) {
     debounce(function () {
       var d = 0, r = 0, f = 0
       for(var id in to_recv) {
-        console.log(to_send, to_recv)
         var S = to_send[id] || 0, R = to_recv[id] || 0
         var D = replicated[id] || 0
         if(to_send[id] != null && to_recv[id] != null) {
