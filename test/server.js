@@ -63,6 +63,11 @@ tape('replicate between 3 peers', function (t) {
     var expected = {}
     expected[alice.id] = expected[bob.id] = expected[carol.id] = 3
 
+    pull(
+      dbA.replicate.changes(),
+      pull.drain(console.log)
+    )
+
     function check(server, name) {
       var closed = false
       return server.on('replicate:finish', function (actual) {

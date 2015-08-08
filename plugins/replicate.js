@@ -22,10 +22,9 @@ function replicate(sbot, config, rpc, cb) {
 
     rpc.progress = Observ()
 
-    var set_progress = rpc.progress.set
-    delete rpc.progress.set
-
-    rpc._emit('replicate:progress', rpc.progress)
+    //var set_progress = rpc.progress.set
+    //delete rpc.progress.set
+    //rpc._emit('replicate:progress', rpc.progress)
 
     //these defaults are for replication
     //so they belong in the replication config
@@ -56,19 +55,28 @@ function replicate(sbot, config, rpc, cb) {
 
     var debounce = Debounce(100)
     debounce(function () {
-      var d = 0, r = 0
+      var d = 0, r = 0, f = 0
       for(var id in to_recv) {
+        console.log(to_send, to_recv)
         var S = to_send[id] || 0, R = to_recv[id] || 0
         var D = replicated[id] || 0
-        if(to_send[id] != null && to_recv[id] != null && S > R) {
-          d += (S - R); r += (D - R)
+        if(to_send[id] != null && to_recv[id] != null) {
+          f++; 
+          if(S > R) {
+            d += (S - R);
+            r += (D - R)
+          }
         }
       }
-      set_progress({total: d, progress: r})
-      notify({ type: 'progress', peerid: rpc.id, total: d, progress: r })
+      //set_progress({total: d, progress: r, feeds: f})
+      //progress is 
+      notify({
+        type: 'progress', peerid: rpc.id,
+        total: d, progress: r, feeds: f,
+        sync: !!(f && (r >= d))
+      })
     })
-    var progress = debounce.set
-
+    
     var replicated = {}
 
     pull(
@@ -78,11 +86,11 @@ function replicate(sbot, config, rpc, cb) {
           replicated[msg.author]||0,
           msg.sequence
         )
-        progress()
+        debounce.set()
       }),
       sbot.createWriteStream(function (err) {
         aborter.abort()
-        progress ()
+        debounce.immediate()
         cb(err, replicated)
       })
     )
@@ -103,8 +111,10 @@ module.exports = {
     })
 
     sbot.on('rpc:connect', function(rpc) {
+      //this is the cli client, just ignore.
+      if(rpc.id === sbot.id) return
 
-      sbot.emit('log:info', ['replicate', rpc._sessid, 'start'])
+      sbot.emit('log:info', ['replicate', rpc._sessid, 'start', rpc.id])
       sbot.emit('replicate:start', rpc)
       replicate(sbot, config, rpc, function (err, progress) {
         if(err) {

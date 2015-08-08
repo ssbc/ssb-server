@@ -9,11 +9,13 @@ var cats = require('cat-names')
 var dogs = require('dog-names')
 
 //build a random network, with n members.
-function bar (r) {
-var s = '\r', M = 50
+function bar (prog) {
+  var r = prog.progress/prog.total
+  var s = '\r', M = 50
   for(var i = 0; i < M; i++)
     s += i < M*r ? '*' : '.'
-  return s
+
+  return s + ' '+prog.progress+'/'+prog.total+':'+prog.feeds
 }
 
 var createSbot = require('../')
@@ -134,11 +136,15 @@ tape('replicate social network for animals', function (t) {
 
       var progress = []
 
-      animalFriends.once('rpc:connect', function (rpc) {
-        rpc.progress(function (prog) {
+      pull(
+        animalFriends.replicate.changes(),
+        pull.drain(function (prog) {
           progress.push(prog)
-          process.stdout.write(bar(prog.progress/prog.total))
+          process.stdout.write(bar(prog))
         })
+      )
+
+      animalFriends.once('rpc:connect', function (rpc) {
         console.log('CONNECTION', Date.now(), c++)
       })
 
@@ -179,8 +185,8 @@ tape('replicate social network for animals', function (t) {
               t.equal(last.progress, total, 'last.total')
 
               console.log("DONE", seconds, c, total/seconds)
-              animalFriends.close()
-              animalNetwork.close()
+              animalFriends.close(true)
+              animalNetwork.close(true)
               t.end()
 
             }, 200)
