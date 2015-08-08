@@ -92,7 +92,7 @@ module.exports = {
           // existing pub, update the announcers list
           if (!f.announcers)
             f.announcers = addr.announcers || []
-          else if(addr.announcers[0])
+          else if(addr.announcers && addr.announcers[0])
             add(f.announcers, addr.announcers[0])
           return false
         }
@@ -241,6 +241,8 @@ module.exports = {
 
           if(fail) p.failure = (p.failure || 0) + 1
           else     p.failure = 0
+
+          schedule()
 
           // :TODO: delete local peers if failure > N
         })
