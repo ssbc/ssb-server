@@ -127,20 +127,24 @@ module.exports = {
       },
       accept: function (invite, cb) {
         var parts = invite.split('~')
+        var addr = toAddress(parts[0])
+
         createClient({seed: parts[1]})
-        (parts[0], function (err, rpc) {
+        (addr, function (err, rpc) {
+          if(err) return cb(explain(err, 'could not connect to server'))
           rpc.invite.use({feed: server.id}, function (err, msg) {
             if(err) return cb(explain(err, 'invite not accepted'))
+            
             cont.para([
               server.publish({
                 type: 'contact',
                 following: true,
                 autofollow: true,
-                contact: rpc.id
+                contact: addr.link || addr.key
               }),
               server.publish({
                 type: 'pub',
-                address: toAddress(parts[0]),
+                address: addr,
               })
             ])(function (err, results) {
               rpc.close()

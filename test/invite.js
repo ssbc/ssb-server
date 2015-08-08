@@ -10,6 +10,10 @@ var createSbot = require('../')
   .use(require('../plugins/invite'))
   .use(require('../plugins/friends'))
 
+function all(stream, cb) {
+  return pull(stream, pull.collect(cb))
+}
+
 tape('test invite api', function (t) {
 
   var aliceKeys = ssbKeys.generate()
@@ -90,6 +94,7 @@ tape('test invite.accept api', function (t) {
       alice.friends.hops({
         source: alice.id, dest: bob.id
       }, function (err, hops) {
+        if(err) throw err
         t.equal(hops[bob.id], 1, 'alice follows bob')
         alice.close(true)
         bob.close(true)
@@ -121,32 +126,44 @@ tape('test invite.accept doesnt follow if already followed', function (t) {
     bob.invite.accept(invite, function (err) {
       if(err) throw err
       alice.friends.hops(alice.id, function (err, hops) {
+        if(err) throw err
         console.log(hops)
         t.equal(hops[bob.id], 1)
-        pull(
-          bob.messagesByType('pub'),
-          pull.collect(function (err, ary) {
+        all(bob.messagesByType('pub'), function (err, ary) {
+          if(err) throw err
+          t.equal(ary.length, 1)
+
+          t.deepEqual({
+            type: 'pub',
+            address: u.toAddress(alice.address()),
+          }, ary[0].value.content)
+
+          all(bob.messagesByType('contact'), function (err, ary) {
             if(err) throw err
+
+            console.log(ary)
             t.equal(ary.length, 1)
 
             t.deepEqual({
-              type: 'pub',
-              address: u.toAddress(alice.address()),
+              type: 'contact',
+              contact: alice.id,
+              autofollow: true,
+              following: true,
             }, ary[0].value.content)
+            
 
-            console.log(ary[0].value)
             bob.invite.accept(invite, function (err) {
               t.ok(err)
               alice.friends.hops(alice.id, function (err, hops) {
                 console.log(hops)
                 t.equal(hops[bob.id], 1)
-                alice.close()
-                bob.close()
+                alice.close(true)
+                bob.close(true)
                 t.end()
               })
             })
           })
-        )
+        })
       })
     })
   })
