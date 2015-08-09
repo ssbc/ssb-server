@@ -20,6 +20,7 @@ var createSbot   = require('./')
   .use(require('./plugins/blobs'))
   .use(require('./plugins/invite'))
   .use(require('./plugins/block'))
+  .use(require('./plugins/local'))
   .use(require('./plugins/logging'))
   //TODO fix plugins/local
 
