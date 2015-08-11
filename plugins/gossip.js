@@ -41,7 +41,7 @@ module.exports = {
 
     function getPeer(id) {
       return u.find(peers.filter(Boolean), function (e) {
-        return e.id === id
+        return e.key === id
       })
     }
 
@@ -68,6 +68,7 @@ module.exports = {
       //add an address to the peer table.
       add: function (addr, source) {
         if(!addr) return
+
         addr = u.toAddress(addr)
         if(!u.isAddress(addr))
           throw new Error('not a valid address:' + JSON.stringify(addr))
@@ -109,7 +110,7 @@ module.exports = {
 
       var peer = getPeer(rpc.id)
 
-      if(peer) {
+      if (peer) {
         peer.id = rpc.id
         peer.connected = true
 
