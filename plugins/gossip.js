@@ -224,7 +224,11 @@ module.exports = {
       p.connected = true
 
       server.connect(p, function (err, rpc) {
-        if(err) return (cb && cb(err))
+        if (err) {
+          p.connected = false
+          server.emit('log:info', ['SBOT', p.host+':'+p.port+p.key, 'connection failed', err])
+          return (cb && cb(err))
+        }
 
         p.id = rpc.id
         p.time = p.time || {}
