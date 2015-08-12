@@ -60,9 +60,10 @@
     "tape": "~4.0.0"
   },
   "bin": {
-    "sbot": "./bin.js"
+    "sbot": "./sbot.js"
   },
   "scripts": {
+    "prepublish": "npm ls && npm test && noderify bin.js > sbot.js",
     "test": "set -e; for t in test/*.js; do node $t; done"
   },
   "author": "Paul Frazee <pfrazee@gmail.com>",
