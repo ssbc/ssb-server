@@ -12,6 +12,8 @@ var createHash   = require('multiblob/util').createHash
 var parse        = require('mynosql-query')
 var isRef        = require('ssb-ref')
 
+var isBuffer     = Buffer.isBuffer
+
 var createSbot   = require('./')
   .use(require('./plugins/master'))
   .use(require('./plugins/gossip'))
@@ -20,6 +22,7 @@ var createSbot   = require('./')
   .use(require('./plugins/blobs'))
   .use(require('./plugins/invite'))
   .use(require('./plugins/block'))
+  .use(require('./plugins/local'))
   .use(require('./plugins/logging'))
   //TODO fix plugins/local
 
@@ -65,6 +68,16 @@ function defaultRel (o, r) {
 function usage () {
   console.error('sbot {cmd} {options}')
   process.exit(1)
+}
+
+function maybeStringify () {
+  //var stringifyer = stringify('', '\n', '\n\n', 2, JSON.stringify)
+
+  return pull.map(function (b) {
+    if(isBuffer(b)) return b
+    return JSON.stringify(b, null, 2) + '\n\n'
+  })
+
 }
 
 var opts = require('minimist')(process.argv.slice(2))
@@ -219,7 +232,7 @@ function next1(rpc) {
       //JSON and length delimitation.
       pull(
         get(rpc, cmd)(data),
-        stringify('', '\n', '\n\n', 2, JSON.stringify),
+        maybeStringify(),
         toPull.sink(process.stdout, function (err) {
           if(err) throw explain(err, 'reading stream failed')
           process.exit()
