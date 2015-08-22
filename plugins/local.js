@@ -26,7 +26,6 @@ module.exports = {
       // (which means they can update their peer table)
       // Oh if this includes your local address,
       // then it becomes unforgeable.
-      console.log(sbot.getAddress())
       local.write(sbot.getAddress())
     }, 1000)
   }
