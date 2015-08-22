@@ -47,7 +47,7 @@
     "ssb-keys": "^4.0.3",
     "ssb-msgs": "~5.0.0",
     "ssb-ref": "^2.0.0",
-    "stream-to-pull-stream": "^1.6.2"
+    "stream-to-pull-stream": "~1.6.5"
   },
   "devDependencies": {
     "cat-names": "~1.0.2",
@@ -64,7 +64,7 @@
     "sbot": "./sbot.js"
   },
   "scripts": {
-    "prepublish": "npm ls && npm test && noderify bin.js > sbot.js",
+    "prepublish": "npm ls && npm test && noderify bin.js > sbot.js && chmod +x sbot.js",
     "test": "set -e; for t in test/*.js; do node $t; done"
   },
   "author": "Paul Frazee <pfrazee@gmail.com>",
