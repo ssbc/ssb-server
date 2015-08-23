@@ -116,6 +116,7 @@ module.exports = {
 
         notify({ type: 'connect', peer: peer })
         rpc.on('closed', function () {
+          peer.connected = false
           notify({ type: 'disconnect', peer: peer })
         })
       }
