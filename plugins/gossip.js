@@ -60,7 +60,15 @@ module.exports = {
         if(!addr.key) return cb(new Error('address must have ed25519 key'))
         // add peer to the table, incase it isn't already.
         gossip.add(addr, 'manual')
-        connect(addr, cb)
+        // look up the peer
+        var peer = u.find(peers, function (a) {
+          return (
+            addr.port === a.port
+            && addr.host === a.host
+            && addr.key === a.key
+          )
+        })
+        connect(peer, cb)
       },
       changes: function () {
         return notify.listen()
