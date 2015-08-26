@@ -39,7 +39,7 @@ var SSB = {
     'get'             : 'async',
     'getPublicKey'    : 'async',
     'getLatest'       : 'async',
-    'whoami'          : 'async',
+    'whoami'          : 'sync',
     'auth'            : 'async',
     'relatedMessages' : 'async',
     //local nodes
@@ -95,7 +95,7 @@ var SSB = {
       latest                   : ssb.latest,
       getLatest                : ssb.getLatest,
       createFeed               : ssb.createFeed,
-      whoami                   : function (cb) { cb(null, { id: feed.id }) },
+      whoami                   : function () { return { id: feed.id } },
       relatedMessages          : ssb.relatedMessages,
       query                    : ssb.query,
       createFeed               : ssb.createFeed,
