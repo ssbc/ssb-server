@@ -42,7 +42,7 @@
     "rimraf": "^2.4.2",
     "secret-stack": "^2.0.5",
     "secure-scuttlebutt": "^14.0.1",
-    "ssb-config": "~1.0.0",
+    "ssb-config": "~1.1.0",
     "ssb-feed": "~2.0.0",
     "ssb-keys": "^4.0.3",
     "ssb-msgs": "~5.0.0",
