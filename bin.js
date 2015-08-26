@@ -11,6 +11,8 @@ var stringify    = require('pull-stringify')
 var createHash   = require('multiblob/util').createHash
 var parse        = require('mynosql-query')
 var isRef        = require('ssb-ref')
+var config       = require('ssb-config/inject')(process.env.ssb_appname)
+
 
 var isBuffer     = Buffer.isBuffer
 
@@ -26,7 +28,6 @@ var createSbot   = require('./')
   .use(require('./plugins/logging'))
   //TODO fix plugins/local
 
-var config  = require('ssb-config')
 
 var keys = ssbKeys.loadOrCreateSync(path.join(config.path, 'secret'))
 
