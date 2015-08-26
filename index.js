@@ -39,9 +39,12 @@ var SSB = {
     'get'             : 'async',
     'getPublicKey'    : 'async',
     'getLatest'       : 'async',
-    'whoami'          : 'sync',
     'auth'            : 'async',
     'relatedMessages' : 'async',
+
+    'getAddress'      : 'sync',
+    'whoami'          : 'sync',
+
     //local nodes
     'getLocal'    : 'async',
 
