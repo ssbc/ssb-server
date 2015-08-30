@@ -47,8 +47,7 @@ Now, in another terminal, issue command:
 ```
 $ sbot whoami
 {
-  "id": "wuDDnMxVtk8U9hrueDj/T0itgp5HJZ4ZDEJodTyoMdg=.blake2s",
-  "public": "vUadxn7OumI4aaHa3FGNQZ+822rsaPvBeJoM4lQ6ayTZcOHlnb0+u41isdwGQv3t3qw//wvFH6JmeHTpJzmO2w==.k256"
+  "id": "@YO7Tam6MnFNmghJa1K8K1VFHErjMrD3jpS1ilyYCrX8=.ed25519"
 }
 ```
 
@@ -67,33 +66,43 @@ Scuttlebot will automatically sync with other computers on your wifi. If you wan
 It's easy to [run your own pub server](#running-a-pub-server), but life's easier if you can join an existing pub ([see the informal registry of pub servers](https://github.com/ssbc/scuttlebot/wiki/Pub-Servers)). Ask a pub-owner for an invite, then run the following command. This sends a request to the server and asks it to follow you. You'll see a similar output if you use this command.
 
 ```
-$ sbot invite.addMe <invite-code>
-
+$ sbot invite.accept <code>
 [
   {
-    "previous": "M9s8ow8TEkVrzrVfdOHs266ABOL58d50TYEduBMYLfM=.blake2s",
-    "author": "wuDDnMxVtk8U9hrueDj/T0itgp5HJZ4ZDEJodTyoMdg=.blake2s",
-    "sequence": 16,
-    "timestamp": 1419570197842,
-    "hash": "blake2s",
-    "content": {
-      "type": "follow",
-      "feed": "TNn7v0MsAs8OpQnyRwtsMeROVWGlKnS/ItX966PAWjI=.blake2s",
-      "rel": "follows"
-    },
-    "signature": "6CC1keA+VZJF2vDd2fjwS7ATPdEhSV+IFVaJNobSCkcvS5dz066UR1QNuRzilxlCA1zRo3wDvJm3rIEOWYzQrg==.blake2s.k256"
+    "key": "%v3hE0SUwT9QA0X1pHdFPD63q8YEiWmo6PCavotZI1x8=.sha256",
+    "value": {
+      "previous": null,
+      "author": "@p10R76tYs0fxqugpqrNj5/hQwThUMfMmxF9gFVzEARg=.ed25519",
+      "sequence": 1,
+      "timestamp": 1440608903230,
+      "hash": "sha256",
+      "content": {
+        "type": "contact",
+        "following": true,
+        "autofollow": true,
+        "contact": "@J+0DGLgRn8H5tVLCcRUfN7NfUcTGEZKqML3krEOJjDY=.ed25519"
+      },
+      "signature": "eFXsAQ/Ve/HCr1RKClNul2bl1txXuvLDbWJIIyeiz5g/sC/j4TbHCASTc6+AWUtprnH5LftFOV4KbxdiqmCMAg==.sig.ed25519"
+    }
   },
   {
-    "previous": "ylKOsS3KjsKAURQ+U7pDMABnDiMt2xHjpJonzDZCmkw=.blake2s",
-    "author": "wuDDnMxVtk8U9hrueDj/T0itgp5HJZ4ZDEJodTyoMdg=.blake2s",
-    "sequence": 17,
-    "timestamp": 1419570197975,
-    "hash": "blake2s",
-    "content": {
-      "type": "pub",
-      "address": "176.58.117.63"
-    },
-    "signature": "tbGFP/OSLrOxCjXJqjoGNzkpUmFXI4b4pf5t53REEBopDA6XG8oPphC1r3vYKhCvJuLERB8EhvwOs2GNjaOKUA==.blake2s.k256"
+    "key": "%dmnkEgD5EwuthpAEkkx3dmRD9B2m0S8Nzg5Q5QX+c3I=.sha256",
+    "value": {
+      "previous": "%v3hE0SUwT9QA0X1pHdFPD63q8YEiWmo6PCavotZI1x8=.sha256",
+      "author": "@p10R76tYs0fxqugpqrNj5/hQwThUMfMmxF9gFVzEARg=.ed25519",
+      "sequence": 2,
+      "timestamp": 1440608903248,
+      "hash": "sha256",
+      "content": {
+        "type": "pub",
+        "address": {
+          "host": "176.58.117.63",
+          "port": 8008,
+          "key": "@J+0DGLgRn8H5tVLCcRUfN7NfUcTGEZKqML3krEOJjDY=.ed25519"
+        }
+      },
+      "signature": "UL9HKRtESBrPqdHPiWY8Bj9e7N5kNlCnLw1t1Ur9C5/UQSdNW16hutuA/VaVW6+xina+8Hyu4IyhZchBxvQbBA==.sig.ed25519"
+    }
   }
 ]
 ```
@@ -116,21 +125,27 @@ $ ssh <user>@<host>
 $ npm install -g scuttlebot
 ```
 
-Run a server like above but with the public ip address of the computer it's running on (using a domain name is also fine):
-
+Run a server!
 ```
-$ sbot server --host 176.58.117.63
+$ sbot server
 ```
+You need to run it on a server that has a static ip address but this will be automatically detected by sbot. If it is not automatically detected, then you may set the host manually using `--host <ip>`. You can use a domain, but an ip address is preferred because that is more decentralized (no dependency on DNS) 
 
-In another terminal, create an invitation:
+
+Open another terminal on the *same server*:
 
 ```
 $ sbot invite.create 100
 "176.58.117.63,TNn7v0MsAs8OpQnyRwtsMeROVWGlKnS/ItX966PAWjI=.blake2s,yCHiB1JfBdIEUZEW/eURMRYe64FTTKuj7+F1p/xDrUc="
 ```
 
-The number specifies how many times the invite can be used before it expires. Share the code with friends so you can reach each other through your pub.
+The number specifies how many times the invite can be used before it expires. Your friends may use `sbot invite.accept` with the code (or "join a pubserver" button on patchwork).
 
+<!--
+//Commenting out this section because it is not true.
+//these instructions do not work anymore because you also need the pubkey of the server.
+//I think we need a better way to specify what server to connect to
+//because passing the pub key in via envvar isn't realistic.
 ### Control your pub server remotely
 
 Using `ssh` to manage your pub server can be a pain. Instead you can configure it to do whatever your local key asks.
@@ -151,7 +166,7 @@ Restart your pub server, and now issue commands from your local computer,
 $ ssb_host=<pub_ip> sbot whoami
 { "id": <pub server's id>, "public": <pub server's pubkey>}
 ```
-
+-->
 ### CLI usage
 
 Start a server
@@ -162,7 +177,7 @@ $ sbot server
 
 Then issue commands from another terminal.
 
-Add a simple message (type is required, but freeform):
+Add a simple message (type is required, but can be any string between 3 and 54 chars long):
 
 ```
 $ sbot publish --type post --text "hello world"
@@ -177,26 +192,36 @@ $ sbot whoami
 Set your nickname:
 
 ```
-$ sbot publish --type contact --name <name> --contact.feed <your_id>
+$ sbot publish --type contact --name <name> --contact <your_id>
 ```
 
 Follow another user:
 
 ```
-$ sbot publish --type contact --following --contact.feed <id>
+$ sbot publish --type contact --following --contact <id>
 ```
 
-Add a pub server (this is a server you'll connect to replicate with)
-(if port is the default, :8008, then that can be leftoff):
+Get the address of a server.
 
 ```
-$ sbot publish --type pub --address <domain:port>
+$ sbot getAddress
+"192.168.43.88:8008:@p10R76tYs0fxqugpqrNj5/hQwThUMfMmxF9gFVzEARg=.ed25519"
+```
+
+Add a pub server (this is a server you'll connect to replicate with):
+```
+$ sbot publish --type pub --address <ip:port:key>
 ```
 
 Read all messages in order received:
-
 ```
 $ sbot log
+```
+
+Read all messages by their type field (try "post" or "contact")
+
+```
+$ sbot messageByType <type>
 ```
 
 ## Configuration
