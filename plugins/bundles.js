@@ -212,8 +212,11 @@ function init (sbot, opts) {
           return cb(error('Invalid path', { invalidPath: true }))
       } else next(bundleid, relpath)
       function next (bundleid, relpath) {
-        if (!relpath || relpath == '/')
+        var isAutoIndex = false
+        if (!relpath || relpath == '/') {
           relpath = '/index.html'
+          isAutoIndex = true
+        }
 
         // get bundle
         sbot.bundles.get(bundleid, function (err, bundle) {
@@ -224,6 +227,7 @@ function init (sbot, opts) {
             var blob = bundle.blobs[normalizePath(relpath)]
             if (!blob)
               return cb(error('File not found', { notFound: true }))
+            blob.isAutoIndex = isAutoIndex
             cb(null, blob)
           } else {
             // working bundle, read from disk
@@ -233,6 +237,7 @@ function init (sbot, opts) {
                 return cb(explain(err, 'Failed to stat file'))
               stat.path = filepath
               stat.type = mime.lookup(filepath)
+              stat.isAutoIndex = isAutoIndex
               cb(null, stat)
             })
           }
