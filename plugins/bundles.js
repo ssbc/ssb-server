@@ -384,6 +384,13 @@ function init (sbot, opts) {
       done(function (err) {
         if (err) return cb(explain(err, 'Failed to update working bundles database'))
         cb(null, bundle)
+
+        // set as default if there's not already a fork for the given name
+        // :WARNING: this is not a safe transaction- the default fork could be set between `lookup` and `setForkAsDefault`
+        sbot.bundles.lookup(bundle.name, function (err, b) {
+          if (!b)
+            sbot.bundles.setForkAsDefault(bundle.id, function(){})
+        })
       })
     },
 
