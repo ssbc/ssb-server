@@ -69,10 +69,10 @@ function normalizeName (str) {
 
 // working id helpers
 function makeWorkingid () {
-  return '!%' + timestamp()
+  return 'working-' + timestamp()
 }
 function isWorkingid (str) {
-  return /^!%/.test(str)
+  return /^working-/.test(str)
 }
 
 function init (sbot, opts) {
@@ -109,9 +109,9 @@ function init (sbot, opts) {
           bundle.blobs[normalizePath(blob.path)] = blob
       })
       if (!bundle.name || !bundleNameRegex.test(bundle.name))
-        return sbot.emit('log:error', ['bundles', null, 'Invalid bundle message: name malformed'], { msg: msg })
+        return sbot.emit('log:error', ['bundles', null, 'Invalid bundle message: name malformed', { msg: msg }])
       if (Object.keys(bundle.blobs).length === 0)
-        return sbot.emit('log:error', ['bundles', null, 'Invalid bundle message: no blobs included'], { msg: msg })
+        return sbot.emit('log:error', ['bundles', null, 'Invalid bundle message: no blobs included', { msg: msg }])
 
       // write to database
       sbot.emit('bundles:got', bundle)
@@ -205,7 +205,7 @@ function init (sbot, opts) {
           if (!parts || !ref.isMsgId(parts[1]))
             return cb(error('Invalid path', { invalidPath: true }))
           next(parts[1], parts[2])
-        } else if (abspath.charAt(0) == '!' && abspath.charAt(1) == '%') {
+        } else if (isWorkingid(abspath)) {
           // working bundle path
           var parts = abspath.split('/')
           next(parts[0], parts.slice(1).join('/'))
@@ -352,12 +352,15 @@ function init (sbot, opts) {
     },
 
     // create a new working bundle
+    // - opts.dirpath: required string
     // - opts.name: required string
     // - opts.root: optional msghash
     // - opts.branch: optional msghash
-    createWorking: function (dirpath, opts, cb) {
+    createWorking: function (opts, cb) {
       if (!opts || !opts.name || !bundleNameRegex.test(opts.name))
         return cb(error('Invalid name', { invalidName: true }))
+      if (!opts.dirpath)
+        return cb(error('Invalid directory path', { invalidDirpath: true }))
       if (opts.root && !ref.isMsgId(opts.root))
         return cb(error('Invalid root hash', { invalidRoot: true }))
       if (opts.branch && !ref.isMsgId(opts.branch))
@@ -369,7 +372,7 @@ function init (sbot, opts) {
         name: opts.name,
         root: opts.root,
         branch: opts.branch,
-        dirpath: dirpath
+        dirpath: opts.dirpath
       }
       var done = multicb()
       workingDB.put(bundle.id, bundle, done())

@@ -1,10 +1,8 @@
 var tape      = require('tape')
 var fs        = require('fs')
-var pathlib      = require('path')
-// var toPull    = require('stream-to-pull-stream')
+var pathlib   = require('path')
 var pull      = require('pull-stream')
 var ssbKeys   = require('ssb-keys')
-// var u         = require('./util')
 var osenv     = require('osenv')
 var mkdirp    = require('mkdirp')
 var rimraf    = require('rimraf')
@@ -38,7 +36,7 @@ tape('create, read, list, remove working bundles', function (t) {
     keys: ssbKeys.generate()
   })
 
-  sbot.bundles.createWorking(tmpdirpath1, { name: 'Temp' }, function (err, bundle1) {
+  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp' }, function (err, bundle1) {
     if (err) throw err
     t.ok(bundle1.id)
     t.equal(bundle1.dirpath, tmpdirpath1)
@@ -48,7 +46,7 @@ tape('create, read, list, remove working bundles', function (t) {
       t.equal(bundle1.id, _bundle1.id)
       t.equal(bundle1.dirpath, _bundle1.dirpath)
 
-      sbot.bundles.createWorking(tmpdirpath2, { name: 'Temp2' }, function (err, bundle2) {
+      sbot.bundles.createWorking({ dirpath: tmpdirpath2, name: 'Temp2' }, function (err, bundle2) {
         if (err) throw err
         t.ok(bundle2.id)
         t.equal(bundle2.dirpath, tmpdirpath2)
@@ -88,7 +86,7 @@ tape('publish bundle, get published bundle, working version is updated', functio
     keys: user
   })
 
-  sbot.bundles.createWorking(tmpdirpath1, { name: 'Temp' }, function (err, bundle1) {
+  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp' }, function (err, bundle1) {
     if (err) throw err
 
     // publish the first time
@@ -173,7 +171,7 @@ tape('get/set default bundle at name', function (t) {
     keys: ssbKeys.generate()
   })
 
-  sbot.bundles.createWorking(tmpdirpath1, { name: 'Temp' }, function (err, bundle1) {
+  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp' }, function (err, bundle1) {
     if (err) throw err
 
     sbot.bundles.publishWorking(bundle1.id, [
@@ -212,7 +210,7 @@ tape('list revisions of a name and of a bundle', function (t) {
     keys: ssbKeys.generate()
   })
 
-  sbot.bundles.createWorking(tmpdirpath1, { name: 'Temp' }, function (err, bundle1) {
+  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp' }, function (err, bundle1) {
     if (err) throw err
     t.ok(bundle1.id)
     t.equal(bundle1.dirpath, tmpdirpath1)
@@ -239,9 +237,9 @@ tape('list revisions of a name and of a bundle', function (t) {
             pull(sbot.bundles.listRevisions('Temp'), pull.collect(function (err, bundles) {
               if (err) throw err
               t.equal(bundles.length, 3)
-              t.equal(bundles[0].id, bundle1.id)
-              t.ok(bundles[1].id === publishedBundle1.id || bundles[2].id === publishedBundle1.id)
-              t.ok(bundles[1].id === publishedBundle2.id || bundles[2].id === publishedBundle2.id)
+              t.equal(bundles[2].id, bundle1.id)
+              t.ok(bundles[0].id === publishedBundle1.id || bundles[1].id === publishedBundle1.id)
+              t.ok(bundles[0].id === publishedBundle2.id || bundles[1].id === publishedBundle2.id)
 
               pull(sbot.bundles.listRevisions(publishedBundle1.id), pull.collect(function (err, bundles) {
                 if (err) throw err
@@ -265,7 +263,7 @@ tape('get blob meta from working and published bundle, and from absolute paths',
     keys: ssbKeys.generate()
   })
 
-  sbot.bundles.createWorking(tmpdirpath1, { name: 'Temp' }, function (err, bundle1) {
+  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp' }, function (err, bundle1) {
     if (err) throw err
     t.ok(bundle1.id)
     t.equal(bundle1.dirpath, tmpdirpath1)
@@ -321,7 +319,7 @@ tape('get blob from working and published bundle, and from absolute path', funct
     keys: ssbKeys.generate()
   })
 
-  sbot.bundles.createWorking(tmpdirpath1, { name: 'Temp' }, function (err, bundle1) {
+  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp' }, function (err, bundle1) {
     if (err) throw err
     t.ok(bundle1.id)
     t.equal(bundle1.dirpath, tmpdirpath1)
@@ -368,7 +366,7 @@ tape('checkout published bundle', function (t) {
     keys: ssbKeys.generate()
   })
 
-  sbot.bundles.createWorking(tmpdirpath1, { name: 'Temp' }, function (err, bundle1) {
+  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp' }, function (err, bundle1) {
     if (err) throw err
     t.ok(bundle1.id)
     t.equal(bundle1.dirpath, tmpdirpath1)
