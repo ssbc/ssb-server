@@ -159,9 +159,9 @@ function init (sbot, opts) {
       // handle (abspath) signature
       if (typeof relpath == 'undefined') {
         relpath = null
-        this.getBlobMeta(bundleid, next)
+        sbot.bundles.getBlobMeta(bundleid, next)
       } else
-        this.getBlobMeta(bundleid, relpath, next)
+        sbot.bundles.getBlobMeta(bundleid, relpath, next)
 
       function next (err, meta) {
         if (err) return stream.abort(err)
@@ -179,7 +179,6 @@ function init (sbot, opts) {
     // get the metadata of a blob for a given (bundleid, relpath) or (abspath)
     // - latter case involves a lookup for the default fork for a given name
     getBlobMeta: function (bundleid, relpath, cb) {
-      var self = this
       var abspath
       // handle (abspath, cb) signature
       if (typeof relpath == 'function') {
@@ -190,7 +189,7 @@ function init (sbot, opts) {
         // go from abspath -> (bundleid,relpath)
         if (abspath.charAt(0) == '/') {
           // named path, eg '/foo/bar'
-          this.lookup(abspath, function (err, bundleid) {
+          sbot.bundles.lookup(abspath, function (err, bundleid) {
             if (err)
               return cb(explain(err, 'Failed to lookup bundle'))
 
@@ -217,7 +216,7 @@ function init (sbot, opts) {
           relpath = '/index.html'
 
         // get bundle
-        self.get(bundleid, function (err, bundle) {
+        sbot.bundles.get(bundleid, function (err, bundle) {
           if (err) return cb(err)
 
           if (ref.isMsgId(bundleid)) {
@@ -233,6 +232,7 @@ function init (sbot, opts) {
               if (err)
                 return cb(explain(err, 'Failed to stat file'))
               stat.path = filepath
+              stat.type = mime.lookup(filepath)
               cb(null, stat)
             })
           }
@@ -286,7 +286,7 @@ function init (sbot, opts) {
     // set the bundle as the default for its name
     setForkAsDefault: function (bundleid, cb) {
       // get the bundle
-      this.get(bundleid, function (err, bundle) {
+      sbot.bundles.get(bundleid, function (err, bundle) {
         if (err)
           return cb(err)
         if (!bundle.name)
@@ -306,8 +306,7 @@ function init (sbot, opts) {
     // copy a bundle's files into the given directory
     checkout: function (bundleid, dirpath, cb) {
       // get bundle
-      var self  = this
-      this.get(bundleid, function (err, bundle) {
+      sbot.bundles.get(bundleid, function (err, bundle) {
         if (err) return cb(err)
 
         // iterate blobs, construct filepath, pipe from blobstore into filepath
@@ -316,7 +315,7 @@ function init (sbot, opts) {
 
         var done = multicb()
         for (var relpath in bundle.blobs)
-          self.checkoutBlob(bundleid, relpath, pathlib.join(dirpath, relpath), done())
+          sbot.bundles.checkoutBlob(bundleid, relpath, pathlib.join(dirpath, relpath), done())
         done(cb)
       })
     },
@@ -331,9 +330,9 @@ function init (sbot, opts) {
         abspath  = bundleid
         relpath  = bundleid = null
 
-        this.getBlobMeta(abspath, next)
+        sbot.bundles.getBlobMeta(abspath, next)
       } else
-        this.getBlobMeta(bundleid, relpath, next)
+        sbot.bundles.getBlobMeta(bundleid, relpath, next)
 
       function next (err, meta) {
         if (err) return stream.abort(err)
@@ -403,7 +402,7 @@ function init (sbot, opts) {
         return cb(error('Files array is required', { invalidFiles: true }))
 
       // load the working bundle
-      this.get(bundleid, function (err, bundle) {
+      sbot.bundles.get(bundleid, function (err, bundle) {
         if (err)
           return cb(explain(err, 'Failed to load bundle from database'))
 
