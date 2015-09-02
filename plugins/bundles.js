@@ -465,7 +465,17 @@ function init (sbot, opts) {
     removeWorking: function (bundleid, cb) {
       if (!isWorkingid(bundleid))
         return cb(error('Invalid bundle id', { invalidId: true }))
-      workingDB.del(bundleid, cb)
+      sbot.bundles.get(bundleid, function (err, bundle) {
+        if (err) return cb(explain(err, 'Failed to get bundle for removal'))
+
+        // remove DB entries
+        var done = multicb({ pluck: 1 })
+        workingDB.del(bundleid, done())
+        bundlesDB.del([bundle.name, bundleid], done())
+        if (bundle.root) bundlesDB.del([bundle.root, bundleid], done())
+        if (bundle.branch) bundlesDB.del([bundle.branch, bundleid], done())
+        done(cb)
+      })
     }
   }
 }
