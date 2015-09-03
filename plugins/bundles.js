@@ -187,7 +187,18 @@ function init (sbot, opts) {
         relpath = bundleid = null
 
         // go from abspath -> (bundleid,relpath)
-        if (abspath.charAt(0) == '/') {
+        var abspathNoSlash = abspath.charAt(0) == '/' ? abspath.slice(1) : abspath
+        if (isWorkingid(abspathNoSlash)) {
+          // working bundle path
+          var parts = abspathNoSlash.split('/')
+          next(parts[0], parts.slice(1).join('/'))
+        } else if (abspathNoSlash.charAt(0) == '%') {
+          // published bundle path
+          var parts = /(%.*\.sha256)(.*)/i.exec(abspathNoSlash)
+          if (!parts || !ref.isMsgId(parts[1]))
+            return cb(error('Invalid path', { invalidPath: true }))
+          next(parts[1], parts[2])
+        } else {
           // named path, eg '/foo/bar'
           sbot.bundles.lookup(abspath, function (err, bundleid) {
             if (err)
@@ -195,21 +206,10 @@ function init (sbot, opts) {
 
             // extract the relpath
             // eg /foo/bar -> /bar
-            relpath = '/' + (abspath.split('/').slice(2).join('/'))
+            relpath = '/' + (abspathNoSlash.split('/').slice(1).join('/'))
             next(bundleid, relpath)
           })
-        } else if (abspath.charAt(0) == '%') {
-          // published bundle path
-          var parts = /(%.*\.sha256)(.*)/i.exec(abspath)
-          if (!parts || !ref.isMsgId(parts[1]))
-            return cb(error('Invalid path', { invalidPath: true }))
-          next(parts[1], parts[2])
-        } else if (isWorkingid(abspath)) {
-          // working bundle path
-          var parts = abspath.split('/')
-          next(parts[0], parts.slice(1).join('/'))
-        } else
-          return cb(error('Invalid path', { invalidPath: true }))
+        }
       } else next(bundleid, relpath)
       function next (bundleid, relpath) {
         var isAutoIndex = false
