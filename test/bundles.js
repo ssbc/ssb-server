@@ -29,7 +29,7 @@ fs.writeFileSync(pathlib.join(tmpdirpath1, 'file1.txt'), 'one')
 fs.writeFileSync(pathlib.join(tmpdirpath1, 'file2.txt'), 'two')
 fs.writeFileSync(pathlib.join(tmpdirpath1, 'file3.txt'), 'three')
 
-tape('create, read, list, remove working bundles', function (t) {
+tape('create, read, list, update, remove working bundles', function (t) {
   var sbot = createSbot({
     temp: 'test-bundles-1',
     timeout: 1000,
@@ -59,18 +59,27 @@ tape('create, read, list, remove working bundles', function (t) {
           t.equal(bundle2.id, bundles[1].id)
           t.equal(bundle2.dirpath, bundles[1].dirpath)
 
-          sbot.bundles.removeWorking(bundle2.id, function (err) {
+          sbot.bundles.updateWorking(bundle1.id, { dirpath: tmpdirpath3 }, function (err) {
             if (err) throw err
 
-            pull(sbot.bundles.listWorking(), pull.collect(function (err, bundles) {
+            sbot.bundles.get(bundle1.id, function (err, bundle1) {
               if (err) throw err
-              t.equal(bundles.length, 1)
-              t.equal(bundle1.id, bundles[0].id)
-              t.equal(bundle1.dirpath, bundles[0].dirpath)
+              t.equal(bundle1.dirpath, tmpdirpath3)
 
-              t.end()
-              sbot.close()
-            }))
+              sbot.bundles.removeWorking(bundle2.id, function (err) {
+                if (err) throw err
+
+                pull(sbot.bundles.listWorking(), pull.collect(function (err, bundles) {
+                  if (err) throw err
+                  t.equal(bundles.length, 1)
+                  t.equal(bundle1.id, bundles[0].id)
+                  t.equal(bundle1.dirpath, bundles[0].dirpath)
+
+                  t.end()
+                  sbot.close()
+                }))
+              })
+            })
           })
         }))
       })

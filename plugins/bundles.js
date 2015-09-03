@@ -32,6 +32,7 @@ module.exports = {
 
     listWorking: 'source',
     createWorking: 'async',
+    updateWorking: 'async',
     publishWorking: 'async',
     removeWorking: 'async'
   },
@@ -395,6 +396,26 @@ function init (sbot, opts) {
           if (!b)
             sbot.bundles.setForkAsDefault(bundle.id, function(){})
         })
+      })
+    },
+
+    // update a working bundle
+    // - opts.dirpath: optional string
+    updateWorking: function (bundleid, opts, cb) {
+      if (!isWorkingid(bundleid))
+        return cb(error('Invalid bundle id', { invalidId: true }))
+
+      // load the working bundle
+      sbot.bundles.get(bundleid, function (err, bundle) {
+        if (err)
+          return cb(explain(err, 'Failed to load bundle from database'))
+
+        // apply updates
+        if (opts && opts.dirpath)
+          bundle.dirpath = opts.dirpath
+
+        // write to db
+        workingDB.put(bundle.id, bundle, cb)
       })
     },
 
