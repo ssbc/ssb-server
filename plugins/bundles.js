@@ -257,7 +257,7 @@ function init (sbot, opts) {
 
       // check the database
       namesDB.get(normalizeName(name), function (err, bundleid) {
-        if (err)
+        if (err && !err.notFound)
           return cb(explain(err, 'Failed to lookup name mapping'))
         cb(null, bundleid)
       })
@@ -474,7 +474,17 @@ function init (sbot, opts) {
         bundlesDB.del([bundle.name, bundleid], done())
         if (bundle.root) bundlesDB.del([bundle.root, bundleid], done())
         if (bundle.branch) bundlesDB.del([bundle.branch, bundleid], done())
+        var nameMappingCB = done()
         done(cb)
+
+        // remove from default
+        // :WARNING: this is not a safe transaction- the default fork could be set between `lookup` and `setForkAsDefault`
+        sbot.bundles.lookup(bundle.name, function (err, b) {
+          if (b && b == bundleid)
+            namesDB.del(normalizeName(bundle.name), nameMappingCB)
+          else
+            nameMappingCB()
+        })
       })
     }
   }

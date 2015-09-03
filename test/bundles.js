@@ -171,10 +171,10 @@ tape('get/set default bundle at name', function (t) {
     keys: ssbKeys.generate()
   })
 
-  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp' }, function (err, bundle1) {
+  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp' }, function (err, working) {
     if (err) throw err
 
-    sbot.bundles.publishWorking(bundle1.id, [
+    sbot.bundles.publishWorking(working.id, [
       pathlib.join(tmpdirpath1, 'file1.txt'),
       pathlib.join(tmpdirpath1, 'file2.txt'),
       pathlib.join(tmpdirpath1, 'file3.txt')
@@ -194,8 +194,32 @@ tape('get/set default bundle at name', function (t) {
           done(function (err, bundleids) {
             if (err) throw err
             t.equal(bundleids.filter(function (id) { return id == bundle.id }).length, 4)
-            t.end()
-            sbot.close()
+
+            // set the working bundle to default
+            sbot.bundles.setForkAsDefault(working.id, function (err) {
+              if (err) throw err
+
+              var done = multicb({ pluck: 1 })
+              sbot.bundles.lookup('/Temp', done())
+              sbot.bundles.lookup('Temp', done())
+              sbot.bundles.lookup('/temp', done())
+              sbot.bundles.lookup('/Temp/foo/bar', done())
+              done(function (err, bundleids) {
+                if (err) throw err
+                t.equal(bundleids.filter(function (id) { return id == working.id }).length, 4)
+
+                // remove the working bundle and check that the mapping is nullified too
+                sbot.bundles.removeWorking(working.id, function (err) {
+                  if (err) throw err
+                  sbot.bundles.lookup('Temp', function (err, bid) {
+                    if (err) throw err
+                    t.equal(bid, undefined)
+                    t.end()
+                    sbot.close()
+                  })
+                })
+              })
+            })
           })
         })
       })
