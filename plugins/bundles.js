@@ -102,6 +102,7 @@ function init (sbot, opts) {
         name: c.name,
         desc: c.desc,
         author: msg.value.author,
+        timestamp: msg.value.timestamp,
         root: mlib.link(c.root, 'msg') ? mlib.link(c.root).link : null,
         branch: mlib.link(c.branch, 'msg') ? mlib.link(c.branch).link : null,
         blobs: {}
