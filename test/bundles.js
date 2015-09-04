@@ -302,8 +302,9 @@ tape('list revisions of a name and of a bundle', function (t) {
             // get revisions of the first published version
             pull(sbot.bundles.listRevisions(publishedBundle1.id), pull.collect(function (err, bundles) {
               if (err) throw err
-              t.equal(bundles.length, 1)
+              t.equal(bundles.length, 2)
               t.equal(bundles[0].id, publishedBundle2.id)
+              t.equal(bundles[1].id, bundle1.id)
               t.end()
               sbot.close()
             }))

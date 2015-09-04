@@ -513,7 +513,7 @@ function init (sbot, opts) {
 
             // update indexes
             var done2 = multicb()
-            if (bundle.branch)
+            if (bundle.branch && bundle.branch != bundle.root)
               bundlesDB.del([bundle.branch, bundleid], done2()) // remove old branch index
             bundlesDB.put([publishedMsg.key, bundleid], 1, done2())
             done2(function () {
