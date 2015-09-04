@@ -109,7 +109,7 @@ tape('publish bundle, get published bundle, working version is updated', functio
     if (err) throw err
 
     // publish the first time
-    sbot.bundles.publishWorking(bundle1.id, [
+    sbot.bundles.publishWorking(bundle1.id, { desc: 'my published' }, [
       pathlib.join(tmpdirpath1, 'file1.txt'),
       pathlib.join(tmpdirpath1, 'file2.txt')
     ], function (err, msg) {
@@ -124,7 +124,7 @@ tape('publish bundle, get published bundle, working version is updated', functio
           // check published version
           t.equal(published1.id, msg.key)
           t.equal(published1.name, 'temp')
-          t.equal(published1.desc, 'my test')
+          t.equal(published1.desc, 'my published')
           t.equal(published1.author, user.id)
           t.ok(published1.timestamp)
           t.equal(published1.blobs['/file1.txt'].path, '/file1.txt')
@@ -141,7 +141,7 @@ tape('publish bundle, get published bundle, working version is updated', functio
             t.equal(working.branch, published1.id)
 
             // publish again
-            sbot.bundles.publishWorking(bundle1.id, [
+            sbot.bundles.publishWorking(bundle1.id, null, [
               pathlib.join(tmpdirpath1, 'file1.txt'),
               pathlib.join(tmpdirpath1, 'file2.txt'),
               pathlib.join(tmpdirpath1, 'file3.txt')
@@ -197,7 +197,7 @@ tape('get/set default bundle at name', function (t) {
   sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp', desc: 'my test' }, function (err, working) {
     if (err) throw err
 
-    sbot.bundles.publishWorking(working.id, [
+    sbot.bundles.publishWorking(working.id, null, [
       pathlib.join(tmpdirpath1, 'file1.txt'),
       pathlib.join(tmpdirpath1, 'file2.txt'),
       pathlib.join(tmpdirpath1, 'file3.txt')
@@ -262,7 +262,7 @@ tape('list revisions of a name and of a bundle', function (t) {
     t.ok(bundle1.id)
     t.equal(bundle1.dirpath, tmpdirpath1)
 
-    sbot.bundles.publishWorking(bundle1.id, [
+    sbot.bundles.publishWorking(bundle1.id, { desc: 'my published' }, [
       pathlib.join(tmpdirpath1, 'file1.txt'),
       pathlib.join(tmpdirpath1, 'file2.txt')
     ], function (err, msg) {
@@ -271,7 +271,7 @@ tape('list revisions of a name and of a bundle', function (t) {
       console.log('published msg', msg)
       sbot.once('bundles:processed', function (publishedBundle1) {
 
-        sbot.bundles.publishWorking(bundle1.id, [
+        sbot.bundles.publishWorking(bundle1.id, null, [
           pathlib.join(tmpdirpath1, 'file1.txt'),
           pathlib.join(tmpdirpath1, 'file2.txt'),
           pathlib.join(tmpdirpath1, 'file3.txt')
@@ -315,7 +315,7 @@ tape('get blob meta from working and published bundle, and from absolute paths',
     t.ok(bundle1.id)
     t.equal(bundle1.dirpath, tmpdirpath1)
 
-    sbot.bundles.publishWorking(bundle1.id, [
+    sbot.bundles.publishWorking(bundle1.id, null, [
       pathlib.join(tmpdirpath1, 'file1.txt'),
       pathlib.join(tmpdirpath1, 'file2.txt')
     ], function (err, msg) {
@@ -371,7 +371,7 @@ tape('get blob from working and published bundle, and from absolute path', funct
     t.ok(bundle1.id)
     t.equal(bundle1.dirpath, tmpdirpath1)
 
-    sbot.bundles.publishWorking(bundle1.id, [
+    sbot.bundles.publishWorking(bundle1.id, null, [
       pathlib.join(tmpdirpath1, 'file1.txt'),
       pathlib.join(tmpdirpath1, 'file2.txt')
     ], function (err, msg) {
@@ -418,7 +418,7 @@ tape('checkout published bundle', function (t) {
     t.ok(bundle1.id)
     t.equal(bundle1.dirpath, tmpdirpath1)
 
-    sbot.bundles.publishWorking(bundle1.id, [
+    sbot.bundles.publishWorking(bundle1.id, null, [
       pathlib.join(tmpdirpath1, 'file1.txt'),
       pathlib.join(tmpdirpath1, 'file2.txt')
     ], function (err, msg) {

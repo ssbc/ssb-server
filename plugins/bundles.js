@@ -448,10 +448,16 @@ function init (sbot, opts) {
     },
 
     // publish a working bundle
+    // - opts.name: optional string, default's to working bundle's data
+    // - opts.desc: optional string, default's to working bundle's data
     // - files: array of absolute filepaths to include in the bundle
-    publishWorking: function (bundleid, files, cb) {
+    publishWorking: function (bundleid, opts, files, cb) {
       if (!isWorkingid(bundleid))
         return cb(error('Invalid bundle id', { invalidId: true }))
+      if (opts && opts.name && !bundleNameRegex.test(opts.name))
+        return cb(error('Invalid name', { invalidName: true }))
+      if (opts && opts.desc && typeof opts.desc != 'string')
+        return cb(error('Invalid desc', { invalidDesc: true }))
       if (!Array.isArray(files))
         return cb(error('Files array is required', { invalidFiles: true }))
 
@@ -490,8 +496,8 @@ function init (sbot, opts) {
           // publish the bundle message
           var msg = {
             type: 'bundle',
-            name: bundle.name,
-            desc: bundle.desc,
+            name: (opts && opts.name) ? opts.name : bundle.name,
+            desc: (opts && opts.desc) ? opts.desc : bundle.desc,
             includes: blobs
           }
           if (bundle.root) msg.root = { link: bundle.root }
