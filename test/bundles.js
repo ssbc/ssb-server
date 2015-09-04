@@ -36,28 +36,33 @@ tape('create, read, list, update, remove working bundles', function (t) {
     keys: ssbKeys.generate()
   })
 
-  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp' }, function (err, bundle1) {
+  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp', desc: 'my test' }, function (err, bundle1) {
     if (err) throw err
     t.ok(bundle1.id)
     t.equal(bundle1.dirpath, tmpdirpath1)
+    t.equal(bundle1.desc, 'my test')
 
     sbot.bundles.get(bundle1.id, function (err, _bundle1) {
       if (err) throw err
       t.equal(bundle1.id, _bundle1.id)
       t.equal(bundle1.dirpath, _bundle1.dirpath)
+      t.equal(bundle1.desc, _bundle1.desc)
 
-      sbot.bundles.createWorking({ dirpath: tmpdirpath2, name: 'Temp2' }, function (err, bundle2) {
+      sbot.bundles.createWorking({ dirpath: tmpdirpath2, name: 'Temp2', desc: 'my test' }, function (err, bundle2) {
         if (err) throw err
         t.ok(bundle2.id)
         t.equal(bundle2.dirpath, tmpdirpath2)
+        t.equal(bundle2.desc, 'my test')
 
         pull(sbot.bundles.listWorking(), pull.collect(function (err, bundles) {
           if (err) throw err
           t.equal(bundles.length, 2)
           t.equal(bundle1.id, bundles[0].id)
           t.equal(bundle1.dirpath, bundles[0].dirpath)
+          t.equal(bundle1.desc, bundles[0].desc)
           t.equal(bundle2.id, bundles[1].id)
           t.equal(bundle2.dirpath, bundles[1].dirpath)
+          t.equal(bundle2.desc, bundles[1].desc)
 
           sbot.bundles.updateWorking(bundle1.id, { dirpath: tmpdirpath3 }, function (err) {
             if (err) throw err
@@ -95,7 +100,7 @@ tape('publish bundle, get published bundle, working version is updated', functio
     keys: user
   })
 
-  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp' }, function (err, bundle1) {
+  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp', desc: 'my test' }, function (err, bundle1) {
     if (err) throw err
 
     // publish the first time
@@ -114,6 +119,7 @@ tape('publish bundle, get published bundle, working version is updated', functio
           // check published version
           t.equal(published1.id, msg.key)
           t.equal(published1.name, 'Temp')
+          t.equal(published1.desc, 'my test')
           t.equal(published1.author, user.id)
           t.equal(published1.blobs['/file1.txt'].path, '/file1.txt')
           t.equal(published1.blobs['/file1.txt'].type, 'text/plain')
@@ -145,6 +151,7 @@ tape('publish bundle, get published bundle, working version is updated', functio
                   // check published version
                   t.equal(published2.id, msg2.key)
                   t.equal(published2.name, 'Temp')
+                  t.equal(published2.desc, 'my test')
                   t.equal(published2.author, user.id)
                   t.equal(published2.blobs['/file1.txt'].path, '/file1.txt')
                   t.equal(published2.blobs['/file1.txt'].type, 'text/plain')
@@ -180,7 +187,7 @@ tape('get/set default bundle at name', function (t) {
     keys: ssbKeys.generate()
   })
 
-  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp' }, function (err, working) {
+  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp', desc: 'my test' }, function (err, working) {
     if (err) throw err
 
     sbot.bundles.publishWorking(working.id, [
@@ -243,7 +250,7 @@ tape('list revisions of a name and of a bundle', function (t) {
     keys: ssbKeys.generate()
   })
 
-  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp' }, function (err, bundle1) {
+  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp', desc: 'my test' }, function (err, bundle1) {
     if (err) throw err
     t.ok(bundle1.id)
     t.equal(bundle1.dirpath, tmpdirpath1)
@@ -296,7 +303,7 @@ tape('get blob meta from working and published bundle, and from absolute paths',
     keys: ssbKeys.generate()
   })
 
-  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp' }, function (err, bundle1) {
+  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp', desc: 'my test' }, function (err, bundle1) {
     if (err) throw err
     t.ok(bundle1.id)
     t.equal(bundle1.dirpath, tmpdirpath1)
@@ -352,7 +359,7 @@ tape('get blob from working and published bundle, and from absolute path', funct
     keys: ssbKeys.generate()
   })
 
-  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp' }, function (err, bundle1) {
+  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp', desc: 'my test' }, function (err, bundle1) {
     if (err) throw err
     t.ok(bundle1.id)
     t.equal(bundle1.dirpath, tmpdirpath1)
@@ -399,7 +406,7 @@ tape('checkout published bundle', function (t) {
     keys: ssbKeys.generate()
   })
 
-  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp' }, function (err, bundle1) {
+  sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp', desc: 'my test' }, function (err, bundle1) {
     if (err) throw err
     t.ok(bundle1.id)
     t.equal(bundle1.dirpath, tmpdirpath1)

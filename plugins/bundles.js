@@ -100,6 +100,7 @@ function init (sbot, opts) {
       var bundle = {
         id: msg.key,
         name: c.name,
+        desc: c.desc,
         author: msg.value.author,
         root: mlib.link(c.root, 'msg') ? mlib.link(c.root).link : null,
         branch: mlib.link(c.branch, 'msg') ? mlib.link(c.branch).link : null,
@@ -359,12 +360,15 @@ function init (sbot, opts) {
     // create a new working bundle
     // - opts.dirpath: required string
     // - opts.name: required string
+    // - opts.desc: require string
     // - opts.root: optional msghash
     // - opts.branch: optional msghash
     createWorking: function (opts, cb) {
       if (!opts || !opts.name || !bundleNameRegex.test(opts.name))
         return cb(error('Invalid name', { invalidName: true }))
-      if (!opts.dirpath)
+      if (!opts.desc || typeof opts.desc != 'string')
+        return cb(error('Invalid desc', { invalidDesc: true }))
+      if (!opts.dirpath || typeof opts.dirpath != 'string')
         return cb(error('Invalid directory path', { invalidDirpath: true }))
       if (opts.root && !ref.isMsgId(opts.root))
         return cb(error('Invalid root hash', { invalidRoot: true }))
@@ -375,6 +379,7 @@ function init (sbot, opts) {
       var bundle = {
         id: makeWorkingid(),
         name: opts.name,
+        desc: opts.desc,
         root: opts.root,
         branch: opts.branch,
         dirpath: opts.dirpath
@@ -463,6 +468,7 @@ function init (sbot, opts) {
           var msg = {
             type: 'bundle',
             name: bundle.name,
+            desc: bundle.desc,
             includes: blobs
           }
           if (bundle.root) msg.root = { link: bundle.root }
