@@ -89,7 +89,7 @@ function init (sbot, opts) {
   - workingDB  wid: bundle                  -> working bundles
   - namesDB    name: hash|wid               -> maps default fork for name
   - bundlesDB  [name, hash|wid]: 1          -> forks/revisions for name
-  - bundlesDB  [bundle.root, hash|wid]: 1   -> revisions for hash
+  - bundlesDB  [bundle.root, hash|wid]: 1   -> revisions for root
   - bundlesDB  [bundle.branch, hash|wid]: 1 -> revisions for branch
   */
 
@@ -269,9 +269,11 @@ function init (sbot, opts) {
     },
 
     // get all of the forks of a given (name or bundleid)
-    listRevisions: function (nameOrBundleid) {
+    // - opts.root: optional any, if set will filter any entries with a root that is !=
+    listRevisions: function (nameOrBundleid, opts) {
       if (!isWorkingid(nameOrBundleid) && !ref.isMsgId(nameOrBundleid))
         nameOrBundleid = normalizeName(nameOrBundleid)
+      var hasRootFilter = (opts && typeof opts.root != 'undefined')
       return pull(
         // read the index
         pl.read(bundlesDB, {
@@ -289,6 +291,10 @@ function init (sbot, opts) {
             workingDB.get(bundleid, cb)
           } else
             cb(error('Invalid bundle id in index', { bundleid: bundleid, invalidId: true }))
+        }),
+        pull.filter(function (b) {
+          if (!hasRootFilter) return true
+          return b.root == opts.root
         })
       )
     },

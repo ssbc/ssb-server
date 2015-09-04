@@ -257,11 +257,13 @@ tape('list revisions of a name and of a bundle', function (t) {
     keys: ssbKeys.generate()
   })
 
+  // create a working bundle
   sbot.bundles.createWorking({ dirpath: tmpdirpath1, name: 'Temp', desc: 'my test' }, function (err, bundle1) {
     if (err) throw err
     t.ok(bundle1.id)
     t.equal(bundle1.dirpath, tmpdirpath1)
 
+    // publish a first version
     sbot.bundles.publishWorking(bundle1.id, { desc: 'my published' }, [
       pathlib.join(tmpdirpath1, 'file1.txt'),
       pathlib.join(tmpdirpath1, 'file2.txt')
@@ -271,6 +273,7 @@ tape('list revisions of a name and of a bundle', function (t) {
       console.log('published msg', msg)
       sbot.once('bundles:processed', function (publishedBundle1) {
 
+        // publish a second version
         sbot.bundles.publishWorking(bundle1.id, null, [
           pathlib.join(tmpdirpath1, 'file1.txt'),
           pathlib.join(tmpdirpath1, 'file2.txt'),
@@ -281,6 +284,7 @@ tape('list revisions of a name and of a bundle', function (t) {
           console.log('published msg', msg)
           sbot.once('bundles:processed', function (publishedBundle2) {
 
+            // get all revisions of the name
             pull(sbot.bundles.listRevisions('Temp'), pull.collect(function (err, bundles) {
               if (err) throw err
               t.equal(bundles.length, 3)
@@ -288,12 +292,20 @@ tape('list revisions of a name and of a bundle', function (t) {
               t.ok(bundles[0].id === publishedBundle1.id || bundles[1].id === publishedBundle1.id)
               t.ok(bundles[0].id === publishedBundle2.id || bundles[1].id === publishedBundle2.id)
 
-              pull(sbot.bundles.listRevisions(publishedBundle1.id), pull.collect(function (err, bundles) {
+              // get just the root revisions of the name
+              pull(sbot.bundles.listRevisions('Temp', { root: null }), pull.collect(function (err, bundles) {
                 if (err) throw err
                 t.equal(bundles.length, 1)
-                t.equal(bundles[0].id, publishedBundle2.id)
-                t.end()
-                sbot.close()
+                t.equal(bundles[0].id, publishedBundle1.id)
+
+                // get revisions of the first published version
+                pull(sbot.bundles.listRevisions(publishedBundle1.id), pull.collect(function (err, bundles) {
+                  if (err) throw err
+                  t.equal(bundles.length, 1)
+                  t.equal(bundles[0].id, publishedBundle2.id)
+                  t.end()
+                  sbot.close()
+                }))
               }))
             }))
           })
