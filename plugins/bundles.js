@@ -398,7 +398,7 @@ function init (sbot, opts) {
       bundlesDB.put([normalizeName(bundle.name), bundle.id], 1, done())
       if (bundle.root)
         bundlesDB.put([bundle.root, bundle.id], 1, done())
-      if (bundle.branch)
+      if (bundle.branch && bundle.branch != bundle.root)
         bundlesDB.put([bundle.branch, bundle.id], 1, done())
       done(function (err) {
         if (err) return cb(explain(err, 'Failed to update working bundles database'))
@@ -511,12 +511,20 @@ function init (sbot, opts) {
           sbot.publish(msg, function (err, publishedMsg) {
             if (err) return cb(explain(err, 'Failed to publish bundle message'))
 
-            // update the working bundle
-            bundle.root = bundle.root || publishedMsg.key
-            bundle.branch = publishedMsg.key
-            workingDB.put(bundle.id, bundle, function (err) {
-              if (err) return cb(explain(err, 'Failed to update working bundle'))
-              cb(null, publishedMsg)
+            // update indexes
+            var done2 = multicb()
+            if (bundle.branch)
+              bundlesDB.del([bundle.branch, bundleid], done2()) // remove old branch index
+            bundlesDB.put([publishedMsg.key, bundleid], 1, done2())
+            done2(function () {
+
+              // update the working bundle
+              bundle.root = bundle.root || publishedMsg.key
+              bundle.branch = publishedMsg.key
+              workingDB.put(bundle.id, bundle, function (err) {
+                if (err) return cb(explain(err, 'Failed to update working bundle'))
+                cb(null, publishedMsg)
+              })
             })
           })
         })
@@ -535,7 +543,7 @@ function init (sbot, opts) {
         workingDB.del(bundleid, done())
         bundlesDB.del([normalizeName(bundle.name), bundleid], done())
         if (bundle.root) bundlesDB.del([bundle.root, bundleid], done())
-        if (bundle.branch) bundlesDB.del([bundle.branch, bundleid], done())
+        if (bundle.branch && bundle.branch != bundle.root) bundlesDB.del([bundle.branch, bundleid], done())
         var nameMappingCB = done()
         done(cb)
 

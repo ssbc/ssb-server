@@ -116,68 +116,68 @@ tape('publish bundle, get published bundle, working version is updated', functio
       if (err) throw err
       console.log('published msg', msg)
       t.equal(msg.value.content.includes.length, 2)
+    })
 
-      sbot.once('bundles:processed', function () {
-        sbot.bundles.get(msg.key, function (err, published1) {
+    sbot.once('bundles:processed', function (b) {
+      sbot.bundles.get(b.id, function (err, published1) {
+        if (err) throw err
+
+        // check published version
+        t.equal(published1.id, b.id)
+        t.equal(published1.name, 'temp')
+        t.equal(published1.desc, 'my published')
+        t.equal(published1.author, user.id)
+        t.ok(published1.timestamp)
+        t.equal(published1.blobs['/file1.txt'].path, '/file1.txt')
+        t.equal(published1.blobs['/file1.txt'].type, 'text/plain')
+        t.equal(published1.blobs['/file2.txt'].path, '/file2.txt')
+        t.equal(published1.blobs['/file2.txt'].type, 'text/plain')
+
+        sbot.bundles.get(bundle1.id, function (err, working) { 
           if (err) throw err
 
-          // check published version
-          t.equal(published1.id, msg.key)
-          t.equal(published1.name, 'temp')
-          t.equal(published1.desc, 'my published')
-          t.equal(published1.author, user.id)
-          t.ok(published1.timestamp)
-          t.equal(published1.blobs['/file1.txt'].path, '/file1.txt')
-          t.equal(published1.blobs['/file1.txt'].type, 'text/plain')
-          t.equal(published1.blobs['/file2.txt'].path, '/file2.txt')
-          t.equal(published1.blobs['/file2.txt'].type, 'text/plain')
+          // check that the working blob now points to published version
+          t.equal(working.id, bundle1.id)
+          t.equal(working.root, published1.id)
+          t.equal(working.branch, published1.id)
 
-          sbot.bundles.get(bundle1.id, function (err, working) { 
+          // publish again
+          sbot.bundles.publishWorking(bundle1.id, null, [
+            pathlib.join(tmpdirpath1, 'file1.txt'),
+            pathlib.join(tmpdirpath1, 'file2.txt'),
+            pathlib.join(tmpdirpath1, 'file3.txt')
+          ], function (err, msg2) {
             if (err) throw err
+            console.log('published msg', msg2)
+            t.equal(msg2.value.content.includes.length, 3)
+          })
 
-            // check that the working blob now points to published version
-            t.equal(working.id, bundle1.id)
-            t.equal(working.root, published1.id)
-            t.equal(working.branch, published1.id)
-
-            // publish again
-            sbot.bundles.publishWorking(bundle1.id, null, [
-              pathlib.join(tmpdirpath1, 'file1.txt'),
-              pathlib.join(tmpdirpath1, 'file2.txt'),
-              pathlib.join(tmpdirpath1, 'file3.txt')
-            ], function (err, msg2) {
+          sbot.once('bundles:processed', function (b) {
+            sbot.bundles.get(b.id, function (err, published2) {
               if (err) throw err
-              console.log('published msg', msg2)
-              t.equal(msg2.value.content.includes.length, 3)
 
-              sbot.once('bundles:processed', function () {
-                sbot.bundles.get(msg2.key, function (err, published2) {
-                  if (err) throw err
+              // check published version
+              t.equal(published2.id, b.id)
+              t.equal(published2.name, 'temp')
+              t.equal(published2.desc, 'my test')
+              t.equal(published2.author, user.id)
+              t.ok(published2.timestamp)
+              t.equal(published2.blobs['/file1.txt'].path, '/file1.txt')
+              t.equal(published2.blobs['/file1.txt'].type, 'text/plain')
+              t.equal(published2.blobs['/file2.txt'].path, '/file2.txt')
+              t.equal(published2.blobs['/file2.txt'].type, 'text/plain')
+              t.equal(published2.blobs['/file3.txt'].path, '/file3.txt')
+              t.equal(published2.blobs['/file3.txt'].type, 'text/plain')
 
-                  // check published version
-                  t.equal(published2.id, msg2.key)
-                  t.equal(published2.name, 'temp')
-                  t.equal(published2.desc, 'my test')
-                  t.equal(published2.author, user.id)
-                  t.ok(published2.timestamp)
-                  t.equal(published2.blobs['/file1.txt'].path, '/file1.txt')
-                  t.equal(published2.blobs['/file1.txt'].type, 'text/plain')
-                  t.equal(published2.blobs['/file2.txt'].path, '/file2.txt')
-                  t.equal(published2.blobs['/file2.txt'].type, 'text/plain')
-                  t.equal(published2.blobs['/file3.txt'].path, '/file3.txt')
-                  t.equal(published2.blobs['/file3.txt'].type, 'text/plain')
+              sbot.bundles.get(bundle1.id, function (err, working) { 
+                if (err) throw err
 
-                  sbot.bundles.get(bundle1.id, function (err, working) { 
-                    if (err) throw err
-
-                  // check that the working blob now points to both published versions
-                    t.equal(working.id, bundle1.id)
-                    t.equal(working.root, published1.id)
-                    t.equal(working.branch, published2.id)
-                    t.end()
-                    sbot.close()
-                  })
-                })
+              // check that the working blob now points to both published versions
+                t.equal(working.id, bundle1.id)
+                t.equal(working.root, published1.id)
+                t.equal(working.branch, published2.id)
+                t.end()
+                sbot.close()
               })
             })
           })
@@ -204,42 +204,42 @@ tape('get/set default bundle at name', function (t) {
     ], function (err, msg) {
       if (err) throw err
       console.log('published msg', msg)
+    })
 
-      sbot.on('bundles:processed', function (bundle) {
-        sbot.bundles.setForkAsDefault(bundle.id, function (err) {
+    sbot.on('bundles:processed', function (bundle) {
+      sbot.bundles.setForkAsDefault(bundle.id, function (err) {
+        if (err) throw err
+
+        var done = multicb({ pluck: 1 })
+        sbot.bundles.lookup('/Temp', done())
+        sbot.bundles.lookup('Temp', done())
+        sbot.bundles.lookup('/temp', done())
+        sbot.bundles.lookup('/Temp/foo/bar', done())
+        done(function (err, bundleids) {
           if (err) throw err
+          t.equal(bundleids.filter(function (id) { return id == bundle.id }).length, 4)
 
-          var done = multicb({ pluck: 1 })
-          sbot.bundles.lookup('/Temp', done())
-          sbot.bundles.lookup('Temp', done())
-          sbot.bundles.lookup('/temp', done())
-          sbot.bundles.lookup('/Temp/foo/bar', done())
-          done(function (err, bundleids) {
+          // set the working bundle to default
+          sbot.bundles.setForkAsDefault(working.id, function (err) {
             if (err) throw err
-            t.equal(bundleids.filter(function (id) { return id == bundle.id }).length, 4)
 
-            // set the working bundle to default
-            sbot.bundles.setForkAsDefault(working.id, function (err) {
+            var done = multicb({ pluck: 1 })
+            sbot.bundles.lookup('/Temp', done())
+            sbot.bundles.lookup('Temp', done())
+            sbot.bundles.lookup('/temp', done())
+            sbot.bundles.lookup('/Temp/foo/bar', done())
+            done(function (err, bundleids) {
               if (err) throw err
+              t.equal(bundleids.filter(function (id) { return id == working.id }).length, 4)
 
-              var done = multicb({ pluck: 1 })
-              sbot.bundles.lookup('/Temp', done())
-              sbot.bundles.lookup('Temp', done())
-              sbot.bundles.lookup('/temp', done())
-              sbot.bundles.lookup('/Temp/foo/bar', done())
-              done(function (err, bundleids) {
+              // remove the working bundle and check that the mapping is nullified too
+              sbot.bundles.removeWorking(working.id, function (err) {
                 if (err) throw err
-                t.equal(bundleids.filter(function (id) { return id == working.id }).length, 4)
-
-                // remove the working bundle and check that the mapping is nullified too
-                sbot.bundles.removeWorking(working.id, function (err) {
+                sbot.bundles.lookup('Temp', function (err, bid) {
                   if (err) throw err
-                  sbot.bundles.lookup('Temp', function (err, bid) {
-                    if (err) throw err
-                    t.equal(bid, undefined)
-                    t.end()
-                    sbot.close()
-                  })
+                  t.equal(bid, undefined)
+                  t.end()
+                  sbot.close()
                 })
               })
             })
@@ -269,47 +269,46 @@ tape('list revisions of a name and of a bundle', function (t) {
       pathlib.join(tmpdirpath1, 'file2.txt')
     ], function (err, msg) {
       if (err) throw err
-
       console.log('published msg', msg)
-      sbot.once('bundles:processed', function (publishedBundle1) {
+    })
+    sbot.once('bundles:processed', function (publishedBundle1) {
 
-        // publish a second version
-        sbot.bundles.publishWorking(bundle1.id, null, [
-          pathlib.join(tmpdirpath1, 'file1.txt'),
-          pathlib.join(tmpdirpath1, 'file2.txt'),
-          pathlib.join(tmpdirpath1, 'file3.txt')
-        ], function (err, msg) {
+      // publish a second version
+      sbot.bundles.publishWorking(bundle1.id, null, [
+        pathlib.join(tmpdirpath1, 'file1.txt'),
+        pathlib.join(tmpdirpath1, 'file2.txt'),
+        pathlib.join(tmpdirpath1, 'file3.txt')
+      ], function (err, msg) {
+        if (err) throw err
+        console.log('published msg', msg)
+      })
+
+      sbot.once('bundles:processed', function (publishedBundle2) {
+
+        // get all revisions of the name
+        pull(sbot.bundles.listRevisions('Temp'), pull.collect(function (err, bundles) {
           if (err) throw err
+          t.equal(bundles.length, 3)
+          t.equal(bundles[2].id, bundle1.id)
+          t.ok(bundles[0].id === publishedBundle1.id || bundles[1].id === publishedBundle1.id)
+          t.ok(bundles[0].id === publishedBundle2.id || bundles[1].id === publishedBundle2.id)
 
-          console.log('published msg', msg)
-          sbot.once('bundles:processed', function (publishedBundle2) {
+          // get just the root revisions of the name
+          pull(sbot.bundles.listRevisions('Temp', { root: null }), pull.collect(function (err, bundles) {
+            if (err) throw err
+            t.equal(bundles.length, 1)
+            t.equal(bundles[0].id, publishedBundle1.id)
 
-            // get all revisions of the name
-            pull(sbot.bundles.listRevisions('Temp'), pull.collect(function (err, bundles) {
+            // get revisions of the first published version
+            pull(sbot.bundles.listRevisions(publishedBundle1.id), pull.collect(function (err, bundles) {
               if (err) throw err
-              t.equal(bundles.length, 3)
-              t.equal(bundles[2].id, bundle1.id)
-              t.ok(bundles[0].id === publishedBundle1.id || bundles[1].id === publishedBundle1.id)
-              t.ok(bundles[0].id === publishedBundle2.id || bundles[1].id === publishedBundle2.id)
-
-              // get just the root revisions of the name
-              pull(sbot.bundles.listRevisions('Temp', { root: null }), pull.collect(function (err, bundles) {
-                if (err) throw err
-                t.equal(bundles.length, 1)
-                t.equal(bundles[0].id, publishedBundle1.id)
-
-                // get revisions of the first published version
-                pull(sbot.bundles.listRevisions(publishedBundle1.id), pull.collect(function (err, bundles) {
-                  if (err) throw err
-                  t.equal(bundles.length, 1)
-                  t.equal(bundles[0].id, publishedBundle2.id)
-                  t.end()
-                  sbot.close()
-                }))
-              }))
+              t.equal(bundles.length, 1)
+              t.equal(bundles[0].id, publishedBundle2.id)
+              t.end()
+              sbot.close()
             }))
-          })
-        })
+          }))
+        }))
       })
     })
   })
@@ -332,41 +331,41 @@ tape('get blob meta from working and published bundle, and from absolute paths',
       pathlib.join(tmpdirpath1, 'file2.txt')
     ], function (err, msg) {
       if (err) throw err
-
       console.log('published msg', msg)
-      sbot.once('bundles:processed', function (publishedBundle1) {
+    })
 
-        sbot.bundles.setForkAsDefault(publishedBundle1.id, function (err) {
+    sbot.once('bundles:processed', function (publishedBundle1) {
+
+      sbot.bundles.setForkAsDefault(publishedBundle1.id, function (err) {
+        if (err) throw err
+
+        var done = multicb({ pluck: 1 })
+        sbot.bundles.getBlobMeta(bundle1.id, '/file1.txt', done())
+        sbot.bundles.getBlobMeta(bundle1.id, 'file1.txt', done())
+        sbot.bundles.getBlobMeta(bundle1.id, './file1.txt', done())
+        sbot.bundles.getBlobMeta(bundle1.id+'/file1.txt', done())
+        sbot.bundles.getBlobMeta(publishedBundle1.id, '/file1.txt', done())
+        sbot.bundles.getBlobMeta(publishedBundle1.id, 'file1.txt', done())
+        sbot.bundles.getBlobMeta(publishedBundle1.id, './file1.txt', done())
+        sbot.bundles.getBlobMeta(publishedBundle1.id+'/file1.txt', done())
+        sbot.bundles.getBlobMeta('/Temp/file1.txt', done())
+        done(function (err, metas) {
           if (err) throw err
 
-          var done = multicb({ pluck: 1 })
-          sbot.bundles.getBlobMeta(bundle1.id, '/file1.txt', done())
-          sbot.bundles.getBlobMeta(bundle1.id, 'file1.txt', done())
-          sbot.bundles.getBlobMeta(bundle1.id, './file1.txt', done())
-          sbot.bundles.getBlobMeta(bundle1.id+'/file1.txt', done())
-          sbot.bundles.getBlobMeta(publishedBundle1.id, '/file1.txt', done())
-          sbot.bundles.getBlobMeta(publishedBundle1.id, 'file1.txt', done())
-          sbot.bundles.getBlobMeta(publishedBundle1.id, './file1.txt', done())
-          sbot.bundles.getBlobMeta(publishedBundle1.id+'/file1.txt', done())
-          sbot.bundles.getBlobMeta('/Temp/file1.txt', done())
-          done(function (err, metas) {
-            if (err) throw err
-
-            t.equal(metas[0].path, pathlib.join(tmpdirpath1, 'file1.txt'))
-            t.deepEqual(metas[1], metas[0])
-            t.deepEqual(metas[2], metas[0])
-            t.deepEqual(metas[3], metas[0])
-            t.equal(metas[4].path, '/file1.txt')
-            t.equal(metas[4].type, 'text/plain')
-            t.deepEqual(metas[5], metas[4])
-            t.deepEqual(metas[6], metas[4])
-            t.deepEqual(metas[7], metas[4])
-            t.deepEqual(metas[8], metas[4])
-            t.end()
-            sbot.close()
-          })
-        })        
-      })
+          t.equal(metas[0].path, pathlib.join(tmpdirpath1, 'file1.txt'))
+          t.deepEqual(metas[1], metas[0])
+          t.deepEqual(metas[2], metas[0])
+          t.deepEqual(metas[3], metas[0])
+          t.equal(metas[4].path, '/file1.txt')
+          t.equal(metas[4].type, 'text/plain')
+          t.deepEqual(metas[5], metas[4])
+          t.deepEqual(metas[6], metas[4])
+          t.deepEqual(metas[7], metas[4])
+          t.deepEqual(metas[8], metas[4])
+          t.end()
+          sbot.close()
+        })
+      })        
     })
   })  
 })
@@ -388,32 +387,32 @@ tape('get blob from working and published bundle, and from absolute path', funct
       pathlib.join(tmpdirpath1, 'file2.txt')
     ], function (err, msg) {
       if (err) throw err
-
       console.log('published msg', msg)
-      sbot.once('bundles:processed', function (publishedBundle1) {
+    })
 
-        sbot.bundles.setForkAsDefault(publishedBundle1.id, function (err) {
+    sbot.once('bundles:processed', function (publishedBundle1) {
+
+      sbot.bundles.setForkAsDefault(publishedBundle1.id, function (err) {
+        if (err) throw err
+
+        var done = multicb({ pluck: 1 })
+        pull(sbot.bundles.getBlob(bundle1.id, '/file1.txt'), pull.collect(done()))
+        pull(sbot.bundles.getBlob(bundle1.id, 'file1.txt'), pull.collect(done()))
+        pull(sbot.bundles.getBlob(bundle1.id, './file1.txt'), pull.collect(done()))
+        pull(sbot.bundles.getBlob(bundle1.id+'/file1.txt'), pull.collect(done()))
+        pull(sbot.bundles.getBlob(publishedBundle1.id, '/file1.txt'), pull.collect(done()))
+        pull(sbot.bundles.getBlob(publishedBundle1.id, 'file1.txt'), pull.collect(done()))
+        pull(sbot.bundles.getBlob(publishedBundle1.id, './file1.txt'), pull.collect(done()))
+        pull(sbot.bundles.getBlob(publishedBundle1.id+'/file1.txt'), pull.collect(done()))
+        pull(sbot.bundles.getBlob('/Temp/file1.txt'), pull.collect(done()))
+        done(function (err, blobs) {
           if (err) throw err
 
-          var done = multicb({ pluck: 1 })
-          pull(sbot.bundles.getBlob(bundle1.id, '/file1.txt'), pull.collect(done()))
-          pull(sbot.bundles.getBlob(bundle1.id, 'file1.txt'), pull.collect(done()))
-          pull(sbot.bundles.getBlob(bundle1.id, './file1.txt'), pull.collect(done()))
-          pull(sbot.bundles.getBlob(bundle1.id+'/file1.txt'), pull.collect(done()))
-          pull(sbot.bundles.getBlob(publishedBundle1.id, '/file1.txt'), pull.collect(done()))
-          pull(sbot.bundles.getBlob(publishedBundle1.id, 'file1.txt'), pull.collect(done()))
-          pull(sbot.bundles.getBlob(publishedBundle1.id, './file1.txt'), pull.collect(done()))
-          pull(sbot.bundles.getBlob(publishedBundle1.id+'/file1.txt'), pull.collect(done()))
-          pull(sbot.bundles.getBlob('/Temp/file1.txt'), pull.collect(done()))
-          done(function (err, blobs) {
-            if (err) throw err
-
-            t.equal(blobs.filter(function (blob) { return blob[0] == 'one' }).length, blobs.length)
-            t.end()
-            sbot.close()
-          })
-        })        
-      })
+          t.equal(blobs.filter(function (blob) { return blob[0] == 'one' }).length, blobs.length)
+          t.end()
+          sbot.close()
+        })
+      })        
     })
   })  
 })
@@ -435,34 +434,34 @@ tape('checkout published bundle', function (t) {
       pathlib.join(tmpdirpath1, 'file2.txt')
     ], function (err, msg) {
       if (err) throw err
-
       console.log('published msg', msg)
-      sbot.once('bundles:processed', function (publishedBundle1) {
+    })
 
-        sbot.bundles.setForkAsDefault(publishedBundle1.id, function (err) {
+    sbot.once('bundles:processed', function (publishedBundle1) {
+
+      sbot.bundles.setForkAsDefault(publishedBundle1.id, function (err) {
+        if (err) throw err
+
+        sbot.bundles.checkout(publishedBundle1.id, tmpdirpath2, function (err) {
           if (err) throw err
 
-          sbot.bundles.checkout(publishedBundle1.id, tmpdirpath2, function (err) {
+          var files = fs.readdirSync(tmpdirpath2)
+          t.deepEqual(files, ['file1.txt', 'file2.txt'])
+
+          var done = multicb()
+          sbot.bundles.checkoutBlob(publishedBundle1.id, '/file1.txt', pathlib.join(tmpdirpath2, 'out1.txt'), done())
+          sbot.bundles.checkoutBlob(publishedBundle1.id, 'file1.txt', pathlib.join(tmpdirpath2, 'out2.txt'), done())
+          sbot.bundles.checkoutBlob(publishedBundle1.id, './file1.txt', pathlib.join(tmpdirpath2, 'out3.txt'), done())
+          sbot.bundles.checkoutBlob(publishedBundle1.id+'/file1.txt', pathlib.join(tmpdirpath2, 'out4.txt'), done())
+          sbot.bundles.checkoutBlob('/Temp/file1.txt', pathlib.join(tmpdirpath2, 'out1.txt'), done())
+          done(function (err) {
             if (err) throw err
-
-            var files = fs.readdirSync(tmpdirpath2)
-            t.deepEqual(files, ['file1.txt', 'file2.txt'])
-
-            var done = multicb()
-            sbot.bundles.checkoutBlob(publishedBundle1.id, '/file1.txt', pathlib.join(tmpdirpath2, 'out1.txt'), done())
-            sbot.bundles.checkoutBlob(publishedBundle1.id, 'file1.txt', pathlib.join(tmpdirpath2, 'out2.txt'), done())
-            sbot.bundles.checkoutBlob(publishedBundle1.id, './file1.txt', pathlib.join(tmpdirpath2, 'out3.txt'), done())
-            sbot.bundles.checkoutBlob(publishedBundle1.id+'/file1.txt', pathlib.join(tmpdirpath2, 'out4.txt'), done())
-            sbot.bundles.checkoutBlob('/Temp/file1.txt', pathlib.join(tmpdirpath2, 'out1.txt'), done())
-            done(function (err) {
-              if (err) throw err
-              t.equal(fs.readFileSync(pathlib.join(tmpdirpath2, 'out1.txt'), { encoding: 'utf-8' }), 'one')
-              t.equal(fs.readFileSync(pathlib.join(tmpdirpath2, 'out2.txt'), { encoding: 'utf-8' }), 'one')
-              t.equal(fs.readFileSync(pathlib.join(tmpdirpath2, 'out3.txt'), { encoding: 'utf-8' }), 'one')
-              t.equal(fs.readFileSync(pathlib.join(tmpdirpath2, 'out4.txt'), { encoding: 'utf-8' }), 'one')
-              t.end()
-              sbot.close()
-            })
+            t.equal(fs.readFileSync(pathlib.join(tmpdirpath2, 'out1.txt'), { encoding: 'utf-8' }), 'one')
+            t.equal(fs.readFileSync(pathlib.join(tmpdirpath2, 'out2.txt'), { encoding: 'utf-8' }), 'one')
+            t.equal(fs.readFileSync(pathlib.join(tmpdirpath2, 'out3.txt'), { encoding: 'utf-8' }), 'one')
+            t.equal(fs.readFileSync(pathlib.join(tmpdirpath2, 'out4.txt'), { encoding: 'utf-8' }), 'one')
+            t.end()
+            sbot.close()
           })
         })
       })
