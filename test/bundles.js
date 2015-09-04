@@ -48,46 +48,51 @@ tape('create, read, list, update, remove working bundles', function (t) {
       t.equal(bundle1.dirpath, _bundle1.dirpath)
       t.equal(bundle1.desc, _bundle1.desc)
 
-      sbot.bundles.createWorking({ dirpath: tmpdirpath2, name: 'Temp2', desc: 'my test' }, function (err, bundle2) {
+      pull(sbot.bundles.listWorkingFiles(bundle1.id), pull.collect(function (err, files) {
         if (err) throw err
-        t.ok(bundle2.id)
-        t.equal(bundle2.dirpath, tmpdirpath2)
-        t.equal(bundle2.desc, 'my test')
+        t.equal(files.length, 3)
 
-        pull(sbot.bundles.listWorking(), pull.collect(function (err, bundles) {
+        sbot.bundles.createWorking({ dirpath: tmpdirpath2, name: 'Temp2', desc: 'my test' }, function (err, bundle2) {
           if (err) throw err
-          t.equal(bundles.length, 2)
-          t.equal(bundle1.id, bundles[0].id)
-          t.equal(bundle1.dirpath, bundles[0].dirpath)
-          t.equal(bundle1.desc, bundles[0].desc)
-          t.equal(bundle2.id, bundles[1].id)
-          t.equal(bundle2.dirpath, bundles[1].dirpath)
-          t.equal(bundle2.desc, bundles[1].desc)
+          t.ok(bundle2.id)
+          t.equal(bundle2.dirpath, tmpdirpath2)
+          t.equal(bundle2.desc, 'my test')
 
-          sbot.bundles.updateWorking(bundle1.id, { dirpath: tmpdirpath3 }, function (err) {
+          pull(sbot.bundles.listWorking(), pull.collect(function (err, bundles) {
             if (err) throw err
+            t.equal(bundles.length, 2)
+            t.equal(bundle1.id, bundles[0].id)
+            t.equal(bundle1.dirpath, bundles[0].dirpath)
+            t.equal(bundle1.desc, bundles[0].desc)
+            t.equal(bundle2.id, bundles[1].id)
+            t.equal(bundle2.dirpath, bundles[1].dirpath)
+            t.equal(bundle2.desc, bundles[1].desc)
 
-            sbot.bundles.get(bundle1.id, function (err, bundle1) {
+            sbot.bundles.updateWorking(bundle1.id, { dirpath: tmpdirpath3 }, function (err) {
               if (err) throw err
-              t.equal(bundle1.dirpath, tmpdirpath3)
 
-              sbot.bundles.removeWorking(bundle2.id, function (err) {
+              sbot.bundles.get(bundle1.id, function (err, bundle1) {
                 if (err) throw err
+                t.equal(bundle1.dirpath, tmpdirpath3)
 
-                pull(sbot.bundles.listWorking(), pull.collect(function (err, bundles) {
+                sbot.bundles.removeWorking(bundle2.id, function (err) {
                   if (err) throw err
-                  t.equal(bundles.length, 1)
-                  t.equal(bundle1.id, bundles[0].id)
-                  t.equal(bundle1.dirpath, bundles[0].dirpath)
 
-                  t.end()
-                  sbot.close()
-                }))
+                  pull(sbot.bundles.listWorking(), pull.collect(function (err, bundles) {
+                    if (err) throw err
+                    t.equal(bundles.length, 1)
+                    t.equal(bundle1.id, bundles[0].id)
+                    t.equal(bundle1.dirpath, bundles[0].dirpath)
+
+                    t.end()
+                    sbot.close()
+                  }))
+                })
               })
             })
-          })
-        }))
-      })
+          }))
+        })
+      }))
     })
   })
 })
@@ -118,7 +123,7 @@ tape('publish bundle, get published bundle, working version is updated', functio
 
           // check published version
           t.equal(published1.id, msg.key)
-          t.equal(published1.name, 'Temp')
+          t.equal(published1.name, 'temp')
           t.equal(published1.desc, 'my test')
           t.equal(published1.author, user.id)
           t.ok(published1.timestamp)
@@ -151,7 +156,7 @@ tape('publish bundle, get published bundle, working version is updated', functio
 
                   // check published version
                   t.equal(published2.id, msg2.key)
-                  t.equal(published2.name, 'Temp')
+                  t.equal(published2.name, 'temp')
                   t.equal(published2.desc, 'my test')
                   t.equal(published2.author, user.id)
                   t.ok(published2.timestamp)

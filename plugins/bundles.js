@@ -11,6 +11,7 @@ var mlib      = require('ssb-msgs')
 var timestamp = require('monotonic-timestamp')
 var multicb   = require('multicb')
 var mime      = require('mime-types')
+var readdirp  = require('readdirp')
 
 var HI = undefined, LO = null
 var bundleNameRegex = /[a-z0-9][a-z0-9\-_.,()]*/i
@@ -33,6 +34,7 @@ module.exports = {
     listWorking: 'source',
     createWorking: 'async',
     updateWorking: 'async',
+    listWorkingFiles: 'source',
     publishWorking: 'async',
     removeWorking: 'async'
   },
@@ -343,7 +345,7 @@ function init (sbot, opts) {
         sbot.bundles.getBlobMeta(bundleid, relpath, next)
 
       function next (err, meta) {
-        if (err) return stream.abort(err)
+        if (err) return cb(err)
         pull(
           (meta.link) ?
             sbot.blobs.get(meta.link) : // published bundle, read the blob
@@ -379,7 +381,7 @@ function init (sbot, opts) {
       // add working bundle to db
       var bundle = {
         id: makeWorkingid(),
-        name: opts.name,
+        name: normalizeName(opts.name),
         desc: opts.desc,
         root: opts.root,
         branch: opts.branch,
@@ -423,6 +425,26 @@ function init (sbot, opts) {
         // write to db
         workingDB.put(bundle.id, bundle, cb)
       })
+    },
+
+    // emit a list of the files in the working bundle's directory
+    listWorkingFiles: function (bundleid) {
+      var stream = defer.source()
+      if (!isWorkingid(bundleid))
+        return stream.abort(error('Invalid bundle id', { invalidId: true })), stream
+
+      // load the working bundle
+      sbot.bundles.get(bundleid, function (err, bundle) {
+        if (err)
+          return stream.abort(explain(err, 'Failed to load bundle from database'))
+
+        // read files
+        stream.resolve(pull(
+          toPull.source(readdirp({ root: bundle.dirpath })),
+          pull.take(100)
+        ))
+      })
+      return stream
     },
 
     // publish a working bundle
@@ -499,7 +521,7 @@ function init (sbot, opts) {
         // remove DB entries
         var done = multicb({ pluck: 1 })
         workingDB.del(bundleid, done())
-        bundlesDB.del([bundle.name, bundleid], done())
+        bundlesDB.del([normalizeName(bundle.name), bundleid], done())
         if (bundle.root) bundlesDB.del([bundle.root, bundleid], done())
         if (bundle.branch) bundlesDB.del([bundle.branch, bundleid], done())
         var nameMappingCB = done()
