@@ -28,7 +28,9 @@ please post an issue!
 Set up a local client, join the network, and post messages.
 Please post an issue if the following does not work for you.
 
-First install scuttlebot globally:
+First install node. The easiest way to install is using Node Version Manager, check out a guide [here](https://github.com/creationix/nvm#node-version-manager-).
+
+Then install scuttlebot globally:
 
 ```
 $ npm install -g scuttlebot
