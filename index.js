@@ -31,10 +31,6 @@ var SSB = {
   manifest: {
     'add'             : 'async',
     'publish'         : 'async',
-    'publishBoxed'    : 'async',
-
-    'box'             : 'async',
-    'unbox'           : 'async',
 
     'get'             : 'async',
     'getPublicKey'    : 'async',
