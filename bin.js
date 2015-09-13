@@ -10,11 +10,8 @@ var ssbKeys      = require('ssb-keys')
 var stringify    = require('pull-stringify')
 var createHash   = require('multiblob/util').createHash
 var parse        = require('mynosql-query')
-var isRef        = require('ssb-ref')
 var config       = require('ssb-config/inject')(process.env.ssb_appname)
-
-
-var isBuffer     = Buffer.isBuffer
+var muxrpcli     = require('muxrpcli')
 
 var createSbot   = require('./')
   .use(require('./plugins/master'))
@@ -28,104 +25,23 @@ var createSbot   = require('./')
   .use(require('./plugins/logging'))
   //TODO fix plugins/local
 
-
 var keys = ssbKeys.loadOrCreateSync(path.join(config.path, 'secret'))
 
 if(keys.curve === 'k256')
   throw new Error('k256 curves are no longer supported,'+
                   'please delete' + path.join(config.path, 'secret'))
 
-var aliases = {
-  feed: 'createFeedStream',
-  history: 'createHistoryStream',
-  hist: 'createHistoryStream',
-  public: 'getPublicKey',
-  pub: 'getPublicKey',
-  log: 'createLogStream',
-  conf: 'config'
-}
-
-function isObject (o) {
-  return o && 'object' === typeof o && !Buffer.isBuffer(o)
-}
-
-function isString (s) {
-  return 'string' === typeof s
-}
-
-function defaultRel (o, r) {
-  if(!isObject(o)) return o
-  for(var k in o) {
-    if(isObject(o[k]))
-      defaultRel(o[k], k)
-    else if(isRef(o[k]) && ~['msg', 'ext', 'feed'].indexOf(k)) {
-      if(!o.rel)
-        o.rel = r ? r : o.type
-    }
-  }
-  return o
-}
-
-function usage () {
-  console.error('sbot {cmd} {options}')
-  process.exit(1)
-}
-
-function maybeStringify () {
-  //var stringifyer = stringify('', '\n', '\n\n', 2, JSON.stringify)
-
-  return pull.map(function (b) {
-    if(isBuffer(b)) return b
-    return JSON.stringify(b, null, 2) + '\n\n'
-  })
-
-}
-
-var opts = require('minimist')(process.argv.slice(2))
-var cmd = opts._[0]
-var arg = opts._[1]
-
-delete opts._
-
 var manifestFile = path.join(config.path, 'manifest.json')
 
-cmd = aliases[cmd] || cmd
-
-if(cmd === 'server') {
+// special server command
+if (process.argv[2] == 'server') {
   config.keys = keys
   var server = createSbot(config)
-
-  fs.writeFileSync(
-    manifestFile,
-    JSON.stringify(server.getManifest(), null, 2)
-  )
-
+  fs.writeFileSync(manifestFile, JSON.stringify(server.getManifest(), null, 2))
   return
 }
 
-if(arg && Object.keys(opts).length === 0)
-  opts = arg
-
-if(cmd === 'version') {
-  console.log(require('./package.json').version)
-  process.exit()
-}
-
-if(cmd === 'config') {
-  console.log(JSON.stringify(config, null, 2))
-  process.exit()
-}
-
-function get(obj, path) {
-  path.forEach(function (k) {
-    obj = obj ? obj[k] : null
-  })
-  return obj
-}
-
-if(!cmd) return usage()
-
-cmd = cmd.split('.')
+// read manifest.json
 var manifest
 try {
   manifest = JSON.parse(fs.readFileSync(manifestFile))
@@ -136,119 +52,37 @@ try {
   )
 }
 
-var type = get(manifest, cmd)
+// connect
+createSbot.createClient({keys: keys})({port: config.port, host: config.host||'localhost', key: keys.id}, function (err, rpc) {
+  if(err) throw err
 
-if(!type) return usage()
-var rpc
-
-createSbot.createClient({keys: keys})
-  ({port: config.port, host: config.host||'localhost', key: keys.id}, function (err, rpc) {
-    if(err) throw err
-
-    next1(rpc)
-  })
-
-function next1(rpc) {
-
-  var isStdin = ('.' === arg || '--' === arg)
-
-  if(!process.stdin.isTTY && isStdin) {
-    pull(
-      toPull.source(process.stdin),
-      pull.collect(function (err, ary) {
-        var str = Buffer.concat(ary).toString('utf8')
-        var data = JSON.parse(str)
-        console.log(data)
-        next2(data)
-      })
-    )
+  // add aliases
+  var aliases = {
+    feed: 'createFeedStream',
+    history: 'createHistoryStream',
+    hist: 'createHistoryStream',
+    public: 'getPublicKey',
+    pub: 'getPublicKey',
+    log: 'createLogStream',
+    conf: 'config'
   }
-  else
-    next2(opts)
-
-  function next2 (data) {
-
-    if(cmd.toString() === 'query' && arg) {
-      data = !isObject(data) ? {} : data
-      data.query = parse(arg)
-      console.error(data)
-    }
-
-    // handle add specially, so that external links (ext)
-    // can be detected, and files uploaded first.
-    // then the message is created and everything is in a valid state.
-
-    if(cmd.toString() === 'publish' && !isStdin) {
-      //parse and add ext links before adding message.
-      var n = 0
-      msgs.indexLinks(data, function (link) {
-        if(isString(link.ext)) {
-          n++
-          var hasher = createHash()
-          var source = (
-              /^(\.|--)$/.test(link.ext)
-            ? toPull.source(process.stdin)
-            : 0 === link.ext.indexOf('./')
-            ? toPull.source(fs.createReadStream(link.ext))
-            : (function () { throw new Error('cannot process ext:'+link.ext) })()
-          )
-
-          pull(
-            source,
-            hasher,
-            rpc.blobs.add(function (err) {
-              if(err) return next(err)
-              link.ext = hasher.digest
-              if(link.size == null) link.size = hasher.size
-              next()
-            })
-          )
-        }
-      })
-
-      if(n == 0) n = 1, next()
-
-      function next (err) {
-        if(err && n > 0) { n = -1; throw err }
-        if(--n) return
-        rpc.publish(data, function (err, ret) {
-          if(err) throw err
-          console.log(JSON.stringify(ret, null, 2))
-          process.exit()
-        })
-      }
-
-    }
-
-    else if('async' === type || type === 'sync') {
-      get(rpc, cmd)(data, function (err, ret) {
-        if(err) throw err
-        console.log(JSON.stringify(ret, null, 2))
-        process.exit()
-      })
-    }
-    else if('source' === type)
-      //TODO: handle binary sources. this will require a different
-      //s  erialization, specially for muxrpc... that can handle
-      //JSON and length delimitation.
-      pull(
-        get(rpc, cmd)(data),
-        maybeStringify(),
-        toPull.sink(process.stdout, function (err) {
-          if(err) throw explain(err, 'reading stream failed')
-          process.exit()
-        })
-      )
-    else if('sink' === type)
-      pull(
-        toPull.source(process.stdin),
-        get(rpc, cmd)(data, function (err, res) {
-          if(err) throw explain(err, 'writing stream failed')
-          console.log(JSON.stringify(res, null, 2))
-          process.exit()
-        })
-      )
-    else
-      throw new Error('api did not have a method:' + cmd.join('.'))
+  for (var k in aliases) {
+    rpc[k] = rpc[aliases[k]]
+    manifest[k] = manifest[aliases[k]]
   }
-}
+
+  // add some extra commands
+  manifest.version = 'async'
+  manifest.config = 'sync'
+  rpc.version = function (cb) {
+    console.log(require('./package.json').version)
+    cb()
+  }
+  rpc.config = function (cb) {
+    console.log(JSON.stringify(config, null, 2))
+    cb()
+  }
+
+  // run commandline flow
+  muxrpcli(process.argv.slice(2), manifest, rpc)
+})
