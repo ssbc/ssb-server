@@ -23,6 +23,7 @@
     "multiblob": "^1.5.0",
     "multicb": "^1.0.0",
     "muxrpc": "^6.1.1",
+    "muxrpcli": "^1.0.0",
     "mynosql-query": "~1.0.0",
     "nomnom": "1.8.0",
     "non-private-ip": "~1.1.0",
