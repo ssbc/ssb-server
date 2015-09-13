@@ -29,6 +29,7 @@ function copy (o) {
 
 var SSB = {
   manifest: {
+    'usage'           : 'sync',
     'add'             : 'async',
     'publish'         : 'async',
 
@@ -82,6 +83,8 @@ var SSB = {
     return {
       id                       : feed.id,
       keys                     : opts.keys,
+
+      usage                    : require('./usage'),
 
       publish                  : feed.add,
       add                      : ssb.add,
