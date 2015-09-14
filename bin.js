@@ -64,6 +64,7 @@ createSbot.createClient({keys: keys})({port: config.port, host: config.host||'lo
     public: 'getPublicKey',
     pub: 'getPublicKey',
     log: 'createLogStream',
+    logt: 'messagesByType',
     conf: 'config'
   }
   for (var k in aliases) {
