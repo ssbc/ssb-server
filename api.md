@@ -323,7 +323,9 @@ whoami(cb)
 
 Outputs information in the following form:
 
-`{ id: FeedID }`
+```
+{ id: FeedID }
+```
 
 
 

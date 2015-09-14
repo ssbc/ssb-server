@@ -6,6 +6,8 @@ var path       = require('path')
 var osenv      = require('osenv')
 var mkdirp     = require('mkdirp')
 var rimraf     = require('rimraf')
+var mdm        = require('mdmanifest')
+var apidoc     = require('fs').readFileSync(__dirname + '/api.md', 'utf-8')
 
 function toBuffer(base64) {
   return new Buffer(base64.substring(0, base64.indexOf('.')), 'base64')
@@ -27,8 +29,10 @@ function copy (o) {
   return O
 }
 
+var manifest = mdm.manifest(apidoc)
+manifest.usage = 'sync'
 var SSB = {
-  manifest: {
+  manifest: manifest, /*{
     'usage'           : 'sync',
     'add'             : 'async',
     'publish'         : 'async',
@@ -53,7 +57,7 @@ var SSB = {
     'createUserStream'       : 'source',
     'links'                  : 'source',
     'messagesByType'         : 'source',
-  },
+  },*/
   permissions: {
     master: {allow: null, deny: null},
     anonymous: {allow: ['createHistoryStream'], deny: null}
@@ -84,7 +88,7 @@ var SSB = {
       id                       : feed.id,
       keys                     : opts.keys,
 
-      usage                    : require('./usage'),
+      usage                    : function (cmd) { return mdm.usage(apidoc, cmd) },
 
       publish                  : feed.add,
       add                      : ssb.add,
