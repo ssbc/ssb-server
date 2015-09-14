@@ -7,7 +7,12 @@ var osenv      = require('osenv')
 var mkdirp     = require('mkdirp')
 var rimraf     = require('rimraf')
 var mdm        = require('mdmanifest')
-var apidoc     = require('fs').readFileSync(__dirname + '/api.md', 'utf-8')
+var fs         = require('fs')
+
+var apidocs = {
+  _: fs.readFileSync(__dirname + '/api.md', 'utf-8'),
+  blobs: fs.readFileSync(__dirname + '/plugins/blobs.md', 'utf-8')
+}
 
 function toBuffer(base64) {
   return new Buffer(base64.substring(0, base64.indexOf('.')), 'base64')
@@ -29,7 +34,27 @@ function copy (o) {
   return O
 }
 
-var manifest = mdm.manifest(apidoc)
+function usage (cmd) {
+  var path = (cmd||'').split('.')
+  if (path[0] && path[0] in apidocs) {
+    // return usage for the plugin
+    cmd = path.slice(1).join('.')
+    console.log(path, cmd)
+    return mdm.usage(apidocs[path[0]], cmd, { prefix: path[0] })
+  }
+  if (!cmd) {
+    // return usage for all docs
+    return Object.keys(apidocs).map(function (name) {
+      if (name == '_')
+        return mdm.usage(apidocs[name])
+      return name + ': ' + mdm.usage(apidocs[name], null, { prefix: name })
+    }).join('\n\n')
+  }
+  // toplevel cmd usage
+  return mdm.usage(apidocs._, cmd)
+}
+
+var manifest = mdm.manifest(apidocs._)
 manifest.usage = 'sync'
 var SSB = {
   manifest: manifest, /*{
@@ -88,7 +113,7 @@ var SSB = {
       id                       : feed.id,
       keys                     : opts.keys,
 
-      usage                    : function (cmd) { return mdm.usage(apidoc, cmd) },
+      usage                    : usage,
 
       publish                  : feed.add,
       add                      : ssb.add,

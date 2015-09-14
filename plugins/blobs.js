@@ -10,6 +10,8 @@ var toPull = require('stream-to-pull-stream')
 var isBlob = require('ssb-ref').isBlobId
 var multicb = require('multicb')
 var Notify = require('pull-notify')
+var mdm = require('mdmanifest')
+var apidoc = require('fs').readFileSync(__dirname + '/blobs.md', 'utf-8')
 
 function isFunction (f) {
   return 'function' === typeof f
@@ -102,15 +104,7 @@ function oneTrack(delay, n, label, fun) {
 module.exports = {
   name: 'blobs',
   version: '0.0.0',
-  manifest: {
-    get: 'source',
-    has: 'async',
-    add: 'sink',
-    ls: 'source',
-    want: 'async',
-    wants: 'sync',
-    changes: 'source',
-  },
+  manifest: mdm.manifest(apidoc),
   permissions: {
     anonymous: {allow: ['has', 'get', 'changes']},
   },

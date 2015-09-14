@@ -1,6 +1,6 @@
 # scuttlebot blobs plugin
 
-Send/receive blobs as theyre referenced.
+Send/receive files by content-hashes.
 
 
 
