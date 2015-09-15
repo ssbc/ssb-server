@@ -16,6 +16,8 @@ var apidocs = {
   friends: fs.readFileSync(__dirname + '/plugins/friends.md', 'utf-8'),
   gossip: fs.readFileSync(__dirname + '/plugins/gossip.md', 'utf-8'),
   invite: fs.readFileSync(__dirname + '/plugins/invite.md', 'utf-8'),
+  'private': fs.readFileSync(__dirname + '/plugins/private.md', 'utf-8'),
+  replicate: fs.readFileSync(__dirname + '/plugins/replicate.md', 'utf-8')
 }
 
 function toBuffer(base64) {
@@ -40,18 +42,19 @@ function copy (o) {
 
 function usage (cmd) {
   var path = (cmd||'').split('.')
-  if (path[0] && path[0] in apidocs) {
+  if ((path[0] && apidocs[path[0]]) || (cmd && apidocs[cmd])) {
     // return usage for the plugin
     cmd = path.slice(1).join('.')
-    console.log(path, cmd)
     return mdm.usage(apidocs[path[0]], cmd, { prefix: path[0] })
   }
   if (!cmd) {
     // return usage for all docs
     return Object.keys(apidocs).map(function (name) {
       if (name == '_')
-        return mdm.usage(apidocs[name])
-      return name + ': ' + mdm.usage(apidocs[name], null, { prefix: name })
+        return mdm.usage(apidocs[name], null, { nameWidth: 20 })
+      
+      var text = mdm.usage(apidocs[name], null, { prefix: name, nameWidth: 20 })
+      return text.slice(text.indexOf('Commands:') + 10) // skip past the toplevel summary, straight to the cmd list
     }).join('\n\n')
   }
   // toplevel cmd usage

@@ -1,13 +1,12 @@
 var ssbKeys = require('ssb-keys')
 var explain = require('explain-error')
+var mdm = require('mdmanifest')
+var apidoc = require('fs').readFileSync(__dirname + '/private.md', 'utf-8')
 
 module.exports = {
   name: 'private',
   version: '0.0.0',
-  manifest: {
-    publish: 'async',
-    unbox: 'sync'
-  },
+  manifest: mdm.manifest(apidoc),
   permissions: {
     anonymous: {},
   },

@@ -23,6 +23,7 @@ var createSbot   = require('./')
   .use(require('./plugins/block'))
   .use(require('./plugins/local'))
   .use(require('./plugins/logging'))
+  .use(require('./plugins/private'))
   //TODO fix plugins/local
 
 var keys = ssbKeys.loadOrCreateSync(path.join(config.path, 'secret'))
