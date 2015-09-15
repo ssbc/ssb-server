@@ -3,6 +3,8 @@ var pull = require('pull-stream')
 var Notify = require('pull-notify')
 var toAddress = require('../lib/util').toAddress
 var nonPrivate = require('non-private-ip')
+var mdm = require('mdmanifest')
+var apidoc = require('fs').readFileSync(__dirname + '/gossip.md', 'utf-8')
 var u = require('../lib/util')
 
 var isArray = Array.isArray
@@ -19,13 +21,7 @@ function add(ary, item) {
 module.exports = {
   name: 'gossip',
   version: '1.0.0',
-  manifest: {
-    seeds: 'async',
-    peers: 'sync',
-    connect: 'async',
-    changes: 'source',
-    add: 'sync'
-  },
+  manifest: mdm.manifest(apidoc),
   init: function (server, config) {
     var notify = Notify()
     var conf = config.gossip || {}
