@@ -15,6 +15,7 @@ var apidocs = {
   block: fs.readFileSync(__dirname + '/plugins/block.md', 'utf-8'),
   friends: fs.readFileSync(__dirname + '/plugins/friends.md', 'utf-8'),
   gossip: fs.readFileSync(__dirname + '/plugins/gossip.md', 'utf-8'),
+  invite: fs.readFileSync(__dirname + '/plugins/invite.md', 'utf-8'),
 }
 
 function toBuffer(base64) {

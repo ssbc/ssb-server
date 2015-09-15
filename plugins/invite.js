@@ -5,6 +5,8 @@ var toAddress = require('../lib/util').toAddress
 var cont = require('cont')
 var explain = require('explain-error')
 var ip = require('ip')
+var mdm = require('mdmanifest')
+var apidoc = require('fs').readFileSync(__dirname + '/invite.md', 'utf-8')
 //okay this plugin adds a method
 //invite(seal({code, public})
 
@@ -20,12 +22,7 @@ function isString (s) {
 module.exports = {
   name: 'invite',
   version: '1.0.0',
-  manifest: {
-    create: 'async',
-    use: 'async',
-    addMe: 'async',
-    accept: 'async'
-  },
+  manifest: mdm.manifest(apidoc),
   permissions: {
     master: {allow: ['create']},
     //temp: {allow: ['use']}
@@ -58,7 +55,7 @@ module.exports = {
         if(!config.allowPrivate && (
           ip.isPrivate(host) || 'localhost' === host)
         )
-          return cb(new Error('Server has no public ip address,'
+          return cb(new Error('Server has no public ip address, '
                             + 'cannot create useable invitation'))
 
         //this stuff is SECURITY CRITICAL
