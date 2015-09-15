@@ -3,6 +3,8 @@ var pull        = require('pull-stream')
 var mlib        = require('ssb-msgs')
 var memview     = require('level-memview')
 var pushable    = require('pull-pushable')
+var mdm         = require('mdmanifest')
+var apidoc      = require('fs').readFileSync(__dirname + '/friends.md', 'utf-8')
 
 function isFunction (f) {
   return 'function' === typeof f
@@ -14,12 +16,7 @@ function isString (s) {
 
 exports.name = 'friends'
 exports.version = '1.0.0'
-exports.manifest = {
-  all  : 'async',
-  hops : 'async',
-  createFriendStream: 'source',
-  get  : 'sync',
-}
+exports.manifest = mdm.manifest(apidoc)
 
 exports.init = function (sbot, config) {
 
