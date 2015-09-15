@@ -24,6 +24,7 @@
     "multiblob": "^1.5.0",
     "multicb": "^1.0.0",
     "muxrpc": "^6.1.1",
+    "muxrpc-validation": "^1.0.0",
     "muxrpcli": "^1.0.0",
     "mynosql-query": "~1.0.0",
     "nomnom": "1.8.0",
@@ -49,7 +50,8 @@
     "ssb-keys": "^4.0.3",
     "ssb-msgs": "~5.0.0",
     "ssb-ref": "^2.0.0",
-    "stream-to-pull-stream": "~1.6.5"
+    "stream-to-pull-stream": "~1.6.5",
+    "zerr": "^1.0.0"
   },
   "devDependencies": {
     "cat-names": "~1.0.2",

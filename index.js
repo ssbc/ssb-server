@@ -8,6 +8,8 @@ var mkdirp     = require('mkdirp')
 var rimraf     = require('rimraf')
 var mdm        = require('mdmanifest')
 var fs         = require('fs')
+var valid      = require('muxrpc-validation')
+require('./validators')
 
 var apidocs = {
   _: fs.readFileSync(__dirname + '/api.md', 'utf-8'),
@@ -120,30 +122,29 @@ var SSB = {
       id                       : feed.id,
       keys                     : opts.keys,
 
-      usage                    : usage,
+      usage                    : valid.sync(usage, 'string|boolean'),
 
-      publish                  : feed.add,
-      add                      : ssb.add,
-      get                      : ssb.get,
+      publish                  : valid.async(feed.add, 'string|msgContent'),
+      add                      : valid.async(ssb.add, 'msg'),
+      get                      : valid.async(ssb.get, 'msgId'),
 
       pre                      : ssb.pre,
       post                     : ssb.post,
 
       getPublicKey             : ssb.getPublicKey,
       latest                   : ssb.latest,
-      getLatest                : ssb.getLatest,
+      getLatest                : valid.async(ssb.getLatest, 'feedId'),
       createFeed               : ssb.createFeed,
       whoami                   : function () { return { id: feed.id } },
-      relatedMessages          : ssb.relatedMessages,
+      relatedMessages          : valid.async(ssb.relatedMessages, 'relatedMessagesOpts'),
       query                    : ssb.query,
-      createFeed               : ssb.createFeed,
-      createFeedStream         : ssb.createFeedStream,
-      createHistoryStream      : ssb.createHistoryStream,
-      createLogStream          : ssb.createLogStream,
-      createUserStream         : ssb.createUserStream,
-      links                    : ssb.links,
+      createFeedStream         : valid.source(ssb.createFeedStream, 'readStreamOpts?'),
+      createHistoryStream      : valid.source(ssb.createHistoryStream, ['createHistoryStreamOpts'], ['feedId', 'number?', 'boolean?']),
+      createLogStream          : valid.source(ssb.createLogStream, 'readStreamOpts?'),
+      createUserStream         : valid.source(ssb.createUserStream, 'createUserStreamOpts'),
+      links                    : valid.source(ssb.links, 'linksOpts'),
       sublevel                 : ssb.sublevel,
-      messagesByType           : ssb.messagesByType,
+      messagesByType           : valid.source(ssb.messagesByType, 'string|messagesByTypeOpts'),
       createWriteStream        : ssb.createWriteStream,
       createLatestLookupStream : ssb.createLatestLookupStream,
     }
