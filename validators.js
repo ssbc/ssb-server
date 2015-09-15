@@ -204,3 +204,41 @@ valid.set('relatedMessagesOpts', function (v, n) {
   if (v.parent && typeof v.parent != 'boolean' && typeof v.parent != 'number')
     return AttrType(n, 'parent', 'boolean')
 })
+
+valid.set('isBlockedOpts', function (v, n) {
+  var err = valid.get('object')(v, n)
+  if (err)
+    return err
+
+  // .source
+  if (v.source && !ref.isFeed(v.source))
+    return AttrType(n, 'source', 'feedId')
+
+  // .dest
+  if (v.dest && !ref.isFeed(v.dest))
+    return AttrType(n, 'dest', 'feedId')
+})
+
+valid.set('createFriendStreamOpts', function (v, n) {
+  var err = valid.get('object')(v, n)
+  if (err)
+    return err
+
+  // .start
+  if (v.start && !ref.isFeed(v.start))
+    return AttrType(n, 'start', 'feedId')
+
+  // .graph
+  if (v.graph && typeof v.graph != 'string')
+    return AttrType(n, 'graph', 'string')
+
+  // .dunbar
+  if (v.dunbar && typeof v.dunbar != 'number')
+    return AttrType(n, 'dunbar', 'number')
+
+  // .hops
+  if (v.hops && typeof v.hops != 'number')
+    return AttrType(n, 'hops', 'number')
+})
+
+

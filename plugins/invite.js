@@ -6,6 +6,7 @@ var cont = require('cont')
 var explain = require('explain-error')
 var ip = require('ip')
 var mdm = require('mdmanifest')
+var valid = require('muxrpc-validation')
 var apidoc = require('fs').readFileSync(__dirname + '/invite.md', 'utf-8')
 //okay this plugin adds a method
 //invite(seal({code, public})
@@ -46,10 +47,7 @@ module.exports = {
     })
 
     return {
-      create: function (n, cb) {
-        if(isFunction(n) || n == null || isNaN(n))
-          return cb(new Error('invite.create must get number of uses.'))
-
+      create: valid.async(function (n, cb) {
         var addr = server.getAddress()
         var host = addr.split(':')[0]
         if(!config.allowPrivate && (
@@ -75,10 +73,9 @@ module.exports = {
           else cb(null, addr + '~' + seed.toString('base64'))
         })
 
-      },
-      use: function (req, cb) {
+      }, 'number'),
+      use: valid.async(function (req, cb) {
         var rpc = this
-
 
         codesDB.get(rpc.id, function(err, invite) {
           if(err) return cb(err)
@@ -118,11 +115,11 @@ module.exports = {
             })
           })
         })
-      },
-      addMe: function (invite, cb) {
+      }, 'object'),
+      addMe: valid.async(function (invite, cb) {
         return this.accept(invite, cb)
-      },
-      accept: function (invite, cb) {
+      }, 'string'),
+      accept: valid.async(function (invite, cb) {
         var parts = invite.split('~')
         var addr = toAddress(parts[0])
 
@@ -149,7 +146,7 @@ module.exports = {
             })
           })
         })
-      }
+      }, 'string')
     }
   }
 }

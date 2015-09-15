@@ -4,6 +4,7 @@ var Notify = require('pull-notify')
 var toAddress = require('../lib/util').toAddress
 var nonPrivate = require('non-private-ip')
 var mdm = require('mdmanifest')
+var valid = require('muxrpc-validation')
 var apidoc = require('fs').readFileSync(__dirname + '/gossip.md', 'utf-8')
 var u = require('../lib/util')
 
@@ -48,7 +49,7 @@ module.exports = {
       peers: function () {
         return peers
       },
-      connect: function (addr, cb) {
+      connect: valid.async(function (addr, cb) {
         addr = u.toAddress(addr)
         if (!addr || typeof addr != 'object')
           return cb(new Error('first param must be an address'))
@@ -57,14 +58,12 @@ module.exports = {
         // add peer to the table, incase it isn't already.
         gossip.add(addr, 'manual')
         connect(addr, cb)
-      },
+      }, 'string|object'),
       changes: function () {
         return notify.listen()
       },
       //add an address to the peer table.
-      add: function (addr, source) {
-        if(!addr) return
-
+      add: valid.sync(function (addr, source) {
         addr = u.toAddress(addr)
         if(!u.isAddress(addr))
           throw new Error('not a valid address:' + JSON.stringify(addr))
@@ -93,7 +92,7 @@ module.exports = {
             add(f.announcers, addr.announcers[0])
           return false
         }
-      }
+      }, 'string|object', 'string?')
     }
 
     // TODO: Move this to another plugin.
@@ -121,7 +120,7 @@ module.exports = {
     // populate peertable with configured seeds (mainly used in testing)
     var seeds = config.seeds
     seeds = (isArray(seeds)  ? seeds : [seeds])
-    seeds.forEach(function (addr) { gossip.add(addr, 'seed') })
+    seeds.filter(Boolean).forEach(function (addr) { gossip.add(addr, 'seed') })
 
     // populate peertable with pub announcements on the feed
     pull(

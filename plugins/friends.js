@@ -4,6 +4,7 @@ var mlib        = require('ssb-msgs')
 var memview     = require('level-memview')
 var pushable    = require('pull-pushable')
 var mdm         = require('mdmanifest')
+var valid       = require('muxrpc-validation')
 var apidoc      = require('fs').readFileSync(__dirname + '/friends.md', 'utf-8')
 
 function isFunction (f) {
@@ -61,13 +62,13 @@ exports.init = function (sbot, config) {
   }))
 
   return {
-    get: function (opts) {
+    get: valid.sync(function (opts) {
       var g = graphs[opts.graph || 'follow']
       if(!g) throw new Error('opts.graph must be provided')
       return g.get(opts.source, opts.dest)
-    },
+    }, 'object?'),
 
-    all: function (graph, cb) {
+    all: valid.async(function (graph, cb) {
       if (typeof graph == 'function') {
         cb = graph
         graph = null
@@ -77,9 +78,9 @@ exports.init = function (sbot, config) {
       awaitSync(function () {
         cb(null, graphs[graph] ? graphs[graph].toJSON() : null)
       })
-    },
+    }, 'string?'),
 
-    createFriendStream: function (opts) {
+    createFriendStream: valid.source(function (opts) {
       opts = opts || {}
       var start = opts.start || sbot.id
       var graph = graphs[opts.graph || 'follow']
@@ -103,9 +104,9 @@ exports.init = function (sbot, config) {
         }
       })
       return ps
-    },
+    }, 'createFriendStreamOpts?'),
 
-    hops: function (start, graph, opts, cb) {
+    hops: valid.async(function (start, graph, opts, cb) {
       if (typeof opts == 'function') { // (start|opts, graph, cb)
         cb = opts
         opts = null
@@ -135,6 +136,6 @@ exports.init = function (sbot, config) {
       awaitSync(function () {
         cb(null, g.traverse(opts))
       })
-    }
+    }, ['feedId', 'string?', 'object?'], ['createFriendStreamOpts'])
   }
 }

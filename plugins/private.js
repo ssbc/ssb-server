@@ -1,6 +1,7 @@
 var ssbKeys = require('ssb-keys')
 var explain = require('explain-error')
 var mdm = require('mdmanifest')
+var valid = require('muxrpc-validation')
 var apidoc = require('fs').readFileSync(__dirname + '/private.md', 'utf-8')
 
 module.exports = {
@@ -12,19 +13,19 @@ module.exports = {
   },
   init: function (sbot, opts) {
     return {
-      publish: function (data, recps, cb) {
+      publish: valid.async(function (data, recps, cb) {
         var ciphertext
         try { ciphertext = ssbKeys.box(data, recps) }
         catch (e) { return cb(explain(e, 'failed to encrypt')) }
 
         sbot.publish(ciphertext, cb)
-      },
-      unbox: function (ciphertext) {
+      }, 'string|object', 'array'),
+      unbox: valid.sync(function (ciphertext) {
         var data
         try { data = ssbKeys.unbox(ciphertext, sbot.keys.private) }
         catch (e) { throw explain(e, 'failed to decrypt') }
         return data
-      }
+      }, 'string')
     }
   }
 }
