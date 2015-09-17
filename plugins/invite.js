@@ -109,7 +109,7 @@ module.exports = {
             //then it may not be counted correctly...
             //this is not a big enough deal to fix though.
 
-            codesDB.put(req.keyId, invite, function (err) {
+            codesDB.put(rpc.id, invite, function (err) {
               server.emit('log:info', ['invite', rpc._sessid, 'use', req])
 
               server.publish({
