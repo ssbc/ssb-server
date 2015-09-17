@@ -8,6 +8,7 @@ var mkdirp     = require('mkdirp')
 var rimraf     = require('rimraf')
 var mdm        = require('mdmanifest')
 var fs         = require('fs')
+var cmdAliases = require('./cli-cmd-aliases')
 var valid      = require('muxrpc-validation')
 valid.set(require('./validators'))
 
@@ -60,6 +61,7 @@ function usage (cmd) {
     }).join('\n\n')
   }
   // toplevel cmd usage
+  cmd = cmdAliases[cmd] || cmd
   return mdm.usage(apidocs._, cmd)
 }
 
