@@ -10,27 +10,27 @@ function isFilter (v) {
   return (v == '@' || v == '%' || v == '&')
 }
 
-valid.set('msgId', function (v) {
+module.exports.msgId = function (v) {
   if (!ref.isMsg(v))
     return 'type'
-})
-valid.set('feedId', function (v) {
+}
+module.exports.feedId = function (v) {
   if (!ref.isFeed(v))
     return 'type'
-})
-valid.set('blobId', function (v) {
+}
+module.exports.blobId = function (v) {
   if (!ref.isBlob(v))
     return 'type'
-})
+}
 
-valid.set('msgContent', function (v, n) {
+module.exports.msgContent = function (v, n) {
   var err = valid.get('object')(v, n)
   if (err) return err
   if (!v.type || typeof v.type != 'string')
     return MissingAttr(n, 'type', 'string')
-})
+}
 
-valid.set('msg', function (v, n) {
+module.exports.msg = function (v, n) {
   var err = valid.get('object')(v, n)
   if (err)
     return err
@@ -67,9 +67,9 @@ valid.set('msg', function (v, n) {
   // .signature
   if (typeof v.signature != 'string')
     return MissingAttr(n, 'signature', 'string')
-})
+}
 
-valid.set('readStreamOpts', function (v, n) {
+module.exports.readStreamOpts = function (v, n) {
   var err = valid.get('object')(v, n)
   if (err)
     return err
@@ -113,9 +113,9 @@ valid.set('readStreamOpts', function (v, n) {
   // .fillCache
   if (v.fillCache && typeof v.fillCache != 'boolean' && typeof v.fillCache != 'number')
     return AttrType(n, 'fillCache', 'boolean')
-})
+}
 
-valid.set('createHistoryStreamOpts', function (v, n) {
+module.exports.createHistoryStreamOpts = function (v, n) {
   // .id
   if (!ref.isFeed(v.id))
     return MissingAttr(n, 'id', 'feedId')
@@ -127,9 +127,9 @@ valid.set('createHistoryStreamOpts', function (v, n) {
   // .live
   if (v.live && typeof v.live != 'boolean' && typeof v.live != 'number')
     return AttrType(n, 'live', 'boolean')
-})
+}
 
-valid.set('createUserStreamOpts', function (v, n) {
+module.exports.createUserStreamOpts = function (v, n) {
   var err = valid.get('readStreamOpts')(v, n)
   if (err)
     return err
@@ -137,9 +137,9 @@ valid.set('createUserStreamOpts', function (v, n) {
   // .id
   if (!ref.isFeed(v.id))
     return MissingAttr(n, 'id', 'feedId')
-})
+}
 
-valid.set('messagesByTypeOpts', function (v, n) {
+module.exports.messagesByTypeOpts = function (v, n) {
   var err = valid.get('readStreamOpts')(v, n)
   if (err)
     return err
@@ -147,9 +147,9 @@ valid.set('messagesByTypeOpts', function (v, n) {
   // .type
   if (typeof v.type != 'string')
     return MissingAttr(n, 'type', 'string')
-})
+}
 
-valid.set('linksOpts', function (v, n) {
+module.exports.linksOpts = function (v, n) {
   var err = valid.get('object')(v, n)
   if (err)
     return err
@@ -181,9 +181,9 @@ valid.set('linksOpts', function (v, n) {
   // .values
   if (v.values && typeof v.values != 'boolean' && typeof v.values != 'number')
     return AttrType(n, 'values', 'boolean')
-})
+}
 
-valid.set('relatedMessagesOpts', function (v, n) {
+module.exports.relatedMessagesOpts = function (v, n) {
   var err = valid.get('object')(v, n)
   if (err)
     return err
@@ -203,9 +203,9 @@ valid.set('relatedMessagesOpts', function (v, n) {
   // .parent
   if (v.parent && typeof v.parent != 'boolean' && typeof v.parent != 'number')
     return AttrType(n, 'parent', 'boolean')
-})
+}
 
-valid.set('isBlockedOpts', function (v, n) {
+module.exports.isBlockedOpts = function (v, n) {
   var err = valid.get('object')(v, n)
   if (err)
     return err
@@ -217,9 +217,9 @@ valid.set('isBlockedOpts', function (v, n) {
   // .dest
   if (v.dest && !ref.isFeed(v.dest))
     return AttrType(n, 'dest', 'feedId')
-})
+}
 
-valid.set('createFriendStreamOpts', function (v, n) {
+module.exports.createFriendStreamOpts = function (v, n) {
   var err = valid.get('object')(v, n)
   if (err)
     return err
@@ -239,6 +239,6 @@ valid.set('createFriendStreamOpts', function (v, n) {
   // .hops
   if (v.hops && typeof v.hops != 'number')
     return AttrType(n, 'hops', 'number')
-})
+}
 
 
