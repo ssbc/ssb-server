@@ -122,7 +122,7 @@ var SSB = {
       id                       : feed.id,
       keys                     : opts.keys,
 
-      usage                    : valid.sync(usage, 'string|boolean'),
+      usage                    : valid.sync(usage, 'string?|boolean?'),
 
       publish                  : valid.async(feed.add, 'string|msgContent'),
       add                      : valid.async(ssb.add, 'msg'),
