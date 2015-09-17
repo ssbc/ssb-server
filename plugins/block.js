@@ -46,6 +46,9 @@ exports.init = function (sbot) {
         //break off this feed if they suddenly block
         //the recipient.
         pull.take(function (msg) {
+          //handle when createHistoryStream is called with keys: true
+          if(!msg.content && msg.value.content)
+            msg = msg.value
           if(msg.content.type !== 'contact') return true
           return !(
             msg.content.flagged &&
