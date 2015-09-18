@@ -328,8 +328,3 @@ Outputs information in the following form:
 
 
 
-
-
-## auth: async
-
-todo
