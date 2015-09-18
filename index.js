@@ -8,17 +8,9 @@ var mkdirp     = require('mkdirp')
 var rimraf     = require('rimraf')
 var mdm        = require('mdmanifest')
 var fs         = require('fs')
-
-var apidocs = {
-  _: fs.readFileSync(__dirname + '/api.md', 'utf-8'),
-  blobs: fs.readFileSync(__dirname + '/plugins/blobs.md', 'utf-8'),
-  block: fs.readFileSync(__dirname + '/plugins/block.md', 'utf-8'),
-  friends: fs.readFileSync(__dirname + '/plugins/friends.md', 'utf-8'),
-  gossip: fs.readFileSync(__dirname + '/plugins/gossip.md', 'utf-8'),
-  invite: fs.readFileSync(__dirname + '/plugins/invite.md', 'utf-8'),
-  'private': fs.readFileSync(__dirname + '/plugins/private.md', 'utf-8'),
-  replicate: fs.readFileSync(__dirname + '/plugins/replicate.md', 'utf-8')
-}
+var cmdAliases = require('./lib/cli-cmd-aliases')
+var valid      = require('./lib/validators')
+var apidocs    = require('./lib/apidocs.js')
 
 function toBuffer(base64) {
   return new Buffer(base64.substring(0, base64.indexOf('.')), 'base64')
@@ -58,6 +50,7 @@ function usage (cmd) {
     }).join('\n\n')
   }
   // toplevel cmd usage
+  cmd = cmdAliases[cmd] || cmd
   return mdm.usage(apidocs._, cmd)
 }
 
@@ -120,30 +113,29 @@ var SSB = {
       id                       : feed.id,
       keys                     : opts.keys,
 
-      usage                    : usage,
+      usage                    : valid.sync(usage, 'string?|boolean?'),
 
-      publish                  : feed.add,
-      add                      : ssb.add,
-      get                      : ssb.get,
+      publish                  : valid.async(feed.add, 'string|msgContent'),
+      add                      : valid.async(ssb.add, 'msg'),
+      get                      : valid.async(ssb.get, 'msgId'),
 
       pre                      : ssb.pre,
       post                     : ssb.post,
 
       getPublicKey             : ssb.getPublicKey,
       latest                   : ssb.latest,
-      getLatest                : ssb.getLatest,
+      getLatest                : valid.async(ssb.getLatest, 'feedId'),
       createFeed               : ssb.createFeed,
       whoami                   : function () { return { id: feed.id } },
-      relatedMessages          : ssb.relatedMessages,
+      relatedMessages          : valid.async(ssb.relatedMessages, 'relatedMessagesOpts'),
       query                    : ssb.query,
-      createFeed               : ssb.createFeed,
-      createFeedStream         : ssb.createFeedStream,
-      createHistoryStream      : ssb.createHistoryStream,
-      createLogStream          : ssb.createLogStream,
-      createUserStream         : ssb.createUserStream,
-      links                    : ssb.links,
+      createFeedStream         : valid.source(ssb.createFeedStream, 'readStreamOpts?'),
+      createHistoryStream      : valid.source(ssb.createHistoryStream, ['createHistoryStreamOpts'], ['feedId', 'number?', 'boolean?']),
+      createLogStream          : valid.source(ssb.createLogStream, 'readStreamOpts?'),
+      createUserStream         : valid.source(ssb.createUserStream, 'createUserStreamOpts'),
+      links                    : valid.source(ssb.links, 'linksOpts'),
       sublevel                 : ssb.sublevel,
-      messagesByType           : ssb.messagesByType,
+      messagesByType           : valid.source(ssb.messagesByType, 'string|messagesByTypeOpts'),
       createWriteStream        : ssb.createWriteStream,
       createLatestLookupStream : ssb.createLatestLookupStream,
     }

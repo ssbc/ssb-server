@@ -12,6 +12,7 @@ var createHash   = require('multiblob/util').createHash
 var parse        = require('mynosql-query')
 var config       = require('ssb-config/inject')(process.env.ssb_appname)
 var muxrpcli     = require('muxrpcli')
+var cmdAliases   = require('./lib/cli-cmd-aliases')
 
 var createSbot   = require('./')
   .use(require('./plugins/master'))
@@ -58,19 +59,9 @@ createSbot.createClient({keys: keys})({port: config.port, host: config.host||'lo
   if(err) throw err
 
   // add aliases
-  var aliases = {
-    feed: 'createFeedStream',
-    history: 'createHistoryStream',
-    hist: 'createHistoryStream',
-    public: 'getPublicKey',
-    pub: 'getPublicKey',
-    log: 'createLogStream',
-    logt: 'messagesByType',
-    conf: 'config'
-  }
-  for (var k in aliases) {
-    rpc[k] = rpc[aliases[k]]
-    manifest[k] = manifest[aliases[k]]
+  for (var k in cmdAliases) {
+    rpc[k] = rpc[cmdAliases[k]]
+    manifest[k] = manifest[cmdAliases[k]]
   }
 
   // add some extra commands
