@@ -1,4 +1,5 @@
 var pull = require('pull-stream')
+var valid = require('../lib/validators')
 
 exports.name = 'block'
 exports.version = '1.0.0'
@@ -63,6 +64,6 @@ exports.init = function (sbot) {
     else return fn.apply(this, args)
   })
 
-  return {isBlocked: isBlocked}
+  return {isBlocked: valid.sync(isBlocked, 'feedId|isBlockedOpts') }
 
 }

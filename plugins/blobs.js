@@ -10,6 +10,9 @@ var toPull = require('stream-to-pull-stream')
 var isBlob = require('ssb-ref').isBlobId
 var multicb = require('multicb')
 var Notify = require('pull-notify')
+var mdm = require('mdmanifest')
+var valid = require('../lib/validators')
+var apidoc = require('../lib/apidocs').blobs
 
 function isFunction (f) {
   return 'function' === typeof f
@@ -102,15 +105,7 @@ function oneTrack(delay, n, label, fun) {
 module.exports = {
   name: 'blobs',
   version: '0.0.0',
-  manifest: {
-    get: 'source',
-    has: 'async',
-    add: 'sink',
-    ls: 'source',
-    want: 'async',
-    wants: 'sync',
-    changes: 'source',
-  },
+  manifest: mdm.manifest(apidoc),
   permissions: {
     anonymous: {allow: ['has', 'get', 'changes']},
   },
@@ -369,21 +364,21 @@ module.exports = {
     }
 
     return {
-      get: function (hash) {
+      get: valid.source(function (hash) {
         return blobs.get(desigil(hash))
-      },
+      }, 'blobId'),
 
-      has: function (hash, cb) {
+      has: valid.async(function (hash, cb) {
         sbot.emit('blobs:has', hash)
         blobs.has(desigil(hash), cb)
-      },
+      }, 'blobId|array'),
 
-      size: function (hash, cb) {
+      size: valid.async(function (hash, cb) {
         sbot.emit('blobs:size', hash)
         blobs.size(desigil(hash), cb)
-      },
+      }, 'blobId|array'),
 
-      add: function (hash, cb) {
+      add: valid.sink(function (hash, cb) {
         if(isFunction(hash)) cb = hash, hash = null
 
         return pull(
@@ -395,7 +390,7 @@ module.exports = {
             if(cb) cb(err, resigil(hash))
           })
         )
-      },
+      }, 'string?'),
 
       ls: function () {
         return pull(blobs.ls(), pull.map(resigil))
@@ -403,7 +398,7 @@ module.exports = {
       // request to retrieve a blob,
       // calls back when that file is available.
       // - `opts.nowait`: call cb immediately if not found (dont register for callback)
-      want: function (hash, opts, cb) {
+      want: valid.async(function (hash, opts, cb) {
         if (typeof opts == 'function') {
           cb = opts
           opts = null
@@ -425,7 +420,7 @@ module.exports = {
           // track # of requests for prioritization
           wantList.byId[hash].requests = clamp(wantList.byId[hash].requests+1, 0, 20)
         })
-      },
+      }, 'blobId', 'object?'),
 
       changes: function () {
         return notify.listen()

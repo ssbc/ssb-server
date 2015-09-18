@@ -6,6 +6,8 @@ var cat = require('pull-cat')
 var Abort = require('pull-abortable')
 var Debounce = require('observ-debounce')
 var Observ = require('observ')
+var mdm = require('mdmanifest')
+var apidoc = require('../lib/apidocs').replicate
 
 var notify = Notify()
 
@@ -98,9 +100,7 @@ function replicate(sbot, config, rpc, cb) {
 module.exports = {
   name: 'replicate',
   version: '1.0.0',
-  manifest: {
-    changes: 'source'
-  },
+  manifest: mdm.manifest(apidoc),
   replicate: replicate,
   init: function (sbot, config) {
     sbot.createHistoryStream.hook(function (fn, args) {

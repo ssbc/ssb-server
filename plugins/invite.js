@@ -5,6 +5,9 @@ var toAddress = require('../lib/util').toAddress
 var cont = require('cont')
 var explain = require('explain-error')
 var ip = require('ip')
+var mdm = require('mdmanifest')
+var valid = require('../lib/validators')
+var apidoc = require('../lib/apidocs').invite
 //okay this plugin adds a method
 //invite(seal({code, public})
 
@@ -20,12 +23,7 @@ function isString (s) {
 module.exports = {
   name: 'invite',
   version: '1.0.0',
-  manifest: {
-    create: 'async',
-    use: 'async',
-    addMe: 'async',
-    accept: 'async'
-  },
+  manifest: mdm.manifest(apidoc),
   permissions: {
     master: {allow: ['create']},
     //temp: {allow: ['use']}
@@ -49,16 +47,13 @@ module.exports = {
     })
 
     return {
-      create: function (n, cb) {
-        if(isFunction(n) || n == null || isNaN(n))
-          return cb(new Error('invite.create must get number of uses.'))
-
+      create: valid.async(function (n, cb) {
         var addr = server.getAddress()
         var host = addr.split(':')[0]
         if(!config.allowPrivate && (
           ip.isPrivate(host) || 'localhost' === host)
         )
-          return cb(new Error('Server has no public ip address,'
+          return cb(new Error('Server has no public ip address, '
                             + 'cannot create useable invitation'))
 
         //this stuff is SECURITY CRITICAL
@@ -78,10 +73,9 @@ module.exports = {
           else cb(null, addr + '~' + seed.toString('base64'))
         })
 
-      },
-      use: function (req, cb) {
+      }, 'number'),
+      use: valid.async(function (req, cb) {
         var rpc = this
-
 
         codesDB.get(rpc.id, function(err, invite) {
           if(err) return cb(err)
@@ -121,11 +115,11 @@ module.exports = {
             })
           })
         })
-      },
-      addMe: function (invite, cb) {
+      }, 'object'),
+      addMe: valid.async(function (invite, cb) {
         return this.accept(invite, cb)
-      },
-      accept: function (invite, cb) {
+      }, 'string'),
+      accept: valid.async(function (invite, cb) {
         var parts = invite.split('~')
         var addr = toAddress(parts[0])
 
@@ -152,7 +146,7 @@ module.exports = {
             })
           })
         })
-      }
+      }, 'string')
     }
   }
 }
