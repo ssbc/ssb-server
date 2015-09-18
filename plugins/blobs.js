@@ -12,7 +12,7 @@ var multicb = require('multicb')
 var Notify = require('pull-notify')
 var mdm = require('mdmanifest')
 var valid = require('../lib/validators')
-var apidoc = require('fs').readFileSync(__dirname + '/blobs.md', 'utf-8')
+var apidoc = require('../lib/apidocs').blobs
 
 function isFunction (f) {
   return 'function' === typeof f

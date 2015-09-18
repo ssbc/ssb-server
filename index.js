@@ -10,17 +10,7 @@ var mdm        = require('mdmanifest')
 var fs         = require('fs')
 var cmdAliases = require('./lib/cli-cmd-aliases')
 var valid      = require('./lib/validators')
-
-var apidocs = {
-  _: fs.readFileSync(__dirname + '/api.md', 'utf-8'),
-  blobs: fs.readFileSync(__dirname + '/plugins/blobs.md', 'utf-8'),
-  block: fs.readFileSync(__dirname + '/plugins/block.md', 'utf-8'),
-  friends: fs.readFileSync(__dirname + '/plugins/friends.md', 'utf-8'),
-  gossip: fs.readFileSync(__dirname + '/plugins/gossip.md', 'utf-8'),
-  invite: fs.readFileSync(__dirname + '/plugins/invite.md', 'utf-8'),
-  'private': fs.readFileSync(__dirname + '/plugins/private.md', 'utf-8'),
-  replicate: fs.readFileSync(__dirname + '/plugins/replicate.md', 'utf-8')
-}
+var apidocs    = require('./lib/apidocs.js')
 
 function toBuffer(base64) {
   return new Buffer(base64.substring(0, base64.indexOf('.')), 'base64')

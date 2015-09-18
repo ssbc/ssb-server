@@ -5,7 +5,7 @@ var memview     = require('level-memview')
 var pushable    = require('pull-pushable')
 var mdm         = require('mdmanifest')
 var valid       = require('../lib/validators')
-var apidoc      = require('fs').readFileSync(__dirname + '/friends.md', 'utf-8')
+var apidoc      = require('../lib/apidocs').friends
 
 function isFunction (f) {
   return 'function' === typeof f

@@ -7,7 +7,7 @@ var explain = require('explain-error')
 var ip = require('ip')
 var mdm = require('mdmanifest')
 var valid = require('../lib/validators')
-var apidoc = require('fs').readFileSync(__dirname + '/invite.md', 'utf-8')
+var apidoc = require('../lib/apidocs').invite
 //okay this plugin adds a method
 //invite(seal({code, public})
 

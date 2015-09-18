@@ -5,7 +5,7 @@ var toAddress = require('../lib/util').toAddress
 var nonPrivate = require('non-private-ip')
 var mdm = require('mdmanifest')
 var valid = require('../lib/validators')
-var apidoc = require('fs').readFileSync(__dirname + '/gossip.md', 'utf-8')
+var apidoc = require('../lib/apidocs').gossip
 var u = require('../lib/util')
 
 var isArray = Array.isArray

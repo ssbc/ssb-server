@@ -7,7 +7,7 @@ var Abort = require('pull-abortable')
 var Debounce = require('observ-debounce')
 var Observ = require('observ')
 var mdm = require('mdmanifest')
-var apidoc = require('fs').readFileSync(__dirname + '/replicate.md', 'utf-8')
+var apidoc = require('../lib/apidocs').replicate
 
 var notify = Notify()
 

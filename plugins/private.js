@@ -2,7 +2,7 @@ var ssbKeys = require('ssb-keys')
 var explain = require('explain-error')
 var mdm = require('mdmanifest')
 var valid = require('../lib/validators')
-var apidoc = require('fs').readFileSync(__dirname + '/private.md', 'utf-8')
+var apidoc = require('../lib/apidocs').private
 
 module.exports = {
   name: 'private',
