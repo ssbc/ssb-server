@@ -40,7 +40,7 @@ cat ./file | add [hash]
 ```
 
 ```js
-add(hash)
+pull(source, add(hash, cb))
 ```
 
 - hash (base64 string): Optional, expected hash of the file. If the file does not match the hash, it is not stored, and an error is emitted.
