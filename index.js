@@ -57,32 +57,7 @@ function usage (cmd) {
 var manifest = mdm.manifest(apidocs._)
 manifest.usage = 'sync'
 var SSB = {
-  manifest: manifest, /*{
-    'usage'           : 'sync',
-    'add'             : 'async',
-    'publish'         : 'async',
-
-    'get'             : 'async',
-    'getPublicKey'    : 'async',
-    'getLatest'       : 'async',
-    'auth'            : 'async',
-    'relatedMessages' : 'async',
-
-    'getAddress'      : 'sync',
-    'whoami'          : 'sync',
-
-    //local nodes
-    'getLocal'    : 'async',
-
-    'latest'                 : 'source',
-    'query'                  : 'source',
-    'createFeedStream'       : 'source',
-    'createHistoryStream'    : 'source',
-    'createLogStream'        : 'source',
-    'createUserStream'       : 'source',
-    'links'                  : 'source',
-    'messagesByType'         : 'source',
-  },*/
+  manifest: manifest,
   permissions: {
     master: {allow: null, deny: null},
     anonymous: {allow: ['createHistoryStream'], deny: null}
