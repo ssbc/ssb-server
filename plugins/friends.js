@@ -4,7 +4,7 @@ var mlib        = require('ssb-msgs')
 var memview     = require('level-memview')
 var pushable    = require('pull-pushable')
 var mdm         = require('mdmanifest')
-var valid       = require('muxrpc-validation')
+var valid       = require('../lib/validators')
 var apidoc      = require('fs').readFileSync(__dirname + '/friends.md', 'utf-8')
 
 function isFunction (f) {

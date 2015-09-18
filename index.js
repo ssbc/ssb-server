@@ -8,9 +8,8 @@ var mkdirp     = require('mkdirp')
 var rimraf     = require('rimraf')
 var mdm        = require('mdmanifest')
 var fs         = require('fs')
-var cmdAliases = require('./cli-cmd-aliases')
-var valid      = require('muxrpc-validation')
-valid.set(require('./validators'))
+var cmdAliases = require('./lib/cli-cmd-aliases')
+var valid      = require('./lib/validators')
 
 var apidocs = {
   _: fs.readFileSync(__dirname + '/api.md', 'utf-8'),

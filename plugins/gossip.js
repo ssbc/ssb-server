@@ -4,7 +4,7 @@ var Notify = require('pull-notify')
 var toAddress = require('../lib/util').toAddress
 var nonPrivate = require('non-private-ip')
 var mdm = require('mdmanifest')
-var valid = require('muxrpc-validation')
+var valid = require('../lib/validators')
 var apidoc = require('fs').readFileSync(__dirname + '/gossip.md', 'utf-8')
 var u = require('../lib/util')
 

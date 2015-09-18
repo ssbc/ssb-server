@@ -12,7 +12,7 @@ var createHash   = require('multiblob/util').createHash
 var parse        = require('mynosql-query')
 var config       = require('ssb-config/inject')(process.env.ssb_appname)
 var muxrpcli     = require('muxrpcli')
-var cmdAliases   = require('./cli-cmd-aliases')
+var cmdAliases   = require('./lib/cli-cmd-aliases')
 
 var createSbot   = require('./')
   .use(require('./plugins/master'))

@@ -6,7 +6,7 @@ var cont = require('cont')
 var explain = require('explain-error')
 var ip = require('ip')
 var mdm = require('mdmanifest')
-var valid = require('muxrpc-validation')
+var valid = require('../lib/validators')
 var apidoc = require('fs').readFileSync(__dirname + '/invite.md', 'utf-8')
 //okay this plugin adds a method
 //invite(seal({code, public})

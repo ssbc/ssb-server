@@ -1,7 +1,7 @@
 var ssbKeys = require('ssb-keys')
 var explain = require('explain-error')
 var mdm = require('mdmanifest')
-var valid = require('muxrpc-validation')
+var valid = require('../lib/validators')
 var apidoc = require('fs').readFileSync(__dirname + '/private.md', 'utf-8')
 
 module.exports = {

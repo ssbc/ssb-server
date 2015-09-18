@@ -1,5 +1,5 @@
 var pull = require('pull-stream')
-var valid = require('muxrpc-validation')
+var valid = require('../lib/validators')
 
 exports.name = 'block'
 exports.version = '1.0.0'

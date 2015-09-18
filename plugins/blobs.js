@@ -11,7 +11,7 @@ var isBlob = require('ssb-ref').isBlobId
 var multicb = require('multicb')
 var Notify = require('pull-notify')
 var mdm = require('mdmanifest')
-var valid = require('muxrpc-validation')
+var valid = require('../lib/validators')
 var apidoc = require('fs').readFileSync(__dirname + '/blobs.md', 'utf-8')
 
 function isFunction (f) {
