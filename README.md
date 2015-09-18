@@ -17,6 +17,7 @@ Join us in #scuttlebutt on freenode.
 
 ### [Setting Up Scuttlebot](https://github.com/ssbc/docs#setup-scuttlebot)
 ### [Setting Up a Pub](https://github.com/ssbc/docs#setup-up-a-pub)
+### [Informal Pub Servers Registry](https://github.com/ssbc/scuttlebot/wiki/Pub-servers)
 ### [Documentation](https://github.com/ssbc/docs)
 
 ## Configuration
