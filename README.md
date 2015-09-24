@@ -14,11 +14,16 @@ Join us in #scuttlebutt on freenode.
 
 [![build status](https://secure.travis-ci.org/ssbc/scuttlebot.png)](http://travis-ci.org/ssbc/scuttlebot)
 
+## Guides
+
 ### [Setting Up Scuttlebot](https://github.com/ssbc/docs#setup-scuttlebot)
-### [Guide to Using Scuttlebot](https://github.com/ssbc/docs/blob/master/intro-to-using-sbot.md)
-### [Guide to Setting Up a Pub](https://github.com/ssbc/docs#setup-up-a-pub)
+### [Using Scuttlebot](https://github.com/ssbc/docs/blob/master/intro-to-using-sbot.md)
+### [Setting Up a Pub](https://github.com/ssbc/docs#setup-up-a-pub)
+
+## Links
+
 ### [Informal Pub Servers Registry](https://github.com/ssbc/scuttlebot/wiki/Pub-servers)
-### [Documentation Repo](https://github.com/ssbc/docs)
+### [Documentation](https://github.com/ssbc/docs)
 
 ## Configuration
 
