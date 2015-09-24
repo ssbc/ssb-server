@@ -8,22 +8,19 @@ It consists of
 - Message distribution over a [gossip network](https://en.wikipedia.org/wiki/Gossip_protocol)
 
 Scuttlebot is an SSB server.
-It includes the database, networking, and command-line interface.
+
+ - [Guide to setup Scuttlebot](https://github.com/ssbc/docs#setup-scuttlebot)
+ - [Introduction to using and developing with Scuttlebot](https://github.com/ssbc/docs/intro-to-using-sbot.md)
+ - [Learn about the Secure Scuttlebutt Protocol](https://github.com/ssbc/docs/learn.md)
 
 Join us in #scuttlebutt on freenode.
 
 [![build status](https://secure.travis-ci.org/ssbc/scuttlebot.png)](http://travis-ci.org/ssbc/scuttlebot)
 
-## Guides
-
-### [Setting Up Scuttlebot](https://github.com/ssbc/docs#setup-scuttlebot)
-### [Using Scuttlebot](https://github.com/ssbc/docs/blob/master/intro-to-using-sbot.md)
-### [Setting Up a Pub](https://github.com/ssbc/docs#setup-up-a-pub)
-
 ## Links
 
-### [Informal Pub Servers Registry](https://github.com/ssbc/scuttlebot/wiki/Pub-servers)
 ### [Documentation](https://github.com/ssbc/docs)
+### [Informal Pub Servers Registry](https://github.com/ssbc/scuttlebot/wiki/Pub-servers)
 
 ## Configuration
 
