@@ -1,6 +1,8 @@
 # Scuttlebot
 
-Secure Scuttlebutt (SSB) is a P2P database of data-feeds.
+![Hermies the Hermit Crab](https://avatars2.githubusercontent.com/u/10190339?v=3&s=200)
+
+Secure Scuttlebutt (SSB) is a P2P database of message-feeds.
 It consists of
 
 - Per-user append-only logs of messages (i.e. [kappa architecture](http://www.kappa-architecture.com/))
