@@ -1,6 +1,7 @@
 # Scuttlebot
 
-Secure Scuttlebutt (SSB) is a P2P database of
+Secure Scuttlebutt (SSB) is a P2P database of data-feeds.
+It consists of
 
 - Per-user append-only logs of messages (i.e. [kappa architecture](http://www.kappa-architecture.com/))
 - Content-addressable storage (i.e. `obj.id == hash(obj)`)
@@ -16,6 +17,7 @@ Join us in #scuttlebutt on freenode.
 ## Get Started
 
 ### [Setting Up Scuttlebot](https://github.com/ssbc/docs#setup-scuttlebot)
+### [Guide to Using and Developing with Scuttlebot](https://github.com/ssbc/docs/blob/master/intro-to-using-sbot.md)
 ### [Setting Up a Pub](https://github.com/ssbc/docs#setup-up-a-pub)
 ### [Informal Pub Servers Registry](https://github.com/ssbc/scuttlebot/wiki/Pub-servers)
 ### [Documentation](https://github.com/ssbc/docs)
