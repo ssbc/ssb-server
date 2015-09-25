@@ -12,8 +12,8 @@ It consists of
 Scuttlebot is an SSB server.
 
  - [Guide to setup Scuttlebot](https://github.com/ssbc/docs#setup-scuttlebot)
- - [Introduction to using and developing with Scuttlebot](https://github.com/ssbc/docs/intro-to-using-sbot.md)
- - [Learn about the Secure Scuttlebutt Protocol](https://github.com/ssbc/docs/learn.md)
+ - [Introduction to using and developing with Scuttlebot](https://github.com/ssbc/docs/blob/master/intro-to-using-sbot.md)
+ - [Learn about the Secure Scuttlebutt Protocol](https://github.com/ssbc/docs/blob/master/learn.md)
 
 Join us in #scuttlebutt on freenode.
 
