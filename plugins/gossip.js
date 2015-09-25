@@ -183,6 +183,26 @@ module.exports = {
 
     var schedule = createSchedule(1e3, config.timeout || 2e3, immediate)()
 
+    // sync with all pubs immediately
+    function syncAll () {
+      peers.forEach(function (p) {
+        connect(p, function(){})
+      })
+    }
+
+    // watch for machine sleeps, and syncAll if just waking up
+    var lastSleepCheck = false
+    var sleepCheckTime = 3e3
+    var sleepCheckInterval = setInterval(function () {
+      var t = Date.now()
+      if (lastSleepCheck && (t - lastSleepCheck) > sleepCheckTime*3) {
+        console.log('Device sleep detected, triggering pub sync')
+        syncAll() // missed 3 checks, let's syncAll 
+      }
+      lastSleepCheck = t
+    }, sleepCheckTime)
+    server.once('close', function () { clearInterval(sleepCheckInterval) })
+
   /*
     ideas:
 
