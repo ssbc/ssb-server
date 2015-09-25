@@ -4,7 +4,6 @@ Secure-scuttlebutt API server
 
 
 
-
 ## get: async
 
 Get a message by its hash-id.
@@ -273,11 +272,19 @@ This is the recommended method for publishing new messages, as it handles the ta
 
 
 
-## getPublicKey: async
 
-Retrieve the public key for the given user id, if it is in the database.
+## getAddress: sync
 
-:TODO: is this still needed?
+Get the address of the server.
+
+```bash
+getAddress
+```
+
+```js
+getAddress(cb)
+```
+
 
 
 
