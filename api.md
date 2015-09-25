@@ -273,6 +273,21 @@ This is the recommended method for publishing new messages, as it handles the ta
 
 
 
+## getAddress: sync
+
+Get the address of the server.
+
+```bash
+getAddress
+```
+
+```js
+getAddress(cb)
+```
+
+
+
+
 ## getLatest: async
 
 Get the latest message in the database by the given feedid.
