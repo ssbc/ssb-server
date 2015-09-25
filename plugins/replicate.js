@@ -17,12 +17,35 @@ function replicate(sbot, config, rpc, cb) {
     var sent = 0
 
     var to_send = {}, to_recv = {}
+    var replicated = {}
+    var debounce = Debounce(100)
+    debounce(function () {
+      var d = 0, r = 0, f = 0
+      for(var id in to_recv) {
+        var S = to_send[id] || 0, R = to_recv[id] || 0
+        var D = replicated[id] || 0
+        if(to_send[id] != null && to_recv[id] != null) {
+          f++;
+          if(S > R) {
+            d += (S - R);
+            r += (D - R)
+          }
+        }
+      }
+      //progress is
+      notify({
+        type: 'progress', peerid: rpc.id,
+        total: d, progress: r, feeds: f,
+        sync: !!(f && (r >= d))
+      })
+    })
 
     rpc.on('call:createHistoryStream', function (opts) {
       to_send[opts.id] = (opts.sequence || opts.seq) - 1
+      debounce.set()
     })
 
-    rpc.progress = Observ()
+//    rpc.progress = Observ()
 
     //var set_progress = rpc.progress.set
     //delete rpc.progress.set
@@ -48,37 +71,13 @@ function replicate(sbot, config, rpc, cb) {
           id: upto.id, seq: upto.sequence + 1,
           live: true, keys: false
         }))
+        debounce.set()
       }, function (err) {
         if(err)
           sbot.emit('log:error', ['replication', rep._sessid, 'error', err])
         sources.cap()
       })
     )
-
-    var debounce = Debounce(100)
-    debounce(function () {
-      var d = 0, r = 0, f = 0
-      for(var id in to_recv) {
-        var S = to_send[id] || 0, R = to_recv[id] || 0
-        var D = replicated[id] || 0
-        if(to_send[id] != null && to_recv[id] != null) {
-          f++; 
-          if(S > R) {
-            d += (S - R);
-            r += (D - R)
-          }
-        }
-      }
-      //set_progress({total: d, progress: r, feeds: f})
-      //progress is 
-      notify({
-        type: 'progress', peerid: rpc.id,
-        total: d, progress: r, feeds: f,
-        sync: !!(f && (r >= d))
-      })
-    })
-    
-    var replicated = {}
 
     pull(
       sources,
@@ -125,7 +124,7 @@ module.exports = {
         }
       })
     })
-    
+
     return {
       changes: function () {
         return notify.listen()
