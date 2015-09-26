@@ -230,6 +230,7 @@ module.exports = {
 
       server.connect(p, function (err, rpc) {
         if (err) {
+          count = Math.max(count - 1, 0)
           p.connected = false
           p.failure = (p.failure || 0) + 1
           notify({ type: 'connect-failure', peer: p })
