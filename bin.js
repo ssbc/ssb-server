@@ -35,6 +35,22 @@ if(keys.curve === 'k256')
 
 var manifestFile = path.join(config.path, 'manifest.json')
 
+if (process.argv[2] == '--help') {
+  console.log(
+"sbot is a scuttlebutt server \n\
+\n\
+Commands:\n\
+  server - starts the sbot server\n\
+  whoami - see your current identity\n\
+  publish - post a message\n\
+  invite - create invites for a pub server. e.g. sbot invite.create 100\n\
+  accept - manually input an invite\n\
+\n\
+see https://github.com/ssbc/docs for more details"
+)
+  return
+}
+
 // special server command
 if (process.argv[2] == 'server') {
   config.keys = keys
