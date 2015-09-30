@@ -4,6 +4,7 @@ var Notify = require('pull-notify')
 var toAddress = require('../lib/util').toAddress
 var nonPrivate = require('non-private-ip')
 var mdm = require('mdmanifest')
+var onWakeup = require('on-wakeup')
 var valid = require('../lib/validators')
 var apidoc = require('../lib/apidocs').gossip
 var u = require('../lib/util')
@@ -191,17 +192,10 @@ module.exports = {
     }
 
     // watch for machine sleeps, and syncAll if just waking up
-    var lastSleepCheck = false
-    var sleepCheckTime = 3e3
-    var sleepCheckInterval = setInterval(function () {
-      var t = Date.now()
-      if (lastSleepCheck && (t - lastSleepCheck) > sleepCheckTime*3) {
-        console.log('Device sleep detected, triggering pub sync')
-        syncAll() // missed 3 checks, let's syncAll 
-      }
-      lastSleepCheck = t
-    }, sleepCheckTime)
-    server.once('close', function () { clearInterval(sleepCheckInterval) })
+    onWakeup(function () {
+      console.log('Device sleep detected, triggering pub sync')
+      syncAll()
+    })
 
   /*
     ideas:
