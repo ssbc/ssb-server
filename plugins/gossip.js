@@ -4,6 +4,7 @@ var Notify = require('pull-notify')
 var toAddress = require('../lib/util').toAddress
 var nonPrivate = require('non-private-ip')
 var mdm = require('mdmanifest')
+var onWakeup = require('on-wakeup')
 var valid = require('../lib/validators')
 var apidoc = require('../lib/apidocs').gossip
 var u = require('../lib/util')
@@ -182,6 +183,19 @@ module.exports = {
     }
 
     var schedule = createSchedule(1e3, config.timeout || 2e3, immediate)()
+
+    // sync with all pubs immediately
+    function syncAll () {
+      peers.forEach(function (p) {
+        connect(p, function(){})
+      })
+    }
+
+    // watch for machine sleeps, and syncAll if just waking up
+    onWakeup(function () {
+      console.log('Device sleep detected, triggering pub sync')
+      syncAll()
+    })
 
   /*
     ideas:
