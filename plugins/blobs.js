@@ -230,7 +230,7 @@ module.exports = {
           // do we have the referenced blob yet?
           blobs.has(hash, function (_, has) {
             if(!has) { // no...
-              sbot.get(data.source, function (err, msg) {
+              sbot.get(data.key, function (err, msg) {
                 // was this blob published in the last month?
                 var dT = Math.abs(Date.now() - msg.timestamp)
                 if (dT < MONTH_IN_MS)
