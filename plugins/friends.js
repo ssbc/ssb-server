@@ -83,6 +83,7 @@ exports.init = function (sbot, config) {
 
     createFriendStream: valid.source(function (opts) {
       opts = opts || {}
+      var live = opts.live === true
       var start = opts.start || sbot.id
       var graph = graphs[opts.graph || 'follow']
       if(!graph)
@@ -105,7 +106,7 @@ exports.init = function (sbot, config) {
         }
       })
 
-      if(!opts.live) { cancel(); ps.end() }
+      if(!live) { cancel(); ps.end() }
 
       return ps
     }, 'createFriendStreamOpts?'),

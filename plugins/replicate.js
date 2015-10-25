@@ -9,6 +9,8 @@ var Observ = require('observ')
 var mdm = require('mdmanifest')
 var apidoc = require('../lib/apidocs').replicate
 
+var DAY = 1000*60*60*24
+var LIMIT = 1000
 var notify = Notify()
 
 function replicate(sbot, config, rpc, cb) {
@@ -56,6 +58,7 @@ function replicate(sbot, config, rpc, cb) {
     var opts = config.replication || {}
     opts.hops = opts.hops || 3
     opts.dunbar = opts.dunbar || 150
+    opts.live = true
 
     pull(
       sbot.friends.createFriendStream(opts),
@@ -67,11 +70,25 @@ function replicate(sbot, config, rpc, cb) {
       pull.drain(function (upto) {
         to_recv[upto.id] = upto.sequence
         replicated[upto.id] = upto.sequence
-        sources.add(rpc.createHistoryStream({
-          id: upto.id, seq: upto.sequence + 1,
-          live: true, keys: false
-        }))
-        debounce.set()
+        var limit  = !upto.ts ? LIMIT
+          : limit = Math.ceil((Date.now() - upto.ts)/DAY * LIMIT)
+
+        sources.add(
+          pull(
+            rpc.createHistoryStream({
+              id: upto.id, seq: upto.sequence + 1,
+              limit: limit,
+              live: true, keys: false
+            }),
+            pull.through(function () {
+              if(limit--) return
+//REPLICATIOAN BACK PRESSURE
+//              rpc.close(true)
+            })
+          )
+        )
+
+          debounce.set()
       }, function (err) {
         if(err)
           sbot.emit('log:error', ['replication', rep._sessid, 'error', err])
