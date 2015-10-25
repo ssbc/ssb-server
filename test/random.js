@@ -18,6 +18,10 @@ function bar (prog) {
   return s + ' '+prog.progress+'/'+prog.total+':'+prog.feeds
 }
 
+function isNumber (n) {
+  return typeof n === 'number'
+}
+
 var createSbot = require('../')
   .use(require('../plugins/friends'))
   .use(require('../plugins/replicate'))
@@ -95,7 +99,7 @@ function latest (sbot, cb) {
     for(var k in keys) (function (key) {
       n++
       get(key, function (err, value) {
-        map[key] = value
+        map[key] = isNumber(value) ? value : value.sequence
         if(--n) return
         cb(null, map)
       })
