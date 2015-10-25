@@ -62,6 +62,7 @@ exports.init = function (sbot, config) {
   }))
 
   return {
+
     get: valid.sync(function (opts) {
       var g = graphs[opts.graph || 'follow']
       if(!g) throw new Error('opts.graph must be provided')
@@ -99,10 +100,13 @@ exports.init = function (sbot, config) {
         start: start,
         hops: opts.hops || conf.hops || 3,
         max: opts.dunbar || conf.dunbar || 150,
-        each: function (_, to) {
+        each: function (_, to, hops) {
           if(to !== start) ps.push(to)
         }
       })
+
+      if(!opts.live) { cancel(); ps.end() }
+
       return ps
     }, 'createFriendStreamOpts?'),
 
