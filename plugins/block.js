@@ -14,7 +14,7 @@ exports.init = function (sbot) {
 
   //if a currently connected peer is blocked, disconnect them immediately.
   pull(
-    sbot.friends.createFriendStream({graph: 'flag'}),
+    sbot.friends.createFriendStream({graph: 'flag', live: true}),
     pull.drain(function (blocked) {
       if(sbot.peers[blocked]) {
         sbot.peers[blocked].forEach(function (b) {
