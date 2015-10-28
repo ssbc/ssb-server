@@ -44,7 +44,7 @@ function usage (cmd) {
     return Object.keys(apidocs).map(function (name) {
       if (name == '_')
         return mdm.usage(apidocs[name], null, { nameWidth: 20 })
-      
+
       var text = mdm.usage(apidocs[name], null, { prefix: name, nameWidth: 20 })
       return text.slice(text.indexOf('Commands:') + 10) // skip past the toplevel summary, straight to the cmd list
     }).join('\n\n')
@@ -100,6 +100,7 @@ var SSB = {
       getPublicKey             : ssb.getPublicKey,
       latest                   : ssb.latest,
       getLatest                : valid.async(ssb.getLatest, 'feedId'),
+      latestSequence           : valid.async(ssb.latestSequence, 'feedId'),
       createFeed               : ssb.createFeed,
       whoami                   : function () { return { id: feed.id } },
       relatedMessages          : valid.async(ssb.relatedMessages, 'relatedMessagesOpts'),
@@ -112,7 +113,7 @@ var SSB = {
       sublevel                 : ssb.sublevel,
       messagesByType           : valid.source(ssb.messagesByType, 'string|messagesByTypeOpts'),
       createWriteStream        : ssb.createWriteStream,
-      createLatestLookupStream : ssb.createLatestLookupStream,
+//      createLatestLookupStream : ssb.createLatestLookupStream,
     }
   }
 }
