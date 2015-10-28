@@ -84,6 +84,7 @@ exports.init = function (sbot, config) {
     createFriendStream: valid.source(function (opts) {
       opts = opts || {}
       var live = opts.live === true
+      var meta = opts.meta === true
       var start = opts.start || sbot.id
       var graph = graphs[opts.graph || 'follow']
       if(!graph)
@@ -92,9 +93,13 @@ exports.init = function (sbot, config) {
         cancel && cancel()
       })
 
+      function push (to, hops) {
+        return ps.push(meta ? {id: to, hops: hops} : to)
+      }
+
       //by default, also emit your own key.
       if(opts.self !== false)
-        ps.push(start)
+        push(start, 0)
 
       var conf = config.friends || {}
       cancel = graph.traverse({
@@ -102,7 +107,7 @@ exports.init = function (sbot, config) {
         hops: opts.hops || conf.hops || 3,
         max: opts.dunbar || conf.dunbar || 150,
         each: function (_, to, hops) {
-          if(to !== start) ps.push(to)
+          if(to !== start) push(to, hops)
         }
       })
 
