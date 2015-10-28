@@ -1,4 +1,5 @@
 var pull = require('pull-stream')
+var para = require('pull-paramap')
 var Notify = require('pull-notify')
 var pushable = require('pull-pushable')
 var many = require('pull-many')
@@ -9,9 +10,27 @@ var Observ = require('observ')
 var mdm = require('mdmanifest')
 var apidoc = require('../lib/apidocs').replicate
 
+//calculate how many messages we will accept this replication
+//from a given peer.
+
 var DAY = 1000*60*60*24
-var LIMIT = 1000
+var LIMIT = [-1, -1, 100]
+var MIN_LIMIT = LIMIT[LIMIT.length - 1]
 var notify = Notify()
+
+function calcLimit (upto) {
+
+  var hopLimit =
+    upto.hops < LIMIT.length ? LIMIT[upto.hops] : MIN_LIMIT
+
+  if(hopLimit <=0) return hopLimit
+
+  return (
+      !upto.ts
+    ? hopLimit
+    : Math.ceil((Date.now() - upto.ts)/DAY * hopLimit)
+  )
+}
 
 function replicate(sbot, config, rpc, cb) {
     var aborter = Abort()
@@ -47,43 +66,55 @@ function replicate(sbot, config, rpc, cb) {
       debounce.set()
     })
 
-//    rpc.progress = Observ()
-
-    //var set_progress = rpc.progress.set
-    //delete rpc.progress.set
-    //rpc._emit('replicate:progress', rpc.progress)
-
     //these defaults are for replication
     //so they belong in the replication config
     var opts = config.replication || {}
     opts.hops = opts.hops || 3
     opts.dunbar = opts.dunbar || 150
     opts.live = true
+    opts.meta = true
+
+    function toSeq (s) {
+      return 'number' === typeof s ? s : s.sequence
+    }
+
+    var lastDB = sbot.sublevel('lst')
 
     pull(
       sbot.friends.createFriendStream(opts),
       aborter,
       pull.through(function (s) {
-        to_recv[s] = 0
+        to_recv['string' === typeof s ? s  : s.id] = 0
       }),
-      sbot.createLatestLookupStream(),
+      //lookup the latest message from a given peer.
+      para(function (data, cb) {
+        if(data.sync) return cb(null, data)
+        var id = data.id || data
+        sbot.latestSequence(id, function (err, seq) {
+          cb(null, {
+            id: id, sequence: err ? 0 : toSeq(seq),
+            ts: err ? null : seq.ts,
+            hops: data.hops
+          })
+        })
+      }, 32),
       pull.drain(function (upto) {
         to_recv[upto.id] = upto.sequence
         replicated[upto.id] = upto.sequence
-        var limit  = !upto.ts ? LIMIT
-          : limit = Math.ceil((Date.now() - upto.ts)/DAY * LIMIT)
+
+        var limit = calcLimit(upto)
 
         sources.add(
           pull(
             rpc.createHistoryStream({
               id: upto.id, seq: upto.sequence + 1,
               limit: limit,
-              live: true, keys: false
+              live: true , keys: false
             }),
             pull.through(function () {
-              if(limit--) return
-//REPLICATIOAN BACK PRESSURE
-//              rpc.close(true)
+              if(limit === null || limit--) return
+              //REPLICATIOAN BACK PRESSURE
+              rpc.close(true)
             })
           )
         )
