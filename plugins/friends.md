@@ -40,14 +40,15 @@ hops(start, graph, { dunbar:, hops: }, cb)
 
 ## createFriendStream: source
 
-Live-stream the ids of feeds which meet the given hops query.
+Live-stream the ids of feeds which meet the given hops query. If `meta`
+option is set, then will return steam of `{id, hops}`
 
 ```bash
-createFriendStream [--start feedid] [--graph follow|flag] [--dunbar number] [--hops number]
+createFriendStream [--start feedid] [--graph follow|flag] [--dunbar number] [--hops number] [--meta]
 ```
 
 ```js
-createFriendStream({ start:, graph:, dunbar:, hops: }, cb)
+createFriendStream({ start:, graph:, dunbar:, hops: , meta: }, cb)
 ```
 
  - `start` (FeedID, default: local user): Which feed to start from.

@@ -287,7 +287,6 @@ getAddress(cb)
 
 
 
-
 ## getLatest: async
 
 Get the latest message in the database by the given feedid.
@@ -313,6 +312,22 @@ latest
 ```js
 latest()
 ```
+
+
+
+## latestSequence: async
+
+Get the sequence and local timestamp of the last received message from
+a given `feedId`.
+
+```bash
+latestSequence {feedId}
+```
+
+```js
+latest({feedId})
+```
+
 
 
 ## whoami: sync
