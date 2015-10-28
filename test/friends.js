@@ -12,6 +12,13 @@ var createSbot = require('../')
   .use(require('../plugins/friends'))
 
 
+function sort (ary) {
+  return ary.sort(function (a, b) {
+    return a.id < b.id ? -1 : a.id === b.id ? 1 : 0
+  })
+}
+
+
 tape('construct and analyze graph', function (t) {
 
   var aliceKeys = ssbKeys.generate()
@@ -95,9 +102,25 @@ tape('construct and analyze graph', function (t) {
       sbot.friends.createFriendStream(),
       pull.collect(function (err, ary) {
         t.notOk(err)
-        console.log(ary)
         t.equal(ary.length, 3)
         t.deepEqual(ary.sort(), [alice.id, bob.id, carol.id].sort())
+        t.end()
+      })
+    )
+  })
+
+  t.test('creatFriendStream - meta', function (t) {
+    pull(
+      sbot.friends.createFriendStream({meta: true}),
+      pull.collect(function (err, ary) {
+        t.notOk(err)
+        t.equal(ary.length, 3)
+        t.deepEqual(sort(ary), sort([
+          {id: alice.id, hops: 0},
+          {id: bob.id, hops: 1},
+          {id: carol.id, hops: 1}
+        ]))
+
         t.end()
       })
     )
@@ -194,7 +217,6 @@ tape('correctly delete edges', function (t) {
       sbot.friends.createFriendStream(),
       pull.collect(function (err, ary) {
         t.notOk(err)
-        console.log(ary)
         t.equal(ary.length, 2)
         t.deepEqual(ary.sort(), [alice.id, bob.id].sort())
         t.end()
@@ -234,7 +256,6 @@ tape('indirect friends', function (t) {
 
       sbot.friends.hops({hops: 3}, function (err, all) {
         if(err) throw err
-        console.log(all)
         var o = {}
 
         o[alice.id] = 0
@@ -249,18 +270,42 @@ tape('indirect friends', function (t) {
     })
   })
 
+  var expected = [
+    {id: alice.id, hops: 0},
+    {id: bob.id, hops: 1},
+    {id: carol.id, hops: 2},
+    {id: dan.id, hops: 3}
+  ]
+
   t.test('createFriendStream on long chain', function (t) {
 
     pull(
       sbot.friends.createFriendStream(),
       pull.collect(function (err, ary) {
         if(err) throw err
-        console.log(ary)
+        t.deepEqual(ary, expected.map(function (e) { return e.id }))
         t.end()
       })
     )
 
   })
+
+  t.test('creatFriendStream - meta', function (t) {
+
+    pull(
+      sbot.friends.createFriendStream({meta: true}),
+      pull.collect(function (err, ary) {
+        t.notOk(err)
+
+        t.equal(ary.length, 4)
+        t.deepEqual(sort(ary), sort(expected))
+
+        t.end()
+      })
+    )
+
+  })
+
 
   t.test('cleanup', function (t) {
     sbot.close()
