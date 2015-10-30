@@ -22,6 +22,39 @@ function read (filename) {
 var createSbot = require('../')
   .use(require('../plugins/blobs'))
 
+tape('test blob api', function (t) {
+  var sbot = createSbot({
+    temp: 'test-blobs-alice', timeout: 1000,
+    keys: ssbKeys.generate()
+  })
+
+  t.test(function (t) {
+    pull(
+      read(path.join(__filename)),
+      sbot.blobs.add(function (err, hash) {
+        t.notOk(err)
+
+        pull(
+          read(path.join(__filename)),
+          sbot.blobs.add(hash, function (err, _hash) {
+            t.notOk(err)
+            t.equal(_hash, hash)
+
+            pull(
+              pull.values([new Buffer([])]),
+              sbot.blobs.add(hash, function (err) {
+                t.ok(err)
+                t.end()
+                sbot.close(true)
+              })
+            )
+          })
+        )
+      })
+    )
+  })
+})
+
 tape('a client can request a blob', function (t) {
 
   var sbotA = createSbot({
