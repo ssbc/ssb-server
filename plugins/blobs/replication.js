@@ -36,9 +36,8 @@ function desigil (hash) {
 }
 
 function resigil (hash) {
-  return '&' + hash
+  return isBlob(hash) ? hash : '&' + hash
 }
-
 //                 ms    s    m    h    d
 var MONTH_IN_MS = 1000 * 60 * 60 * 24 * 30
 
@@ -217,17 +216,10 @@ module.exports = function (sbot, opts, blobs, notify) {
     // download!
     f.state = 'downloading'
     sbot.emit('log:info', ['blobs', id, 'downloading', f.id])
+
     pull(
       peer(id).blobs.get(f.id),
-      //TODO: error if the object is longer than we expected.
-      blobs.add(desigil(f.id), function (err, hash) {
-        if(err) {
-          f.state = 'ready'
-          console.error(err.stack)
-        }
-        else wantList.got(resigil(hash))
-        done()
-      })
+      sbot.blobs.add(f.id, done)
     )
   })
 
@@ -236,3 +228,4 @@ module.exports = function (sbot, opts, blobs, notify) {
   return wantList
 
 }
+

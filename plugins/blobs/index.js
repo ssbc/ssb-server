@@ -26,7 +26,7 @@ function desigil (hash) {
 }
 
 function resigil (hash) {
-  return '&' + hash
+  return isBlob(hash) ? hash : '&'+hash
 }
 
 function clamp (n, lo, hi) {
@@ -74,15 +74,13 @@ module.exports = {
       add: valid.sink(function (hash, cb) {
         if(isFunction(hash)) cb = hash, hash = null
 
-        return pull(
-          blobs.add(desigil(hash), function (err, hash) {
-            if(err) console.error(err.stack)
-            else wantList.got(resigil(hash))
-            // sink cbs are not exposed over rpc
-            // so this is only available when using this api locally.
-            if(cb) cb(err, resigil(hash))
-          })
-        )
+        return blobs.add(desigil(hash), function (err, hash) {
+          if(err) console.error(err.stack)
+          else wantList.got(resigil(hash))
+          // sink cbs are not exposed over rpc
+          // so this is only available when using this api locally.
+          if(cb) cb(err, resigil(hash))
+        })
       }, 'string?'),
 
       ls: function () {
@@ -102,7 +100,6 @@ module.exports = {
         sbot.emit('blobs:wants', hash)
         blobs.has(desigil(hash), function (_, has) {
           if (has) return cb(null, true)
-          
           // update queue
             wantList.queue(hash, nowait ? cb(null, false) : cb)
 
