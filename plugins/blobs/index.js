@@ -5,21 +5,20 @@ var path = require('path')
 var pull = require('pull-stream')
 var toPull = require('stream-to-pull-stream')
 var isBlob = require('ssb-ref').isBlobId
-var multicb = require('multicb')
 
 var Notify = require('pull-notify')
 var mdm = require('mdmanifest')
-var valid = require('../lib/validators')
-var apidoc = require('../lib/apidocs').blobs
+var valid = require('../../lib/validators')
+var apidoc = require('../../lib/apidocs').blobs
 
-var Replicate = require('./blob-replication')
-
-function isFunction (f) {
-  return 'function' === typeof f
-}
+var Replicate = require('./replication')
 
 function id (e) {
   return !!e
+}
+
+function isFunction (f) {
+  return 'function' === typeof f
 }
 
 function desigil (hash) {
@@ -29,7 +28,6 @@ function desigil (hash) {
 function resigil (hash) {
   return '&' + hash
 }
-
 
 function clamp (n, lo, hi) {
   return Math.min(Math.max(n, lo), hi)
@@ -106,11 +104,7 @@ module.exports = {
           if (has) return cb(null, true)
           
           // update queue
-          if (nowait) {
-            wantList.queue(hash); cb(null, false)
-          } else {
-            wantList.queue(hash, cb)
-          }
+            wantList.queue(hash, nowait ? cb(null, false) : cb)
 
           // track # of requests for prioritization
           wantList.byId[hash].requests = clamp(wantList.byId[hash].requests+1, 0, 20)
