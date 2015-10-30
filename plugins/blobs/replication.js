@@ -107,7 +107,6 @@ module.exports = function (sbot, opts, blobs, notify) {
   // monitor the feed for new links to blobs
   pull(
     sbot.links({dest: '&', live: true}),
-
     pull.drain(function (data) {
       var hash = data.dest
       if(isBlob(hash))

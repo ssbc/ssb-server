@@ -37,7 +37,7 @@ module.exports = function (sbot, notify, query) {
     return apriority - bpriority + randomization
   }
 
-  wL.each = function (iter) { 
+  wL.each = function (iter) {
     return each(wL.byId, iter)
   }
 
@@ -80,9 +80,7 @@ module.exports = function (sbot, notify, query) {
   wL.got = function (hash) {
     sbot.emit('blobs:got', hash)
     sbot.emit('log:info', ['blobs', null, 'got', hash])
-    each(sbot.peers, function (rpc) {
-      notify(hash)
-    })
+    notify(hash)
 
     if(!wL.byId[hash]) return
 

@@ -75,7 +75,7 @@ module.exports = {
         if(isFunction(hash)) cb = hash, hash = null
 
         return pull(
-          blobs.add(function (err, hash) {
+          blobs.add(desigil(hash), function (err, hash) {
             if(err) console.error(err.stack)
             else wantList.got(resigil(hash))
             // sink cbs are not exposed over rpc
