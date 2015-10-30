@@ -54,7 +54,7 @@ module.exports = {
       hash: 'sha256'
     })
 
-    var wantList = Replicate(sbot, config, blobs, notify)
+    var wantList = Replicate(sbot, config, notify)
 
     return {
       get: valid.source(function (hash) {
@@ -62,7 +62,7 @@ module.exports = {
       }, 'blobId'),
 
       has: valid.async(function (hash, cb) {
-        sbot.emit('blobs:has', hash)
+        if(this.id) sbot.emit('blobs:has', hash)
         blobs.has(desigil(hash), cb)
       }, 'blobId|array'),
 

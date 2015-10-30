@@ -47,9 +47,9 @@ module.exports = function (sbot, notify, query) {
 
   // adds a blob to the want list
   wL.queue = function (hash, cb) {
-    var isnew = false
+    var isNew = false
     if (!wL.byId[hash]) {
-      isnew = true
+      isNew = true
       sbot.emit('log:info', ['blobs', null, 'want', hash])
       wL.jobs.push(wL.byId[hash] = {
         id: hash,
@@ -63,7 +63,7 @@ module.exports = function (sbot, notify, query) {
     if (cb)
       wL.byId[hash].waiting.push(cb)
 
-    if (isnew) {
+    if (isNew) {
       // trigger a query round with the existing connections
       each(sbot.peers, function (_, id) { query(id) })
     }

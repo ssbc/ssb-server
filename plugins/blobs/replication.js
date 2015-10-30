@@ -13,11 +13,11 @@ function each (obj, iter) {
     iter(obj[k], k, obj)
 }
 
+function id (e) { return e }
+
 function first(obj, iter) {
   iter = iter || id
-  for(var k in obj)
-    if(iter(obj[k], k, obj))
-      return obj[k]
+  for(var k in obj) if(iter(obj[k], k, obj)) return obj[k]
 }
 
 function firstKey(obj, iter) {
@@ -95,7 +95,7 @@ function oneTrack(delay, n, label, fun) {
   return job
 }
 
-module.exports = function (sbot, opts, blobs, notify) {
+module.exports = function (sbot, opts, notify) {
 
   function peer(id) {
     return sbot.peers[id] && sbot.peers[id][0]
@@ -108,32 +108,28 @@ module.exports = function (sbot, opts, blobs, notify) {
     sbot.links({dest: '&', live: true}),
     pull.drain(function (data) {
       var hash = data.dest
-      if(isBlob(hash))
-        // do we have the referenced blob yet?
-        blobs.has(hash, function (_, has) {
-          if(!has) { // no...
-            sbot.get(data.key, function (err, msg) {
-              // was this blob published in the last month?
-              var dT = Math.abs(Date.now() - msg.timestamp)
-              if (dT < MONTH_IN_MS)
-                wantList.queue(hash) // yes, search for it
-            })
-          }
+      // do we have the referenced blob yet?
+      if(isBlob(hash)) sbot.blobs.has(hash, function (_, has) {
+        if(!has) sbot.get(data.key, function (err, msg) {
+          // was this blob published in the last month?
+          var dT = Math.abs(Date.now() - msg.timestamp)
+          if (dT < MONTH_IN_MS)
+            wantList.queue(hash) // yes, search for it
         })
+      })
     })
   )
 
   // query worker
 
   sbot.on('rpc:connect', function (rpc) {
-    var id = rpc.id
     //forget any blobs that they did not have
     //in previous requests. they might have them by now.
     wantList.each(function (e, k) {
-      if(e.has && e.has[id] === false) delete e.has[id]
+      if(e.has && e.has[rpc.id] === false) delete e.has[rpc.id]
     })
 
-    query(id, function (err) {
+    query(rpc.id, function (err) {
       if(err) console.error(err.stack)
     })
 
@@ -143,7 +139,8 @@ module.exports = function (sbot, opts, blobs, notify) {
       rpc.blobs.changes({}),
       pull.drain(function (hash) {
         if (wantList.wants(hash)) {
-          wantList.setFoundAt(hash, id)
+          //why does the want-list have found and wants?
+          wantList.setFoundAt(hash, rpc.id)
           download()
         }
       }, function (err) {
@@ -159,17 +156,15 @@ module.exports = function (sbot, opts, blobs, notify) {
     done = done || function (){}
 
     var remote = peer(remoteid)
-    if (!remote)
-      return done()
-    if (queries[remoteid])
-      return done()
+    if (!remote) return done()
+    if (queries[remoteid]) return done()
 
     // filter bloblist down to blobs not (yet) found at the peer
     var neededBlobs = wantList.subset(function (e) {
       return e.state == 'waiting' && !wantList.isFoundAt(e.id, remoteid)
     })
-    if(!neededBlobs.length)
-      return done()
+
+    if(!neededBlobs.length) return done()
 
     // does the remote have any of them?
     queries[remoteid] = true
@@ -205,27 +200,23 @@ module.exports = function (sbot, opts, blobs, notify) {
         return has && sbot.peers[k]
       })
     })
+
     if(!readyBlobs.length) return done(true)
 
-    // get the first ready blob and the id of an available remote that has it
+    // get the first ready blob and the id
+    // of an available remote that has it
     var f = readyBlobs.shift()
     var id = firstKey(f.has, function (_, id) { return !!sbot.peers[id] })
-    if (!id)
-      return done(true)
+    if (!id) return done(true)
 
-    // download!
     f.state = 'downloading'
     sbot.emit('log:info', ['blobs', id, 'downloading', f.id])
 
-    pull(
-      peer(id).blobs.get(f.id),
-      sbot.blobs.add(f.id, done)
-    )
+    pull(peer(id).blobs.get(f.id), sbot.blobs.add(f.id, done))
   })
 
   sbot.on('close', download.abort)
 
   return wantList
-
 }
 
