@@ -15,7 +15,17 @@ function firstKey(obj, iter) {
       return k
 }
 
-module.exports = function (sbot, notify, query) {
+module.exports = function (sbot, notify) {
+  function BlobState (hash) {
+    return {
+      id: hash,
+      has: {},
+      waiting: [], // cb queue
+      requests: 0, // # of times want()ed
+      notfounds: 0, // # of times failed to find at a peer
+      state: 'waiting'
+    }
+  }
   var wL = {
     byId: {}, // [hash] => {blob state}
     jobs: [] // ordered queue of {blob state}
@@ -24,17 +34,16 @@ module.exports = function (sbot, notify, query) {
   // provides a random subset of the current state
   // - `filter` function
   // - `n` number (default 20) max subset length
-  wL.subset = function (filter, n) {
+  wL.filter = function (filter, n) {
     return wL.jobs
       .filter(filter)
-      .sort(sortSubset)
-      .slice(0, n || 20)
-  }
-  function sortSubset (a, b) {
-    var apriority = clamp(a.requests - a.notfounds, -20, 20)
-    var bpriority = clamp(b.requests - b.notfounds, -20, 20) 
-    var randomization = (Math.random()*5 - 2.5)
-    return apriority - bpriority + randomization
+      .sort(function (a, b) {
+        return (
+          clamp(a.requests - a.notfounds, -20, 20)
+        - clamp(b.requests - b.notfounds, -20, 20)
+        + (Math.random()*5 - 2.5)
+        )
+      })
   }
 
   wL.each = function (iter) {
@@ -47,39 +56,22 @@ module.exports = function (sbot, notify, query) {
 
   // adds a blob to the want list
   wL.queue = function (hash, cb) {
-    var isNew = false
     if (!wL.byId[hash]) {
-      isNew = true
-      sbot.emit('log:info', ['blobs', null, 'want', hash])
-      wL.jobs.push(wL.byId[hash] = {
-        id: hash,
-        waiting: [], // cb queue
-        requests: 0, // # of times want()ed
-        notfounds: 0, // # of times failed to find at a peer
-        state: 'waiting'
-      })
+      wL.jobs.push(wL.byId[hash] = BlobState(hash))
+      //check if a peer has something.
     }
-
-    if (cb)
-      wL.byId[hash].waiting.push(cb)
-
-    if (isNew) {
-      // trigger a query round with the existing connections
-      each(sbot.peers, function (_, id) { query(id) })
-    }
+    wL.onQueue && wL.onQueue(hash)
+    if (cb) wL.byId[hash].waiting.push(cb)
   }
 
   // queues a callback for when a particular blob arrives
   wL.waitFor = function (hash, cb) {
-    if(wL.byId[hash]) {
-      wL.byId[hash].waiting.push(cb)
-    }
+    if(wL.byId[hash]) wL.byId[hash].waiting.push(cb)
   }
 
   // notifies that the blob was got and removes it from the wantlist
   wL.got = function (hash) {
     sbot.emit('blobs:got', hash)
-    sbot.emit('log:info', ['blobs', null, 'got', hash])
     notify(hash)
 
     if(!wL.byId[hash]) return
@@ -89,25 +81,25 @@ module.exports = function (sbot, notify, query) {
     // stop tracking
     delete wL.byId[hash]
     var i = +firstKey(wL.jobs, function (e) { return e.id == hash })
-    wL.jobs.splice(i, 1)
+    wL.jobs.splice(i, 1) //remove from jobs queue.
 
     // notify queued cbs
     cbs.forEach(function (cb) {
-      if (isFunction(cb))
-        cb(null, true)
+      if (isFunction(cb)) cb(null, true)
     })
   }
 
   // tracks the given peer as a location for the hash
   wL.setFoundAt = function (hash, peerid) {
-    wL.byId[hash].has = wL.byId[hash].has || {}
+    if(!wL.byId[hash]) return false
     wL.byId[hash].has[peerid] = true
     if(wL.byId[hash].state === 'waiting')
       wL.byId[hash].state = 'ready'
+    return true
   }
 
   wL.isFoundAt = function (hash, peerid) {
-    return wL.byId[hash].has && wL.byId[hash].has[peerid]
+    return wL.byId[hash].has[peerid]
   }
 
   return wL

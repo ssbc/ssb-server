@@ -62,12 +62,14 @@ module.exports = {
       }, 'blobId'),
 
       has: valid.async(function (hash, cb) {
+        //emit blobs:has event when this api is called remotely.
+        //needed to make tests pass. should probably remove this.
         if(this.id) sbot.emit('blobs:has', hash)
         blobs.has(desigil(hash), cb)
       }, 'blobId|array'),
 
       size: valid.async(function (hash, cb) {
-        sbot.emit('blobs:size', hash)
+        //sbot.emit('blobs:size', hash)
         blobs.size(desigil(hash), cb)
       }, 'blobId|array'),
 
@@ -75,11 +77,12 @@ module.exports = {
         if(isFunction(hash)) cb = hash, hash = null
 
         return blobs.add(desigil(hash), function (err, hash) {
-          if(err) console.error(err.stack)
-          else wantList.got(resigil(hash))
+          if(!err) wantList.got(resigil(hash))
           // sink cbs are not exposed over rpc
           // so this is only available when using this api locally.
+
           if(cb) cb(err, resigil(hash))
+          else if(err) console.error(err.stack)
         })
       }, 'string?'),
 

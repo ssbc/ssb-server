@@ -49,7 +49,7 @@ var MONTH_IN_MS = 1000 * 60 * 60 * 24 * 30
 // - `label`: string, name of the task (for logging)
 // - `fun`: function(cb(done?)), calls cb(true) when done, cb(false) when needs to requeue
 
-function oneTrack(delay, n, label, fun) {
+function Work(delay, n, label, fun) {
   var doing = 0, timeout
 
   var timers = []
@@ -102,7 +102,9 @@ module.exports = function (sbot, opts, notify) {
   }
 
   var wantList = require('./want-list')(sbot, notify, query)
-
+  wantList.onQueue = function () {
+    each(sbot.peers, function (_, id) { query(id) })
+  }
   // monitor the feed for new links to blobs
   pull(
     sbot.links({dest: '&', live: true}),
@@ -113,8 +115,9 @@ module.exports = function (sbot, opts, notify) {
         if(!has) sbot.get(data.key, function (err, msg) {
           // was this blob published in the last month?
           var dT = Math.abs(Date.now() - msg.timestamp)
-          if (dT < MONTH_IN_MS)
+          if (dT < MONTH_IN_MS) {
             wantList.queue(hash) // yes, search for it
+          }
         })
       })
     })
@@ -138,20 +141,17 @@ module.exports = function (sbot, opts, notify) {
     pull(
       rpc.blobs.changes({}),
       pull.drain(function (hash) {
-        if (wantList.wants(hash)) {
-          //why does the want-list have found and wants?
-          wantList.setFoundAt(hash, rpc.id)
-          download()
-        }
-      }, function (err) {
-        //Ignore errors.
-        //these will either be from a cli client that doesn't have
-        //blobs plugin, or because stream has terminated.
+        //if this hash is in our wantlist, download it.
+        wantList.setFoundAt(hash, rpc.id) && download()
+      }, function (_) {
+        //Ignore errors. these will either be from a cli client
+        //that doesn't have blobs plugin, or because stream has terminated.
       })
     )
   })
 
   var queries = {}
+  //given a peer, request has, then get for wanted blobs.
   function query (remoteid, done) {
     done = done || function (){}
 
@@ -159,9 +159,9 @@ module.exports = function (sbot, opts, notify) {
     if (!remote) return done()
     if (queries[remoteid]) return done()
 
-    // filter bloblist down to blobs not (yet) found at the peer
-    var neededBlobs = wantList.subset(function (e) {
-      return e.state == 'waiting' && !wantList.isFoundAt(e.id, remoteid)
+    // select wanted blobs which this peer may have.
+    var neededBlobs = wantList.filter(function (e) {
+      return e.state == 'waiting' && null == wantList.isFoundAt(e.id, remoteid)
     })
 
     if(!neededBlobs.length) return done()
@@ -174,13 +174,14 @@ module.exports = function (sbot, opts, notify) {
       if(err) console.error(err.stack)
       delete queries[remoteid]
       if(hasList) {
-        var downloadDone = multicb()
+        var downloadDone = multicb() //***
         neededBlobs.forEach(function (blob, i) {
           if (!wantList.wants(blob.id))
             return // must have been got already
 
           if (hasList[i]) {
             wantList.setFoundAt(blob.id, remoteid)
+            //WAIT FOR.
             wantList.waitFor(blob.id, downloadDone())
             sbot.emit('log:info', ['blobs', remoteid, 'found', blob.id])
             download()
@@ -193,9 +194,9 @@ module.exports = function (sbot, opts, notify) {
     })
   }
 
-  var download = oneTrack(/*config.timeout*/300, 5, 'download', function (done) {
+  var download = Work(300, 5, 'download', function (done) {
     // get ready blobs with a connected remote
-    var readyBlobs = wantList.subset(function (e) {
+    var readyBlobs = wantList.filter(function (e) {
       return e.state == 'ready' && first(e.has, function (has, k) {
         return has && sbot.peers[k]
       })
