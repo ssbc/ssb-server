@@ -77,11 +77,15 @@ module.exports = {
         if(isFunction(hash)) cb = hash, hash = null
 
         return blobs.add(desigil(hash), function (err, hash) {
-          if(!err) wantList.got(resigil(hash))
+          //if(!err) wantList.got(resigil(hash))
           // sink cbs are not exposed over rpc
           // so this is only available when using this api locally.
-
-          if(cb) cb(err, resigil(hash))
+          if(!err) {
+            hash = resigil(hash)
+            sbot.emit('blobs:got', hash)
+            notify(hash)
+          }
+          if(cb) cb(err, hash)
           else if(err) console.error(err.stack)
         })
       }, 'string?'),
@@ -104,10 +108,11 @@ module.exports = {
         blobs.has(desigil(hash), function (_, has) {
           if (has) return cb(null, true)
           // update queue
-            wantList.queue(hash, nowait ? cb(null, false) : cb)
+          //  wantList.queue(hash, nowait ? cb(null, false) : cb)
+            wantList.want(hash, cb)
 
           // track # of requests for prioritization
-          wantList.byId[hash].requests = clamp(wantList.byId[hash].requests+1, 0, 20)
+          // wantList.byId[hash].requests = clamp(wantList.byId[hash].requests+1, 0, 20)
         })
       }, 'blobId', 'object?'),
 
