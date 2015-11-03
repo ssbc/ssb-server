@@ -7,6 +7,8 @@ var cont      = require('cont')
 var ssbKeys   = require('ssb-keys')
 var u         = require('./util')
 
+var crypto    = require('crypto')
+
 // create 3 servers
 // give them all pub servers (on localhost)
 // and get them to follow each other...
@@ -17,6 +19,16 @@ var replicate = require('../plugins/replicate')
 
 function read (filename) {
   return toPull.source(fs.createReadStream(filename))
+}
+
+function createHash () {
+  var hash = crypto.createHash('sha256')
+  var hasher = pull.through(function (data) {
+    hash.update(data)
+  }, function () {
+    hasher.digest = '&'+hash.digest('base64')+'.sha256'
+  })
+  return hasher
 }
 
 var createSbot = require('../')
@@ -63,7 +75,6 @@ tape('a client can request a blob', function (t) {
   })
 
   var bob = ssbKeys.generate()
-
   pull(
     read(path.join(__filename)),
     sbotA.blobs.add(function (err, hash) {
@@ -93,6 +104,8 @@ tape('a client can request a blob', function (t) {
 
 tape('replicate blobs between 2 peers - explicit want request', function (t) {
 
+  var hasher = createHash()
+
   var alice
   var sbotA = createSbot({
     temp: 'test-blobs-alice1',  timeout: 1000,
@@ -107,26 +120,32 @@ tape('replicate blobs between 2 peers - explicit want request', function (t) {
 
   pull(
     read(path.join(__filename)),
-    sbotA.blobs.add(function (err, hash) {
+    hasher,
+    sbotA.blobs.add(function (err) {
       if(err) throw err
+
+      var hash = hasher.digest
+      console.log('added:', hash)
+      sbotB.blobs.want(hash, function (err) {
+        console.log('got:', hash)
+        if(err) throw err
+        sbotB.blobs.has(hash, function (err, has) {
+          if(err) throw err
+          t.ok(has)
+          t.end()
+          sbotA.close()
+          sbotB.close()
+          console.log('TEST ENDED')
+        })
+      })
+
     })
   )
 
-  sbotA.on('blobs:got', function (hash) {
-    console.log('BLOBS', hash)
-    console.log('added', hash)
-    sbotB.blobs.want(hash, function (err) {
-      if(err) throw err
-      sbotB.blobs.has(hash, function (err, has) {
-        if(err) throw err
-        t.ok(has)
-        t.end()
-        sbotA.close()
-        sbotB.close()
-        console.log('TEST ENDED')
-      })
-    })
-  })
+//  sbotA.on('blobs:got', function (hash) {
+    //console.log('BLOBS', hash)
+    //console.log('added', hash)
+  //})
 
   sbotA.connect(sbotB.getAddress(), function (err) {
     if(err) throw err
@@ -148,31 +167,41 @@ tape('replicate published blobs between 2 peers', function (t) {
       seeds: [alice.getAddress()]
     })
 
+  var hasher = createHash()
+
   pull(
     read(__filename),
-    alice.blobs.add(null, function (err, hash) {
+    hasher,
+    alice.blobs.add(null, function (err) {
       if(err) throw err
+      var hash = hasher.digest
       cont.para([
         alice.publish(u.file(hash)),
         alice.publish(u.follow(bob.id)),
         bob.publish(u.follow(alice.id))
       ])(function (err, data) {
         if(err) throw err
-        console.log(data)
       })
+
+      pull(
+        bob.blobs.changes(),
+        pull.through(console.log),
+        pull.drain(function (_hash) {
+
+          if(_hash === hash)
+            bob.blobs.has(hash, function (err, okay) {
+              t.ok(okay, 'file replicated:' + hash)
+              t.end()
+              alice.close(); bob.close()
+            })
+
+        })
+      )
+
 
       // bob should request the blob,
       // and then emit this event.
 
-      bob.on('blobs:got', function (_hash) {
-        console.log("BLOBS GOT", _hash)
-        t.equal(_hash, hash)
-        bob.blobs.has(hash, function (err, okay) {
-          t.ok(okay, 'file replicated:' + hash)
-          t.end()
-          alice.close(); bob.close()
-        })
-      })
     })
   )
 })

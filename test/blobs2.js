@@ -48,7 +48,6 @@ tape('avoid flooding a peer with blob requests', function (t) {
     pull.drain(null, function (err) {
 
       var hash = '&'+hasher.digest
-      console.log('WANT:', hash)
 
       cont.para([
         alice.publish(u.file(hash)),
@@ -64,8 +63,7 @@ tape('avoid flooding a peer with blob requests', function (t) {
       var has = 0
 
       alice.on('blobs:has', function (h) {
-        console.log('HAS', h)
-        t.deepEqual(h, [hash])
+        t.equal(h, hash)
 
         if(has++==0) {
           alice.close(true); bob.close(true)
@@ -88,6 +86,7 @@ tape('emit "has" event to let peer know you have blob now', function (t) {
       seeds: [alice.getAddress()],
       keys: ssbKeys.generate()
     })
+  console.log('BOB', bob.id)
 
   var hasher = Hasher(alg)
 
@@ -95,11 +94,13 @@ tape('emit "has" event to let peer know you have blob now', function (t) {
     console.log('REQUEST', r)
   })
 
+  var count = 1
+
   pull(
     read(__filename),
     hasher,
     pull.drain(null, function (err) {
-
+      if(err) throw err
       var hash = '&'+hasher.digest
       console.log('WANT:', hash)
 
@@ -115,6 +116,7 @@ tape('emit "has" event to let peer know you have blob now', function (t) {
       t.plan(2)
 
       bob.on('blobs:got', function (h) {
+        if(--count) throw new Error('blobs:got should only trigger once')
         console.log('BLOBS GOT', h)
         t.equal(h, hash)
         alice.close(); bob.close()
@@ -125,11 +127,12 @@ tape('emit "has" event to let peer know you have blob now', function (t) {
       //then add that file.
       alice.on('blobs:has', function (h) {
         console.log('BLOBS HAS', h)
-        t.deepEqual(h, [hash])
+        t.equal(h, hash)
 
         pull(
           read(__filename),
-          bob.blobs.add(null, function (err, hash) {
+          bob.blobs.add(function (err, hash) {
+            if(err) throw err
             //have now added the blob to 
           })
         )
@@ -178,8 +181,8 @@ tape('request missing blobs again after reconnect', function (t) {
       var has = 0, connects = 0
 
       alice.on('blobs:has', function (h) {
-        console.log('HAS', h)
-        t.deepEqual(h, [hash])
+        console.log('----HAS', h)
+        t.equal(h, hash)
 
         if(has++ == 1) {
           t.equal(has, connects)
