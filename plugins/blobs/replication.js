@@ -1,67 +1,55 @@
 var pull = require('pull-stream')
-var toPull = require('stream-to-pull-stream')
-var isBlob = require('ssb-ref').isBlobId
-var multicb = require('multicb')
 var Queue = require('./queue')
-
-//TODO: rewrite to use queues for each job.
-//decouple control flow from data structures.
-
-function isFunction (f) {
-  return 'function' === typeof f
-}
 
 function each (obj, iter) {
   for(var k in obj)
     iter(obj[k], k, obj)
 }
 
-function id (e) { return e }
-
-function first(obj, iter) {
-  iter = iter || id
-  for(var k in obj) if(iter(obj[k], k, obj)) return obj[k]
+function first (obj, test) {
+  var v
+  for (var k in obj)
+    if(v = test(obj[k], k, obj))
+      return v
 }
 
-function firstKey(obj, iter) {
-  iter = iter || id
-  for(var k in obj)
-    if(iter(obj[k], k, obj))
-      return k
-}
-
-//function clamp (n, lo, hi) {
-//  return Math.min(Math.max(n, lo), hi)
-//}
-//
-//function desigil (hash) {
-//  return isBlob(hash) ? hash.substring(1) : hash
-//}
-//
-//function resigil (hash) {
-//  return isBlob(hash) ? hash : '&' + hash
-//}
-//
 module.exports = function (sbot, opts, notify) {
+  var jobs = {}, hasQueue, getQueue
 
-  var jobs = {}
+  // calculate quotas for each feed.
+  // start with size of each blob
+  // divided between the feeds that mention it.
+  // getting a use for each feed.
 
-  var hasQueue = Queue(function (hasQueue, done) {
+  // periodically recalculate the quotas.
+  // or adjust it when someone links or you download a file?
+
+  function createJob(id, cb) {
+    if(jobs[id]) return jobs[id].cbs.push(cb)
+    hasQueue.push(jobs[id] = {
+      id: id, has: {}, cbs: cb ? [cb] : [], done: false
+    })
+  }
+
+  function hasPeers () {
+    return Object.keys(sbot.peers).length !== 0
+  }
+
+  hasQueue = Queue(function (_, done) {
     //check if there is a something in the has queue.
     //filter out cases where work is impossible...
     //(empty queue, or no peers)
-    if(Object.keys(sbot.peers).length === 0) return done()
+    if(!hasPeers()) return done()
 
     var job = hasQueue.pull()
-    if(!job) throw new Error('hasQueue returned null, length: '+l)
     if(job.done) return done()
 
     var n = 0, found = false
-    each(sbot.peers, function (peers, peerId) {
-      if(('undefined' !== typeof job.has[peerId]) || !peers[0]) return
+    each(sbot.peers, function (peers, id) {
+      if(('undefined' !== typeof job.has[id]) || !peers[0]) return
       n++
       peers[0].blobs.has(job.id, function (err, has) {
-        found = found || (job.has[peerId] = has)
+        found = found || (job.has[id] = has)
         if(--n) return
         next()
       })
@@ -73,10 +61,10 @@ module.exports = function (sbot, opts, notify) {
       done()
     }
   })
-  var getQueue = Queue(function (getQueue, done) {
-    if(getQueue.length() === 0) return done()
-    if(!Object.keys(sbot.peers).length) return done()
-    var job = getQueue.pull(), remote
+  getQueue = Queue(function (_, done) {
+    if(!hasPeers()) return done()
+
+    var job = getQueue.pull()
 
     //this covers weird edgecase where a blob is added
     //while something is looking for it. covered in
@@ -86,21 +74,12 @@ module.exports = function (sbot, opts, notify) {
       return done()
     }
 
-    var peerId
-    for(var k in job.has) {
-      if(job.has[k]) { peerId = k; break;}
-    }
+    var remote = first(job.has, function (has, id) {
+      return has && peer(id)
+    })
 
-    if(!peerId) {
-      hasQueue.push(job); return done()
-    }
-
-    remote = peer(peerId)
     if(!remote) {
-      job.has.slice(i, 1)
-      if(job.has.length) getQueue.push(job)
-      else               hasQueue.push(job)
-      return
+      hasQueue.push(job); return done()
     }
 
     pull(
@@ -119,12 +98,6 @@ module.exports = function (sbot, opts, notify) {
       })
     )
   })
-  var hasMap = {}
-
-  function createJob(id, type, cb) {
-    if(jobs[id]) jobs[id].cbs.push(cb)
-    else hasQueue.push(jobs[id] = {id: id, type: type, has: {}, cbs: cb ? [cb] : [], done: false})
-  }
 
   function peer(id) {
     return sbot.peers[id] && sbot.peers[id][0]
@@ -134,11 +107,9 @@ module.exports = function (sbot, opts, notify) {
   pull(
     sbot.links({dest: '&', live: true}),
     pull.drain(function (data) {
-      var hash = data.dest
       // do we have the referenced blob yet?
-      if(isBlob(hash)) sbot.blobs.has(hash, function (_, has) {
-        console.log('createJob', hash)
-        if(!has) createJob(hash, 'feed')
+      sbot.blobs.has(data.dest, function (_, has) {
+        if(!has) createJob(data.dest)
       })
     })
   )
@@ -150,20 +121,16 @@ module.exports = function (sbot, opts, notify) {
   })
 
   sbot.on('rpc:connect', function (rpc) {
-    for(id in jobs) {
-      if(false === jobs[id].has[rpc.id]) {
-        console.log('CLEAR', id, rpc.id)
+    for(id in jobs)
+      if(false === jobs[id].has[rpc.id])
         delete jobs[id].has[rpc.id]
-        console.log(jobs[id], getQueue.length(), hasQueue.length())
-      }
-    }
   })
 
   return {
     has: hasQueue,
     get: getQueue,
     want: function (id, cb) {
-      createJob(id, 'want', cb)
+      createJob(id, cb)
     }
   }
 }

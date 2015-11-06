@@ -29,10 +29,6 @@ function resigil (hash) {
   return isBlob(hash) ? hash : '&'+hash
 }
 
-function clamp (n, lo, hi) {
-  return Math.min(Math.max(n, lo), hi)
-}
-
 function isString (s) {
   return 'string' === typeof s
 }
@@ -97,22 +93,18 @@ module.exports = {
       // calls back when that file is available.
       // - `opts.nowait`: call cb immediately if not found (dont register for callback)
       want: valid.async(function (hash, opts, cb) {
-        if (typeof opts == 'function') {
+        if (isFunction(opts)) {
           cb = opts
           opts = null
         }
-        var nowait = (opts && opts.nowait)
+//        var nowait = (opts && opts.nowait)
         if(!isBlob(hash)) return cb(new Error('not a hash:' + hash))
 
         sbot.emit('blobs:wants', hash)
         blobs.has(desigil(hash), function (_, has) {
           if (has) return cb(null, true)
           // update queue
-          //  wantList.queue(hash, nowait ? cb(null, false) : cb)
-            wantList.want(hash, cb)
-
-          // track # of requests for prioritization
-          // wantList.byId[hash].requests = clamp(wantList.byId[hash].requests+1, 0, 20)
+          wantList.want(hash, cb)
         })
       }, 'blobId', 'object?'),
 

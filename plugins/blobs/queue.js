@@ -63,6 +63,11 @@ module.exports = function (work) {
     return -1
   }
 
+//  function clear () {
+//    for(var i = jobs.length - 1; i>=0; i)
+//      if(jobs.done) jobs.splice(i, 1)
+//  }
+//
   var queue = {
     push: function (job) {
       jobs.push(job)
