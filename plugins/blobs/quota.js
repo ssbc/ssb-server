@@ -22,7 +22,6 @@ module.exports = function (sbot, blobs) {
 
   pull(
     blobs.ls({long: true, live: true}),
-    pull.through(console.log),
     paramap(function (data, cb) {
       if(data.sync) {
         return cb(null, data)
@@ -43,11 +42,7 @@ module.exports = function (sbot, blobs) {
         })
       )
     }),
-    pull.drain(function (data) {
-      if(data.sync)
-        console.log(quotas, total)
-      }, function () {
-    })
+    pull.drain()
   )
 
   return quotas

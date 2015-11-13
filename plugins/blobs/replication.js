@@ -55,7 +55,7 @@ module.exports = function (sbot, opts, notify, quota) {
     //return false if this job's owner is over quota.
     return job.owner.every(function (id) {
       //if you follow them, no quota.
-      if(sbot.friends.get({source: sbot.id, dest: id})
+      if(sbot.friends.get({source: sbot.id, dest: id}))
         return true
 
       //else, Hard Code 20mb limit.
