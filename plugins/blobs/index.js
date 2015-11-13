@@ -5,6 +5,8 @@ var path = require('path')
 var pull = require('pull-stream')
 var toPull = require('stream-to-pull-stream')
 var isBlob = require('ssb-ref').isBlobId
+var paramap = require('pull-paramap')
+var Quota = require('./quota')
 
 var Notify = require('pull-notify')
 var mdm = require('mdmanifest')
@@ -50,7 +52,9 @@ module.exports = {
       hash: 'sha256'
     })
 
-    var wantList = Replicate(sbot, config, notify)
+    var quota = Quota(sbot, blobs)
+
+    var wantList = Replicate(sbot, config, notify, quota)
 
     return {
       get: valid.source(function (hash) {
@@ -86,8 +90,19 @@ module.exports = {
         })
       }, 'string?'),
 
-      ls: function () {
-        return pull(blobs.ls(), pull.map(resigil))
+      ls: function (opts) {
+        var source
+        if(opts && opts.live) {
+
+
+        }
+
+        return pull(blobs.ls(opts), pull.map(function (e) {
+          if(e.sync) return e
+          if(isString(e)) return resigil(e)
+          e.id = resigil(e.id)
+          return e
+        }))
       },
       // request to retrieve a blob,
       // calls back when that file is available.

@@ -1,5 +1,6 @@
 var pull = require('pull-stream')
 var Queue = require('./queue')
+//var Quotas = require('./quotas')
 
 function each (obj, iter) {
   for(var k in obj)
@@ -13,7 +14,20 @@ function first (obj, test) {
       return v
 }
 
-module.exports = function (sbot, opts, notify) {
+function union (a, b) {
+  if (a.length < b.length) {
+    var t = b; b = a; a = t
+  }
+  b.forEach(function (e) {
+    if(!~a.indexOf(e)) a.push(e)
+  })
+  return a
+}
+
+function toArray (s) {
+  return ('string' === typeof s) ? [s] : s
+}
+module.exports = function (sbot, opts, notify, quota) {
   var jobs = {}, hasQueue, getQueue
 
   // calculate quotas for each feed.
@@ -21,18 +35,39 @@ module.exports = function (sbot, opts, notify) {
   // divided between the feeds that mention it.
   // getting a use for each feed.
 
-  // periodically recalculate the quotas.
-  // or adjust it when someone links or you download a file?
-
-  function createJob(id, cb) {
-    if(jobs[id]) return jobs[id].cbs.push(cb)
+  function createJob(id, owner, cb) {
+    if(jobs[id]) {
+      jobs[id].owner = merge(jobs[id].owner, owner)
+      jobs[id].cbs.push(cb)
+      return
+    }
     hasQueue.push(jobs[id] = {
-      id: id, has: {}, cbs: cb ? [cb] : [], done: false
+      id: id, has: {}, owner: toArray(owner),
+      cbs: cb ? [cb] : [], done: false
     })
   }
 
   function hasPeers () {
     return Object.keys(sbot.peers).length !== 0
+  }
+
+  function filter (job) {
+    //return false if this job's owner is over quota.
+    return job.owner.every(function (id) {
+      //if you follow them, no quota.
+      if(sbot.friends.get({source: sbot.id, dest: id})
+        return true
+
+      //else, Hard Code 20mb limit.
+      return quota[id] < 20*1024*1024 //20 megabytes
+
+      //UGLY. this is totally rough and ugly and we should
+      //think of something more nuanced. followed
+      //accounts should get a quota too, and maybe
+      //it should depend on other things too.
+      //if they are a foaf maybe they get a mid limit.
+      //there are lots of things we could do.
+    })
   }
 
   hasQueue = Queue(function (_, done) {
@@ -41,7 +76,7 @@ module.exports = function (sbot, opts, notify) {
     //(empty queue, or no peers)
     if(!hasPeers()) return done()
 
-    var job = hasQueue.pull()
+    var job = hasQueue.pull(filter)
     if(job.done) return done()
 
     var n = 0, found = false
@@ -61,10 +96,12 @@ module.exports = function (sbot, opts, notify) {
       done()
     }
   })
+
   getQueue = Queue(function (_, done) {
     if(!hasPeers()) return done()
 
-    var job = getQueue.pull()
+    //check if this file is over quota.
+    var job = getQueue.pull(filter)
 
     //this covers weird edgecase where a blob is added
     //while something is looking for it. covered in
@@ -84,9 +121,9 @@ module.exports = function (sbot, opts, notify) {
 
     pull(
       remote.blobs.get(job.id),
+      //only accept blobs that have the correct size.
       sbot.blobs.add(job.id, function (err) {
         if(!err) {
-          console.log(job)
           job.cbs.forEach(function (cb) { if(cb) cb() })
           return done() //success
         }
@@ -109,7 +146,7 @@ module.exports = function (sbot, opts, notify) {
     pull.drain(function (data) {
       // do we have the referenced blob yet?
       sbot.blobs.has(data.dest, function (_, has) {
-        if(!has) createJob(data.dest)
+        if(!has) createJob(data.dest, data.source)
       })
     })
   )
@@ -130,7 +167,7 @@ module.exports = function (sbot, opts, notify) {
     has: hasQueue,
     get: getQueue,
     want: function (id, cb) {
-      createJob(id, cb)
+      createJob(id, this && this.id ? this.id : sbot.id, cb)
     }
   }
 }

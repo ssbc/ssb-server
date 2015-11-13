@@ -53,37 +53,55 @@ function Work(delay, n, label, fun) {
   return job
 }
 
+function find (jobs, test) {
+  for(var k in jobs)
+    if(test(jobs[k])) return k
+  return -1
+}
+
+function max (jobs, test) {
+  var M = -Infinity, i = -1
+  for(var k in jobs) {
+    var m = test(jobs[k], k, jobs)
+    if(m > M) {
+      M = m
+      i = k
+    }
+  }
+  return k
+}
+
 module.exports = function (work) {
 
   var jobs = []
 
-  function find (test) {
-    for(var k in jobs)
-      if(test(jobs[k])) return k
-    return -1
-  }
 
 //  function clear () {
 //    for(var i = jobs.length - 1; i>=0; i)
 //      if(jobs.done) jobs.splice(i, 1)
 //  }
 //
+
+  function pull (i) {
+    if(~index) {
+      return jobs.splice(index, 1)[0]
+    }
+  }
+
   var queue = {
     push: function (job) {
       jobs.push(job)
+      console.log(jobs)
     },
 
     pull: function (id) {
       if(!this.length()) return
-      if(!id) {
+      if(!id)
         return jobs.shift()
-      }
-      else {
-        var index = find(function (e) { return e.id === id })
-        if(~index) {
-          return jobs.splice(index, 1)[0]
-        }
-      }
+      else
+        return pull(find(jobs,
+          isFunction(id) ? id : function (e) { return e.id === id }
+        ))
     },
 
     each: function (iter) {
@@ -99,6 +117,6 @@ module.exports = function (work) {
     if(!queue.length()) return done()
     work(queue, done)
   }) ()
-  return queue
 
+  return queue
 }
