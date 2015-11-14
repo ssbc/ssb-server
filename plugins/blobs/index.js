@@ -46,7 +46,7 @@ module.exports = {
 
     var notify = Notify()
     var config = opts
-    //NOW PROVIDED BY CORE. REFACTOR THIS AWAY.
+
     var blobs = sbot._blobs = Blobs({
       dir: path.join(config.path, 'blobs'),
       hash: 'sha256'
@@ -91,12 +91,6 @@ module.exports = {
       }, 'string?'),
 
       ls: function (opts) {
-        var source
-        if(opts && opts.live) {
-
-
-        }
-
         return pull(blobs.ls(opts), pull.map(function (e) {
           if(e.sync) return e
           if(isString(e)) return resigil(e)
@@ -112,7 +106,6 @@ module.exports = {
           cb = opts
           opts = null
         }
-//        var nowait = (opts && opts.nowait)
         if(!isBlob(hash)) return cb(new Error('not a hash:' + hash))
 
         sbot.emit('blobs:wants', hash)

@@ -6,6 +6,10 @@
 // - `label`: string, name of the task (for logging)
 // - `fun`: function(cb(done?)), calls cb(true) when done, cb(false) when needs to requeue
 
+function isFunction (f) {
+  return 'function' === typeof f
+}
+
 function Work(delay, n, label, fun) {
   var doing = 0, timeout
 
@@ -75,33 +79,23 @@ module.exports = function (work) {
 
   var jobs = []
 
-
-//  function clear () {
-//    for(var i = jobs.length - 1; i>=0; i)
-//      if(jobs.done) jobs.splice(i, 1)
-//  }
-//
-
-  function pull (i) {
-    if(~index) {
-      return jobs.splice(index, 1)[0]
-    }
+  function pull (index) {
   }
 
   var queue = {
     push: function (job) {
       jobs.push(job)
-      console.log(jobs)
     },
 
     pull: function (id) {
+      var test = isFunction(id) ? id : function (e) { return e.id === id }
       if(!this.length()) return
       if(!id)
         return jobs.shift()
-      else
-        return pull(find(jobs,
-          isFunction(id) ? id : function (e) { return e.id === id }
-        ))
+      else {
+        var index = find(jobs, test)
+        if(~index) return jobs.splice(index, 1)[0]
+      }
     },
 
     each: function (iter) {

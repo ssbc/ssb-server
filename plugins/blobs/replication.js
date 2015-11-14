@@ -15,7 +15,10 @@ function first (obj, test) {
 }
 
 function union (a, b) {
-  if (a.length < b.length) {
+  b = toArray(b)
+  a = toArray(a)
+  if(!a.length) return b
+  if(a.length < b.length) {
     var t = b; b = a; a = t
   }
   b.forEach(function (e) {
@@ -25,7 +28,7 @@ function union (a, b) {
 }
 
 function toArray (s) {
-  return ('string' === typeof s) ? [s] : s
+  return s == null ? (Array.isArray(s) ? s : [s]) : []
 }
 module.exports = function (sbot, opts, notify, quota) {
   var jobs = {}, hasQueue, getQueue
@@ -37,7 +40,7 @@ module.exports = function (sbot, opts, notify, quota) {
 
   function createJob(id, owner, cb) {
     if(jobs[id]) {
-      jobs[id].owner = merge(jobs[id].owner, owner)
+      jobs[id].owner = union(jobs[id].owner, owner || [])
       jobs[id].cbs.push(cb)
       return
     }
