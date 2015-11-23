@@ -8,6 +8,8 @@ var onWakeup = require('on-wakeup')
 var valid = require('../lib/validators')
 var apidoc = require('../lib/apidocs').gossip
 var u = require('../lib/util')
+var os = require('os')
+var ip = require('ip')
 
 var isArray = Array.isArray
 
@@ -18,6 +20,13 @@ function rand(array) {
 function add(ary, item) {
   if(!~ary.indexOf(item)) ary.push(item)
   return ary
+}
+
+//detect if not connected to wifi or other network
+//(i.e. if there is only localhost)
+function isOffline () {
+  var lo = Object.keys(os.networkInterfaces())
+  return lo.length === 1 && lo[0] === 'lo'
 }
 
 module.exports = {
@@ -211,7 +220,14 @@ module.exports = {
     var count = 0
 
     function choosePeer () {
+      var offline = isOffline()
+      //this needs to be handled differently.
+      //if we are offline (only loopback)
+      //then don't bother connecting.
+      //also, detect when wifi network changes
+      //(say, your private ip address changes)
       if(init_synclist.length) return init_synclist.shift()
+
 
       // connect to this random peer
       // choice is weighted...
@@ -222,6 +238,13 @@ module.exports = {
       // for seeds and peers (with no failures, lim will be 0.75)
       var default_a = 5
       var p = rand(peers.filter(function (e) {
+
+        //if we are not online, only connect to loopback
+        //addresses (needed so tests will still work)
+
+        if(offline && (!ip.isLoopback(e.host) && e.host !== 'localhost'))
+          return false
+
         var a = Math.min((e.announcers) ? e.announcers.length : default_a, 10) // cap at 10
         var f = e.failure || 0
         var lim = (a+10)/((f+1)*20)
