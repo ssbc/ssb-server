@@ -81,6 +81,13 @@ exports.init = function (sbot, config) {
       })
     }, 'string?'),
 
+    path: valid.sync(function (opts) {
+      if(isString(opts))
+        opts = {source: sbot.id, dest: opts}
+      return graphs.follow.path(opts)
+
+    }, 'string|object'),
+    
     createFriendStream: valid.source(function (opts) {
       opts = opts || {}
       var live = opts.live === true
