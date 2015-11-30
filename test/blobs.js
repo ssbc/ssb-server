@@ -32,7 +32,7 @@ function createHash () {
 }
 
 var createSbot = require('../')
-  .use(require('../plugins/blobs'))
+  .use(friends).use(blobs)
 
 tape('test blob api', function (t) {
   var sbot = createSbot({
