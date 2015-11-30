@@ -15,31 +15,38 @@ var apidoc = require('../lib/apidocs').replicate
 
 var DAY = 1000*60*60*24
 var LIMIT = [-1, -1, 100]
-var MIN_LIMIT = LIMIT[LIMIT.length - 1]
+
 var notify = Notify()
 
-function calcLimit (upto) {
-
-  var hopLimit =
-    upto.hops < LIMIT.length ? LIMIT[upto.hops] : MIN_LIMIT
-
-  if(hopLimit <=0) return hopLimit
-
-  return (
-      !upto.ts
-    ? hopLimit
-    : Math.ceil((Date.now() - upto.ts)/DAY * hopLimit)
-  )
-}
+function last (a) { return a[a.length - 1] }
 
 function replicate(sbot, config, rpc, cb) {
+
+  function calcLimit (upto) {
+
+    var limit = config.replication && config.replication.limit
+    if(!Array.isArray(limit)) limit = LIMIT
+
+    var hopLimit =
+      upto.hops < limit.length ? limit[upto.hops] : last(limit)
+
+    if(hopLimit <=0) return hopLimit
+
+    return (
+        !upto.ts
+      ? hopLimit
+      : Math.ceil((Date.now() - upto.ts)/DAY * hopLimit)
+    )
+  }
+
+
     var aborter = Abort()
     var sources = many()
     var sent = 0
-
     var to_send = {}, to_recv = {}
     var replicated = {}
     var debounce = Debounce(100)
+
     debounce(function () {
       var d = 0, r = 0, f = 0
       for(var id in to_recv) {
