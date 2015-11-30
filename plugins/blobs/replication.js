@@ -28,8 +28,11 @@ function union (a, b) {
 }
 
 function toArray (s) {
-  return s == null ? (Array.isArray(s) ? s : [s]) : []
+  return s != null ? (Array.isArray(s) ? s : [s]) : []
 }
+var MB = 1024*1024
+var LIMIT = [-1, 100*MB, 20*MB]
+
 module.exports = function (sbot, opts, notify, quota) {
   var jobs = {}, hasQueue, getQueue
 
@@ -55,21 +58,19 @@ module.exports = function (sbot, opts, notify, quota) {
   }
 
   function filter (job) {
-    //return false if this job's owner is over quota.
     return job.owner.every(function (id) {
       //if you follow them, no quota.
-      if(sbot.friends.get({source: sbot.id, dest: id}))
-        return true
 
-      //else, Hard Code 20mb limit.
-      return quota[id] < 20*1024*1024 //20 megabytes
+      var p = sbot.friends.path({
+        source: sbot.id, dest: id, hops: LIMIT.length
+      })
+      var limit = opts.blobs && opts.limit
+      if(!Array.isArray(limit)) limit = LIMIT
+      var l = limit[p && p.length] || 0
 
-      //UGLY. this is totally rough and ugly and we should
-      //think of something more nuanced. followed
-      //accounts should get a quota too, and maybe
-      //it should depend on other things too.
-      //if they are a foaf maybe they get a mid limit.
-      //there are lots of things we could do.
+      if(l < 0) return true
+      else          return (quota[id] || 0) < l
+
     })
   }
 
@@ -80,7 +81,7 @@ module.exports = function (sbot, opts, notify, quota) {
     if(!hasPeers()) return done()
 
     var job = hasQueue.pull(filter)
-    if(job.done) return done()
+    if(!job || job.done) return done()
 
     var n = 0, found = false
     each(sbot.peers, function (peers, id) {
@@ -105,7 +106,7 @@ module.exports = function (sbot, opts, notify, quota) {
 
     //check if this file is over quota.
     var job = getQueue.pull(filter)
-
+    if(!job) done()
     //this covers weird edgecase where a blob is added
     //while something is looking for it. covered in
     //test/blobs2.js
@@ -170,7 +171,10 @@ module.exports = function (sbot, opts, notify, quota) {
     has: hasQueue,
     get: getQueue,
     want: function (id, cb) {
-      createJob(id, this && this.id ? this.id : sbot.id, cb)
+      sbot.blobs.has(id, function (err, has) {
+        if(has) return cb()
+        createJob(id, this && this.id ? this.id : sbot.id, cb)
+      })
     }
   }
 }
