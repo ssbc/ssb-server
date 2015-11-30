@@ -106,7 +106,7 @@ module.exports = function (sbot, opts, notify, quota) {
 
     //check if this file is over quota.
     var job = getQueue.pull(filter)
-    if(!job) done()
+    if(!job) return done()
     //this covers weird edgecase where a blob is added
     //while something is looking for it. covered in
     //test/blobs2.js
