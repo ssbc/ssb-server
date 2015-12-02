@@ -250,7 +250,7 @@ module.exports = {
         var lim = (a+10)/((f+1)*20)
         // this function increases linearly from 0.5 to 1 with # of announcements
         // ..and decreases by inversely with # of failures
-        return !e.connected && (Math.random() < lim)
+        return !(e.connected || e.connecting)  && (Math.random() < lim)
       }))
 
       return p
@@ -263,9 +263,11 @@ module.exports = {
       if (!p.time.connect)
         p.time.connect = 0
       p.time.attempt = Date.now()
-      p.connected = true
-
+      p.connecting = true
+      p.connected = false
       server.connect(p, function (err, rpc) {
+        p.connected = true
+        p.connecting = false
         if (err) {
           count = Math.max(count - 1, 0)
           p.connected = false
