@@ -90,6 +90,10 @@ module.exports = {
         })
       }, 'string?'),
 
+      rm: valid.async(function (hash, cb) {
+        return blobs.rm(desigil(hash), cb)
+      }, 'string'),
+
       ls: function (opts) {
         return pull(blobs.ls(opts), pull.map(function (e) {
           if(e.sync) return e

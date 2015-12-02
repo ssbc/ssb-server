@@ -11,8 +11,9 @@ How it works:
     and subscribe to their blob changes. call `query` on each new connection.
   * when a new message is queued. call `query`
   *. in `download`, 5 workers try to download a blob every 300 ms.
-
+  * `hash` arguments must be valid ssb blob links `&<base64 hash>.sha256`
   A queued blob has a callback.
+
 ---
 
 better design:
@@ -54,6 +55,21 @@ has(blobid, cb)
 
 
 ## add: sink
+
+Remove a blob from the store.
+
+```bash
+rm hash
+```
+
+```js
+add(hash, cb)
+```
+
+- hash (base64 string): hash of the file.
+
+
+## rm: async
 
 Add a new blob to the DB.
 
