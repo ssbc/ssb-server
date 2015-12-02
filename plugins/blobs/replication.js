@@ -42,6 +42,9 @@ module.exports = function (sbot, opts, notify, quota) {
   // getting a use for each feed.
 
   function createJob(id, owner, cb) {
+    toArray(owner).forEach(function (e) {
+      if(e[0] !== '@') throw new Error('not a owner:'+e)
+    })
     if(jobs[id]) {
       jobs[id].owner = union(jobs[id].owner, owner || [])
       jobs[id].cbs.push(cb)
@@ -69,7 +72,9 @@ module.exports = function (sbot, opts, notify, quota) {
       var l = limit[p && p.length] || 0
 
       if(l < 0) return true
-      else          return (quota[id] || 0) < l
+      else if ((quota[id] || 0) < l)
+        return true
+      else console.log('Over Quota', id, quota[id], l, p)
 
     })
   }
@@ -128,6 +133,7 @@ module.exports = function (sbot, opts, notify, quota) {
       //only accept blobs that have the correct size.
       sbot.blobs.add(job.id, function (err) {
         if(!err) {
+          delete jobs[job.id]
           job.cbs.forEach(function (cb) { if(cb) cb() })
           return done() //success
         }
@@ -170,11 +176,8 @@ module.exports = function (sbot, opts, notify, quota) {
   return {
     has: hasQueue,
     get: getQueue,
-    want: function (id, cb) {
-      sbot.blobs.has(id, function (err, has) {
-        if(has) return cb()
-        createJob(id, this && this.id ? this.id : sbot.id, cb)
-      })
+    want: function (id, owner, cb) {
+      createJob(id, owner || sbot.id, cb)
     }
   }
 }

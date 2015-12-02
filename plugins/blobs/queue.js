@@ -104,10 +104,14 @@ module.exports = function (work) {
 
     length: function () {
       return jobs.length
+    },
+
+    toJSON: function () {
+      return jobs.slice()
     }
   }
 
-  Work(100, 1, null, function (done) {
+  Work(100, 2, null, function (done) {
     if(!queue.length()) return done()
     work(queue, done)
   }) ()

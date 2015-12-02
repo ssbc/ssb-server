@@ -110,13 +110,14 @@ module.exports = {
           cb = opts
           opts = null
         }
+        var id = this.id
         if(!isBlob(hash)) return cb(new Error('not a hash:' + hash))
 
         sbot.emit('blobs:wants', hash)
         blobs.has(desigil(hash), function (_, has) {
           if (has) return cb(null, true)
           // update queue
-          wantList.want(hash, cb)
+          wantList.want(hash, id, cb)
         })
       }, 'blobId', 'object?'),
 
