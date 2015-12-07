@@ -29,6 +29,23 @@ function isOffline () {
   return lo.length === 1 && lo[0] === 'lo'
 }
 
+/*
+Peers : [{
+  key: id,
+  host: ip,
+  port: int,
+  time: {
+    connect: ts,
+    attempt: ts
+  },
+  failure: int
+  announcers: [ID+], // append only set.
+                     // (unique members, only adds to end),
+                     // could change for {id: true}
+  type: 'pub'|'manual'|'local'
+}]
+*/
+
 module.exports = {
   name: 'gossip',
   version: '1.0.0',
