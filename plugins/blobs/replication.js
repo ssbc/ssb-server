@@ -30,11 +30,16 @@ function union (a, b) {
 function toArray (s) {
   return s != null ? (Array.isArray(s) ? s : [s]) : []
 }
-var MB = 1024*1024
-var LIMIT = [-1, 100*MB, 20*MB]
 
+var MB = 1024*1024
+//default replication limits.
+var defaults = {limit: [-1, 100*MB, 20*MB], minLimit: 5*MB}
 module.exports = function (sbot, opts, notify, quota) {
   var jobs = {}, hasQueue, getQueue
+  var conf = opts.blobs || defaults
+
+  //keep track of who is over quota so that it doesn't get logged again and again.
+  var over = {}
 
   // calculate quotas for each feed.
   // start with size of each blob
@@ -60,22 +65,26 @@ module.exports = function (sbot, opts, notify, quota) {
     return Object.keys(sbot.peers).length !== 0
   }
 
+  function quotaFor(id) {
+    var p = sbot.friends.path({
+      source: sbot.id, dest: id, hops: conf.limit.length
+    })
+    return conf.limit[p && p.length - 1] || conf.minLimit
+  }
+
   function filter (job) {
     return job.owner.every(function (id) {
-      //if you follow them, no quota.
-
-      var p = sbot.friends.path({
-        source: sbot.id, dest: id, hops: LIMIT.length
-      })
-      var limit = opts.blobs && opts.limit
-      if(!Array.isArray(limit)) limit = LIMIT
-      var l = limit[p && p.length] || 0
-
+      var l = quotaFor(id)
       if(l < 0) return true
       else if ((quota[id] || 0) < l)
         return true
-      else console.log('Over Quota', id, quota[id], l, p)
-
+      else if(!over[id]) {
+        over[id] = quota[id]
+        var p = sbot.friends.path({
+          source: sbot.id, dest: id, hops: conf.limit.length
+        })
+        console.log('OverQuota:', id, ((quota[id]/l)*100).toPrecision(4)+'%', p.length)
+      }
     })
   }
 
