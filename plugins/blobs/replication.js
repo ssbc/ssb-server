@@ -73,6 +73,9 @@ module.exports = function (sbot, opts, notify, quota) {
   }
 
   function filter (job) {
+    //set config.blobs.party = true
+    //to disable all quotas.
+    if(conf.party) return true
     return job.owner.every(function (id) {
       var l = quotaFor(id)
       if(l < 0) return true
