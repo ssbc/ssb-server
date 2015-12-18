@@ -81,7 +81,6 @@ module.exports = {
         // sink cbs are not exposed over rpc
         // so this is only available when using this api 
         if(isFunction(hash)) cb = hash, hash = null
-locally.
 
         return blobs.add(desigil(hash), function (err, hash) {
           if(!err) {

@@ -3,7 +3,6 @@ var paramap = require('pull-paramap')
 
 module.exports = function (sbot, blobs, quotas, cb) {
   var listeners = []
-//  var quotas = {}
 
   //recalculate the quota, with live updates.
 
@@ -25,10 +24,10 @@ module.exports = function (sbot, blobs, quotas, cb) {
     blobs.ls({long: true, live: true}),
     paramap(function (data, cb) {
       if(data.sync) return cb(null, data)
-      console.log('BLOB ADDED', data)
+
       var acc = {}, count = 0
       total += data.size
-      console.log(data)
+
       inflight ++
       pull(
         sbot.links({dest: '&'+data.id}),
