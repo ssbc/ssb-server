@@ -21,7 +21,7 @@
     "mdmanifest": "^1.0.4",
     "minimist": "~1.1.0",
     "mkdirp": "~0.5.0",
-    "multiblob": "^1.8.0",
+    "multiblob": "^1.8.1",
     "multicb": "^1.0.0",
     "muxrpc": "^6.1.1",
     "muxrpc-validation": "^2.0.0",
