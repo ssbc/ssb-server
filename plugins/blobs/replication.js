@@ -36,7 +36,7 @@ var MB = 1024*1024
 var defaults = {limit: [-1, 100*MB, 20*MB], minLimit: 5*MB}
 module.exports = function (sbot, opts, notify, quota) {
   var jobs = {}, hasQueue, getQueue
-  var conf = opts.blobs || defaults
+  var conf = opts.blobs || defaults, wl
 
   //keep track of who is over quota so that it doesn't get logged again and again.
   var over = {}
@@ -65,11 +65,17 @@ module.exports = function (sbot, opts, notify, quota) {
     return Object.keys(sbot.peers).length !== 0
   }
 
-  function quotaFor(id) {
+  function hops (id) {
     var p = sbot.friends.path({
       source: sbot.id, dest: id, hops: conf.limit.length
     })
-    return conf.limit[p && p.length - 1] || conf.minLimit
+    return p ? p.length - 1 : -1
+  }
+
+  function limitFor(id) {
+    var h = hops(id)
+    if(hops === -1) return conf.minLimit
+    return conf.limit[h] || conf.minLimit
   }
 
   function filter (job) {
@@ -77,16 +83,13 @@ module.exports = function (sbot, opts, notify, quota) {
     //to disable all quotas.
     if(conf.party) return true
     return job.owner.every(function (id) {
-      var l = quotaFor(id)
+      var l = limitFor(id)
       if(l < 0) return true
       else if ((quota[id] || 0) < l)
         return true
       else if(!over[id]) {
         over[id] = quota[id]
-        var p = sbot.friends.path({
-          source: sbot.id, dest: id, hops: conf.limit.length
-        })
-        console.log('OverQuota:', id, ((quota[id]/l)*100).toPrecision(4)+'%', p.length)
+        console.log('OverQuota:', id, wl.quota(id))
       }
     })
   }
@@ -185,12 +188,21 @@ module.exports = function (sbot, opts, notify, quota) {
         delete jobs[id].has[rpc.id]
   })
 
-  return {
+  return wl = {
     has: hasQueue,
     get: getQueue,
     want: function (id, owner, cb) {
       createJob(id, owner || sbot.id, cb)
+    },
+    quota: function (id) {
+      var l = limitFor(id), q = quota[id] || 0
+      console.log('QUOTA', quota) 
+     return {
+        limit: l,
+        usage: q,
+        hops: hops(id),
+        percent: ((q/l)*100).toPrecision(4)+'%'
+      }
     }
   }
 }
-

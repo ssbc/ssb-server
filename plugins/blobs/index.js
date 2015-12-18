@@ -52,7 +52,10 @@ module.exports = {
       hash: 'sha256'
     })
 
-    var quota = Quota(sbot, blobs)
+    var quota = {}
+    //pass drain a function and it calls back once
+    //quotas are recalculated. see `add` below.
+    var drain = Quota(sbot, blobs, quota)
 
     var wantList = Replicate(sbot, config, notify, quota)
 
@@ -74,19 +77,27 @@ module.exports = {
       }, 'blobId|array'),
 
       add: valid.sink(function (hash, cb) {
+        // cb once blob is successfully added.
+        // sink cbs are not exposed over rpc
+        // so this is only available when using this api 
         if(isFunction(hash)) cb = hash, hash = null
+locally.
 
         return blobs.add(desigil(hash), function (err, hash) {
-          //if(!err) wantList.got(resigil(hash))
-          // sink cbs are not exposed over rpc
-          // so this is only available when using this api locally.
           if(!err) {
             hash = resigil(hash)
             sbot.emit('blobs:got', hash)
             notify(hash)
+            //wait until quotas have been calculated
+            //befor returning (tests will fail without this)
+            if(cb) drain(function () {
+              cb(null, hash)
+            })
           }
-          if(cb) cb(err, hash)
-          else if(err) console.error(err.stack)
+          else {
+            if(cb) cb(err, hash)
+            else   console.error(err.stack)
+          }
         })
       }, 'string?'),
 
@@ -124,6 +135,10 @@ module.exports = {
       changes: function () {
         return notify.listen()
       },
+
+      quota: valid.sync(function (id) {
+        return wantList.quota(id)
+      }, 'feedId'),
 
       // get current want list
       wants: function () {
