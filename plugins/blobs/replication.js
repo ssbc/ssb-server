@@ -89,7 +89,7 @@ module.exports = function (sbot, opts, notify, quota) {
         return true
       else if(!over[id]) {
         over[id] = quota[id]
-        console.log('OverQuota:', id, wl.quota(id))
+        console.log('Over Quota:', id, wl.quota(id))
       }
     })
   }
@@ -196,8 +196,7 @@ module.exports = function (sbot, opts, notify, quota) {
     },
     quota: function (id) {
       var l = limitFor(id), q = quota[id] || 0
-      console.log('QUOTA', quota) 
-     return {
+      return {
         limit: l,
         usage: q,
         hops: hops(id),
