@@ -1,7 +1,6 @@
 var pull = require('pull-stream')
 var para = require('pull-paramap')
 var Notify = require('pull-notify')
-var pushable = require('pull-pushable')
 var many = require('pull-many')
 var cat = require('pull-cat')
 var Abort = require('pull-abortable')
@@ -187,3 +186,4 @@ module.exports = {
     }
   }
 }
+
