@@ -14,17 +14,6 @@ var config       = require('ssb-config/inject')(process.env.ssb_appname)
 var muxrpcli     = require('muxrpcli')
 var cmdAliases   = require('./lib/cli-cmd-aliases')
 
-var createSbot   = require('./')
-  .use(require('./plugins/master'))
-  .use(require('./plugins/gossip'))
-  .use(require('./plugins/friends'))
-  .use(require('./plugins/replicate'))
-  .use(require('./plugins/blobs'))
-  .use(require('./plugins/invite'))
-  .use(require('./plugins/block'))
-  .use(require('./plugins/local'))
-  .use(require('./plugins/logging'))
-  .use(require('./plugins/private'))
   //TODO fix plugins/local
 
 var keys = ssbKeys.loadOrCreateSync(path.join(config.path, 'secret'))
@@ -37,6 +26,19 @@ var manifestFile = path.join(config.path, 'manifest.json')
 
 // special server command
 if (process.argv[2] == 'server') {
+
+  var createSbot = require('./')
+  .use(require('./plugins/master'))
+  .use(require('./plugins/gossip'))
+  .use(require('./plugins/friends'))
+  .use(require('./plugins/replicate'))
+  .use(require('./plugins/blobs'))
+  .use(require('./plugins/invite'))
+  .use(require('./plugins/block'))
+  .use(require('./plugins/local'))
+  .use(require('./plugins/logging'))
+  .use(require('./plugins/private'))
+
   config.keys = keys
   var server = createSbot(config)
   fs.writeFileSync(manifestFile, JSON.stringify(server.getManifest(), null, 2))
@@ -55,7 +57,10 @@ try {
 }
 
 // connect
-createSbot.createClient({keys: keys})({port: config.port, host: config.host||'localhost', key: keys.id}, function (err, rpc) {
+require('ssb-client')(keys, {manifest: manifest,
+  port: config.port, host: config.host||'localhost',
+  key: keys.id
+}, function (err, rpc) {
   if(err) throw err
 
   // add aliases
@@ -79,3 +84,5 @@ createSbot.createClient({keys: keys})({port: config.port, host: config.host||'lo
   // run commandline flow
   muxrpcli(process.argv.slice(2), manifest, rpc)
 })
+
+
