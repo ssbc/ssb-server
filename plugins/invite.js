@@ -40,7 +40,6 @@ module.exports = {
       fn(pub, function (err, auth) {
         if(err || auth) return cb(err, auth)
         codesDB.get(pub, function (_, code) {
-          console.log(pub, code, _)
           return cb(null, code && code.permissions)
         })
       })
