@@ -56,21 +56,6 @@ has(blobid, cb)
 
 ## add: sink
 
-Remove a blob from the store.
-
-```bash
-rm hash
-```
-
-```js
-add(hash, cb)
-```
-
-- hash (base64 string): hash of the file.
-
-
-## rm: async
-
 Add a new blob to the DB.
 
 ```bash
@@ -82,6 +67,21 @@ pull(source, add(hash, cb))
 ```
 
 - hash (base64 string): Optional, expected hash of the file. If the file does not match the hash, it is not stored, and an error is emitted.
+
+
+## rm: async
+
+Remove a blob from the store.
+
+```bash
+rm hash
+```
+
+```js
+rm(hash, cb)
+```
+
+- hash (base64 string): hash of the file.
 
 
 
