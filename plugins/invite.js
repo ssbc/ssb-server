@@ -8,6 +8,7 @@ var ip = require('ip')
 var mdm = require('mdmanifest')
 var valid = require('../lib/validators')
 var apidoc = require('../lib/apidocs').invite
+var u = require('../lib/util')
 //okay this plugin adds a method
 //invite(seal({code, public})
 
@@ -48,7 +49,7 @@ module.exports = {
     return {
       create: valid.async(function (n, cb) {
         var addr = server.getAddress()
-        var host = addr.split(':')[0]
+        var host = u.toAddress(addr).host
         if(!config.allowPrivate && (
           ip.isPrivate(host) || 'localhost' === host)
         )
