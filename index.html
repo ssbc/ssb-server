@@ -1,0 +1,63 @@
+<html>
+    <head>
+    <title>Scuttlebot - SSBC</title>
+    <link rel="stylesheet" href="normalize.css">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+    <body>
+      <div id="leftnav">
+    <div class="leftnav-item ">
+      <a href="/" title="Home">Home</a>
+    </div>
+    <div class="leftnav-item ">
+      <a href="/patchwork" title="Patchwork">Patchwork</a>
+    </div>
+    <div class="leftnav-item ">
+      <a href="/secure-scuttlebutt" title="Secure Scuttlebutt">Secure Scuttlebutt</a>
+    </div>
+    <div class="leftnav-subitems">
+      <div class="leftnav-item ">
+      <a href="/docs/learn.html" title="Learn about the Protocol">Learn about the Protocol</a>
+    </div>
+    </div>
+    <div class="leftnav-item selected">
+      <a href="/scuttlebot" title="Scuttlebot">Scuttlebot</a>
+    </div>
+    <div class="leftnav-subitems">
+      <div class="leftnav-item ">
+      <a href="/docs/intro-to-using-sbot.html" title="Introduction to Using Scuttlebot">Introduction to Using Scuttlebot</a>
+    </div>
+    </div>
+    <div class="leftnav-item ">
+      <a href="/docs" title="Documentation">Documentation</a>
+    </div>
+  </div>
+      <div id="content">
+        <h1 id="scuttlebot">Scuttlebot</h1>
+<p><img src="https://avatars2.githubusercontent.com/u/10190339?v=3&amp;s=200" alt="Hermies the Hermit Crab"></p>
+<p>Secure Scuttlebutt (SSB) is a P2P database of message-feeds.
+It consists of</p>
+<ul>
+<li>Per-user append-only logs of messages (i.e. <a href="http://www.kappa-architecture.com/">kappa architecture</a>)</li>
+<li>Content-addressable storage (i.e. <code>obj.id == hash(obj)</code>)</li>
+<li>Message distribution over a <a href="https://en.wikipedia.org/wiki/Gossip_protocol">gossip network</a></li>
+</ul>
+<p>Scuttlebot is an SSB server.</p>
+<ul>
+<li><a href="https://github.com/ssbc/docs#setup-scuttlebot">Guide to setup Scuttlebot</a></li>
+<li><a href="https://github.com/ssbc/docs/blob/master/intro-to-using-sbot.md">Introduction to using and developing with Scuttlebot</a></li>
+<li><a href="https://github.com/ssbc/docs/blob/master/learn.md">Learn about the Secure Scuttlebutt Protocol</a></li>
+</ul>
+<p>Join us in #scuttlebutt on freenode.</p>
+<p><a href="http://travis-ci.org/ssbc/scuttlebot"><img src="https://secure.travis-ci.org/ssbc/scuttlebot.png" alt="build status"></a></p>
+<h2 id="links">Links</h2>
+<h3 id="-documentation-https-github-com-ssbc-docs-"><a href="https://github.com/ssbc/docs">Documentation</a></h3>
+<h3 id="-informal-pub-servers-registry-https-github-com-ssbc-scuttlebot-wiki-pub-servers-"><a href="https://github.com/ssbc/scuttlebot/wiki/Pub-servers">Informal Pub Servers Registry</a></h3>
+<h2 id="configuration">Configuration</h2>
+<p>Default configuration should be fine.
+If you want to know about the details and advanced usage please have a look at <a href="https://github.com/ssbc/ssb-config"><code>ssb-config</code></a>.
+Data, keys, and config are stored in <code>~/.ssb</code> by default.</p>
+
+      </div>
+    </body>
+  </html>
