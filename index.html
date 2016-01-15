@@ -14,10 +14,10 @@
       Home<br><small>SSBC</small>
     </a>
       <a class="topnav-item " href="/patchwork" title="Patchwork">
-      Patchwork<br><small>Messaging App</small>
+      Patchwork<br><small>Social App</small>
     </a>
       <a class="topnav-item selected" href="/scuttlebot" title="Scuttlebot">
-      Scuttlebot<br><small>P2P Database</small>
+      Scuttlebot<br><small>P2P Log Store</small>
     </a>
       <a class="topnav-item " href="/docs" title="Documentation">
       Documentation<br><small>APIs, Articles</small>
@@ -41,7 +41,7 @@
     </div>
       </div>
       <div class="leftnav-item ">
-      <a href="/secure-scuttlebutt" title="Secure Scuttlebutt">Secure Scuttlebutt<br><small>Database Protocol</small></a>
+      <a href="/secure-scuttlebutt" title="Secure Scuttlebutt">Secure Scuttlebutt<br><small>Global Database Protocol</small></a>
     </div>
       <div class="leftnav-subitems">
         <div class="leftnav-item ">
@@ -51,13 +51,13 @@
       <a href="/docs/ssb/linking.html" title="Linking">Linking</a>
     </div>
         <div class="leftnav-item ">
+      <a href="/docs/ssb/faq.html" title="FAQ">FAQ</a>
+    </div>
+        <div class="leftnav-item ">
       <a href="/docs/ssb/secret-handshake.html" title="Secret Handshake">Secret Handshake</a>
     </div>
         <div class="leftnav-item ">
-      <a href="/docs/ssb/end-to-end-encryption.html" title="End-to-end Encryption">End-to-end Encryption</a>
-    </div>
-        <div class="leftnav-item ">
-      <a href="/docs/ssb/faq.html" title="FAQ">FAQ</a>
+      <a href="/docs/ssb/end-to-end-encryption.html" title="Private Box">Private Box</a>
     </div>
       </div>
       <div class="leftnav-item">Howto Guides</div>
@@ -102,29 +102,55 @@
     </div>
         <div id="content">
           <h1 id="scuttlebot">Scuttlebot</h1>
-<p><img src="https://avatars2.githubusercontent.com/u/10190339?v=3&amp;s=200" alt="Hermies the Hermit Crab"></p>
-<p>Secure Scuttlebutt (SSB) is a P2P database of message-feeds.
-It consists of</p>
+<p>Scuttlebot is an open source <strong>peer-to-peer log store</strong> used as a database, identity provider, and messaging system.
+It has:</p>
 <ul>
-<li>Per-user append-only logs of messages (i.e. <a href="http://www.kappa-architecture.com/">kappa architecture</a>)</li>
-<li>Content-addressable storage (i.e. <code>obj.id == hash(obj)</code>)</li>
-<li>Message distribution over a <a href="https://en.wikipedia.org/wiki/Gossip_protocol">gossip network</a></li>
+<li>Global replication</li>
+<li>File-syncronization </li>
+<li>End-to-end encryption</li>
 </ul>
-<p>Scuttlebot is an SSB server.</p>
-<ul>
-<li><a href="https://github.com/ssbc/docs#setup-scuttlebot">Guide to setup Scuttlebot</a></li>
-<li><a href="https://github.com/ssbc/docs/blob/master/intro-to-using-sbot.md">Introduction to using and developing with Scuttlebot</a></li>
-<li><a href="https://github.com/ssbc/docs/blob/master/learn.md">Learn about the Secure Scuttlebutt Protocol</a></li>
-</ul>
-<p>Join us in #scuttlebutt on freenode.</p>
+<p>Scuttlebot behaves just like a <a href="http://www.kappa-architecture.com/">Kappa Architecture DB</a>.
+In the background, it syncs with known peers.
+Peers do not have to be trusted, and can share logs and files on behalf of other peers, as each log is an <a href="https://ssbc.github.io/secure-scuttlebutt">unforgeable append-only message feed</a>.
+This means Scuttlebots comprise a <a href="https://en.wikipedia.org/wiki/Gossip_protocol">global gossip-protocol mesh</a> without any host dependencies.</p>
+<p><strong>Join us in #scuttlebutt on freenode.</strong></p>
 <p><a href="http://travis-ci.org/ssbc/scuttlebot"><img src="https://secure.travis-ci.org/ssbc/scuttlebot.png" alt="build status"></a></p>
-<h2 id="links">Links</h2>
-<h3 id="-documentation-https-github-com-ssbc-docs-"><a href="https://github.com/ssbc/docs">Documentation</a></h3>
-<h3 id="-informal-pub-servers-registry-https-github-com-ssbc-scuttlebot-wiki-pub-servers-"><a href="https://github.com/ssbc/scuttlebot/wiki/Pub-servers">Informal Pub Servers Registry</a></h3>
-<h2 id="configuration">Configuration</h2>
-<p>Default configuration should be fine.
-If you want to know about the details and advanced usage please have a look at <a href="https://github.com/ssbc/ssb-config"><code>ssb-config</code></a>.
-Data, keys, and config are stored in <code>~/.ssb</code> by default.</p>
+<h2 id="use-cases">Use-cases</h2>
+<p>Scuttlebot&#39;s message-based data structure makes ideal for mail and forum applications (see <a href="https://ssbc.github.io/patchwork/">Patchwork</a>).
+However, it is sufficiently general to be used to build:</p>
+<ul>
+<li>Office tools (calendars, document-sharing, tasklists)</li>
+<li>Wikis</li>
+<li>Package managers</li>
+</ul>
+<p>Because Scuttlebot doesn&#39;t depend on hosts, its users can synchronize over WiFi or any other connective medium, making it great for <a href="https://en.wikipedia.org/wiki/Sneakernet">Sneakernets</a>.</p>
+<p>Scuttlebot is <a href="https://en.wikipedia.org/wiki/Eventual_consistency">eventually-consistent with peers</a>, and requires exterior coordination to create strictly-ordered transactions.
+Therefore, by itself, it would probably make a poor choice for implementing a crypto-currency.
+(We get asked that a lot.)</p>
+<hr>
+<h3 id="getting-started">Getting Started</h3>
+<ul>
+<li><a href="https://ssbc.github.io/docs/scuttlebot/install.html">Install</a> - Setup instructions</li>
+<li><a href="https://ssbc.github.io/docs/scuttlebot/tutorial.html">Tutorial</a> - Primer on developing with Scuttlebot</li>
+<li><a href="https://ssbc.github.io/docs/api/scuttlebot.html">API / CLI Reference</a></li>
+</ul>
+<h3 id="technical-documents">Technical Documents</h3>
+<ul>
+<li><a href="https://ssbc.github.io/secure-scuttlebutt/">Secure Scuttlebutt</a>, Scuttlebot&#39;s global database protocol<ul>
+<li><a href="https://ssbc.github.io/docs/ssb/key-concepts.html">Key Concepts</a></li>
+<li><a href="https://ssbc.github.io/docs/ssb/linking.html">Linking</a></li>
+<li><a href="https://ssbc.github.io/docs/ssb/faq.html">FAQ</a></li>
+</ul>
+</li>
+<li><a href="https://ssbc.github.io/docs/ssb/secret-handshake.html">Secret Handshake</a>, Scuttlebot&#39;s transport-layer security protocol</li>
+<li><a href="https://ssbc.github.io/docs/ssb/end-to-end-encryption.html">Private Box</a>, Scuttlebot&#39;s end-to-end security protocol</li>
+</ul>
+<h3 id="further-reading">Further Reading</h3>
+<ul>
+<li><a href="https://ssbc.github.io/docs/articles/design-challenge-avoid-centralization-and-singletons.html">Design Challenge: Avoid Centralization and Singletons</a></li>
+<li><a href="https://ssbc.github.io/docs/articles/design-challenge-sybil-attack.html">Design Challenge: Sybil Attacks</a></li>
+<li><a href="https://ssbc.github.io/docs/articles/using-trust-in-open-networks.html">Using Trust in Open Networks</a></li>
+</ul>
 
         </div>
       </div>
