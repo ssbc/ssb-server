@@ -113,6 +113,67 @@ Peers do not have to be trusted, and can share logs and files on behalf of other
 This means Scuttlebots comprise a <a href="https://en.wikipedia.org/wiki/Gossip_protocol">global gossip-protocol mesh</a> without any host dependencies.</p>
 <p><strong>Join us in #scuttlebutt on freenode.</strong></p>
 <p><a href="http://travis-ci.org/ssbc/scuttlebot"><img src="https://secure.travis-ci.org/ssbc/scuttlebot.png" alt="build status"></a></p>
+<h2 id="example-usage">Example Usage</h2>
+<pre><code class="lang-bash"># In bash:
+
+# publish a message
+sbot publish --type post --text &quot;My First Post!&quot;
+
+# stream all messages in all feeds, ordered by publish time
+sbot feed
+
+# stream all messages in all feeds, ordered by receive time
+sbot log
+
+# stream all messages by one feed, ordered by sequence number
+sbot hist $FEED_ID
+</code></pre>
+<pre><code class="lang-js">// In javascript:
+
+var pull = require(&#39;pull-stream&#39;)
+var ssbClient = require(&#39;ssb-client&#39;)
+
+// create a scuttlebot client using default settings
+// (server at localhost:8080, using key found at ~/.ssb/secret)
+ssbClient(function (err, sbot) {
+  if (err) throw err
+
+  // publish a message
+  sbot.publish({ type: &#39;post&#39;, text: &#39;My First Post!&#39; }, function (err, msg) {
+    // msg.key           == hash(msg.value)
+    // msg.value.author  == your id
+    // msg.value.content == { type: &#39;post&#39;, text: &#39;My First Post!&#39; }
+    // ...
+  })
+
+  // stream all messages in all feeds, ordered by publish time
+  pull(
+    ssb.createFeedStream(),
+    pull.collect(function (err, msgs) {
+      // msgs[0].key == hash(msgs[0].value)
+      // msgs[0].value...
+    })
+  )
+
+  // stream all messages in all feeds, ordered by receive time
+  pull(
+    ssb.createLogStream(),
+    pull.collect(function (err, msgs) {
+      // msgs[0].key == hash(msgs[0].value)
+      // msgs[0].value...
+    })
+  )
+
+  // stream all messages by one feed, ordered by sequence number
+  pull(
+    ssb.createHistoryStream(feedId),
+    pull.collect(function (err, msgs) {
+      // msgs[0].key == hash(msgs[0].value)
+      // msgs[0].value...
+    })
+  )
+})
+</code></pre>
 <h2 id="use-cases">Use-cases</h2>
 <p>Scuttlebot&#39;s message-based data structure makes ideal for mail and forum applications (see <a href="https://ssbc.github.io/patchwork/">Patchwork</a>).
 However, it is sufficiently general to be used to build:</p>
