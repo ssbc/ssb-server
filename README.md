@@ -39,14 +39,13 @@ Therefore, by itself, it would probably make a poor choice for implementing a cr
 - [Tutorial](https://ssbc.github.io/docs/scuttlebot/tutorial.html) - Primer on developing with Scuttlebot
 - [API / CLI Reference](https://ssbc.github.io/docs/api/scuttlebot.html)
 
-### Technical Documents
+### Key Concepts
 
 - [Secure Scuttlebutt](https://ssbc.github.io/secure-scuttlebutt/), Scuttlebot's global database protocol
-  - [Key Concepts](https://ssbc.github.io/docs/ssb/key-concepts.html)
-  - [Linking](https://ssbc.github.io/docs/ssb/linking.html)
-  - [FAQ](https://ssbc.github.io/docs/ssb/faq.html)
+- [Content Hash Linking](https://ssbc.github.io/docs/ssb/linking.html)
 - [Secret Handshake](https://ssbc.github.io/docs/ssb/secret-handshake.html), Scuttlebot's transport-layer security protocol
 - [Private Box](https://ssbc.github.io/docs/ssb/end-to-end-encryption.html), Scuttlebot's end-to-end security protocol
+- [Frequently Asked Questions](https://ssbc.github.io/docs/ssb/faq.html)
 
 ### Further Reading
 
