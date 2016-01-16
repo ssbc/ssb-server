@@ -16,6 +16,71 @@ This means Scuttlebots comprise a [global gossip-protocol mesh](https://en.wikip
 
 [![build status](https://secure.travis-ci.org/ssbc/scuttlebot.png)](http://travis-ci.org/ssbc/scuttlebot)
 
+## Example Usage
+
+```bash
+# In bash:
+
+# publish a message
+sbot publish --type post --text "My First Post!"
+
+# stream all messages in all feeds, ordered by publish time
+sbot feed
+
+# stream all messages in all feeds, ordered by receive time
+sbot log
+
+# stream all messages by one feed, ordered by sequence number
+sbot hist $FEED_ID
+```
+```js
+// In javascript:
+
+var pull = require('pull-stream')
+var ssbClient = require('ssb-client')
+
+// create a scuttlebot client using default settings
+// (server at localhost:8080, using key found at ~/.ssb/secret)
+ssbClient(function (err, sbot) {
+  if (err) throw err
+
+  // publish a message
+  sbot.publish({ type: 'post', text: 'My First Post!' }, function (err, msg) {
+    // msg.key           == hash(msg.value)
+    // msg.value.author  == your id
+    // msg.value.content == { type: 'post', text: 'My First Post!' }
+    // ...
+  })
+
+  // stream all messages in all feeds, ordered by publish time
+  pull(
+    ssb.createFeedStream(),
+    pull.collect(function (err, msgs) {
+      // msgs[0].key == hash(msgs[0].value)
+      // msgs[0].value...
+    })
+  )
+
+  // stream all messages in all feeds, ordered by receive time
+  pull(
+    ssb.createLogStream(),
+    pull.collect(function (err, msgs) {
+      // msgs[0].key == hash(msgs[0].value)
+      // msgs[0].value...
+    })
+  )
+
+  // stream all messages by one feed, ordered by sequence number
+  pull(
+    ssb.createHistoryStream(feedId),
+    pull.collect(function (err, msgs) {
+      // msgs[0].key == hash(msgs[0].value)
+      // msgs[0].value...
+    })
+  )
+})
+```
+
 ## Use-cases
 
 Scuttlebot's message-based data structure makes ideal for mail and forum applications (see [Patchwork](https://ssbc.github.io/patchwork/)).
