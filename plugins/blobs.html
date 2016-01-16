@@ -1,0 +1,178 @@
+<html>
+    <head>
+    <title>Scuttlebot Blobs Plugin - Documentation - SSBC</title>
+    <link rel="stylesheet" href="/normalize.css">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/atelier-forest-light.css">
+    <script src="/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  </head>
+    <body>
+      <div id="topnav">
+    <div id="topnav-inner">
+      <a class="topnav-item " href="/" title="Home">
+      Home<br><small>SSBC</small>
+    </a>
+      <a class="topnav-item " href="/patchwork" title="Patchwork">
+      Patchwork<br><small>Social App</small>
+    </a>
+      <a class="topnav-item " href="/scuttlebot" title="Scuttlebot">
+      Scuttlebot<br><small>P2P Log Store</small>
+    </a>
+      <a class="topnav-item selected" href="/docs" title="Documentation">
+      Documentation<br><small>APIs, Articles</small>
+    </a>
+    </div>
+  </div>
+      <div id="layout">
+        <div id="leftnav">
+      <div class="leftnav-item">API Documentation</div>
+      <div class="leftnav-subitems">
+        <div class="leftnav-item ">
+      <a href="/scuttlebot/api.html" title="scuttlebot">scuttlebot</a>
+    </div>
+        <div class="leftnav-indent">
+          <div class="leftnav-item selected">
+      <a href="/scuttlebot/plugins/blobs.html" title="blobs">blobs</a>
+    </div>
+          <div class="leftnav-item ">
+      <a href="/scuttlebot/plugins/block.html" title="block">block</a>
+    </div>
+          <div class="leftnav-item ">
+      <a href="/scuttlebot/plugins/friends.html" title="friends">friends</a>
+    </div>
+          <div class="leftnav-item ">
+      <a href="/scuttlebot/plugins/gossip.html" title="gossip">gossip</a>
+    </div>
+          <div class="leftnav-item ">
+      <a href="/scuttlebot/plugins/invite.html" title="invite">invite</a>
+    </div>
+          <div class="leftnav-item ">
+      <a href="/scuttlebot/plugins/private.html" title="private">private</a>
+    </div>
+          <div class="leftnav-item ">
+      <a href="/scuttlebot/plugins/replicate.html" title="replicate">replicate</a>
+    </div>
+        </div>
+        <div class="leftnav-item ">
+      <a href="/ssb-msgs" title="ssb-msgs">ssb-msgs</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/ssb-msg-schemas" title="ssb-msg-schemas">ssb-msg-schemas</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/ssb-ref" title="ssb-ref">ssb-ref</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/ssb-keys" title="ssb-keys">ssb-keys</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/ssb-config" title="ssb-config">ssb-config</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/secret-stack" title="secret-stack">secret-stack</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/muxrpc" title="muxrpc">muxrpc</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/docs/api/pull-stream.html" title="pull-stream">pull-stream</a>
+    </div>
+      </div>
+      <div class="leftnav-item">Articles</div>
+      <div class="leftnav-subitems">
+        <div class="leftnav-item ">
+      <a href="/docs/articles/design-challenge-avoid-centralization-and-singletons.html" title="Design Challenge: Avoiding Centralization and Singletons">Design Challenge: Avoiding Centralization and Singletons</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/docs/articles/design-challenge-sybil-attack.html" title="Design Challenge: Sybil Attacks">Design Challenge: Sybil Attacks</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/docs/articles/using-trust-in-open-networks.html" title="Using Trust in Open Networks">Using Trust in Open Networks</a>
+    </div>
+      </div>
+    </div>
+        <div id="content">
+          <h1 id="scuttlebot-blobs-plugin">scuttlebot blobs plugin</h1>
+<p>Send/receive files by content-hashes.</p>
+<p>How it works:</p>
+<ul>
+<li>Get list of wanted blobs via <code>links</code>, or explicit calls to <code>want</code>.
+ Call <code>wL.queue(hash)</code>.</li>
+<li>connected to a peer (managed by gossip plugin): rpc.has wants,
+and subscribe to their blob changes. call <code>query</code> on each new connection.</li>
+<li>when a new message is queued. call <code>query</code>
+*. in <code>download</code>, 5 workers try to download a blob every 300 ms.</li>
+<li><code>hash</code> arguments must be valid ssb blob links <code>&amp;&lt;base64 hash&gt;.sha256</code>
+A queued blob has a callback.</li>
+</ul>
+<hr>
+<p>better design:</p>
+<p>  each task has it&#39;s own queue.
+  first is queue for has
+  then is queue for download.</p>
+<p>  once you know where a file is, move it to the download queue.
+  if there arn&#39;t any peers to get a file from, put it back in has queue.</p>
+<h2 id="get-source">get: source</h2>
+<p>Get a blob by its ID.</p>
+<pre><code class="lang-bash">get {blobid}
+</code></pre>
+<pre><code class="lang-js">get(blobid)
+</code></pre>
+<h2 id="has-async">has: async</h2>
+<p>Check if the blob of the given ID is stored in the DB.</p>
+<pre><code class="lang-bash">has {blobid}
+</code></pre>
+<pre><code class="lang-js">has(blobid, cb)
+</code></pre>
+<h2 id="add-sink">add: sink</h2>
+<p>Add a new blob to the DB.</p>
+<pre><code class="lang-bash">cat ./file | add [hash]
+</code></pre>
+<pre><code class="lang-js">pull(source, add(hash, cb))
+</code></pre>
+<ul>
+<li>hash (base64 string): Optional, expected hash of the file. If the file does not match the hash, it is not stored, and an error is emitted.</li>
+</ul>
+<h2 id="rm-async">rm: async</h2>
+<p>Remove a blob from the store.</p>
+<pre><code class="lang-bash">rm hash
+</code></pre>
+<pre><code class="lang-js">rm(hash, cb)
+</code></pre>
+<ul>
+<li>hash (base64 string): hash of the file.</li>
+</ul>
+<h2 id="ls-source">ls: source</h2>
+<p>List the hashes of the blobs in the DB.</p>
+<pre><code class="lang-bash">ls
+</code></pre>
+<pre><code class="lang-js">ls()
+</code></pre>
+<h2 id="want-async">want: async</h2>
+<p>Begin searching the network for the blob of the given hash.</p>
+<pre><code class="lang-bash">want {hash} [--nowait]
+</code></pre>
+<pre><code class="lang-js">want(hash, { nowait: }, cb)
+</code></pre>
+<p>By default, <code>want</code> will not call the <code>cb</code> until the blob has been downloaded.
+If you want the <code>cb</code> to be called immediately, specify <code>nowait: true</code>.
+The <code>cb</code> will be called with true/false as the value, telling you if the blob was already present.</p>
+<h2 id="wants-sync">wants: sync</h2>
+<p>List the currently-wanted blobs&#39; data-structures.</p>
+<pre><code class="lang-bash">wants
+</code></pre>
+<pre><code class="lang-js">wants()
+</code></pre>
+<h2 id="changes-source">changes: source</h2>
+<p>Listen for any newly-downloaded blobs.</p>
+<pre><code class="lang-bash">changes
+</code></pre>
+<pre><code class="lang-js">changes()
+</code></pre>
+<p>When a blob is downloaded, this stream will emit the hash of the blob.</p>
+
+        </div>
+      </div>
+    </body>
+  </html>

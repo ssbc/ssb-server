@@ -1,0 +1,317 @@
+<html>
+    <head>
+    <title>Scuttlebot - Documentation - SSBC</title>
+    <link rel="stylesheet" href="/normalize.css">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/atelier-forest-light.css">
+    <script src="/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  </head>
+    <body>
+      <div id="topnav">
+    <div id="topnav-inner">
+      <a class="topnav-item " href="/" title="Home">
+      Home<br><small>SSBC</small>
+    </a>
+      <a class="topnav-item " href="/patchwork" title="Patchwork">
+      Patchwork<br><small>Social App</small>
+    </a>
+      <a class="topnav-item " href="/scuttlebot" title="Scuttlebot">
+      Scuttlebot<br><small>P2P Log Store</small>
+    </a>
+      <a class="topnav-item selected" href="/docs" title="Documentation">
+      Documentation<br><small>APIs, Articles</small>
+    </a>
+    </div>
+  </div>
+      <div id="layout">
+        <div id="leftnav">
+      <div class="leftnav-item">API Documentation</div>
+      <div class="leftnav-subitems">
+        <div class="leftnav-item selected">
+      <a href="/scuttlebot/api.html" title="scuttlebot">scuttlebot</a>
+    </div>
+        <div class="leftnav-indent">
+          <div class="leftnav-item ">
+      <a href="/scuttlebot/plugins/blobs.html" title="blobs">blobs</a>
+    </div>
+          <div class="leftnav-item ">
+      <a href="/scuttlebot/plugins/block.html" title="block">block</a>
+    </div>
+          <div class="leftnav-item ">
+      <a href="/scuttlebot/plugins/friends.html" title="friends">friends</a>
+    </div>
+          <div class="leftnav-item ">
+      <a href="/scuttlebot/plugins/gossip.html" title="gossip">gossip</a>
+    </div>
+          <div class="leftnav-item ">
+      <a href="/scuttlebot/plugins/invite.html" title="invite">invite</a>
+    </div>
+          <div class="leftnav-item ">
+      <a href="/scuttlebot/plugins/private.html" title="private">private</a>
+    </div>
+          <div class="leftnav-item ">
+      <a href="/scuttlebot/plugins/replicate.html" title="replicate">replicate</a>
+    </div>
+        </div>
+        <div class="leftnav-item ">
+      <a href="/ssb-msgs" title="ssb-msgs">ssb-msgs</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/ssb-msg-schemas" title="ssb-msg-schemas">ssb-msg-schemas</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/ssb-ref" title="ssb-ref">ssb-ref</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/ssb-keys" title="ssb-keys">ssb-keys</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/ssb-config" title="ssb-config">ssb-config</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/secret-stack" title="secret-stack">secret-stack</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/muxrpc" title="muxrpc">muxrpc</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/docs/api/pull-stream.html" title="pull-stream">pull-stream</a>
+    </div>
+      </div>
+      <div class="leftnav-item">Articles</div>
+      <div class="leftnav-subitems">
+        <div class="leftnav-item ">
+      <a href="/docs/articles/design-challenge-avoid-centralization-and-singletons.html" title="Design Challenge: Avoiding Centralization and Singletons">Design Challenge: Avoiding Centralization and Singletons</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/docs/articles/design-challenge-sybil-attack.html" title="Design Challenge: Sybil Attacks">Design Challenge: Sybil Attacks</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/docs/articles/using-trust-in-open-networks.html" title="Using Trust in Open Networks">Using Trust in Open Networks</a>
+    </div>
+      </div>
+    </div>
+        <div id="content">
+          <h1 id="scuttlebot">scuttlebot</h1>
+<p>Secure-scuttlebutt API server</p>
+<h2 id="get-async">get: async</h2>
+<p>Get a message by its hash-id.</p>
+<pre><code class="lang-bash">get {msgid}
+</code></pre>
+<pre><code class="lang-js">get(msgid, cb)
+</code></pre>
+<h2 id="createfeedstream-source">createFeedStream: source</h2>
+<p>(feed) Fetch messages ordered by their claimed timestamps.</p>
+<pre><code class="lang-bash">feed [--live] [--gt index] [--gte index] [--lt index] [--lte index] [--reverse]  [--keys] [--values] [--limit n]
+</code></pre>
+<pre><code class="lang-js">createFeedStream({ live:, gt:, gte:, lt:, lte:, reverse:, keys:, values:, limit:, fillCache:, keyEncoding:, valueEncoding: })
+</code></pre>
+<p>Create a stream of the data in the database, ordered by the timestamp claimed by the author.
+NOTE - the timestamp is not verified, and may be incorrect.
+The range queries (gt, gte, lt, lte) filter against this claimed timestap.</p>
+<ul>
+<li><code>live</code> (boolean, default: <code>false</code>): Keep the stream open and emit new messages as they are received.</li>
+<li><code>gt</code> (greater than), <code>gte</code> (greater than or equal) define the lower bound of the range to be streamed. Only records where the key is greater than (or equal to) this option will be included in the range. When <code>reverse=true</code> the order will be reversed, but the records streamed will be the same.</li>
+<li><code>lt</code> (less than), <code>lte</code> (less than or equal) define the higher bound of the range to be streamed. Only key/value pairs where the key is less than (or equal to) this option will be included in the range. When <code>reverse=true</code> the order will be reversed, but the records streamed will be the same.</li>
+<li><code>reverse</code> (boolean, default: <code>false</code>): a boolean, set true and the stream output will be reversed. Beware that due to the way LevelDB works, a reverse seek will be slower than a forward seek.</li>
+<li><code>keys</code> (boolean, default: <code>true</code>): whether the <code>data</code> event should contain keys. If set to <code>true</code> and <code>values</code> set to <code>false</code> then <code>data</code> events will simply be keys, rather than objects with a <code>key</code> property.</li>
+<li><code>values</code> (boolean, default: <code>true</code>): whether the <code>data</code> event should contain values. If set to <code>true</code> and <code>keys</code> set to <code>false</code> then <code>data</code> events will simply be values, rather than objects with a <code>value</code> property.</li>
+<li><code>limit</code> (number, default: <code>-1</code>): limit the number of results collected by this stream. This number represents a <em>maximum</em> number of results and may not be reached if you get to the end of the data first. A value of <code>-1</code> means there is no limit. When <code>reverse=true</code> the highest keys will be returned instead of the lowest keys.</li>
+<li><code>fillCache</code> (boolean, default: <code>false</code>): wheather LevelDB&#39;s LRU-cache should be filled with data read.</li>
+<li><code>keyEncoding</code> / <code>valueEncoding</code> (string): the encoding applied to each read piece of data.</li>
+</ul>
+<h2 id="createlogstream-source">createLogStream: source</h2>
+<p>(log) Fetch messages ordered by the time received.</p>
+<pre><code class="lang-bash">log [--live] [--gt index] [--gte index] [--lt index] [--lte index] [--reverse]  [--keys] [--values] [--limit n]
+</code></pre>
+<pre><code class="lang-js">createLogStream({ live:, gt:, gte:, lt:, lte:, reverse:, keys:, values:, limit:, fillCache:, keyEncoding:, valueEncoding: })
+</code></pre>
+<p>Creates a stream of the messages that have been written to this instance, in the order they arrived.
+The objects in this stream will be of the form:</p>
+<pre><code>{ key: Hash, value: Message, timestamp: timestamp }
+</code></pre><p><code>timestamp</code> is the time which the message was received.
+It is generated by <a href="https://github.com/dominictarr/monotonic-timestamp">monotonic-timestamp</a>.
+The range queries (gt, gte, lt, lte) filter against this receive timestap.</p>
+<ul>
+<li><code>live</code> (boolean, default: <code>false</code>): Keep the stream open and emit new messages as they are received.</li>
+<li><code>gt</code> (greater than), <code>gte</code> (greater than or equal) define the lower bound of the range to be streamed. Only records where the key is greater than (or equal to) this option will be included in the range. When <code>reverse=true</code> the order will be reversed, but the records streamed will be the same.</li>
+<li><code>lt</code> (less than), <code>lte</code> (less than or equal) define the higher bound of the range to be streamed. Only key/value pairs where the key is less than (or equal to) this option will be included in the range. When <code>reverse=true</code> the order will be reversed, but the records streamed will be the same.</li>
+<li><code>reverse</code> (boolean, default: <code>false</code>): a boolean, set true and the stream output will be reversed. Beware that due to the way LevelDB works, a reverse seek will be slower than a forward seek.</li>
+<li><code>keys</code> (boolean, default: <code>true</code>): whether the <code>data</code> event should contain keys. If set to <code>true</code> and <code>values</code> set to <code>false</code> then <code>data</code> events will simply be keys, rather than objects with a <code>key</code> property.</li>
+<li><code>values</code> (boolean, default: <code>true</code>): whether the <code>data</code> event should contain values. If set to <code>true</code> and <code>keys</code> set to <code>false</code> then <code>data</code> events will simply be values, rather than objects with a <code>value</code> property.</li>
+<li><code>limit</code> (number, default: <code>-1</code>): limit the number of results collected by this stream. This number represents a <em>maximum</em> number of results and may not be reached if you get to the end of the data first. A value of <code>-1</code> means there is no limit. When <code>reverse=true</code> the highest keys will be returned instead of the lowest keys.</li>
+<li><code>fillCache</code> (boolean, default: <code>false</code>): wheather LevelDB&#39;s LRU-cache should be filled with data read.</li>
+<li><code>keyEncoding</code> / <code>valueEncoding</code> (string): the encoding applied to each read piece of data.</li>
+</ul>
+<h2 id="messagesbytype-source">messagesByType: source</h2>
+<p>(logt) Retrieve messages with a given type, ordered by receive-time.</p>
+<pre><code class="lang-bash">logt --type {type} [--live] [--gt index] [--gte index] [--lt index] [--lte index] [--reverse]  [--keys] [--values] [--limit n]
+</code></pre>
+<pre><code class="lang-js">messagesByType({ type:, live:, gt:, gte:, lt:, lte:, reverse:, keys:, values:, limit:, fillCache:, keyEncoding:, valueEncoding: })
+</code></pre>
+<p>All messages must have a type, so this is a good way to select messages that an application might use.
+Like in createLogStream, the range queries (gt, gte, lt, lte) filter against the receive timestap.</p>
+<ul>
+<li><code>type</code> (string): The type of the messages to emit.</li>
+<li><code>live</code> (boolean, default: <code>false</code>): Keep the stream open and emit new messages as they are received.</li>
+<li><code>gt</code> (greater than), <code>gte</code> (greater than or equal) define the lower bound of the range to be streamed. Only records where the key is greater than (or equal to) this option will be included in the range. When <code>reverse=true</code> the order will be reversed, but the records streamed will be the same.</li>
+<li><code>lt</code> (less than), <code>lte</code> (less than or equal) define the higher bound of the range to be streamed. Only key/value pairs where the key is less than (or equal to) this option will be included in the range. When <code>reverse=true</code> the order will be reversed, but the records streamed will be the same.</li>
+<li><code>reverse</code> (boolean, default: <code>false</code>): a boolean, set true and the stream output will be reversed. Beware that due to the way LevelDB works, a reverse seek will be slower than a forward seek.</li>
+<li><code>keys</code> (boolean, default: <code>true</code>): whether the <code>data</code> event should contain keys. If set to <code>true</code> and <code>values</code> set to <code>false</code> then <code>data</code> events will simply be keys, rather than objects with a <code>key</code> property.</li>
+<li><code>values</code> (boolean, default: <code>true</code>): whether the <code>data</code> event should contain values. If set to <code>true</code> and <code>keys</code> set to <code>false</code> then <code>data</code> events will simply be values, rather than objects with a <code>value</code> property.</li>
+<li><code>limit</code> (number, default: <code>-1</code>): limit the number of results collected by this stream. This number represents a <em>maximum</em> number of results and may not be reached if you get to the end of the data first. A value of <code>-1</code> means there is no limit. When <code>reverse=true</code> the highest keys will be returned instead of the lowest keys.</li>
+<li><code>fillCache</code> (boolean, default: <code>false</code>): wheather LevelDB&#39;s LRU-cache should be filled with data read.</li>
+<li><code>keyEncoding</code> / <code>valueEncoding</code> (string): the encoding applied to each read piece of data.</li>
+</ul>
+<h2 id="createhistorystream-source">createHistoryStream: source</h2>
+<p>(hist) Fetch messages from a specific user, ordered by sequence numbers.</p>
+<pre><code class="lang-bash">hist {feedid} [seq] [live]
+hist --id {feedid} [--seq n] [--live]
+</code></pre>
+<pre><code class="lang-js">createHistoryStream(id, seq, live)
+createHistoryStream({ id:, seq:, live: })
+</code></pre>
+<p><code>createHistoryStream</code> and <code>createUserStream</code> serve the same purpose.
+<code>createHistoryStream</code> exists as a separate call because it provides fewer range parameters, which makes it safer for RPC between untrusted peers.</p>
+<ul>
+<li><code>id</code> (FeedID, required): The id of the feed to fetch.</li>
+<li><code>seq</code> (number, default: <code>0</code>): If <code>seq &gt; 0</code>, then only stream messages with sequence numbers greater than <code>seq</code>.</li>
+<li><code>live</code> (boolean, default: <code>false</code>): Keep the stream open and emit new messages as they are received.</li>
+</ul>
+<h2 id="createuserstream-source">createUserStream: source</h2>
+<p>Fetch messages from a specific user, ordered by sequence numbers.</p>
+<pre><code class="lang-bash">createUserStream --id {feedid} [--live] [--gt index] [--gte index] [--lt index] [--lte index] [--reverse]  [--keys] [--values] [--limit n]
+</code></pre>
+<pre><code class="lang-js">createUserStream({ id:, live:, gt:, gte:, lt:, lte:, reverse:, keys:, values:, limit:, fillCache:, keyEncoding:, valueEncoding: })
+</code></pre>
+<p><code>createHistoryStream</code> and <code>createUserStream</code> serve the same purpose.
+<code>createHistoryStream</code> exists as a separate call because it provides fewer range parameters, which makes it safer for RPC between untrusted peers.</p>
+<p>The range queries (gt, gte, lt, lte) filter against the sequence number.</p>
+<ul>
+<li><code>id</code> (FeedID, required): The id of the feed to fetch.</li>
+<li><code>live</code> (boolean, default: <code>false</code>): Keep the stream open and emit new messages as they are received.</li>
+<li><code>gt</code> (greater than), <code>gte</code> (greater than or equal) define the lower bound of the range to be streamed. Only records where the key is greater than (or equal to) this option will be included in the range. When <code>reverse=true</code> the order will be reversed, but the records streamed will be the same.</li>
+<li><code>lt</code> (less than), <code>lte</code> (less than or equal) define the higher bound of the range to be streamed. Only key/value pairs where the key is less than (or equal to) this option will be included in the range. When <code>reverse=true</code> the order will be reversed, but the records streamed will be the same.</li>
+<li><code>reverse</code> (boolean, default: <code>false</code>): a boolean, set true and the stream output will be reversed. Beware that due to the way LevelDB works, a reverse seek will be slower than a forward seek.</li>
+<li><code>keys</code> (boolean, default: <code>true</code>): whether the <code>data</code> event should contain keys. If set to <code>true</code> and <code>values</code> set to <code>false</code> then <code>data</code> events will simply be keys, rather than objects with a <code>key</code> property.</li>
+<li><code>values</code> (boolean, default: <code>true</code>): whether the <code>data</code> event should contain values. If set to <code>true</code> and <code>keys</code> set to <code>false</code> then <code>data</code> events will simply be values, rather than objects with a <code>value</code> property.</li>
+<li><code>limit</code> (number, default: <code>-1</code>): limit the number of results collected by this stream. This number represents a <em>maximum</em> number of results and may not be reached if you get to the end of the data first. A value of <code>-1</code> means there is no limit. When <code>reverse=true</code> the highest keys will be returned instead of the lowest keys.</li>
+<li><code>fillCache</code> (boolean, default: <code>false</code>): wheather LevelDB&#39;s LRU-cache should be filled with data read.</li>
+<li><code>keyEncoding</code> / <code>valueEncoding</code> (string): the encoding applied to each read piece of data.</li>
+</ul>
+<h2 id="links-source">links: source</h2>
+<p>Get a stream of messages, feeds, or blobs that are linked to/from an id.</p>
+<pre><code class="lang-bash">links [--source id|filter] [--dest id|filter] [--rel value] [--keys] [--values] [--live] [--reverse]
+</code></pre>
+<pre><code class="lang-js">links({ source:, dest:, rel:, keys:, values:, live:, reverse: })
+</code></pre>
+<p>The objects in this stream will be of the form:</p>
+<pre><code>{ source: ID, rel: String, dest: ID, key: MsgID }
+</code></pre><ul>
+<li><code>source</code> (string, optional): An id or filter, specifying where the link should originate from. To filter, just use the sigil of the type you want: <code>@</code> for feeds, <code>%</code> for messages, and <code>&amp;</code> for blobs.</li>
+<li><code>dest</code> (string, optional): An id or filter, specifying where the link should point to. To filter, just use the sigil of the type you want: <code>@</code> for feeds, <code>%</code> for messages, and <code>&amp;</code> for blobs.</li>
+<li><code>rel</code> (string, optional): Filters the links by the relation string.</li>
+<li><code>live</code> (boolean, default: <code>false</code>): Keep the stream open and emit new messages as they are received.</li>
+<li><code>reverse</code> (boolean, default: <code>false</code>): a boolean, set true and the stream output will be reversed. Beware that due to the way LevelDB works, a reverse seek will be slower than a forward seek.</li>
+<li><code>keys</code> (boolean, default: <code>true</code>): whether the <code>data</code> event should contain keys. If set to <code>true</code> and <code>values</code> set to <code>false</code> then <code>data</code> events will simply be keys, rather than objects with a <code>key</code> property.</li>
+<li><code>values</code> (boolean, default: <code>true</code>): whether the <code>data</code> event should contain values. If set to <code>true</code> and <code>keys</code> set to <code>false</code> then <code>data</code> events will simply be values, rather than objects with a <code>value</code> property.</li>
+</ul>
+<h2 id="relatedmessages-async">relatedMessages: async</h2>
+<p>Retrieve the tree of messages related to the given id.</p>
+<pre><code class="lang-bash">relatedMessages --id {msgid} [--rel value] [--count] [--parent]
+</code></pre>
+<pre><code class="lang-js">relatedMessages ({ id:, rel:, count:, parent: }, cb)
+</code></pre>
+<p>This is ideal for collecting things like threaded replies.
+The output is a recursive structure like this:</p>
+<pre><code class="lang-js">{
+  key: &lt;id&gt;,
+  value: &lt;msg&gt;,
+  related: [
+    &lt;recursive&gt;,...
+  ],
+  //number of messages below this point. (when opts.count = true)
+  count: &lt;int&gt;,
+  //the message this message links to. this will not appear on the bottom level.
+  //(when opts.parent = true)
+  parent: &lt;parent_id&gt;
+}
+</code></pre>
+<ul>
+<li><code>id</code> (MsgID): Root message, fetches messages related message to its ID.</li>
+<li><code>rel</code> (string, optional): Filters the links by the relation string.</li>
+<li><code>count</code> (boolean, default: <code>false</code>): Include a <code>count</code> of each message&#39;s decendant messages.</li>
+<li><code>parent</code> (boolean, default: <code>false</code>): Include the <code>parent</code> id of each message.</li>
+</ul>
+<h2 id="add-async">add: async</h2>
+<p>Add a well-formed message to the database.</p>
+<pre><code class="lang-bash">cat ./message.json | add
+add --author {feedid} --sequence {number} --previous {msgid} --timestamp {number} --hash sha256 --signature {sig} --content.type {type} --content.{...}
+</code></pre>
+<pre><code class="lang-js">add({ author:, sequence:, previous: timestamp:, hash: &#39;sha256&#39;, signature:, content: { type:, ... } }, cb)
+</code></pre>
+<ul>
+<li><code>author</code> (FeedID): Public key of the author of the message.</li>
+<li><code>sequence</code> (number): Sequence number of the message. (Starts from 1.)</li>
+<li><code>previous</code> (MsgID): Hash-id of the previous message in the feed (null for seq=1).</li>
+<li><code>timestamp</code> (number): Unix timestamp for the publish time.</li>
+<li><code>hash</code> (string): The hash algorithm used in the message, should always be <code>sha256</code>.</li>
+<li><code>signature</code> (string): A signature computed using the author pubkey and the content of the message (less the <code>signature</code> attribute).</li>
+<li><code>content</code> (object): The content of the message.<ul>
+<li><code>.type</code> (string): The object&#39;s type.</li>
+</ul>
+</li>
+</ul>
+<h2 id="publish-async">publish: async</h2>
+<p>Construct a message using sbot&#39;s current user, and add it to the DB.</p>
+<pre><code class="lang-bash">cat ./message-content.json | publish
+publish --type {string} [--other-attributes...]
+</code></pre>
+<pre><code class="lang-js">publish({ type:, ... }, cb)
+</code></pre>
+<p>This is the recommended method for publishing new messages, as it handles the tasks of correctly setting the message&#39;s timestamp, sequence number, previous-hash, and signature.</p>
+<ul>
+<li><code>content</code> (object): The content of the message.<ul>
+<li><code>.type</code> (string): The object&#39;s type.</li>
+</ul>
+</li>
+</ul>
+<h2 id="getaddress-sync">getAddress: sync</h2>
+<p>Get the address of the server.</p>
+<pre><code class="lang-bash">getAddress
+</code></pre>
+<pre><code class="lang-js">getAddress(cb)
+</code></pre>
+<h2 id="getlatest-async">getLatest: async</h2>
+<p>Get the latest message in the database by the given feedid.</p>
+<pre><code class="lang-bash">getLatest {feedid}
+</code></pre>
+<pre><code class="lang-js">getLatest(id, cb)
+</code></pre>
+<h2 id="latest-source">latest: source</h2>
+<p>Get the seq numbers of the latest messages of all users in the database.</p>
+<pre><code class="lang-bash">latest
+</code></pre>
+<pre><code class="lang-js">latest()
+</code></pre>
+<h2 id="latestsequence-async">latestSequence: async</h2>
+<p>Get the sequence and local timestamp of the last received message from
+a given <code>feedId</code>.</p>
+<pre><code class="lang-bash">latestSequence {feedId}
+</code></pre>
+<pre><code class="lang-js">latest({feedId})
+</code></pre>
+<h2 id="whoami-sync">whoami: sync</h2>
+<p>Get information about the current sbot user.</p>
+<pre><code class="lang-bash">whoami
+</code></pre>
+<pre><code class="lang-js">whoami(cb)
+</code></pre>
+<p>Outputs information in the following form:</p>
+<pre><code>{ id: FeedID }
+</code></pre>
+        </div>
+      </div>
+    </body>
+  </html>

@@ -1,0 +1,139 @@
+<html>
+    <head>
+    <title>Scuttlebot Invite Plugin - Documentation - SSBC</title>
+    <link rel="stylesheet" href="/normalize.css">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/atelier-forest-light.css">
+    <script src="/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  </head>
+    <body>
+      <div id="topnav">
+    <div id="topnav-inner">
+      <a class="topnav-item " href="/" title="Home">
+      Home<br><small>SSBC</small>
+    </a>
+      <a class="topnav-item " href="/patchwork" title="Patchwork">
+      Patchwork<br><small>Social App</small>
+    </a>
+      <a class="topnav-item " href="/scuttlebot" title="Scuttlebot">
+      Scuttlebot<br><small>P2P Log Store</small>
+    </a>
+      <a class="topnav-item selected" href="/docs" title="Documentation">
+      Documentation<br><small>APIs, Articles</small>
+    </a>
+    </div>
+  </div>
+      <div id="layout">
+        <div id="leftnav">
+      <div class="leftnav-item">API Documentation</div>
+      <div class="leftnav-subitems">
+        <div class="leftnav-item ">
+      <a href="/scuttlebot/api.html" title="scuttlebot">scuttlebot</a>
+    </div>
+        <div class="leftnav-indent">
+          <div class="leftnav-item ">
+      <a href="/scuttlebot/plugins/blobs.html" title="blobs">blobs</a>
+    </div>
+          <div class="leftnav-item ">
+      <a href="/scuttlebot/plugins/block.html" title="block">block</a>
+    </div>
+          <div class="leftnav-item ">
+      <a href="/scuttlebot/plugins/friends.html" title="friends">friends</a>
+    </div>
+          <div class="leftnav-item ">
+      <a href="/scuttlebot/plugins/gossip.html" title="gossip">gossip</a>
+    </div>
+          <div class="leftnav-item selected">
+      <a href="/scuttlebot/plugins/invite.html" title="invite">invite</a>
+    </div>
+          <div class="leftnav-item ">
+      <a href="/scuttlebot/plugins/private.html" title="private">private</a>
+    </div>
+          <div class="leftnav-item ">
+      <a href="/scuttlebot/plugins/replicate.html" title="replicate">replicate</a>
+    </div>
+        </div>
+        <div class="leftnav-item ">
+      <a href="/ssb-msgs" title="ssb-msgs">ssb-msgs</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/ssb-msg-schemas" title="ssb-msg-schemas">ssb-msg-schemas</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/ssb-ref" title="ssb-ref">ssb-ref</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/ssb-keys" title="ssb-keys">ssb-keys</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/ssb-config" title="ssb-config">ssb-config</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/secret-stack" title="secret-stack">secret-stack</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/muxrpc" title="muxrpc">muxrpc</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/docs/api/pull-stream.html" title="pull-stream">pull-stream</a>
+    </div>
+      </div>
+      <div class="leftnav-item">Articles</div>
+      <div class="leftnav-subitems">
+        <div class="leftnav-item ">
+      <a href="/docs/articles/design-challenge-avoid-centralization-and-singletons.html" title="Design Challenge: Avoiding Centralization and Singletons">Design Challenge: Avoiding Centralization and Singletons</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/docs/articles/design-challenge-sybil-attack.html" title="Design Challenge: Sybil Attacks">Design Challenge: Sybil Attacks</a>
+    </div>
+        <div class="leftnav-item ">
+      <a href="/docs/articles/using-trust-in-open-networks.html" title="Using Trust in Open Networks">Using Trust in Open Networks</a>
+    </div>
+      </div>
+    </div>
+        <div id="content">
+          <h1 id="scuttlebot-invite-plugin">scuttlebot invite plugin</h1>
+<p>Invite-token system, mainly used for pubs.</p>
+<h2 id="create-async">create: async</h2>
+<p>Create a new invite code.</p>
+<pre><code class="lang-bash">create {n}
+</code></pre>
+<pre><code class="lang-js">create(n, cb)
+</code></pre>
+<p>This produces an invite-code which encodes the sbot server&#39;s address, and a keypair seed.
+The keypair seed is used to generate a keypair, which is then used to authenticate a connection with the sbot server.
+The sbot server will then grant access to the <code>use</code> call.</p>
+<ul>
+<li><code>n</code> (number): How many times the invite can be used before it expires.</li>
+</ul>
+<h2 id="accept-async">accept: async</h2>
+<p>Use an invite code.</p>
+<pre><code class="lang-bash">accept {invitecode}
+</code></pre>
+<pre><code class="lang-js">accept(invitecode, cb)
+</code></pre>
+<p>This connects to the server address encoded in the invite-code, then calls <code>use()</code> on the server.
+It will cause the server to follow the local user.</p>
+<ul>
+<li>invitecode (string)</li>
+</ul>
+<h2 id="addme-async">addMe: async</h2>
+<p>Alias for accept.</p>
+<h2 id="use-async">use: async</h2>
+<p>Use an invite code created by this sbot instance (advanced function).</p>
+<pre><code class="lang-bash">use --feed {feedid}
+</code></pre>
+<pre><code class="lang-js">use({ feed: }, cb)
+</code></pre>
+<p>This commands the receiving server to follow the given feed.</p>
+<p>An invite-code encodes the sbot server&#39;s address, and a keypair seed.
+The keypair seed must be used to generate a keypair, then authenticate a connection with the sbot server, in order to use this function.</p>
+<ul>
+<li><code>feed</code> (feedid): The feed the server should follow.</li>
+</ul>
+
+        </div>
+      </div>
+    </body>
+  </html>
