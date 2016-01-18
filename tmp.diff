@@ -1,0 +1,36 @@
+diff --git a/plugins/blobs/replication.js b/plugins/blobs/replication.js
+index 9887957..e0032da 100644
+--- a/plugins/blobs/replication.js
++++ b/plugins/blobs/replication.js
+@@ -136,7 +136,8 @@ module.exports = function (sbot, opts, notify, quota) {
+     }
+ 
+     var remote = first(job.has, function (has, id) {
+-      return has && peer(id)
++      if (has)
++        return getPeer(id)
+     })
+ 
+     if(!remote) {
+@@ -152,16 +153,17 @@ module.exports = function (sbot, opts, notify, quota) {
+           job.cbs.forEach(function (cb) { if(cb) cb() })
+           return done() //success
+         }
+-        //if we didn't get the blob, put it back on the get or has queue.
+-        job.has.splice(i, 1)
+-        if(job.has.length) getQueue.push(job)
++        // remove the remote, it may be misbehaving
++        delete job.has[peer.id]
++        // put it back on the get or has queue
++        if(Object.keys(job.has).length) getQueue.push(job)
+         else hasQueue.push(job)
+         done()
+       })
+     )
+   })
+ 
+-  function peer(id) {
++  function getPeer(id) {
+     return sbot.peers[id] && sbot.peers[id][0]
+   }
+ 

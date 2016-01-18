@@ -1,0 +1,4 @@
+for i in {1..50}
+do
+    ./bin.js patchwork.getThreadSqlite %cGzs1DkGWe5HPKeybA8C+2OV/5mKsfT6ZAYiyHqGwwY=.sha256
+done
