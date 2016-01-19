@@ -43,6 +43,7 @@ function replicate(sbot, config, rpc, cb) {
     var sources = many()
     var sent = 0
     var to_send = {}, to_recv = {}
+    var initial = {}
     var replicated = {}
     var debounce = Debounce(100)
 
@@ -106,7 +107,7 @@ function replicate(sbot, config, rpc, cb) {
       }, 32),
       pull.drain(function (upto) {
         to_recv[upto.id] = upto.sequence
-        replicated[upto.id] = upto.sequence
+        initial[upto.id] = replicated[upto.id] = upto.sequence
 
         var limit = calcLimit(upto)
 
@@ -145,6 +146,10 @@ function replicate(sbot, config, rpc, cb) {
       sbot.createWriteStream(function (err) {
         aborter.abort()
         debounce.immediate()
+
+        // subtract initial from final so `replicated` represents a delta
+        for (var author in replicated)
+          replicated[author] -= (initial[author] || 0)
         cb(err, replicated)
       })
     )
@@ -173,7 +178,9 @@ module.exports = {
           sbot.emit('replicate:fail', err)
           sbot.emit('log:warning', ['replicate', rpc._sessid, 'error', err])
         } else {
-          sbot.emit('log:info', ['replicate', rpc._sessid, 'success', progress])
+          var progressSummary = summarizeProgress(progress)
+          if (progressSummary)
+            sbot.emit('log:info', ['replicate', rpc._sessid, 'success', progressSummary])
           sbot.emit('replicate:finish', progress)
         }
       })
@@ -185,5 +192,20 @@ module.exports = {
       }
     }
   }
+}
+
+function summarizeProgress (progress) {
+  // count the number of feeds updated, and the number of new messages
+  var updatedFeeds = 0, newMessages = 0
+  for (var author in progress) {
+    if (progress[author] > 0) {
+      updatedFeeds++
+      newMessages += progress[author]
+    }
+  }
+  // no message if no updates
+  if (updatedFeeds === 0)
+    return false
+  return 'Feeds updated: '+updatedFeeds+', New messages: '+newMessages
 }
 
