@@ -129,7 +129,7 @@ function replicate(sbot, config, rpc, cb) {
           debounce.set()
       }, function (err) {
         if(err)
-          sbot.emit('log:error', ['replication', rep._sessid, 'error', err])
+          sbot.emit('log:error', ['replication', rep.id, 'error', err])
         sources.cap()
       })
     )
@@ -171,16 +171,16 @@ module.exports = {
       //this is the cli client, just ignore.
       if(rpc.id === sbot.id) return
 
-      sbot.emit('log:info', ['replicate', rpc._sessid, 'start', rpc.id])
+      sbot.emit('log:info', ['replicate', rpc.id, 'start'])
       sbot.emit('replicate:start', rpc)
       replicate(sbot, config, rpc, function (err, progress) {
         if(err) {
           sbot.emit('replicate:fail', err)
-          sbot.emit('log:warning', ['replicate', rpc._sessid, 'error', err])
+          sbot.emit('log:warning', ['replicate', rpc.id, 'error', err])
         } else {
           var progressSummary = summarizeProgress(progress)
           if (progressSummary)
-            sbot.emit('log:info', ['replicate', rpc._sessid, 'success', progressSummary])
+            sbot.emit('log:info', ['replicate', rpc.id, 'success', progressSummary])
           sbot.emit('replicate:finish', progress)
         }
       })

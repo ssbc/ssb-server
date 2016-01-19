@@ -304,7 +304,7 @@ module.exports = {
           count = Math.max(count - 1, 0)
           //or how many failures there have been.
           p.connected = false
-          server.emit('log:info', ['SBOT', rpc._sessid, 'disconnect'])
+          server.emit('log:info', ['SBOT', rpc.id, 'disconnect'])
 
           var fail = !p.time || (p.time.attempt > p.time.connect)
 

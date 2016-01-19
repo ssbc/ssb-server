@@ -103,7 +103,7 @@ module.exports = {
             //this is not a big enough deal to fix though.
 
             codesDB.put(rpc.id, invite, function (err) {
-              server.emit('log:info', ['invite', rpc._sessid, 'use', req])
+              server.emit('log:info', ['invite', rpc.id, 'use', req])
 
               server.publish({
                 type: 'contact',
