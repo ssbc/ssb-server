@@ -290,7 +290,7 @@ module.exports = {
           p.connected = false
           p.failure = (p.failure || 0) + 1
           notify({ type: 'connect-failure', peer: p })
-          server.emit('log:info', ['SBOT', p.host+':'+p.port+p.key, 'connection failed', err])
+          server.emit('log:info', ['SBOT', p.host+':'+p.port+p.key, 'connection failed', err.message || err])
           schedule()
           return (cb && cb(err))
         }
