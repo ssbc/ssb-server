@@ -1,5 +1,13 @@
 var color = require('bash-color')
 
+var LOG_LEVELS = [
+  'error',
+  'warning',
+  'notice',
+  'info'
+]
+var DEFAULT_LEVEL = LOG_LEVELS.indexOf('notice')
+
 function indent (o) {
   return o.split('\n').map(function (e) {
     return '  ' + e
@@ -39,12 +47,24 @@ function formatter(id, level) {
   }
 }
 
-module.exports = function logging (server) {
+module.exports = function logging (server, conf) {
+  var level = conf.logging && conf.logging.level && LOG_LEVELS.indexOf(conf.logging.level) || DEFAULT_LEVEL
+  if (level === -1) {
+    console.log('Warning, logging.level configured to an invalid value:', conf.logging.level)
+    console.log('Should be one of:', LOG_LEVELS.join(', '))
+    level = DEFAULT_LEVEL
+  }
+  console.log('Log level:', LOG_LEVELS[level])
+
   var id = server.id
-  server.on('log:info',    formatter(id, color.green('info')))
-  server.on('log:notice',  formatter(id, color.blue('note')))
-  server.on('log:warning', formatter(id, color.yellow('warn')))
-  server.on('log:error',   formatter(id, color.red('err!')))
+  if (level >= LOG_LEVELS.indexOf('info'))
+    server.on('log:info',    formatter(id, color.green('info')))
+  if (level >= LOG_LEVELS.indexOf('notice'))
+    server.on('log:notice',  formatter(id, color.blue('note')))
+  if (level >= LOG_LEVELS.indexOf('warning'))
+    server.on('log:warning', formatter(id, color.yellow('warn')))
+  if (level >= LOG_LEVELS.indexOf('error'))
+    server.on('log:error',   formatter(id, color.red('err!')))
 }
 
 module.exports.init = module.exports
