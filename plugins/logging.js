@@ -42,6 +42,7 @@ function formatter(id, level) {
 module.exports = function logging (server) {
   var id = server.id
   server.on('log:info',    formatter(id, color.green('info')))
+  server.on('log:notice',  formatter(id, color.blue('note')))
   server.on('log:warning', formatter(id, color.yellow('warn')))
   server.on('log:error',   formatter(id, color.red('err!')))
 }
