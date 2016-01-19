@@ -61,7 +61,14 @@ require('ssb-client')(keys, {manifest: manifest,
   port: config.port, host: config.host||'localhost',
   key: keys.id
 }, function (err, rpc) {
-  if(err) throw err
+  if(err) {
+    if (/could not connect/.test(err.message)) {
+      console.log('Error: Could not connect to the scuttlebot server.')
+      console.log('Use the "server" command to start it.')
+      process.exit(1)
+    }
+    throw err
+  }
 
   // add aliases
   for (var k in cmdAliases) {

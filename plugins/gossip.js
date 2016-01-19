@@ -290,7 +290,7 @@ module.exports = {
           p.connected = false
           p.failure = (p.failure || 0) + 1
           notify({ type: 'connect-failure', peer: p })
-          server.emit('log:info', ['SBOT', p.host+':'+p.port+p.key, 'connection failed', err])
+          server.emit('log:info', ['SBOT', p.host+':'+p.port+p.key, 'connection failed', err.message || err])
           schedule()
           return (cb && cb(err))
         }
@@ -304,7 +304,7 @@ module.exports = {
           count = Math.max(count - 1, 0)
           //or how many failures there have been.
           p.connected = false
-          server.emit('log:info', ['SBOT', rpc._sessid, 'disconnect'])
+          server.emit('log:info', ['SBOT', rpc.id, 'disconnect'])
 
           var fail = !p.time || (p.time.attempt > p.time.connect)
 
