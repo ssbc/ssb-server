@@ -88,8 +88,30 @@ require('ssb-client')(keys, {manifest: manifest,
     cb()
   }
 
+  // HACK
+  // we need to output the hash of blobs that are added via blobs.add
+  // because muxrpc doesnt support the `sink` callback yet, we need this manual override:
+  if (process.argv[2] === 'blobs.add')
+    return blobsAddOverride(rpc)
+
   // run commandline flow
   muxrpcli(process.argv.slice(2), manifest, rpc)
 })
 
+// HACK helper
+// runs stdin through the hasher, then on to sbot for adding, then outputs the hash on success
+var createHash = require('multiblob/util').createHash
+function blobsAddOverride (rpc) {
+  var hasher = createHash('sha256')
+  pull(
+    toPull.source(process.stdin),
+    hasher,
+    rpc.blobs.add(function (err) {
+      if (err) 
+        throw err
+      console.log('&'+hasher.digest)
+      process.exit()
+    })
+  )
+}
 
