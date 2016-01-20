@@ -91,7 +91,7 @@ tape('a client can request a blob', function (t) {
             pull.collect(function (err, ary) {
               if(err) throw err
               var data = Buffer.concat(ary)
-              sbotA.close()
+              sbotA.close(true)
               t.equal('&'+ssbKeys.hash(data), hash)
               t.end()
             })
@@ -103,7 +103,6 @@ tape('a client can request a blob', function (t) {
 })
 
 tape('replicate blobs between 2 peers - explicit want request', function (t) {
-
   var hasher = createHash()
 
   var alice
@@ -133,8 +132,8 @@ tape('replicate blobs between 2 peers - explicit want request', function (t) {
           if(err) throw err
           t.ok(has)
           t.end()
-          sbotA.close()
-          sbotB.close()
+          sbotA.close(true)
+          sbotB.close(true)
           console.log('TEST ENDED')
         })
       })
@@ -192,7 +191,7 @@ tape('replicate published blobs between 2 peers', function (t) {
             bob.blobs.has(hash, function (err, okay) {
               t.ok(okay, 'file replicated:' + hash)
               t.end()
-              alice.close(); bob.close()
+              alice.close(true); bob.close(true)
             })
 
         })
@@ -205,5 +204,12 @@ tape('replicate published blobs between 2 peers', function (t) {
     })
   )
 })
+
+
+
+
+
+
+
 
 

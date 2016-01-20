@@ -119,7 +119,7 @@ tape('emit "has" event to let peer know you have blob now', function (t) {
         if(--count) throw new Error('blobs:got should only trigger once')
         console.log('BLOBS GOT', h)
         t.equal(h, hash)
-        alice.close(); bob.close()
+        alice.close(true); bob.close(true)
         t.end()
       })
 
@@ -181,7 +181,7 @@ tape('request missing blobs again after reconnect', function (t) {
       var has = 0, connects = 0
 
       alice.on('blobs:has', function (h) {
-        console.log('----HAS', h)
+        console.log('----HAS', h, has)
         t.equal(h, hash)
 
         if(has++ == 1) {
@@ -198,4 +198,6 @@ tape('request missing blobs again after reconnect', function (t) {
     })
   )
 })
+
+
 
