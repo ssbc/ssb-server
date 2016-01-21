@@ -107,10 +107,9 @@ tape('test blob quota api', function (t) {
 
     cont.para([
       alice.publish(u.file(h)),
-      bob.add(u.file(h)),
+      bob.add(u.file(h))
     ]) (function (err, msg) {
       if(err) throw err
-
       pull(
         pull.once(rand),
         alice.blobs.add(function (err, _hash) {
@@ -124,12 +123,87 @@ tape('test blob quota api', function (t) {
     })
   })
 
+  t.test('if over quota, do not download more', function (t) {
+    var rand = crypto.randomBytes(3*K)
+    var h = hash(rand)
+    var h2 = hash(crypto.randomBytes(1*K))
+
+    cont.para([
+      dan.add(u.file(h)),
+      dan.add(u.file(h2)),
+      function (cb) {
+        pull(pull.once(rand), alice.blobs.add(cb))
+      },
+    ]) (function (err, msg) {
+      console.log(err)
+      test(t, alice.blobs.quota(dan.id), {limit: 256, usage: 4*K, hops: 3})
+      t.end()
+    })
+  })
+
 
   t.test('cleanup', function (t) {
     alice.close(true); t.end()
   })
-  
 
 })
+
+// I used this test to get the blobs replicator to actually go into
+// overquota situation. There was a bug where it would go into a CPU
+// spin... but there isn't a good way to actually test that...
+// but i'll leave this code here just incase.
+
+tape('test actual overquota situation', function (t) {
+  var hasher = createHash()
+
+  var rand = crypto.randomBytes(3*K)
+  var h = hash(rand)
+  var h2 = hash(crypto.randomBytes(3*K))
+
+  var bob = create('bob', { limit: [-1, 1*K], minLimit: 256})
+  var carol = create('carol', { limit: [-1, 1*K], minLimit: 256})
+
+  cont.para([
+    carol.publish(u.file(h)),
+    carol.publish(u.file(h2)),
+  ]) (function (err) {
+    if(err) throw err
+    //copy bob's feed to alice. bob should be over quota now.
+    pull(
+      carol.createHistoryStream({id: carol.id, sequence: 0, keys: false}),
+      pull.through(console.log),
+      bob.createWriteStream(function (err, n) {
+        if(err) throw err
+        pull(bob.createLogStream(), pull.log())
+        pull(pull.once(rand), bob.blobs.add(function (err) {
+          if(err) throw err
+          var bq = bob.blobs.quota(carol.id)
+          t.ok(bq.limit < bq.usage)
+          bob.close(true); carol.close(true)
+          t.end()
+        }))
+      })
+    )
+  })
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

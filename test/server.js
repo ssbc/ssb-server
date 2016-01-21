@@ -26,18 +26,21 @@ tape('replicate between 3 peers', function (t) {
     temp: 'server-alice',
     port: 45451, timeout: 1400,
     keys: alice = ssbKeys.generate(),
+    level: 'info'
   })
   var dbB = createSbot({
     temp: 'server-bob',
     port: 45452, timeout: 1400,
     keys: bob = ssbKeys.generate(),
-    seeds: [dbA.getAddress()]
+    seeds: [dbA.getAddress()],
+    level: 'info'
   })
   var dbC = createSbot({
     temp: 'server-carol',
     port: 45453, timeout: 1400,
     keys: carol = ssbKeys.generate(),
-    seeds: [dbA.getAddress()]
+    seeds: [dbA.getAddress()],
+    level: 'info'
   })
 
   var apub = cont(dbA.publish)
@@ -63,14 +66,10 @@ tape('replicate between 3 peers', function (t) {
     var expected = {}
     expected[alice.id] = expected[bob.id] = expected[carol.id] = 3
 
-    pull(
-      dbA.replicate.changes(),
-      pull.drain(console.log)
-    )
-
     function check(server, name) {
       var closed = false
       return server.on('replicate:finish', function (actual) {
+        console.log(actual)
         if(deepEqual(expected, actual) && !closed) {
           closed = true
           done()
@@ -82,10 +81,6 @@ tape('replicate between 3 peers', function (t) {
     var serverB = check(dbB, 'BOB')
     var serverC = check(dbC, 'CAROL')
 
-    pull(serverA.gossip.changes(), pull.drain(function (e) { console.log('serverA event', e) }))
-    pull(serverB.gossip.changes(), pull.drain(function (e) { console.log('serverB event', e) }))
-    pull(serverC.gossip.changes(), pull.drain(function (e) { console.log('serverC event', e) }))
-
     var n = 2
 
     function done () {
@@ -96,4 +91,6 @@ tape('replicate between 3 peers', function (t) {
     }
   })
 })
+
+
 
