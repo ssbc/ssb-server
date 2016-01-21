@@ -183,7 +183,7 @@ module.exports = {
           var progressSummary = summarizeProgress(progress)
           if (progressSummary)
             sbot.emit('log:notice', ['replicate', rpc.id, 'success', progressSummary])
-          sbot.emit('replicate:finish', progress)
+          sbot.emit('replicate:finish', final)
         }
       })
     })
