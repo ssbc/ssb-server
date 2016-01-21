@@ -88,10 +88,22 @@ function replicate(sbot, config, rpc, cb) {
     var lastDB = sbot.sublevel('lst')
 
     pull(
-      sbot.friends.createFriendStream(opts),
+      cat([
+        sbot.friends.createFriendStream(opts),
+        //include new local peers
+        //so that you can put a name to someone on your local network.
+        pull.values(
+          sbot.gossip.peers()
+          .filter(function (e) { return e.source === 'local' })
+          .map(function (e) { return {id: e.key, hops: 6} })
+        )
+      ]),
       aborter,
-      pull.through(function (s) {
-        to_recv['string' === typeof s ? s  : s.id] = 0
+      pull.filter(function (s) {
+        //sometimes with local peers someone may be seen twice
+        //filter that out (and also keep track of what we expect to receive)
+        var id = 'string' === typeof s ? s  : s.id
+        if(to_recv[id] == null) { to_recv[id] = 0; return true }
       }),
       //lookup the latest message from a given peer.
       para(function (data, cb) {
@@ -210,6 +222,8 @@ function summarizeProgress (progress) {
     return false
   return 'Feeds updated: '+updatedFeeds+', New messages: '+newMessages
 }
+
+
 
 
 
