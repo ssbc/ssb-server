@@ -10,7 +10,8 @@ function isFunction (f) {
   return 'function' === typeof f
 }
 
-function Work(delay, n, label, fun) {
+function Work(avgWait, n, label, fun) {
+  n  = 1
   var doing = 0, timeout
 
   var timers = []
@@ -28,11 +29,13 @@ function Work(delay, n, label, fun) {
     }, d)
     timer.unref()
     timers.push(timer)
+
     return timer
   }
 
   function job () {
     // abort if already doing too many
+
     if(doing >= n) return
     doing++
 
@@ -45,13 +48,13 @@ function Work(delay, n, label, fun) {
       }
 
       // requeue after a delay
-      var wait = ~~(delay/2 + delay*Math.random())
+      var wait = ~~(avgWait/2 + avgWait*Math.random())
       delay(job, wait)
     })
   }
 
   job.abort = function () {
-    timers.forEach(function (timer) { clearTimeout(timer) })
+    timers.forEach(clear)
   }
 
   return job
@@ -78,9 +81,6 @@ function max (jobs, test) {
 module.exports = function (work) {
 
   var jobs = []
-
-  function pull (index) {
-  }
 
   var queue = {
     push: function (job) {
@@ -118,3 +118,10 @@ module.exports = function (work) {
 
   return queue
 }
+
+
+
+
+
+
+

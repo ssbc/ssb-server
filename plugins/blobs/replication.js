@@ -101,6 +101,7 @@ module.exports = function (sbot, opts, notify, quota) {
     if(!hasPeers()) return done()
 
     var job = hasQueue.pull(filter)
+
     if(!job || job.done) return done()
 
     var n = 0, found = false
@@ -207,3 +208,7 @@ module.exports = function (sbot, opts, notify, quota) {
     }
   }
 }
+
+
+
+
