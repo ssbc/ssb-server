@@ -147,10 +147,7 @@ function replicate(sbot, config, rpc, cb) {
         aborter.abort()
         debounce.immediate()
 
-        // subtract initial from final so `replicated` represents a delta
-        for (var author in replicated)
-          replicated[author] -= (initial[author] || 0)
-        cb(err, replicated)
+        cb(err, replicated, initial)
       })
     )
 }
@@ -173,11 +170,16 @@ module.exports = {
 
       sbot.emit('log:info', ['replicate', rpc.id, 'start'])
       sbot.emit('replicate:start', rpc)
-      replicate(sbot, config, rpc, function (err, progress) {
+      replicate(sbot, config, rpc, function (err, final, initial) {
         if(err) {
           sbot.emit('replicate:fail', err)
           sbot.emit('log:warning', ['replicate', rpc.id, 'error', err])
         } else {
+          var progress = {}
+          // subtract `initial` from `final` so `progress` represents a delta
+          for (var author in final)
+            progress[author] = final[author] - (initial[author] || 0)
+
           var progressSummary = summarizeProgress(progress)
           if (progressSummary)
             sbot.emit('log:notice', ['replicate', rpc.id, 'success', progressSummary])
@@ -208,4 +210,6 @@ function summarizeProgress (progress) {
     return false
   return 'Feeds updated: '+updatedFeeds+', New messages: '+newMessages
 }
+
+
 
