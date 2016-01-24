@@ -15,7 +15,7 @@
     "graphmitter": "^1.6.3",
     "ip": "^0.3.3",
     "ip-regex": "^1.0.3",
-    "is-valid-domain": "0.0.1",
+    "is-valid-domain": "0.0.2",
     "level-memview": "~0.0.0",
     "map-merge": "~1.1.0",
     "mdmanifest": "^1.0.4",
