@@ -42,7 +42,7 @@ Peers : [{
   announcers: [ID+], // append only set.
                      // (unique members, only adds to end),
                      // could change for {id: true}
-  type: 'pub'|'manual'|'local'
+  source: 'pub'|'manual'|'local'
 }]
 */
 
@@ -116,6 +116,7 @@ module.exports = {
         })
         if(!f) {
           // new peer
+          addr.source = source
           peers.push(addr)
           notify({ type: 'discover', peer: addr, source: source || 'manual' })
           return true
