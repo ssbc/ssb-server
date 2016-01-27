@@ -58,7 +58,7 @@
   },
   "devDependencies": {
     "cat-names": "~1.0.2",
-    "deep-equal": "~0.2.1",
+    "deep-equal": "~1.0.0",
     "dog-names": "~1.0.2",
     "level-sublevel": "~6.3.15",
     "level-test": "^2.0.1",
