@@ -87,18 +87,19 @@ function replicate(sbot, config, rpc, cb) {
 
     var lastDB = sbot.sublevel('lst')
 
+    var userSources = [sbot.friends.createFriendStream(opts)]
+    if (sbot.gossip) {
+      // if we have the gossip plugin active, then include new local peers
+      // so that you can put a name to someone on your local network.
+      userSources.unshift(pull.values(
+        sbot.gossip.peers()
+        .filter(function (e) { return e.source === 'local' })
+        .map(function (e) { return {id: e.key, hops: 6} })
+      ))
+    }
+
     pull(
-      cat([
-        //include new local peers
-        //so that you can put a name to someone on your local network.
-        pull.values(
-          sbot.gossip.peers()
-          .filter(function (e) { return e.source === 'local' })
-          .map(function (e) { return {id: e.key, hops: 6} })
-        ),
-        // include the user's contacts
-        sbot.friends.createFriendStream(opts)
-      ]),
+      cat(userSources),
       aborter,
       pull.filter(function (s) {
         //filter out duplicates, and also keep track of what we expect to receive
