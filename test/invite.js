@@ -19,7 +19,7 @@ tape('test invite api', function (t) {
   var aliceKeys = ssbKeys.generate()
 
   var alice = createSbot({
-    temp: 'test-invite-alice', timeout: 200,
+    temp: 'test-invite-alice', timeout: 1000,
     allowPrivate: true,
     keys: aliceKeys
   })
@@ -150,7 +150,7 @@ tape('test invite.accept doesnt follow if already followed', function (t) {
               autofollow: true,
               following: true,
             }, ary[0].value.content)
-            
+
 
             bob.invite.accept(invite, function (err) {
               t.ok(err)

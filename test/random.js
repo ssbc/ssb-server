@@ -114,7 +114,7 @@ tape('replicate social network for animals', function (t) {
 
   var animalNetwork = createSbot({
     temp: 'test-random-animals',
-    port: 45451, host: 'localhost', timeout: 2001,
+    port: 45451, host: 'localhost', timeout: 20001,
     replication: {hops: 3}, keys: alice
   })
 
@@ -131,7 +131,7 @@ tape('replicate social network for animals', function (t) {
       var start = Date.now()
       var animalFriends = createSbot({
         temp: 'test-random-animals2',
-        port: 45452, host: 'localhost', timeout: 2001,
+        port: 45452, host: 'localhost', timeout: 20001,
         replication: {hops: 3},
         progress: true,
         seeds: [animalNetwork.getAddress()],
