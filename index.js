@@ -11,6 +11,7 @@ var fs         = require('fs')
 var cmdAliases = require('./lib/cli-cmd-aliases')
 var valid      = require('./lib/validators')
 var apidocs    = require('./lib/apidocs.js')
+var plugins    = require('./lib/plugins')
 
 function toBuffer(base64) {
   return new Buffer(base64.substring(0, base64.indexOf('.')), 'base64')
@@ -81,6 +82,10 @@ var SSB = {
 
     if(!opts.path)
       throw new Error('opts.path *must* be provided, or use opts.temp=sname to create a test instance')
+
+    // DEBUG load test plugins
+    var p = plugins.spawn(path.join(__dirname, 'plugins/hello-world.js'), { ping: 'async' })
+    p.ipcApi.ping(function (err, ret) { console.log('ping -', err, ret) })
 
     var ssb = create(path.join(opts.path, 'db'), null, opts.keys)
     var feed = ssb.createFeed(opts.keys)
