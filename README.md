@@ -54,7 +54,7 @@ ssbClient(function (err, sbot) {
 
   // stream all messages in all feeds, ordered by publish time
   pull(
-    ssb.createFeedStream(),
+    sbot.createFeedStream(),
     pull.collect(function (err, msgs) {
       // msgs[0].key == hash(msgs[0].value)
       // msgs[0].value...
@@ -63,7 +63,7 @@ ssbClient(function (err, sbot) {
 
   // stream all messages in all feeds, ordered by receive time
   pull(
-    ssb.createLogStream(),
+    sbot.createLogStream(),
     pull.collect(function (err, msgs) {
       // msgs[0].key == hash(msgs[0].value)
       // msgs[0].value...
@@ -72,7 +72,7 @@ ssbClient(function (err, sbot) {
 
   // stream all messages by one feed, ordered by sequence number
   pull(
-    ssb.createHistoryStream(feedId),
+    sbot.createHistoryStream(feedId),
     pull.collect(function (err, msgs) {
       // msgs[0].key == hash(msgs[0].value)
       // msgs[0].value...
