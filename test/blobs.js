@@ -125,9 +125,10 @@ tape('replicate blobs between 2 peers - explicit want request', function (t) {
 
       var hash = hasher.digest
       console.log('added:', hash)
-      sbotB.blobs.want(hash, function (err) {
+      sbotB.blobs.want(hash, function (err, has) {
         console.log('got:', hash)
         if(err) throw err
+        t.ok(has)
         sbotB.blobs.has(hash, function (err, has) {
           if(err) throw err
           t.ok(has)
