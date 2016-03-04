@@ -151,7 +151,7 @@ module.exports = function (sbot, opts, notify, quota) {
       sbot.blobs.add(job.id, function (err) {
         if(!err) {
           delete jobs[job.id]
-          job.cbs.forEach(function (cb) { if(cb) cb() })
+          job.cbs.forEach(function (cb) { if(cb) cb(null, true) })
           return done() //success
         }
         // remove the remote, it may be misbehaving
