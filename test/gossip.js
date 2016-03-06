@@ -52,7 +52,7 @@ tape('gossip: errors on invalid peers', function (t) {
   console.log(pk)
 
   t.throws(function () {
-    sbot.gossip.add({host: '10.0.0.', port: 1234, key: pk})
+    sbot.gossip.add({host: 5, port: 1234, key: pk})
   })
 
   t.throws(function () {
