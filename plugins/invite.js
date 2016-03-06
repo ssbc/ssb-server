@@ -46,7 +46,7 @@ module.exports = {
       })
     })
 
-    return {
+    var invite_plugin = {
       create: valid.async(function (n, cb) {
         var addr = server.getAddress()
         var host = u.toAddress(addr).host
@@ -117,7 +117,7 @@ module.exports = {
         })
       }, 'object'),
       addMe: valid.async(function (invite, cb) {
-        return this.accept(invite, cb)
+        return invite_plugin.accept(invite, cb)
       }, 'string'),
       accept: valid.async(function (invite, cb) {
         var parts = invite.split('~')
@@ -148,6 +148,7 @@ module.exports = {
         })
       }, 'string')
     }
+    return invite_plugin
   }
 }
 
