@@ -69,6 +69,7 @@ function replicate(sbot, config, rpc, cb) {
     })
 
     rpc.on('call:createHistoryStream', function (opts) {
+      //console.log(opts)
       to_send[opts.id] = (opts.sequence || opts.seq) - 1
       debounce.set()
     })
@@ -122,7 +123,7 @@ function replicate(sbot, config, rpc, cb) {
         to_recv[upto.id] = upto.sequence
         initial[upto.id] = replicated[upto.id] = upto.sequence
 
-        var limit = calcLimit(upto)
+        var limit = config.party ? null : calcLimit(upto)
 
         sources.add(
           pull(
@@ -223,6 +224,7 @@ function summarizeProgress (progress) {
     return false
   return 'Feeds updated: '+updatedFeeds+', New messages: '+newMessages
 }
+
 
 
 

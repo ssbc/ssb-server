@@ -73,6 +73,7 @@ module.exports = function (sbot, opts, notify, quota) {
   }
 
   function limitFor(id) {
+    if(opts.party) return -1
     var h = hops(id)
     if(hops === -1) return conf.minLimit
     return conf.limit[h] || conf.minLimit
