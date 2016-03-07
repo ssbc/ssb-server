@@ -85,6 +85,11 @@ tape('test invite.accept api', function (t) {
     keys: ssbKeys.generate()
   })
 
+  var carol = createSbot({
+    temp: 'test-invite-carol2', timeout: 100,
+    keys: ssbKeys.generate()
+  })
+
   //request a secret that with particular permissions.
 
   alice.invite.create(1, function (err, invite) {
@@ -96,9 +101,17 @@ tape('test invite.accept api', function (t) {
       }, function (err, hops) {
         if(err) throw err
         t.equal(hops[bob.id], 1, 'alice follows bob')
-        alice.close(true)
-        bob.close(true)
-        t.end()
+        carol.invite.accept(invite, function (err) {
+          alice.friends.hops({
+            source: alice.id, dest: bob.id
+          }, function (err, hops) {
+            t.equal(hops[carol.id], undefined)
+            alice.close(true)
+            bob.close(true)
+            carol.close(true)
+            t.end()
+          })
+        })
       })
     })
   })
@@ -204,3 +217,4 @@ tape('test invite.accept api with ipv6', function (t) {
   })
 
 })
+

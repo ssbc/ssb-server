@@ -125,9 +125,10 @@ tape('replicate blobs between 2 peers - explicit want request', function (t) {
 
       var hash = hasher.digest
       console.log('added:', hash)
-      sbotB.blobs.want(hash, function (err) {
+      sbotB.blobs.want(hash, function (err, has) {
         console.log('got:', hash)
         if(err) throw err
+        t.ok(has)
         sbotB.blobs.has(hash, function (err, has) {
           if(err) throw err
           t.ok(has)
@@ -201,6 +202,37 @@ tape('replicate published blobs between 2 peers', function (t) {
       // bob should request the blob,
       // and then emit this event.
 
+    })
+  )
+})
+
+tape('blob add resolves blob want', function (t) {
+  var sbot = createSbot({
+    temp: 'test-blobs-foo', timeout: 1000,
+    keys: ssbKeys.generate()
+  })
+
+  var hasher = createHash()
+  pull(
+    read(path.join(__filename)),
+    hasher,
+    pull.drain(null, function (err) {
+      t.error(err, 'read file hash')
+      var hash = hasher.digest
+
+      sbot.blobs.want(hash, function (err) {
+        t.error(err, 'blob want')
+        t.end()
+        sbot.close(true)
+      })
+
+      pull(
+        read(path.join(__filename)),
+        sbot.blobs.add(hash, function (err, _hash) {
+          t.error(err, 'blob add')
+          t.equal(_hash, hash, 'added the wanted blob')
+        })
+      )
     })
   )
 })

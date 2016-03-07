@@ -1,7 +1,7 @@
 {
   "name": "scuttlebot",
   "description": "A bot-server for the phoenix network",
-  "version": "7.5.2",
+  "version": "7.6.2",
   "homepage": "https://github.com/pfraze/scuttlebot",
   "repository": {
     "type": "git",
@@ -43,12 +43,12 @@
     "pull-stream-to-stream": "~1.3.0",
     "pull-stringify": "~1.2.2",
     "rimraf": "^2.4.2",
-    "secret-stack": "^2.0.5",
+    "secret-stack": "^2.3.0",
     "secure-scuttlebutt": "^15.0.0",
     "ssb-client": "^3.0.0",
     "ssb-config": "~1.1.0",
     "ssb-feed": "~2.0.0",
-    "ssb-keys": "^4.0.3",
+    "ssb-keys": "^5.0.0",
     "ssb-msgs": "~5.0.0",
     "ssb-ref": "^2.0.0",
     "stream-to-pull-stream": "~1.6.5",
