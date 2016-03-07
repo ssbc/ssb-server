@@ -39,13 +39,6 @@ This connects to the server address encoded in the invite-code, then calls `use(
 It will cause the server to follow the local user.
 
  - invitecode (string)
- 
-
-
-## addMe: async
-
-Alias for accept.
-
 
 
 ## use: async
@@ -66,3 +59,4 @@ An invite-code encodes the sbot server's address, and a keypair seed.
 The keypair seed must be used to generate a keypair, then authenticate a connection with the sbot server, in order to use this function.
 
  - `feed` (feedid): The feed the server should follow.
+

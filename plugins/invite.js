@@ -116,9 +116,6 @@ module.exports = {
           })
         })
       }, 'object'),
-      addMe: valid.async(function (invite, cb) {
-        return this.accept(invite, cb)
-      }, 'string'),
       accept: valid.async(function (invite, cb) {
         var parts = invite.split('~')
         var addr = toAddress(parts[0])
@@ -150,4 +147,6 @@ module.exports = {
     }
   }
 }
+
+
 
