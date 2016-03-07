@@ -31,6 +31,10 @@ function toArray (s) {
   return s != null ? (Array.isArray(s) ? s : [s]) : []
 }
 
+function isFunction (f) {
+  return 'function' === typeof f
+}
+
 var MB = 1024*1024
 //default replication limits.
 var defaults = {limit: [-1, 100*MB, 20*MB], minLimit: 5*MB}
@@ -60,6 +64,21 @@ module.exports = function (sbot, opts, notify, quota) {
       cbs: cb ? [cb] : [], done: false
     })
   }
+
+  function finishJob(job) {
+    if(!job) return
+    delete jobs[job.id]
+    while(job.cbs && job.cbs.length) {
+      var cb = job.cbs.shift()
+      if(isFunction(cb)) cb()
+    }
+  }
+
+  //if want is called and then it's locally added,
+  //handle that by calling back want.
+  pull(notify.listen(), pull.drain(function (hash) {
+    finishJob(hasQueue.pull(hash) || getQueue.pull(hash))
+  }))
 
   function hasPeers () {
     return Object.keys(sbot.peers).length !== 0
@@ -150,8 +169,7 @@ module.exports = function (sbot, opts, notify, quota) {
       //only accept blobs that have the correct size.
       sbot.blobs.add(job.id, function (err) {
         if(!err) {
-          delete jobs[job.id]
-          job.cbs.forEach(function (cb) { if(cb) cb() })
+          finishJob(job)
           return done() //success
         }
         // remove the remote, it may be misbehaving
@@ -208,7 +226,4 @@ module.exports = function (sbot, opts, notify, quota) {
     }
   }
 }
-
-
-
 
