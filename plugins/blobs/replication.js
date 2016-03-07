@@ -70,7 +70,7 @@ module.exports = function (sbot, opts, notify, quota) {
     delete jobs[job.id]
     while(job.cbs && job.cbs.length) {
       var cb = job.cbs.shift()
-      if(isFunction(cb)) cb()
+      if(isFunction(cb)) cb(null, true)
     }
   }
 
