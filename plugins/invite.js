@@ -96,7 +96,7 @@ module.exports = {
 
             //never allow this to be used again
             if(invite.used >= invite.total)
-              invite.permissions = {allow: [], deny: true}
+              invite.permissions = {allow: [], deny: null}
 
             //okay so there is a small race condition here
             //if people use a code massively in parallel
