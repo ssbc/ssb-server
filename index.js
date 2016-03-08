@@ -82,7 +82,7 @@ var SSB = {
     if(!opts.path)
       throw new Error('opts.path *must* be provided, or use opts.temp=sname to create a test instance')
 
-    var ssb = create(path.join(opts.path, 'db'), null, opts.keys)
+    var ssb = create(dbPath, null, opts.keys)
     var feed = ssb.createFeed(opts.keys)
     return {
       id                       : feed.id,
@@ -92,7 +92,7 @@ var SSB = {
 
       publish                  : valid.async(feed.add, 'string|msgContent'),
       add                      : valid.async(ssb.add, 'msg'),
-      get                      : valid.async(ssb.get, 'msgId'),
+      get                      : valid.async(ssb.get, 'msgId|number'),
 
       pre                      : ssb.pre,
       post                     : ssb.post,
