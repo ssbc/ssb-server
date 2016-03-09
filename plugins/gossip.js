@@ -34,6 +34,7 @@ function createSchedule (min, max, job, server) {
   server.once('close', function () { clearTimeout(sched) })
   return function schedule () {
     if(server.closed) return
+    console.log('SCHED')
     sched = setTimeout(job, min + (Math.random()*max))
     return schedule
   }
@@ -47,12 +48,9 @@ Peers : [{
   port: int,
   time: {
     connect: ts,
-    attempt: ts
   },
-  failure: int
-  announcers: [ID+], // append only set.
-                     // (unique members, only adds to end),
-                     // could change for {id: true}
+  //to be backwards compatible with patchwork...
+  announcers: {length: int}
   source: 'pub'|'manual'|'local'
 }]
 */
@@ -68,7 +66,7 @@ module.exports = {
 
     //Known Peers
 
-    var peers = []
+    var peers = [], maxConnections = conf.connections || 2
 
     function getPeer(id) {
       return u.find(peers, function (e) {
@@ -169,36 +167,31 @@ module.exports = {
       if (peer) {
         console.log('connect', peer.host, peer.port, rpc.id)
 
-        peer.id = rpc.id
         peer.connected = true
-        peer.time = peer.time || {}
-        peer.time.connect = Date.now()
-        count ++
+        peer.time = {connect: Date.now()}
         notify({ type: 'connect', peer: peer })
         rpc.on('closed', function () {
           //track whether we have successfully connected.
-          count--
           //or how many failures there have been.
           peer.connected = false
           notify({ type: 'disconnect', peer: peer })
           server.emit('log:info', ['SBOT', rpc.id, 'disconnect'])
 
-          if(count < conf.connections) schedule()
+          if(count() < maxConnections) schedule()
         })
       }
     })
 
     function immediate () {
       if(server.closed) return
-      if(count < (conf.connections || 2)) schedule()
-      var p = choosePeer(); p && connect(p, function () {})
+      connect(choosePeer(), function () {})
     }
 
     var schedule = createSchedule(
       1e3, config.timeout || 2e3, immediate, server
     )
 
-    var n = (config.connections || 2)
+    var n = maxConnections
     while(n--) schedule()
 
     // watch for machine sleeps, and syncAll if just waking up
@@ -207,10 +200,15 @@ module.exports = {
       immediate()
     })
 
-    var count = 0
+    function count () {
+      return peers.reduce(function (acc, peer) {
+        return acc + (peer.connected || peer.connecting)&1
+      }, 0)
+    }
 
     //select a random peer that we are not currently connect{ed,ing} to
     function choosePeer () {
+      if(count() > maxConnections) return
       return rand(peers.filter(function (e) {
         //if we are offline, we can still connect to localhost.
         //without this, the tests will fail.
@@ -222,6 +220,7 @@ module.exports = {
     }
 
     function connect (p, cb) {
+      if(!p) return cb()
       p.time = p.time || {}
       if (!p.time.connect)
         p.time.connect = 0
