@@ -29,6 +29,17 @@ function isOffline () {
   return lo.length === 1 && lo[0] === 'lo'
 }
 
+function createSchedule (min, max, job, server) {
+  var sched
+  server.once('close', function () { clearTimeout(sched) })
+  return function schedule () {
+    if(server.closed) return
+    sched = setTimeout(job, min + (Math.random()*max))
+    return schedule
+  }
+}
+
+
 /*
 Peers : [{
   key: id,
@@ -55,17 +66,13 @@ module.exports = {
     var conf = config.gossip || {}
     var home = u.toAddress(server.getAddress())
 
-    // Peer Table
-    // ==========
+    //Known Peers
 
-    //current list of known peers.
     var peers = []
-    // ordered list of peers to sync with once at startup
-    var init_synclist = []
 
     function getPeer(id) {
-      return u.find(peers.filter(Boolean), function (e) {
-        return e.key === id
+      return u.find(peers, function (e) {
+        return e && e.key === id
       })
     }
 
@@ -103,7 +110,7 @@ module.exports = {
         if(!u.isAddress(addr))
           throw new Error('not a valid address:' + JSON.stringify(addr))
         // check that this is a valid address, and not pointing at self.
-        
+
         if(addr.key === home.key) return
         if(addr.host === home.host && addr.port === home.port) return
 
@@ -123,35 +130,13 @@ module.exports = {
         } else {
           // existing pub, update the announcers list
           if (!f.announcers)
-            f.announcers = addr.announcers || []
-          else if(addr.announcers && addr.announcers[0])
-            add(f.announcers, addr.announcers[0])
+            f.announcers = {length: 1}
+          else if(f.source != 'local') //don't count local over and over
+            f.announcers.length ++
           return false
         }
       }, 'string|object', 'string?')
     }
-
-    // TODO: Move this to another plugin.
-    // not really about gossip.
-    // track connection-state in peertable
-    // :TODO: need to update on rpc.on('closed') ?
-    server.on('rpc:connect', function (rpc) {
-      //************************************
-      //TODO. DISTINGUISH CLIENT CONNECTIONS.
-
-      var peer = getPeer(rpc.id)
-
-      if (peer) {
-        peer.id = rpc.id
-        peer.connected = true
-
-        notify({ type: 'connect', peer: peer })
-        rpc.on('closed', function () {
-          peer.connected = false
-          notify({ type: 'disconnect', peer: peer })
-        })
-      }
-    })
 
     // populate peertable with configured seeds (mainly used in testing)
     var seeds = config.seeds
@@ -161,47 +146,47 @@ module.exports = {
     // populate peertable with pub announcements on the feed
     pull(
       server.messagesByType({
-        type: 'pub', live: true, keys: false, onSync: onFeedSync
+        type: 'pub', live: true, keys: false
       }),
       pull.drain(function (msg) {
         if(!msg.content.address) return
         var addr = toAddress(msg.content.address)
-        addr.announcers = [msg.author] // track who has announced this pub addr
+        //addr.announcers = [msg.author] // track who has announced this pub addr
         gossip.add(addr, 'pub')
       })
     )
-
-    function onFeedSync () {
-      // create the initial synclist, ordered by # of announcers
-      init_synclist = peers.slice()
-      init_synclist.sort(function (a, b) {
-        var al = (a.announcers) ? a.announcers.length : 5
-        var bl = (b.announcers) ? b.announcers.length : 5
-        return bl - al
-      })
-      init_synclist = init_synclist.slice(0, 50) // limit to top 50
-      // kick off a connection
-      immediate()
-    }
 
     // populate peertable with announcements on the LAN multicast
     server.on('local', function (_peer) {
       gossip.add(_peer, 'local')
     })
 
-    function createSchedule (min, max, job) {
-      var sched
-      server.once('close', function () { clearTimeout(sched) })
-      return function schedule () {
-        if(server.closed) return
-        sched = setTimeout(job, min + (Math.random()*max))
-        return schedule
-      }
-    }
+    //get current state
 
-    // Gossip
-    // ======
-    // create a new connection every so often.
+    server.on('rpc:connect', function (rpc) {
+      var peer = getPeer(rpc.id)
+
+      if (peer) {
+        console.log('connect', peer.host, peer.port, rpc.id)
+
+        peer.id = rpc.id
+        peer.connected = true
+        peer.time = peer.time || {}
+        peer.time.connect = Date.now()
+        count ++
+        notify({ type: 'connect', peer: peer })
+        rpc.on('closed', function () {
+          //track whether we have successfully connected.
+          count--
+          //or how many failures there have been.
+          peer.connected = false
+          notify({ type: 'disconnect', peer: peer })
+          server.emit('log:info', ['SBOT', rpc.id, 'disconnect'])
+
+          if(count < conf.connections) schedule()
+        })
+      }
+    })
 
     function immediate () {
       if(server.closed) return
@@ -209,74 +194,34 @@ module.exports = {
       var p = choosePeer(); p && connect(p, function () {})
     }
 
-    var schedule = createSchedule(1e3, config.timeout || 2e3, immediate)()
+    var schedule = createSchedule(
+      1e3, config.timeout || 2e3, immediate, server
+    )
 
-    // sync with all pubs immediately
-    function syncAll () {
-      peers.forEach(function (p) {
-        connect(p, function(){})
-      })
-    }
+    var n = (config.connections || 2)
+    while(n--) schedule()
 
     // watch for machine sleeps, and syncAll if just waking up
     onWakeup(function () {
-      console.log('Device sleep detected, triggering pub sync')
-      syncAll()
+      console.log('Device wakeup detected, triggering pub sync')
+      immediate()
     })
-
-  /*
-    ideas:
-
-      if long time since replicated then priority = high
-      if syncing_complete and contacted_all_pubs then rereplicate
-      if popular_pub and long_time_sincethen priority=high
-      if posted_recently > connected_recently then priority=high
-      if failed_recently then priority=low
-
-  */
 
     var count = 0
 
+    //select a random peer that we are not currently connect{ed,ing} to
     function choosePeer () {
-      var offline = isOffline()
-      //this needs to be handled differently.
-      //if we are offline (only loopback)
-      //then don't bother connecting.
-      //also, detect when wifi network changes
-      //(say, your private ip address changes)
-      if(init_synclist.length) return init_synclist.shift()
-
-
-      // connect to this random peer
-      // choice is weighted...
-      // - decrease odds due to failures
-      // - increase odds due to multiple announcements
-      // - if no announcements, it came from config seed or LAN, so given a higher-than-avg weight
-
-      // for seeds and peers (with no failures, lim will be 0.75)
-      var default_a = 5
-      var p = rand(peers.filter(function (e) {
-
-        //if we are not online, only connect to loopback
-        //addresses (needed so tests will still work)
-
-        if(offline && (!ip.isLoopback(e.host) && e.host !== 'localhost'))
+      return rand(peers.filter(function (e) {
+        //if we are offline, we can still connect to localhost.
+        //without this, the tests will fail.
+        if(isOffline() && (!ip.isLoopback(e.host) && e.host !== 'localhost'))
           return false
 
-        var a = Math.min((e.announcers) ? e.announcers.length : default_a, 10) // cap at 10
-        var f = e.failure || 0
-        var lim = (a+10)/((f+1)*20)
-        // this function increases linearly from 0.5 to 1 with # of announcements
-        // ..and decreases by inversely with # of failures
-        return !(e.connected || e.connecting)  && (Math.random() < lim)
+        return !(e.connected || e.connecting)
       }))
-
-      return p
-
     }
 
     function connect (p, cb) {
-      count ++
       p.time = p.time || {}
       if (!p.time.connect)
         p.time.connect = 0
@@ -284,10 +229,8 @@ module.exports = {
       p.connecting = true
       p.connected = false
       server.connect(p, function (err, rpc) {
-        p.connected = true
         p.connecting = false
         if (err) {
-          count = Math.max(count - 1, 0)
           p.connected = false
           p.failure = (p.failure || 0) + 1
           notify({ type: 'connect-failure', peer: p })
@@ -295,27 +238,6 @@ module.exports = {
           schedule()
           return (cb && cb(err))
         }
-
-        p.id = rpc.id
-        p.time = p.time || {}
-        p.time.connect = Date.now()
-
-        rpc.on('closed', function () {
-          //track whether we have successfully connected.
-          count = Math.max(count - 1, 0)
-          //or how many failures there have been.
-          p.connected = false
-          server.emit('log:info', ['SBOT', rpc.id, 'disconnect'])
-
-          var fail = !p.time || (p.time.attempt > p.time.connect)
-
-          if(fail) p.failure = (p.failure || 0) + 1
-          else     p.failure = 0
-
-          schedule()
-
-          // :TODO: delete local peers if failure > N
-        })
         cb && cb(null, rpc)
       })
     }
@@ -323,3 +245,4 @@ module.exports = {
     return gossip
   }
 }
+
