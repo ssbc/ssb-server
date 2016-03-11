@@ -10,6 +10,8 @@ var apidoc = require('../lib/apidocs').gossip
 var u = require('../lib/util')
 var os = require('os')
 var ip = require('ip')
+var Stats = require('statistics')
+var ping = require('pull-ping')
 
 var isArray = Array.isArray
 
@@ -34,7 +36,6 @@ function createSchedule (min, max, job, server) {
   server.once('close', function () { clearTimeout(sched) })
   return function schedule () {
     if(server.closed) return
-    console.log('SCHED')
     sched = setTimeout(job, min + (Math.random()*max))
     return schedule
   }
@@ -122,18 +123,24 @@ module.exports = {
         if(!f) {
           // new peer
           addr.source = source
+          addr.announcers = {length: 1}
+          addr.duration = Stats()
           peers.push(addr)
           notify({ type: 'discover', peer: addr, source: source || 'manual' })
           return true
-        } else {
-          // existing pub, update the announcers list
-          if (!f.announcers)
-            f.announcers = {length: 1}
-          else if(f.source != 'local') //don't count local over and over
-            f.announcers.length ++
-          return false
         }
-      }, 'string|object', 'string?')
+        //don't count local over and over
+        else if(f.source != 'local')
+          f.announcers.length ++
+
+        return false
+      }, 'string|object', 'string?'),
+      ping: function (opts) {
+        var timeout = (opts && opts.timeout) || 5*60e3
+        //between 10 seconds and 30 minutes, default 5 min
+        timeout = Math.max(10e3, Math.min(timeout, 30*60e3))
+        return ping({timeout: timeout})
+      }
     }
 
     // populate peertable with configured seeds (mainly used in testing)
@@ -161,18 +168,40 @@ module.exports = {
 
     //get current state
 
-    server.on('rpc:connect', function (rpc) {
+    server.on('rpc:connect', function (rpc, isClient) {
       var peer = getPeer(rpc.id)
+      //don't track clients that connect, but arn't considered peers.
+      //maybe we should though?
+      if(!peer) return
+      //means that we have created this connection, not received it.
+      peer.client = !!isClient
+
+      if(isClient) {
+        //default ping is 5 minutes...
+        var pp = ping({serve: true}, function (_) {})
+        peer.rtt = pp.rtt
+        peer.skew = pp.skew
+        pull(
+          pp,
+          rpc.gossip.ping({}, function (err) {
+            if(err && err.name === 'TypeError')
+              peer.ping = false
+          }),
+          pp
+        )
+
+      }
 
       if (peer) {
         console.log('connect', peer.host, peer.port, rpc.id)
-
+        
         peer.connected = true
         peer.time = {connect: Date.now()}
         notify({ type: 'connect', peer: peer })
         rpc.on('closed', function () {
           //track whether we have successfully connected.
           //or how many failures there have been.
+          peer.duration.value(Date.now() - peer.time.connect)
           peer.connected = false
           notify({ type: 'disconnect', peer: peer })
           server.emit('log:info', ['SBOT', rpc.id, 'disconnect'])
@@ -244,4 +273,5 @@ module.exports = {
     return gossip
   }
 }
+
 
