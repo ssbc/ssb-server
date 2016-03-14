@@ -60,6 +60,9 @@ module.exports = {
   name: 'gossip',
   version: '1.0.0',
   manifest: mdm.manifest(apidoc),
+  permissions: {
+    anonymous: {allow: ['ping']}
+  },
   init: function (server, config) {
     var notify = Notify()
     var conf = config.gossip || {}
@@ -178,6 +181,7 @@ module.exports = {
 
       if(isClient) {
         //default ping is 5 minutes...
+        console.log('IS_CLIENT', rpc.id)
         var pp = ping({serve: true}, function (_) {})
         peer.rtt = pp.rtt
         peer.skew = pp.skew
@@ -273,5 +277,6 @@ module.exports = {
     return gossip
   }
 }
+
 
 
