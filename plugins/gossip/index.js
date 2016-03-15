@@ -11,10 +11,6 @@ var Stats = require('statistics')
 var isArray = Array.isArray
 var Schedule = require('./schedule')
 var Init = require('./init')
-function add(ary, item) {
-  if(!~ary.indexOf(item)) ary.push(item)
-  return ary
-}
 
 /*
 Peers : [{
@@ -78,6 +74,7 @@ module.exports = {
         gossip.add(addr, 'manual')
         connect(gossip.get(addr), cb)
       }, 'string|object'),
+
       changes: function () {
         return notify.listen()
       },
@@ -96,20 +93,20 @@ module.exports = {
         if(!f) {
           // new peer
           addr.source = source
-          addr.announcers = {length: 1}
+          addr.announcers = 1
           addr.duration = Stats()
           peers.push(addr)
           notify({ type: 'discover', peer: addr, source: source || 'manual' })
-          return true
+          return addr
         }
         //don't count local over and over
         else if(f.source != 'local')
-          f.announcers.length ++
+          f.announcers ++
 
-        return false
+        return f
       }, 'string|object', 'string?'),
       ping: function (opts) {
-        var timeout = (opts && opts.timeout) || timer_ping
+        var timeout = config.timers && config.timers.ping || 5*60e3
         //between 10 seconds and 30 minutes, default 5 min
         timeout = Math.max(10e3, Math.min(timeout, 30*60e3))
         return ping({timeout: timeout})
@@ -127,60 +124,52 @@ module.exports = {
       if(!peer) return
       //means that we have created this connection, not received it.
       peer.client = !!isClient
+      peer.state = 'connected'
+      peer.time = {connect: Date.now()}
 
       if(isClient) {
         //default ping is 5 minutes...
-        console.log('IS_CLIENT', rpc.id)
         var pp = ping({serve: true, timeout: timer_ping}, function (_) {})
         peer.ping = {rtt: pp.rtt, skew: pp.skew}
         pull(
           pp,
           rpc.gossip.ping({timeout: timer_ping}, function (err) {
-            if(err.name === 'TypeError') {
-              console.log('ping failed', peer.host)
-              peer.ping.fail = true
-            }
+            if(err.name === 'TypeError') peer.ping.fail = true
           }),
           pp
         )
-
       }
 
-      if (peer) {
-        console.log('connect', peer.host, peer.port, rpc.id)
-        
-        peer.connected = true
-        peer.time = {connect: Date.now()}
-        notify({ type: 'connect', peer: peer })
-        rpc.on('closed', function () {
-          //track whether we have successfully connected.
-          //or how many failures there have been.
-          peer.duration.value(Date.now() - peer.time.connect)
-          peer.connected = false
-          notify({ type: 'disconnect', peer: peer })
-          server.emit('log:info', ['SBOT', rpc.id, 'disconnect'])
-        })
-      }
+      rpc.on('closed', function () {
+        //track whether we have successfully connected.
+        //or how many failures there have been.
+        peer.duration.value(Date.now() - peer.time.connect)
+        peer.state = undefined
+        notify({ type: 'disconnect', peer: peer })
+        server.emit('log:info', ['SBOT', rpc.id, 'disconnect'])
+      })
+
+      notify({ type: 'connect', peer: peer })
     })
 
     function connect (p, cb) {
       if(!p) return cb()
       p.time = p.time || {}
-      if (!p.time.connect)
-        p.time.connect = 0
       p.time.attempt = Date.now()
-      p.connecting = true
-      p.connected = false
+      p.state = 'connecting'
       server.connect(p, function (err, rpc) {
-        p.connecting = false
         if (err) {
-          console.log('CONNECT FAILED', p.host, err.message)
-          p.connected = false
+          p.active = false
+          p.state = undefined
           p.failure = (p.failure || 0) + 1
           notify({ type: 'connect-failure', peer: p })
           server.emit('log:info', ['SBOT', p.host+':'+p.port+p.key, 'connection failed', err.message || err])
           p.duration.value(0)
           return (cb && cb(err))
+        }
+        else {
+          p.state = 'connected'
+          p.active = true
         }
         cb && cb(null, rpc)
       })
@@ -190,7 +179,13 @@ module.exports = {
   }
 }
 
+// what does patchwork use?
 
-
+// .time.connect
+// .time.attempt (to count how many pubs you are on)
+// .host (to check if this is is on the lan - instead use .source===local)
+// .announcers (for sorting; change to sorting by last connect)
+// .key (to check if this peer follows you) 
+// .connected (to see if currently connected)
 
 

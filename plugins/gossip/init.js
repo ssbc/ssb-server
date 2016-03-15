@@ -16,7 +16,7 @@ module.exports = function (gossip, config, server) {
     }),
     pull.drain(function (msg) {
       if(!msg.content.address) return
-      gossip.add(addr, 'pub')
+      gossip.add(msg.content.address, 'pub')
     })
   )
 
