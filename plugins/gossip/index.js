@@ -72,7 +72,30 @@ module.exports = {
         if(!addr.key) return cb(new Error('address must have ed25519 key'))
         // add peer to the table, incase it isn't already.
         gossip.add(addr, 'manual')
-        connect(gossip.get(addr), cb)
+        var p = gossip.get(addr)
+        if(!p) return cb()
+
+        p.time = p.time || {}
+        p.time.attempt = Date.now()
+        p.state = 'connecting'
+        server.connect(p, function (err, rpc) {
+          if (err) {
+            p.active = false
+            p.state = undefined
+            p.failure = (p.failure || 0) + 1
+            p.time.hangup = Date.now()
+            notify({ type: 'connect-failure', peer: p })
+            server.emit('log:info', ['SBOT', p.host+':'+p.port+p.key, 'connection failed', err.message || err])
+            p.duration.value(0)
+            return (cb && cb(err))
+          }
+          else {
+            p.state = 'connected'
+            p.active = true
+          }
+          cb && cb(null, rpc)
+        })
+
       }, 'string|object'),
 
       changes: function () {
@@ -143,7 +166,8 @@ module.exports = {
       rpc.on('closed', function () {
         //track whether we have successfully connected.
         //or how many failures there have been.
-        peer.duration.value(Date.now() - peer.time.connect)
+        peer.time.hangup = Date.now()
+        peer.duration.value(peer.time.hangup - peer.time.connect)
         peer.state = undefined
         notify({ type: 'disconnect', peer: peer })
         server.emit('log:info', ['SBOT', rpc.id, 'disconnect'])
@@ -151,29 +175,6 @@ module.exports = {
 
       notify({ type: 'connect', peer: peer })
     })
-
-    function connect (p, cb) {
-      if(!p) return cb()
-      p.time = p.time || {}
-      p.time.attempt = Date.now()
-      p.state = 'connecting'
-      server.connect(p, function (err, rpc) {
-        if (err) {
-          p.active = false
-          p.state = undefined
-          p.failure = (p.failure || 0) + 1
-          notify({ type: 'connect-failure', peer: p })
-          server.emit('log:info', ['SBOT', p.host+':'+p.port+p.key, 'connection failed', err.message || err])
-          p.duration.value(0)
-          return (cb && cb(err))
-        }
-        else {
-          p.state = 'connected'
-          p.active = true
-        }
-        cb && cb(null, rpc)
-      })
-    }
 
     return gossip
   }
@@ -187,5 +188,9 @@ module.exports = {
 // .announcers (for sorting; change to sorting by last connect)
 // .key (to check if this peer follows you) 
 // .connected (to see if currently connected)
+
+
+
+
 
 
