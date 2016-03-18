@@ -1,4 +1,3 @@
-
 var SecretStack = require('secret-stack')
 var create     = require('secure-scuttlebutt/create')
 var ssbKeys    = require('ssb-keys')
@@ -7,53 +6,13 @@ var osenv      = require('osenv')
 var mkdirp     = require('mkdirp')
 var rimraf     = require('rimraf')
 var mdm        = require('mdmanifest')
-var fs         = require('fs')
 var cmdAliases = require('./lib/cli-cmd-aliases')
 var valid      = require('./lib/validators')
 var apidocs    = require('./lib/apidocs.js')
 
-function toBuffer(base64) {
-  return new Buffer(base64.substring(0, base64.indexOf('.')), 'base64')
-}
-
-function toSodiumKeys (keys) {
-  return {
-    publicKey: toBuffer(keys.public),
-    secretKey: toBuffer(keys.private)
-  }
-}
-
 function isString(s) { return 'string' === typeof s }
 
-function copy (o) {
-  var O = {}
-  for(var k in o)
-    if(o[k] && 'object' !== typeof o[k]) O[k] = o[k]
-  return O
-}
-
-function usage (cmd) {
-  var path = (cmd||'').split('.')
-  if ((path[0] && apidocs[path[0]]) || (cmd && apidocs[cmd])) {
-    // return usage for the plugin
-    cmd = path.slice(1).join('.')
-    return mdm.usage(apidocs[path[0]], cmd, { prefix: path[0] })
-  }
-  if (!cmd) {
-    // return usage for all docs
-    return Object.keys(apidocs).map(function (name) {
-      if (name == '_')
-        return mdm.usage(apidocs[name], null, { nameWidth: 20 })
-
-      var text = mdm.usage(apidocs[name], null, { prefix: name, nameWidth: 20 })
-      return text.slice(text.indexOf('Commands:') + 10) // skip past the toplevel summary, straight to the cmd list
-    }).join('\n\n')
-  }
-  // toplevel cmd usage
-  cmd = cmdAliases[cmd] || cmd
-  return mdm.usage(apidocs._, cmd)
-}
-
+// create SecretStack definition
 var manifest = mdm.manifest(apidocs._)
 manifest.usage = 'sync'
 var SSB = {
@@ -64,24 +23,25 @@ var SSB = {
   },
   init: function (api, opts) {
 
-    //useful for testing
+    // .temp: use a /tmp data directory
+    // (useful for testing)
     if(opts.temp) {
       var name = isString(opts.temp) ? opts.temp : ''+Date.now()
       opts.path = path.join(osenv.tmpdir(), name)
       rimraf.sync(opts.path)
-
     }
 
+    // load/create secure scuttlebutt data directory
     var dbPath = path.join(opts.path, 'db')
-    //load/create  secure scuttlebutt.
     mkdirp.sync(dbPath)
 
     if(!opts.keys)
       opts.keys = ssbKeys.generate('ed25519', opts.seed && new Buffer(opts.seed, 'base64'))
 
     if(!opts.path)
-      throw new Error('opts.path *must* be provided, or use opts.temp=sname to create a test instance')
+      throw new Error('opts.path *must* be provided, or use opts.temp=name to create a test instance')
 
+    // main interface
     var ssb = create(path.join(opts.path, 'db'), null, opts.keys)
     var feed = ssb.createFeed(opts.keys)
     return {
@@ -116,6 +76,29 @@ var SSB = {
 //      createLatestLookupStream : ssb.createLatestLookupStream,
     }
   }
+}
+
+// live help RPC method
+function usage (cmd) {
+  var path = (cmd||'').split('.')
+  if ((path[0] && apidocs[path[0]]) || (cmd && apidocs[cmd])) {
+    // return usage for the plugin
+    cmd = path.slice(1).join('.')
+    return mdm.usage(apidocs[path[0]], cmd, { prefix: path[0] })
+  }
+  if (!cmd) {
+    // return usage for all docs
+    return Object.keys(apidocs).map(function (name) {
+      if (name == '_')
+        return mdm.usage(apidocs[name], null, { nameWidth: 20 })
+
+      var text = mdm.usage(apidocs[name], null, { prefix: name, nameWidth: 20 })
+      return text.slice(text.indexOf('Commands:') + 10) // skip past the toplevel summary, straight to the cmd list
+    }).join('\n\n')
+  }
+  // toplevel cmd usage
+  cmd = cmdAliases[cmd] || cmd
+  return mdm.usage(apidocs._, cmd)
 }
 
 module.exports = SecretStack({
