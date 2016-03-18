@@ -7,6 +7,10 @@ var mdm         = require('mdmanifest')
 var valid       = require('../lib/validators')
 var apidoc      = require('../lib/apidocs').friends
 
+// friends plugin
+// methods to analyze the social graph
+// maintains a 'follow' and 'flag' graph
+
 function isFunction (f) {
   return 'function' === typeof f
 }
@@ -33,6 +37,7 @@ exports.init = function (sbot, config) {
     else cb()
   }
 
+  // read/watch the log for changes to the social graph
   pull(sbot.createLogStream({ live: true }), pull.drain(function (msg) {
 
     if (msg.sync) {

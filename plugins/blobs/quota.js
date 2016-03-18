@@ -1,7 +1,7 @@
 var pull = require('pull-stream')
 var paramap = require('pull-paramap')
 
-module.exports = function (sbot, blobs, quotas, cb) {
+module.exports = function (sbot, blobs, userQuotas, cb) {
   var listeners = []
 
   //recalculate the quota, with live updates.
@@ -42,7 +42,7 @@ module.exports = function (sbot, blobs, quotas, cb) {
           if(err) return cb(err)
           var size = data.size
           for(var k in acc)
-            quotas[k] = (quotas[k] || 0) + size/count
+            userQuotas[k] = (userQuotas[k] || 0) + size/count
 
           if(inflight === 0)
             while (listeners.length) listeners.shift()()

@@ -1,23 +1,19 @@
 'use strict'
 
-var Blobs = require('multiblob')
-var path = require('path')
-var pull = require('pull-stream')
-var toPull = require('stream-to-pull-stream')
+var Blobs  = require('multiblob')
+var path   = require('path')
+var pull   = require('pull-stream')
 var isBlob = require('ssb-ref').isBlobId
-var paramap = require('pull-paramap')
-var Quota = require('./quota')
-
+var Quota  = require('./quota')
 var Notify = require('pull-notify')
-var mdm = require('mdmanifest')
-var valid = require('../../lib/validators')
+var mdm    = require('mdmanifest')
+var valid  = require('../../lib/validators')
 var apidoc = require('../../lib/apidocs').blobs
-
 var Replicate = require('./replication')
 
-function id (e) {
-  return !!e
-}
+// blobs plugin
+// methods to read/write the blobstore
+// and automated blob-fetching from the network
 
 function isFunction (f) {
   return 'function' === typeof f
@@ -52,12 +48,9 @@ module.exports = {
       hash: 'sha256'
     })
 
-    var quota = {}
-    //pass drain a function and it calls back once
-    //quotas are recalculated. see `add` below.
-    var drain = Quota(sbot, blobs, quota)
-
-    var wantList = Replicate(sbot, config, notify, quota)
+    var userQuotas = {} // map of { feedId => quotaUsage }, for rate-limiting
+    var drain = Quota(sbot, blobs, userQuotas)
+    var wantList = Replicate(sbot, config, notify, userQuotas)
 
     return {
       get: valid.source(function (hash) {
