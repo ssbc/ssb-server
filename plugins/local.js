@@ -1,5 +1,8 @@
-
 var broadcast = require('broadcast-stream')
+
+// local plugin
+// broadcasts the address:port:pubkey triple of the sbot server
+// on the LAN, using multicast UDP
 
 function isFunction (f) {
   return 'function' === typeof f
@@ -14,7 +17,6 @@ module.exports = {
 
     local.on('data', function (buf) {
       if(buf.loopback) return
-
       var data = buf.toString()
       sbot.gossip.add(data, 'local')
     })
