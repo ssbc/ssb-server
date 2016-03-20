@@ -1,4 +1,3 @@
-
 var crypto = require('crypto')
 var ssbKeys = require('ssb-keys')
 var toAddress = require('../lib/util').toAddress
@@ -8,10 +7,10 @@ var ip = require('ip')
 var mdm = require('mdmanifest')
 var valid = require('../lib/validators')
 var apidoc = require('../lib/apidocs').invite
-var u = require('../lib/util')
-//okay this plugin adds a method
-//invite(seal({code, public})
 
+// invite plugin
+// adds methods for producing invite-codes,
+// which peers can use to command your server to follow them.
 
 function isFunction (f) {
   return 'function' === typeof f
@@ -37,10 +36,15 @@ module.exports = {
 
     //add an auth hook.
     server.auth.hook(function (fn, args) {
-      var pub = args[0], cb = args[1]
-      fn(pub, function (err, auth) {
+      var pubkey = args[0], cb = args[1]
+
+      // run normal authentication
+      fn(pubkey, function (err, auth) {
         if(err || auth) return cb(err, auth)
-        codesDB.get(pub, function (_, code) {
+
+        // if no rights were already defined for this pubkey
+        // check if the pubkey is one of our invite codes
+        codesDB.get(pubkey, function (_, code) {
           return cb(null, code && code.permissions)
         })
       })
@@ -49,10 +53,8 @@ module.exports = {
     return {
       create: valid.async(function (n, cb) {
         var addr = server.getAddress()
-        var host = u.toAddress(addr).host
-        if(!config.allowPrivate && (
-          ip.isPrivate(host) || 'localhost' === host)
-        )
+        var host = toAddress(addr).host
+        if(!config.allowPrivate && (ip.isPrivate(host) || 'localhost' === host))
           return cb(new Error('Server has no public ip address, '
                             + 'cannot create useable invitation'))
 
@@ -61,25 +63,32 @@ module.exports = {
         //there should be something that restricts what
         //permissions the plugin can create also:
         //it should be able to diminish it's own permissions.
+
+        // generate a key-seed and its key
         var seed = crypto.randomBytes(32)
         var keyCap = ssbKeys.generate('ed25519', seed)
 
+        // store metadata under the generated pubkey
         var owner = server.id
         codesDB.put(keyCap.id,  {
-          id: keyCap.id, total: +n, used: 0,
+          id: keyCap.id,
+          total: +n,
+          used: 0,
           permissions: {allow: ['invite.use'], deny: null}
         }, function (err) {
+          // emit the invite code: our server address, plus the key-seed
           if(err) cb(err)
           else cb(null, addr + '~' + seed.toString('base64'))
         })
-
       }, 'number'),
       use: valid.async(function (req, cb) {
         var rpc = this
 
+        // fetch the code
         codesDB.get(rpc.id, function(err, invite) {
           if(err) return cb(err)
 
+          // check if we're already following them
           server.friends.all('follow', function(err, follows) {
             if (follows && follows[server.id] && follows[server.id][req.feed])
               return cb(new Error('already following'))
@@ -98,14 +107,18 @@ module.exports = {
             if(invite.used >= invite.total)
               invite.permissions = {allow: [], deny: null}
 
+            //TODO
             //okay so there is a small race condition here
             //if people use a code massively in parallel
             //then it may not be counted correctly...
             //this is not a big enough deal to fix though.
+            //-dominic
 
+            // update code metadata
             codesDB.put(rpc.id, invite, function (err) {
               server.emit('log:info', ['invite', rpc.id, 'use', req])
 
+              // follow the user
               server.publish({
                 type: 'contact',
                 contact: req.feed,
@@ -117,15 +130,20 @@ module.exports = {
         })
       }, 'object'),
       accept: valid.async(function (invite, cb) {
+        // connect to the address in the invite code
+        // using a keypair generated from the key-seed in the invite code
         var parts = invite.split('~')
         var addr = toAddress(parts[0])
 
-        createClient({seed: parts[1]})
+        createClient({ seed: parts[1] })
         (addr, function (err, rpc) {
           if(err) return cb(explain(err, 'could not connect to server'))
-          rpc.invite.use({feed: server.id}, function (err, msg) {
+
+          // command the peer to follow me
+          rpc.invite.use({ feed: server.id }, function (err, msg) {
             if(err) return cb(explain(err, 'invite not accepted'))
             
+            // follow and announce the pub
             cont.para([
               server.publish({
                 type: 'contact',

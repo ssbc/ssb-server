@@ -1,5 +1,9 @@
 var color = require('bash-color')
 
+// logging plugin
+// subscribes to 'log:*' events
+// and emits using lovely colors
+
 var LOG_LEVELS = [
   'error',
   'warning',

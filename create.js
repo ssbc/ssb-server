@@ -1,3 +1,8 @@
+// TODO
+// this is an old file, which I dont think is being used anymore
+// remove?
+// -prf
+
 var Scuttlebot = require('./')
 module.exports = function (config, cb) {
   var sbot = Scuttlebot(config)

@@ -1,6 +1,5 @@
 var pull = require('pull-stream')
 var Queue = require('./queue')
-//var Quotas = require('./quotas')
 
 function each (obj, iter) {
   for(var k in obj)
@@ -38,7 +37,7 @@ function isFunction (f) {
 var MB = 1024*1024
 //default replication limits.
 var defaults = {limit: [-1, 100*MB, 20*MB], minLimit: 5*MB}
-module.exports = function (sbot, opts, notify, quota) {
+module.exports = function (sbot, opts, notify, userQuotas) {
   var jobs = {}, hasQueue, getQueue
   var conf = opts.blobs || defaults, wl
 
@@ -105,10 +104,10 @@ module.exports = function (sbot, opts, notify, quota) {
     return job.owner.every(function (id) {
       var l = limitFor(id)
       if(l < 0) return true
-      else if ((quota[id] || 0) < l)
+      else if ((userQuotas[id] || 0) < l)
         return true
       else if(!over[id]) {
-        over[id] = quota[id]
+        over[id] = userQuotas[id]
         console.log('Over Quota:', id, wl.quota(id))
       }
     })
@@ -217,7 +216,7 @@ module.exports = function (sbot, opts, notify, quota) {
       createJob(id, owner || sbot.id, cb)
     },
     quota: function (id) {
-      var l = limitFor(id), q = quota[id] || 0
+      var l = limitFor(id), q = userQuotas[id] || 0
       return {
         limit: l,
         usage: q,
