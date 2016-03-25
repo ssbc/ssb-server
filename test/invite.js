@@ -94,7 +94,8 @@ tape('test invite.accept api', function (t) {
 
   alice.invite.create(1, function (err, invite) {
     if(err) throw err
-    bob.invite.accept(invite, function (err) {
+    //test that invite is accepted with quotes around it.
+    bob.invite.accept(JSON.stringify(invite), function (err) {
       if(err) throw err
       alice.friends.hops({
         source: alice.id, dest: bob.id
