@@ -130,8 +130,13 @@ module.exports = {
         })
       }, 'object'),
       accept: valid.async(function (invite, cb) {
+        // remove surrounding quotes, if found
+        if (invite.charAt(0) === '"' && invite.charAt(invite.length - 1) === '"')
+          invite = invite.slice(1, -1)
+
         // connect to the address in the invite code
         // using a keypair generated from the key-seed in the invite code
+
         var parts = invite.split('~')
         var addr = toAddress(parts[0])
 
@@ -165,6 +170,10 @@ module.exports = {
     }
   }
 }
+
+
+
+
 
 
 
