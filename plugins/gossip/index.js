@@ -76,14 +76,14 @@ module.exports = {
         if(!p) return cb()
 
         p.time = p.time || {}
-        p.time.attempt = Date.now()
+        p.stateChange = p.time.attempt = Date.now()
         p.state = 'connecting'
         server.connect(p, function (err, rpc) {
           if (err) {
             p.active = false
             p.state = undefined
             p.failure = (p.failure || 0) + 1
-            p.time.hangup = Date.now()
+            p.stateChange = p.time.hangup = Date.now()
             notify({ type: 'connect-failure', peer: p })
             server.emit('log:info', ['SBOT', p.host+':'+p.port+p.key, 'connection failed', err.message || err])
             p.duration.value(0)
@@ -92,6 +92,7 @@ module.exports = {
           else {
             p.state = 'connected'
             p.active = true
+            p.failure = 0
           }
           cb && cb(null, rpc)
         })
@@ -148,7 +149,8 @@ module.exports = {
       //means that we have created this connection, not received it.
       peer.client = !!isClient
       peer.state = 'connected'
-      peer.time = {connect: Date.now()}
+      peer.time = peer.time || {}
+      peer.stateChange = peer.time.connect = Date.now()
 
       if(isClient) {
         //default ping is 5 minutes...
@@ -166,7 +168,7 @@ module.exports = {
       rpc.on('closed', function () {
         //track whether we have successfully connected.
         //or how many failures there have been.
-        peer.time.hangup = Date.now()
+        peer.stateChange = peer.time.hangup = Date.now()
         peer.duration.value(peer.time.hangup - peer.time.connect)
         peer.state = undefined
         notify({ type: 'disconnect', peer: peer })
