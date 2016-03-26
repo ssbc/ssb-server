@@ -26,7 +26,7 @@ function createSchedule (min, max, job, server) {
   }
 }
 
-module.exports = function (gossip, config, server) { 
+exports = module.exports = function (gossip, config, server) { 
 
     pull(
       gossip.changes(),
@@ -143,23 +143,120 @@ Strategies
 */
 
 
-module.exports.isUnattempted = function (e) {
-  return !e.time || !e.time.attempt && !e.time.connect
+exports.isUnattempted = function (e) {
+  return !e.stateChange
 }
 
-//select peers which need to be retried, but have not been
-//successfully connected to yet.
-module.exports.isInactive = function (e) {
-  return (e.duration.mean === 0 && e.time && (e.time.attempt && e.time.connect == null))
+//select peers which have never been successfully connected to yet,
+//but have been tried.
+exports.isInactive = function (e) {
+  return e.stateChange && e.duration.mean == 0
+}
+
+function not (fn) {
+  return function (e) { return !fn(e) }
+}
+
+
+//peers which we can connect to, but are not upgraded.
+exports.isLongterm = function (e) {
+  return e.ping && e.ping.rtt.mean > 0
 }
 
 //select peers which we can connect to, but are not upgraded to LT.
-module.exports.isLegacy = function (e) {
-  return e.duration.mean < 60e3 && (e.ping && e.ping.fail)
+//assume any peer is legacy, until we know otherwise...
+exports.isLegacy = not(exports.isLongterm)
+
+module.exports.isConnectedOrConnecting = function (e) {
+  return 'connected' === e.state || 'connecting' === e.state
 }
 
-//peers which we can connect to, but are not upgraded.
-module.exports.isLongterm = function (e) {
-  return e.ping && e.ping.rtt.mean > 0
+function and () {
+  var args = [].slice.call(arguments)
+  return function (e) {
+    return args.reduce(function (result, fn) {
+      return result && fn(e)
+    }, true)
+  }
 }
+
+// connect IF
+
+// we have not attempted to connect before.
+
+// we have not successfully connected, and it's been TIMEOUT since last try
+
+// the peer is active legacy offline, and it's been TIMEOUT since last connect.
+
+// the peer is longterm, and we are connected to less than 3 peers.
+
+function compareBy (fn) {
+  return function (a, b) {
+    return fn(a) - fn(b)
+  }
+}
+
+function reattemptDelay (e) {
+  return e.stateChange + delay(5*60e3, e.failure, 5*60e3, 3*60*60e3)
+}
+
+function max (fn) {
+  return function (a, b) {
+    return Math.max(a, fn(b))
+  }
+}
+
+//function pluck (name) { return function (e) { return e[name] } }
+
+function _stateChange (e) {
+  return e.stateChange
+}
+
+function latestStateChange (set) {
+  return set.reduce(max(_stateChange))
+}
+
+exports.connect = function (peers) {
+  var time = Date.now()
+  //peers we haven't tried to connect with yet
+  var unattempted = peers.filter(exports.isUnattempted)
+  var connect = [].concat(unattempted)
+
+  //peers we haven't successfully connect to yet
+  //reconnect to a random failed peer, min every 5 minutes (12 an hour)
+  //each time a peer fails, double the time until you next try it.
+  var reattempt = peers.filter(and(exports.isInactive, not(isConnect)))
+  var change = latestStateChange(reattempt)
+  if(change + 5*min < time) {
+    connect = reattempt.filter(function (e) {
+      return reattemptDelay(e) < time
+    }).sort(compareBy(_stateChange))
+  }
+//    .filter(function (e) {
+//      return reattemptDelay(e) < time
+//    })
+//    .sort(compareBy(reattemptDelay)).slice(0, 5)
+
+  //reattempt connecting to peers that did work once
+  //but failed recently.
+
+  //reconnect to legacy peers that are active.
+  //and then wait until 5 minutes before reconnecting.
+  var legacy = peers.filter(and(exports.isLegacy, not(isConnect)))
+
+  //for long term peers,
+  //connect to 3 peers. after one hour switch to another peer if available?
+  if(peers.filter(and(isLongterm, isConnect)).length > 3)
+  ;
+
+  //IDEA: when there are all LT peers,
+  //just replicate feeds that are new or have changed since last connect.
+  //if other peer asks for a feed, ask for that feed too.
+  //this way, handshake can be pretty small.
+}
+
+
+
+
+
 
