@@ -4,68 +4,136 @@ var u = require('../lib/util')
 
 var schedule = require('../plugins/gossip/schedule')
 
-var peers = require('./data/gossip.json')
+var g = require('./data/gossip.json')
 
-tape('peers we have never connected to', function (t) {
+var ts = g.ts
+var peers = g.peers
 
-  t.deepEqual(
-    peers.filter(schedule.isUnattempted).map(u.stringifyAddress),
-    [
-      '131.72.139.47:8008:@V+sfZ+X/MSUb+cO3GVI4gn1cCVVwz1+t6B+J9DlUkQs=.ed25519',
-      '24.75.24.253:8008:@WzvzUh2KMhAfWeJEpkI01BGlTtLXOei7GoB/dLVjcjE=.ed25519', '104.236.72.67:8008:@xBZ783+eCc9+vc/CHxR03y1nAcfULJUAOgd3zWsy1uY=.ed25519', 'evbogue.com:8008:@9sCXwCJZJ9doPcx7oZ1gm7HNZapO2Z9iZ0FJHJdROio=.ed25519'
-    ]
+function delay (failures, factor, max) {
+  return Math.min(Math.pow(2, failures-1)*factor, max || Number.infinity)
+}
 
+function not (fn) {
+  return function (e) {
+    return !fn(e)
+  }
+}
+
+function maxStateChange (M, e) {
+  return Math.max(M, e.stateChange || 0)
+}
+
+  //filter by type (is long term)
+  //filter by connected. quota - connected.
+
+  //min delay (delay since last disconnect of most recent peer in unconnected set)
+  //unconnected filter delay peer < min delay
+
+  //slice that quota - connected
+
+  var isConnect = schedule.isConnectedOrConnecting
+
+  function select(peers, filter, ts, opts) {
+    //opts: { quota, groupMin, min, factor, max }
+    var type = peers.filter(filter)
+    var unconnect = type.filter(not(isConnect))
+    var count = Math.max(opts.quota - type.filter(isConnect).length, 0)
+    var min = unconnect.reduce(maxStateChange, 0)// + opts.groupMin
+    console.log('latest:', new Date(min))
+    console.log('now:', new Date(ts))
+    console.log('connected, unconnected, latest')
+    console.log(count, unconnect.length, (ts - min)/60e3)
+
+    console.log(
+      unconnect.map(function (peer) {
+        console.log(new Date(peer.stateChange), peer.failure)
+        return peer.stateChange + delay(peer.failure || 0, opts.factor, opts.max)
+      }).map(Date)
+    )
+
+    return unconnect.filter(function (peer) {
+      return peer.stateChange + delay(peer.failure, opts.factor, opts.max) < ts
+    }).sort(function (a, b) {
+      return a.stateChange - b.stateChange
+    })
+  }
+
+  // is group min just a simple delay?
+  // lets say that it is..?
+
+  // long term connections - delay is only a few seconds.
+
+  // legacy connections - delay is about 5 minutes.
+  // -- does this limit the max number of connections to 1?
+  //    say we want to connect to up to 3 legacy connections?
+  //    but only every 5 minutes? wait 5 min then connect to 3?
+  //       ...that works
+
+  // retry... min delay is 5 min?
+
+
+tape('delay', function (t) {
+
+  // delay by 1 second the second retry after a failure
+  t.equal(delay(1, 1000, 10000), 1000)
+  // 2nd: 2sec
+  t.equal(delay(2, 1000, 10000), 2000)
+  // 3rd: 4sec
+  t.equal(delay(3, 1000, 10000), 4000)
+  // 4th: 8sec
+  t.equal(delay(4, 1000, 10000), 8000)
+  // 5th: hit max, so only 10sec
+  t.equal(delay(5, 1000, 10000), 10000)
+  t.end()
+})
+
+
+
+/*
+Okay, now I need a way to decide, for a given category,
+when to connect next.
+
+one aspect: next time to attempt a connection
+based on number of Math.min(2^failures*factor + min, max) 
+
+another aspect: how many connections to create at once?
+easy way: filter candidates that are not connected,
+          sort by next connect time, then slice first n.
+
+but what about set a reason, which relates to the strategy,
+and then connects based on that. `pending: reason` ?
+
+and then disconnections is just a quota per reason?
+
+but what about at startup, we create a bunch of connections,
+and then some of them turn out to support longterm?
+We want to apply the same filters for disconnecting.
+
+first we filter out the various categories and numbers that we allow,
+(type of connection, time the connection has been active, number
+of that type of connection allowed) then close the rest.
+*/
+
+
+tape('max stateChange', function (t) {
+
+  // { quota, groupMin, min, factor, max }
+  console.log('Unattempted')
+  console.log(
+    select(peers, schedule.isUnattempted, ts, {quota: -1, groupMin: 0, min: 0, factor: 0, max: 0})
+  )
+
+  console.log()
+
+  console.log('Reattempt')
+  console.log(
+    select(peers, schedule.isInactive, ts, {
+      quota: 3, groupMin: 5*60e3,
+      min: 10e3, factor: 60e3, max: 3*60*60e3
+    }).map(u.stringifyAddress)
   )
 
   t.end()
 })
-
-tape('peers we have attempted a connection, but failed', function (t) {
-  t.deepEqual(
-    peers.filter(schedule.isInactive).map(u.stringifyAddress),
-    [
-      '176.58.117.63:8008:@J+0DGLgRn8H5tVLCcRUfN7NfUcTGEZKqML3krEOJjDY=.ed25519',
-      '88.198.115.222:8008:@im4Qn0fCzpD3YfsegHFLJzkNXYUb/nYnlfuCf+LmPuM=.ed25519', 
-      'localhost:8008:@J+0DGLgRn8H5tVLCcRUfN7NfUcTGEZKqML3krEOJjDY=.ed25519',
-      '24.75.24.253:8008:@JMnMSsDHjwZfUlC2J8ZiIAOoxM5KJfsvewmVe39/wSM=.ed25519',
-      '74.207.246.247:8008:@omgyp7Pnrw+Qm0I6T6Fh5VvnKmodMXwnxTIesW2DgMg=.ed25519',
-      '188.166.107.197:8008:@/RM1Id8j05uitIt6iwMpiivnCqHcbcC1IHyi5FrvLLQ=.ed25519',
-      '9ithub.com:8008:@GLH9VPzvvU2KcnnUu2n5oxOqaTUtzw+Rk6fd/Kb9Si0=.ed25519',
-      'newpi.ffhh:8080:@gYCJpN4eGDjHFnWW2Fcusj8O4QYbVDUW6rNYh7nNEnc=.ed25519',
-      'acab.mobi:5228:@Ia0xWQGJSTjRfYjHDDAFizXR9e8l5RQctTqYcbtR+Es=.ed25519', 
-      'pi.bret.io:8008:@j3qWwQrWPzTM9zNgk0SI0FcqP1ULGquuINYEWfL330g=.ed25519',
-      'drinkbot.org:8008:@kOK9sfSLeFrQMtYaqLQ3nZE19v2IDiEwlpEdAqep3bw=.ed25519',
-      'pub.mixmix.io:8008:@uRECWB4KIeKoNMis2UYWyB2aQPvWmS3OePQvBj2zClg=.ed25519',
-      '178.62.206.163:110:@Uki1+Hds2kkx4rOWl202SPfcsgsdaLHJ/Y6OfPnK1xk=.ed25519',
-      '104.131.122.139:8008:@kZ9Ra80lKWlmzfjxh5PFAjJWYlCHEPxbqxNajdzhPF8=.ed25519'
-    ]
-  )
-
-  t.end()
-})
-
-tape('peers we have connected to, but are running legacy code', function (t) {
-  t.deepEqual(
-    peers.filter(schedule.isLegacy).map(u.stringifyAddress),
-    [
-      '188.166.252.233:8008:@uRECWB4KIeKoNMis2UYWyB2aQPvWmS3OePQvBj2zClg=.ed25519',
-      '45.33.29.124:8008:@0GLMsG6IgXdv+GjG0U5UnZlwxHnomlfmrlWugx8i4dg=.ed25519',
-      'mindeco.de:110:@Uki1+Hds2kkx4rOWl202SPfcsgsdaLHJ/Y6OfPnK1xk=.ed25519'
-    ]
-  )
-  t.end()
-})
-
-tape('peers we have connected to, and are running new code', function (t) {
-  t.deepEqual(
-    peers.filter(schedule.isLongterm).map(u.stringifyAddress),
-    [
-      '128.199.132.182:8008:@DTNmX+4SjsgZ7xyDh5xxmNtFqa6pWi5Qtw7cE8aR9TQ=.ed25519'
-    ]
-  )
-  t.end()
-})
-
-
 
 
