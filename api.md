@@ -117,12 +117,12 @@ Like in createLogStream, the range queries (gt, gte, lt, lte) filter against the
 
 ```bash
 hist {feedid} [seq] [live]
-hist --id {feedid} [--seq n] [--live]
+hist --id {feedid} [--seq n] [--live] [--limit n] [--keys] [--values]
 ```
 
 ```js
 createHistoryStream(id, seq, live)
-createHistoryStream({ id:, seq:, live: })
+createHistoryStream({ id:, seq:, live:, limit:, keys:, values: })
 ```
 
 `createHistoryStream` and `createUserStream` serve the same purpose.
@@ -131,7 +131,9 @@ createHistoryStream({ id:, seq:, live: })
  - `id` (FeedID, required): The id of the feed to fetch.
  - `seq` (number, default: `0`): If `seq > 0`, then only stream messages with sequence numbers greater than `seq`.
  - `live` (boolean, default: `false`): Keep the stream open and emit new messages as they are received.
-
+ - `keys` (boolean, default: `true`): whether the `data` event should contain keys. If set to `true` and `values` set to `false` then `data` events will simply be keys, rather than objects with a `key` property.
+ - `values` (boolean, default: `true`): whether the `data` event should contain values. If set to `true` and `keys` set to `false` then `data` events will simply be values, rather than objects with a `value` property.
+ - `limit` (number, default: `-1`): limit the number of results collected by this stream. This number represents a *maximum* number of results and may not be reached if you get to the end of the data first. A value of `-1` means there is no limit. When `reverse=true` the highest keys will be returned instead of the lowest keys.
 
 
 ## createUserStream: source
