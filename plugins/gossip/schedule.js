@@ -141,7 +141,7 @@ function (gossip, config, server) {
 
     setInterval(function () {
       connections()
-    }, 2e3)
+    }, 2e3).unref()
 
     connections()
 
