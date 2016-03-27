@@ -146,6 +146,7 @@ module.exports = {
       //don't track clients that connect, but arn't considered peers.
       //maybe we should though?
       if(!peer) return
+      console.log('+connected', u.stringifyAddress(peer))
       //means that we have created this connection, not received it.
       peer.client = !!isClient
       peer.state = 'connected'
@@ -166,6 +167,7 @@ module.exports = {
       }
 
       rpc.on('closed', function () {
+        console.log('-disconnected', u.stringifyAddress(peer))
         //track whether we have successfully connected.
         //or how many failures there have been.
         peer.stateChange = peer.time.hangup = Date.now()
@@ -190,6 +192,9 @@ module.exports = {
 // .announcers (for sorting; change to sorting by last connect)
 // .key (to check if this peer follows you) 
 // .connected (to see if currently connected)
+
+
+
 
 
 

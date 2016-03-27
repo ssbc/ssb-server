@@ -37,6 +37,7 @@ if (process.argv[2] == 'server') {
     .use(require('./plugins/private'))
 
   // start server
+
   config.keys = keys
   var server = createSbot(config)
 
