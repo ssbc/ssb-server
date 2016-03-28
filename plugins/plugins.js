@@ -1,5 +1,6 @@
 var assert = require('assert')
 var path = require('path')
+var fs = require('fs')
 var execFile = require('child_process').execFile
 var mdm = require('mdmanifest')
 var valid = require('../lib/validators')
@@ -47,10 +48,46 @@ module.exports = {
             // npm's output should be in json, due to the --json flag
             try { res = JSON.parse(stdout) }
             catch (e) {}
-            cb(null, res)
+            cb(null, {
+              message: 'Restart Scuttlebot server to enable the plugin.',
+              installed: res
+            })
           }
         })
       })
     }
+  },
+  loadUserPlugins: function (createSbot, config) {
+    // iterate all modules
+    var nodeModulesPath = path.join(config.path, 'node_modules')
+    fs.readdirSync(nodeModulesPath).forEach(function (filename) {
+      try {
+        // load module
+        var plugin = require(path.join(nodeModulesPath, filename))
+
+        // check the signature
+        assertSbotPlugin(plugin)
+
+        // load
+        createSbot.use(plugin)
+      } catch (e) {
+        console.error('Error loading plugin "'+filename+'":', e.message)
+      }
+    })
   }
+}
+
+// predictate to check if an object appears to be a sbot plugin
+function assertSbotPlugin (obj) {
+  // function signature:
+  if (typeof obj == 'function')
+    return
+
+  // object signature:
+  assert(obj && typeof obj == 'object',   'module.exports must be an object')
+  assert(typeof obj.name == 'string',     'module.exports.name must be a string')
+  assert(typeof obj.version == 'string',  'module.exports.version must be a string')
+  assert(obj.manifest &&
+         typeof obj.manifest == 'object', 'module.exports.manifest must be an object')
+  assert(typeof obj.init == 'function',   'module.exports.init must be a function')
 }
