@@ -25,6 +25,7 @@ if (process.argv[2] == 'server') {
   // import sbot and start the server
 
   var createSbot = require('./')
+    .use(require('./plugins/plugins'))
     .use(require('./plugins/master'))
     .use(require('./plugins/gossip'))
     .use(require('./plugins/friends'))
@@ -94,7 +95,8 @@ if (process.argv[2] == 'server') {
 
     // HACK
     // we need to output the hash of blobs that are added via blobs.add
-    // because muxrpc doesnt support the `sink` callback yet, we need this manual override:
+    // because muxrpc doesnt support the `sink` callback yet, we need this manual override
+    // -prf
     if (process.argv[2] === 'blobs.add')
       return blobsAddOverride(rpc)
 
