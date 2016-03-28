@@ -88,6 +88,7 @@ if (process.argv[2] == 'server') {
     manifest.version = 'async'
     manifest.config = 'sync'
     manifest.install = 'async'
+    manifest.uninstall = 'async'
     rpc.version = function (cb) {
       console.log(require('./package.json').version)
       cb()
@@ -98,6 +99,7 @@ if (process.argv[2] == 'server') {
     }
     var pluginCliMethods = plugins.cliMethods(config)
     rpc.install = pluginCliMethods.install
+    rpc.uninstall = pluginCliMethods.uninstall
 
     // HACK
     // we need to output the hash of blobs that are added via blobs.add
