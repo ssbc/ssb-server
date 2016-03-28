@@ -11,7 +11,6 @@ var createHash   = require('multiblob/util').createHash
 var config       = require('ssb-config/inject')(process.env.ssb_appname)
 var muxrpcli     = require('muxrpcli')
 var cmdAliases   = require('./lib/cli-cmd-aliases')
-var plugins      = require('./lib/plugins')
 
 var keys = ssbKeys.loadOrCreateSync(path.join(config.path, 'secret'))
 if(keys.curve === 'k256')
@@ -26,6 +25,7 @@ if (process.argv[2] == 'server') {
   // import sbot and start the server
 
   var createSbot = require('./')
+    .use(require('./plugins/plugins'))
     .use(require('./plugins/master'))
     .use(require('./plugins/gossip'))
     .use(require('./plugins/friends'))
@@ -38,7 +38,7 @@ if (process.argv[2] == 'server') {
     .use(require('./plugins/private'))
 
   // add third-party plugins
-  plugins.loadUserPlugins(createSbot, config)
+  require('./plugins/plugins').loadUserPlugins(createSbot, config)
 
   // start server
   config.keys = keys
@@ -87,8 +87,6 @@ if (process.argv[2] == 'server') {
     // add some extra commands
     manifest.version = 'async'
     manifest.config = 'sync'
-    manifest.install = 'async'
-    manifest.uninstall = 'async'
     rpc.version = function (cb) {
       console.log(require('./package.json').version)
       cb()
@@ -97,9 +95,6 @@ if (process.argv[2] == 'server') {
       console.log(JSON.stringify(config, null, 2))
       cb()
     }
-    var pluginCliMethods = plugins.cliMethods(config)
-    rpc.install = pluginCliMethods.install
-    rpc.uninstall = pluginCliMethods.uninstall
 
     // HACK
     // we need to output the hash of blobs that are added via blobs.add
