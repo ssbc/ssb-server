@@ -62,7 +62,8 @@ module.exports = {
 
       // update the plugins config
       existingConfig.plugins = existingConfig.plugins || {}
-      Object.assign(existingConfig.plugins, config.plugins)
+      for (var k in config.plugins)
+        existingConfig.plugins[k] = config.plugins[k]
 
       // write to disc
       fs.writeFileSync(cfgPath, JSON.stringify(existingConfig, null, 2), 'utf-8')
