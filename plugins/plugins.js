@@ -28,7 +28,7 @@ module.exports = {
         chechInstalled(pluginName, function (err) {
           if (err) return cb(err)
 
-          config.plugins[pluginName] = b
+          config.plugins[pluginName] = b 
           writePluginConfig()
           if (b)
             cb(null, '\''+pluginName+'\' has been enabled. Restart Scuttlebot server to use the plugin.')
@@ -91,11 +91,17 @@ module.exports = {
               p.push(new Buffer('"'+pluginName+'" has been installed. Restart Scuttlebot server to enable the plugin.\n', 'utf-8'))
 
             // enable the plugin
-            config.plugins[pluginName] = true
+            // - use basename(), because plugins can be installed from the FS, in which case pluginName is a path
+            config.plugins[path.basename(pluginName)] = true
             writePluginConfig()
             p.end()
           })
-        return cat([toPull(child.stdout), toPull(child.stderr), p])
+        return cat([
+          pull.values([new Buffer('Installing "'+pluginName+'"...\n', 'utf-8')]),
+          toPull(child.stdout),
+          toPull(child.stderr),
+          p
+        ])
       },
       uninstall: function (pluginName, opts) {
         var p = pushable()
