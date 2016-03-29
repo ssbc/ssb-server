@@ -29,7 +29,7 @@ module.exports = {
           if (err) return cb(err)
 
           config.plugins[pluginName] = b 
-          writePluginConfig()
+          writePluginConfig(pluginName, b)
           if (b)
             cb(null, '\''+pluginName+'\' has been enabled. Restart Scuttlebot server to use the plugin.')
           else
@@ -52,7 +52,7 @@ module.exports = {
     }
 
     // write the plugin config to ~/.ssb/config
-    function writePluginConfig () {
+    function writePluginConfig (pluginName, value) {
       var cfgPath = path.join(config.path, 'config')
       var existingConfig = {}
       
@@ -62,8 +62,7 @@ module.exports = {
 
       // update the plugins config
       existingConfig.plugins = existingConfig.plugins || {}
-      for (var k in config.plugins)
-        existingConfig.plugins[k] = config.plugins[k]
+      existingConfig.plugins[pluginName] = value
 
       // write to disc
       fs.writeFileSync(cfgPath, JSON.stringify(existingConfig, null, 2), 'utf-8')
@@ -92,8 +91,9 @@ module.exports = {
 
             // enable the plugin
             // - use basename(), because plugins can be installed from the FS, in which case pluginName is a path
-            config.plugins[path.basename(pluginName)] = true
-            writePluginConfig()
+            var name = path.basename(pluginName)
+            config.plugins[name] = true
+            writePluginConfig(name, true)
             p.end()
           })
         return cat([
@@ -111,9 +111,10 @@ module.exports = {
         var modulePath = path.join(installPath, 'node_modules', pluginName)
 
         rimraf(modulePath, function (err) {
-          if (!err)
+          if (!err) {
+            writePluginConfig(pluginName, false)
             p.push(new Buffer('"'+pluginName+'" has been uninstalled. Restart Scuttlebot server to disable the plugin.\n', 'utf-8'))
-          else
+          } else
             p.push(new Buffer(err.toString(), 'utf-8'))
           p.end()
         })
