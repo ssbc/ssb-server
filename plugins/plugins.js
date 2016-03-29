@@ -131,6 +131,8 @@ module.exports.loadUserPlugins = function (createSbot, config) {
   try {
     console.log('Loading plugins from', nodeModulesPath)
     fs.readdirSync(nodeModulesPath).forEach(function (filename) {
+      if (filename.charAt(0) == '.')
+        return // ignore
       if (!config.plugins[filename])
         return console.log('Skipping disabled plugin "'+filename+'"')
       console.log('Loading plugin "'+filename+'"')
