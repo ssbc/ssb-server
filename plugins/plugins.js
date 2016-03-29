@@ -16,10 +16,57 @@ module.exports = {
   version: '1.0.0',
   manifest: mdm.manifest(apidoc),
   permissions: {
-    master: {allow: ['install', 'uninstall']}
+    master: {allow: ['install', 'uninstall', 'enable', 'disable']}
   },
   init: function (server, config) {
     var installPath = config.path
+    config.plugins = config.plugins || {}
+
+    // helper to enable/disable plugins
+    function configPluginEnabled (b) {
+      return function (pluginName, cb) {
+        chechInstalled(pluginName, function (err) {
+          if (err) return cb(err)
+
+          config.plugins[pluginName] = b
+          writePluginConfig()
+          if (b)
+            cb(null, '\''+pluginName+'\' has been enabled. Restart Scuttlebot server to use the plugin.')
+          else
+            cb(null, '\''+pluginName+'\' has been disabled. Restart Scuttlebot server to stop using the plugin.')
+        })
+      }
+    }
+
+    // helper to check if a plugin is installed
+    function chechInstalled (pluginName, cb) {
+      if (!pluginName || typeof pluginName !== 'string')
+        return cb(new Error('plugin name is required'))
+      var modulePath = path.join(installPath, 'node_modules', pluginName)
+      fs.stat(modulePath, function (err) {
+        if (err)
+          cb(new Error('Plugin "'+pluginName+'" is not installed.'))
+        else
+          cb()
+      })
+    }
+
+    // write the plugin config to ~/.ssb/config
+    function writePluginConfig () {
+      var cfgPath = path.join(config.path, 'config')
+      var existingConfig = {}
+      
+      // load ~/.ssb/config
+      try { existingConfig = JSON.parse(fs.readFileSync(cfgPath, 'utf-8')) }
+      catch (e) {}
+
+      // update the plugins config
+      existingConfig.plugins = existingConfig.plugins || {}
+      Object.assign(existingConfig.plugins, config.plugins)
+
+      // write to disc
+      fs.writeFileSync(cfgPath, JSON.stringify(existingConfig, null, 2), 'utf-8')
+    }
 
     return { 
       install: function (pluginName, opts) {
@@ -41,6 +88,10 @@ module.exports = {
           .on('close', function (code) {
             if (code == 0 && !dryRun)
               p.push(new Buffer('"'+pluginName+'" has been installed. Restart Scuttlebot server to enable the plugin.\n', 'utf-8'))
+
+            // enable the plugin
+            config.plugins[pluginName] = true
+            writePluginConfig()
             p.end()
           })
         return cat([toPull(child.stdout), toPull(child.stderr), p])
@@ -60,7 +111,9 @@ module.exports = {
           p.end()
         })
         return p
-      }
+      },
+      enable: configPluginEnabled(true),
+      disable: configPluginEnabled(false)
     }
   }
 }
@@ -70,6 +123,10 @@ module.exports.loadUserPlugins = function (createSbot, config) {
   var nodeModulesPath = path.join(config.path, 'node_modules')
   try {
     fs.readdirSync(nodeModulesPath).forEach(function (filename) {
+      if (!config.plugins[filename])
+        return console.log('Skipping disabled plugin "'+filename+'"')
+      console.log('Loading plugin "'+filename+'"')
+
       try {
         // load module
         var plugin = require(path.join(nodeModulesPath, filename))

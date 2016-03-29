@@ -12,7 +12,7 @@ Install a plugin to Scuttlebot.
 install {nodeModule}
 ```
 ```js
-install(nodeModule, cb)
+install(nodeModule)
 ```
 
 Calls out to npm to install a package into `~/.ssb/node_modules`.
@@ -29,9 +29,39 @@ Uninstall a plugin from Scuttlebot.
 uninstall {nodeModule}
 ```
 ```js
-uninstall(nodeModule, cb)
+uninstall(nodeModule)
 ```
 
 Calls out to npm to uninstall a package into `~/.ssb/node_modules`.
 
  - nodeModule (string): The name of the plugin to uninstall.
+
+
+
+## enable: async
+
+Update the config to enable a plugin.
+
+```bash
+enable {nodeModule}
+```
+```js
+enable(nodeModule, cb)
+```
+
+ - nodeModule (string): The name of the plugin to enable.
+
+
+
+## disable: async
+
+Update the config to disable a plugin.
+
+```bash
+disable {nodeModule}
+```
+```js
+disable(nodeModule, cb)
+```
+
+ - nodeModule (string): The name of the plugin to disable.
