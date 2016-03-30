@@ -87,15 +87,16 @@ module.exports = {
         // exec npm
         var child = spawn('npm', args, { cwd: installPath })
           .on('close', function (code) {
-            if (code == 0 && !dryRun)
+            if (code == 0 && !dryRun) {
+              // enable the plugin
+              // - use basename(), because plugins can be installed from the FS, in which case pluginName is a path
+              var name = path.basename(pluginName)
+              config.plugins[name] = true
+              writePluginConfig(name, true)
               p.push(new Buffer('"'+pluginName+'" has been installed. Restart Scuttlebot server to enable the plugin.\n', 'utf-8'))
-
-            // enable the plugin
-            // - use basename(), because plugins can be installed from the FS, in which case pluginName is a path
-            var name = path.basename(pluginName)
-            config.plugins[name] = true
-            writePluginConfig(name, true)
-            p.end()
+              p.end()
+            } else
+              p.end(new Error('"'+pluginName+'" failed to install. See log output above.'))
           })
         return cat([
           pull.values([new Buffer('Installing "'+pluginName+'"...\n', 'utf-8')]),
@@ -114,9 +115,9 @@ module.exports = {
           if (!err) {
             writePluginConfig(pluginName, false)
             p.push(new Buffer('"'+pluginName+'" has been uninstalled. Restart Scuttlebot server to disable the plugin.\n', 'utf-8'))
+            p.end()
           } else
-            p.push(new Buffer(err.toString(), 'utf-8'))
-          p.end()
+            p.end(err)
         })
         return p
       },
