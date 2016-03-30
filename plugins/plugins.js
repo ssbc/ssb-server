@@ -3,6 +3,7 @@ var path = require('path')
 var fs = require('fs')
 var pull = require('pull-stream')
 var cat = require('pull-cat')
+var many = require('pull-many')
 var pushable = require('pull-pushable')
 var toPull = require('stream-to-pull-stream')
 var spawn = require('child_process').spawn
@@ -98,8 +99,7 @@ module.exports = {
           })
         return cat([
           pull.values([new Buffer('Installing "'+pluginName+'"...\n', 'utf-8')]),
-          toPull(child.stdout),
-          toPull(child.stderr),
+          many([toPull(child.stdout), toPull(child.stderr)]),
           p
         ])
       },
