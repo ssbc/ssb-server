@@ -7,6 +7,7 @@ var many = require('pull-many')
 var pushable = require('pull-pushable')
 var toPull = require('stream-to-pull-stream')
 var spawn = require('child_process').spawn
+var mkdirp = require('mkdirp')
 var rimraf = require('rimraf')
 var mdm = require('mdmanifest')
 var valid = require('../lib/validators')
@@ -22,11 +23,12 @@ module.exports = {
   init: function (server, config) {
     var installPath = config.path
     config.plugins = config.plugins || {}
+    mkdirp.sync(path.join(installPath, 'node_modules'))
 
     // helper to enable/disable plugins
     function configPluginEnabled (b) {
       return function (pluginName, cb) {
-        chechInstalled(pluginName, function (err) {
+        checkInstalled(pluginName, function (err) {
           if (err) return cb(err)
 
           config.plugins[pluginName] = b 
@@ -40,7 +42,7 @@ module.exports = {
     }
 
     // helper to check if a plugin is installed
-    function chechInstalled (pluginName, cb) {
+    function checkInstalled (pluginName, cb) {
       if (!pluginName || typeof pluginName !== 'string')
         return cb(new Error('plugin name is required'))
       var modulePath = path.join(installPath, 'node_modules', pluginName)
