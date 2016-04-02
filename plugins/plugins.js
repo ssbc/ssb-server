@@ -3,7 +3,6 @@ var path = require('path')
 var fs = require('fs')
 var pull = require('pull-stream')
 var cat = require('pull-cat')
-var many = require('pull-many')
 var pushable = require('pull-pushable')
 var toPull = require('stream-to-pull-stream')
 var spawn = require('child_process').spawn
@@ -82,27 +81,55 @@ module.exports = {
         // build args
         // --global-style: dont dedup at the top level, gives proper isolation between each plugin
         // --loglevel error: dont output warnings, because npm just whines about the lack of a package.json in ~/.ssb
-        var args = ['install', pluginName, '--global-style', '--loglevel', 'error']
+        // --json: output stdout in JSON, so we can extract the final module name
+        var args = ['install', pluginName, '--global-style', '--loglevel', 'error', '--json']
         if (dryRun)
           args.push('--dry-run')
+
+        var stdoutCollected
+        var nDone = 2
+        function doneSuccess (err, data) {
+          if (data)
+            stdoutCollected = data.map(function (b) { return b.toString('utf-8') }).join('')
+          
+          if (--nDone === 0) {
+              var moduleName, version = ''
+              try {
+                // read the stdout for the module name
+                // - pluginName may actually be a URL or some other kind of identifier
+                var jsonOut = JSON.parse(stdoutCollected)
+                moduleName = Object.keys(jsonOut.dependencies)[0]
+                version = '@'+jsonOut.dependencies[moduleName].version
+              } catch (e) {}
+
+              // fallback to trying to extract from the given url/identifier
+              if (!moduleName) 
+                moduleName = path.basename(pluginName)
+
+              // enable the plugin
+              config.plugins[moduleName] = true
+              writePluginConfig(moduleName, true)
+              p.push(new Buffer('"'+moduleName+version+'" has been installed. Restart Scuttlebot server to enable the plugin.\n', 'utf-8'))
+              p.end()
+          }
+        }
 
         // exec npm
         var child = spawn('npm', args, { cwd: installPath })
           .on('close', function (code) {
-            if (code == 0 && !dryRun) {
-              // enable the plugin
-              // - use basename(), because plugins can be installed from the FS, in which case pluginName is a path
-              var name = path.basename(pluginName)
-              config.plugins[name] = true
-              writePluginConfig(name, true)
-              p.push(new Buffer('"'+pluginName+'" has been installed. Restart Scuttlebot server to enable the plugin.\n', 'utf-8'))
-              p.end()
-            } else
+            if (code == 0 && !dryRun)
+              doneSuccess()
+            else
               p.end(new Error('"'+pluginName+'" failed to install. See log output above.'))
           })
+
+        // collect stdout
+        pull(toPull(child.stdout), pull.collect(doneSuccess))
+
+        // build output stream
         return cat([
           pull.values([new Buffer('Installing "'+pluginName+'"...\n', 'utf-8')]),
-          many([toPull(child.stdout), toPull(child.stderr)]),
+          toPull(child.stderr),
           p
         ])
       },
