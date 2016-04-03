@@ -46,6 +46,10 @@ function isOffline () {
 
 var isOnline = not(isOffline)
 
+function isLocal (e) {
+  return ip.isPrivate(e.host)
+}
+
 function isUnattempted (e) {
   return !e.stateChange
 }
@@ -72,6 +76,7 @@ function isConnect (e) {
 }
 
 function select(peers, filter, ts, opts) {
+  if(opts.disable) return []
   //opts: { quota, groupMin, min, factor, max }
   var type = peers.filter(filter)
   var unconnect = type.filter(not(isConnect))
@@ -91,16 +96,20 @@ function (gossip, config, server) {
 
   var min = 60e3, hour = 60*60e3
 
+  function conf(name) {
+    return config.gossip && config.gossip[name]
+  }
+
   function connections () {
     var ts = Date.now()
     var peers = gossip.peers()
     var attempt =
     select(peers, and(exports.isUnattempted, isOnline), ts, {
-        min: 0,
-      quota: 10, factor: 0, max: 0, groupMin: 0
+        min: 0, quota: 10, factor: 0, max: 0, groupMin: 0,
+        disable: +conf('global') !== 0
     })
 
-//quota, groupMin, min, factor, max
+    //quota, groupMin, min, factor, max
     var retry =
       select(peers, and(exports.isInactive, isOnline), ts, {
         min: 0,
@@ -109,12 +118,20 @@ function (gossip, config, server) {
 
     var legacy =
       select(peers, and(exports.isLegacy, isOnline), ts, {
-        quota: 3, factor: 5*min, max: 3*hour, groupMin: 5*min
+        quota: 3, factor: 5*min, max: 3*hour, groupMin: 5*min,
+        disable: +conf('global') !== 0
       })
 
-   var longterm =
+    var longterm =
     select(peers, and(exports.isLongterm, isOnline), ts, {
-      quota: 3, factor: 10e3, max: 10*min, groupMin: 5e3
+      quota: 3, factor: 10e3, max: 10*min, groupMin: 5e3,
+      disable: +conf('global') !== 0
+    })
+
+    var local =
+    select(peers, and(exports.isLocal, isOnline), ts, {
+      quota: 3, factor: 2e3, max: 10*min, groupMin: 1e3,
+      disable: +conf('local') !== 0
     })
 
     function all(ary, reason) {
@@ -128,7 +145,7 @@ function (gossip, config, server) {
     all(retry, 'retry')
     all(legacy, 'legacy')
     all(longterm, 'longterm')
-
+    all(local, 'local')
   }
 
     pull(
@@ -151,6 +168,8 @@ exports.isUnattempted = isUnattempted
 exports.isInactive = isInactive
 exports.isLongterm = isLongterm
 exports.isLegacy = isLegacy
+exports.isLocal = isLocal
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
+
 
