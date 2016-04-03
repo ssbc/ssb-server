@@ -193,7 +193,7 @@ tape('replicate social network for animals', function (t) {
               animalNetwork.close(true)
               t.end()
 
-            }, 200)
+            }, 1000)
           }
         })
       )
