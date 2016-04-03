@@ -12,6 +12,10 @@ var isArray = Array.isArray
 var Schedule = require('./schedule')
 var Init = require('./init')
 
+function isFunction (f) {
+  return 'function' === typeof f
+}
+
 /*
 Peers : [{
   key: id,
@@ -99,6 +103,18 @@ module.exports = {
 
       }, 'string|object'),
 
+      disconnect: valid.async(function (addr, cb) {
+        var peer = this.get(addr)
+
+        peer.state = 'disconnecting'
+        peer.stateChange = Date.now()
+        if(!peer || !peer.disconnect) cb && cb()
+        else peer.disconnect(true, function (err) {
+          peer.stateChange = Date.now()
+        })
+
+      }, 'string|object'),
+
       changes: function () {
         return notify.listen()
       },
@@ -152,6 +168,10 @@ module.exports = {
       peer.state = 'connected'
       peer.time = peer.time || {}
       peer.stateChange = peer.time.connect = Date.now()
+      peer.disconnect = function (err, cb) {
+        if(isFunction(err)) cb = err, err = null
+        rpc.close(err, cb)
+      }
 
       if(isClient) {
         //default ping is 5 minutes...
@@ -192,6 +212,8 @@ module.exports = {
 // .announcers (for sorting; change to sorting by last connect)
 // .key (to check if this peer follows you) 
 // .connected (to see if currently connected)
+
+
 
 
 

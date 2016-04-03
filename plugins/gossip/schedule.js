@@ -75,7 +75,14 @@ function isConnect (e) {
   return 'connected' === e.state || 'connecting' === e.state
 }
 
-function select(peers, filter, ts, opts) {
+//sort oldest to newest then take first n
+function earliest(peers, n) {
+  return peers.sort(function (a, b) {
+    return a.stateChange - b.stateChange
+  }).slice(0, Math.max(n, 0))
+}
+
+function select(peers, ts, filter, opts) {
   if(opts.disable) return []
   //opts: { quota, groupMin, min, factor, max }
   var type = peers.filter(filter)
@@ -84,11 +91,9 @@ function select(peers, filter, ts, opts) {
   var min = unconnect.reduce(maxStateChange, 0) + opts.groupMin
   if(ts < min) return []
 
-  return unconnect.filter(function (peer) {
+  return earliest(unconnect.filter(function (peer) {
     return peerNext(peer, opts) < ts
-  }).sort(function (a, b) {
-    return a.stateChange - b.stateChange
-  }).slice(0, count)
+  }), count)
 }
 
 var schedule = exports = module.exports =
@@ -96,56 +101,64 @@ function (gossip, config, server) {
 
   var min = 60e3, hour = 60*60e3
 
-  function conf(name) {
-    return config.gossip && config.gossip[name]
+  function conf(name, def) {
+    if(!config.gossip) return def
+    var value = config.gossip[name]
+    return (value === undefined || value === '') ? def : value
   }
+
+  function connect (peers, ts, name, filter, opts) {
+    var connected = peers.filter(isConnect).filter(filter)
+      .filter(function (peer) {
+        return peer.stateChange + 10e3 < ts
+      })
+
+    if(connected.length > opts.quota) {
+      return earliest(connected, connected.length - opts.quota)
+        .forEach(function (peer) {
+          console.log('Disconnect', name, u.stringifyAddress(peer))
+          gossip.disconnect(peer)
+        })
+    }
+
+    select(peers, ts, and(filter, isOnline), opts)
+      .forEach(function (peer) {
+        console.log('Connect', name, u.stringifyAddress(peer))
+        gossip.connect(peer)
+      })
+  }
+
 
   function connections () {
     var ts = Date.now()
     var peers = gossip.peers()
-    var attempt =
-    select(peers, and(exports.isUnattempted, isOnline), ts, {
+
+    connect(peers, ts, 'attempt', exports.isUnattempted, {
         min: 0, quota: 10, factor: 0, max: 0, groupMin: 0,
-        disable: +conf('global') !== 0
+        disable: !conf('global', true)
     })
 
     //quota, groupMin, min, factor, max
-    var retry =
-      select(peers, and(exports.isInactive, isOnline), ts, {
+    connect(peers, ts, 'retry', exports.isInactive, {
         min: 0,
         quota: 3, factor: 5*60e3, max: 3*60*60e3, groupMin: 5*50e3
       })
 
-    var legacy =
-      select(peers, and(exports.isLegacy, isOnline), ts, {
+    connect(peers, ts, 'legacy', exports.isLegacy, {
         quota: 3, factor: 5*min, max: 3*hour, groupMin: 5*min,
-        disable: +conf('global') !== 0
+        disable: !conf('global', true)
       })
 
-    var longterm =
-    select(peers, and(exports.isLongterm, isOnline), ts, {
+    connect(peers, ts, 'longterm', exports.isLongterm, {
       quota: 3, factor: 10e3, max: 10*min, groupMin: 5e3,
-      disable: +conf('global') !== 0
+      disable: !conf('global', true)
     })
 
-    var local =
-    select(peers, and(exports.isLocal, isOnline), ts, {
+    connect(peers, ts, 'local', exports.isLocal, {
       quota: 3, factor: 2e3, max: 10*min, groupMin: 1e3,
-      disable: +conf('local') !== 0
+      disable: !conf('local', true)
     })
 
-    function all(ary, reason) {
-      ary.forEach(function (peer) {
-        console.log('CONNECT', reason, u.stringifyAddress(peer))
-        gossip.connect(peer)
-      })
-    }
-
-    all(attempt, 'attempt')
-    all(retry, 'retry')
-    all(legacy, 'legacy')
-    all(longterm, 'longterm')
-    all(local, 'local')
   }
 
     pull(
@@ -171,5 +184,12 @@ exports.isLegacy = isLegacy
 exports.isLocal = isLocal
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
+
+
+
+
+
+
+
 
 
