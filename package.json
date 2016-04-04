@@ -22,7 +22,7 @@
     "multiblob": "^1.8.1",
     "multicb": "^1.0.0",
     "muxrpc": "^6.1.1",
-    "muxrpc-validation": "^2.0.0",
+    "muxrpc-validation": "^3.0.0",
     "muxrpcli": "^1.0.0",
     "mynosql-query": "~1.0.0",
     "nomnom": "1.8.0",
