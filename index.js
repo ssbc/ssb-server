@@ -50,8 +50,8 @@ var SSB = {
 
       usage                    : valid.sync(usage, 'string?|boolean?'),
 
-      publish                  : valid.async(feed.add, 'string|msgContent'),
-      add                      : valid.async(ssb.add, 'msg'),
+      publish                  : valid.async(feed.add, { cbOptional: true }, 'string|msgContent'),
+      add                      : valid.async(ssb.add, { cbOptional: true }, 'msg'),
       get                      : valid.async(ssb.get, 'msgId'),
 
       pre                      : ssb.pre,
