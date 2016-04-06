@@ -21,9 +21,6 @@ Peers : [{
   key: id,
   host: ip,
   port: int,
-  time: {
-    connect: ts,
-  },
   //to be backwards compatible with patchwork...
   announcers: {length: int}
   source: 'pub'|'manual'|'local'
@@ -79,15 +76,13 @@ module.exports = {
         var p = gossip.get(addr)
         if(!p) return cb()
 
-        p.time = p.time || {}
-        p.stateChange = p.time.attempt = Date.now()
+        p.stateChange = Date.now()
         p.state = 'connecting'
         server.connect(p, function (err, rpc) {
           if (err) {
-            p.active = false
             p.state = undefined
             p.failure = (p.failure || 0) + 1
-            p.stateChange = p.time.hangup = Date.now()
+            p.stateChange = Date.now()
             notify({ type: 'connect-failure', peer: p })
             server.emit('log:info', ['SBOT', p.host+':'+p.port+p.key, 'connection failed', err.message || err])
             p.duration.value(0)
@@ -95,7 +90,6 @@ module.exports = {
           }
           else {
             p.state = 'connected'
-            p.active = true
             p.failure = 0
           }
           cb && cb(null, rpc)
@@ -166,8 +160,7 @@ module.exports = {
       //means that we have created this connection, not received it.
       peer.client = !!isClient
       peer.state = 'connected'
-      peer.time = peer.time || {}
-      peer.stateChange = peer.time.connect = Date.now()
+      peer.stateChange = Date.now()
       peer.disconnect = function (err, cb) {
         if(isFunction(err)) cb = err, err = null
         rpc.close(err, cb)
@@ -190,8 +183,10 @@ module.exports = {
         console.log('-disconnected', u.stringifyAddress(peer))
         //track whether we have successfully connected.
         //or how many failures there have been.
-        peer.stateChange = peer.time.hangup = Date.now()
-        peer.duration.value(peer.time.hangup - peer.time.connect)
+        var since = peer.stateChange
+        peer.stateChange = Date.now()
+        if(peer.state === 'connected') //may be "disconnecting"
+          peer.duration.value(peer.stateChange - since)
         peer.state = undefined
         notify({ type: 'disconnect', peer: peer })
         server.emit('log:info', ['SBOT', rpc.id, 'disconnect'])
@@ -204,14 +199,10 @@ module.exports = {
   }
 }
 
-// what does patchwork use?
 
-// .time.connect
-// .time.attempt (to count how many pubs you are on)
-// .host (to check if this is is on the lan - instead use .source===local)
-// .announcers (for sorting; change to sorting by last connect)
-// .key (to check if this peer follows you) 
-// .connected (to see if currently connected)
+
+
+
 
 
 
