@@ -9,15 +9,16 @@ Install and manage third-party plugins.
 Install a plugin to Scuttlebot.
 
 ```bash
-install {nodeModule}
+install {nodeModule} [--from path]
 ```
 ```js
-install(nodeModule)
+install(nodeModule, { from: })
 ```
 
 Calls out to npm to install a package into `~/.ssb/node_modules`.
 
  - nodeModule (string): The name of the plugin to install. Uses npm's module package-name rules.
+ - from (string): A location to install from (directory path, url, or any location that npm accepts for its install command).
 
 
 

@@ -72,17 +72,31 @@ module.exports = {
     }
 
     return { 
-      install: function (pluginName, opts) {
+      install: valid.source(function (pluginName, opts) {
         var p = pushable()
         var dryRun = opts && opts['dry-run']
+        var from   = opts && opts.from
 
-        if (!pluginName)
+        if (!pluginName || typeof pluginName !== 'string')
           return pull.error(new Error('plugin name is required'))
+
+        // pull out the version, if given
+        if (pluginName.indexOf('@') !== -1) {
+          var pluginNameSplitted = pluginName.split('@')
+          pluginName = pluginNameSplitted[0]
+          var version = pluginNameSplitted[1]
+
+          if (version && !from)
+            from = pluginName + '@' + version
+        }
+        
+        if (!validatePluginName(pluginName))
+          return pull.error(new Error('invalid plugin name: "'+pluginName+'"'))
 
         // build args
         // --global-style: dont dedup at the top level, gives proper isolation between each plugin
         // --loglevel error: dont output warnings, because npm just whines about the lack of a package.json in ~/.ssb
-        var args = ['install', pluginName, '--global-style', '--loglevel', 'error']
+        var args = ['install', from||pluginName, '--global-style', '--loglevel', 'error']
         if (dryRun)
           args.push('--dry-run')
 
@@ -105,8 +119,8 @@ module.exports = {
           many([toPull(child.stdout), toPull(child.stderr)]),
           p
         ])
-      },
-      uninstall: function (pluginName, opts) {
+      }, 'string', 'object?'),
+      uninstall: valid.source(function (pluginName, opts) {
         var p = pushable()
         if (!pluginName || typeof pluginName !== 'string')
           return pull.error(new Error('plugin name is required'))
@@ -122,9 +136,9 @@ module.exports = {
             p.end(err)
         })
         return p
-      },
-      enable: configPluginEnabled(true),
-      disable: configPluginEnabled(false)
+      }, 'string', 'object?'),
+      enable: valid.async(configPluginEnabled(true), 'string'),
+      disable: valid.async(configPluginEnabled(false), 'string')
     }
   }
 }
@@ -172,4 +186,13 @@ function assertSbotPlugin (obj) {
   assert(obj.manifest &&
          typeof obj.manifest == 'object', 'module.exports.manifest must be an object')
   assert(typeof obj.init == 'function',   'module.exports.init must be a function')
+}
+
+function validatePluginName (name) {
+  if (/^[._]/.test(name))
+    return false
+  // from npm-validate-package-name:
+  if (encodeURIComponent(name) !== name)
+    return false
+  return true
 }
