@@ -37,7 +37,9 @@ add({ host:, port:, key: }, cb)
  - `port` (port number)
  - `key` (feedid)
 
+## ping: duplex
 
+used internally by the gossip plugin to measure latency and clock skew
 
 ## connect: async
 

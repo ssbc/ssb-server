@@ -41,6 +41,7 @@ if (process.argv[2] == 'server') {
   require('./plugins/plugins').loadUserPlugins(createSbot, config)
 
   // start server
+
   config.keys = keys
   var server = createSbot(config)
 
