@@ -31,7 +31,6 @@
     "observ-debounce": "^1.1.1",
     "on-wakeup": "^1.0.0",
     "osenv": "~0.1.0",
-    "packet-stream-codec": "~1.1.0",
     "pull-abortable": "~4.0.0",
     "pull-cat": "~1.1.5",
     "pull-inactivity": "~2.1.1",
@@ -76,3 +75,4 @@
   "author": "Paul Frazee <pfrazee@gmail.com>",
   "license": "MIT"
 }
+
