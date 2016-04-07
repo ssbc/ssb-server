@@ -24,6 +24,7 @@
     "muxrpc": "^6.1.1",
     "muxrpc-validation": "^2.0.0",
     "muxrpcli": "^1.0.0",
+    "mv": "^2.1.1",
     "mynosql-query": "~1.0.0",
     "nomnom": "1.8.0",
     "non-private-ip": "~1.1.0",

@@ -8,8 +8,11 @@ var pushable = require('pull-pushable')
 var toPull = require('stream-to-pull-stream')
 var spawn = require('child_process').spawn
 var mkdirp = require('mkdirp')
+var osenv = require('osenv')
 var rimraf = require('rimraf')
+var mv = require('mv')
 var mdm = require('mdmanifest')
+var explain = require('explain-error')
 var valid = require('../lib/validators')
 var apidoc = require('../lib/apidocs').plugins
 
@@ -93,6 +96,10 @@ module.exports = {
         if (!validatePluginName(pluginName))
           return pull.error(new Error('invalid plugin name: "'+pluginName+'"'))
 
+        // create a tmp directory to install into
+        var tmpInstallPath = path.join(osenv.tmpdir(), pluginName)
+        rimraf.sync(tmpInstallPath); mkdirp.sync(tmpInstallPath)
+
         // build args
         // --global-style: dont dedup at the top level, gives proper isolation between each plugin
         // --loglevel error: dont output warnings, because npm just whines about the lack of a package.json in ~/.ssb
@@ -101,16 +108,35 @@ module.exports = {
           args.push('--dry-run')
 
         // exec npm
-        var child = spawn('npm', args, { cwd: installPath })
+        var child = spawn('npm', args, { cwd: tmpInstallPath })
           .on('close', function (code) {
             if (code == 0 && !dryRun) {
-              // enable the plugin
-              // - use basename(), because plugins can be installed from the FS, in which case pluginName is a path
-              var name = path.basename(pluginName)
-              config.plugins[name] = true
-              writePluginConfig(name, true)
-              p.push(new Buffer('"'+pluginName+'" has been installed. Restart Scuttlebot server to enable the plugin.\n', 'utf-8'))
-              p.end()
+              var tmpInstallNMPath   = path.join(tmpInstallPath, 'node_modules')
+              var finalInstallNMPath = path.join(installPath, 'node_modules')
+
+              // delete plugin, if it's already there
+              rimraf.sync(path.join(finalInstallNMPath, pluginName))
+
+              // move the plugin from the tmpdir into our install path
+              // ...using our given plugin name
+              var dirs = fs.readdirSync(tmpInstallNMPath)
+                .filter(function (name) { return name.charAt(0) !== '.' }) // filter out dot dirs, like '.bin'
+              mv(
+                path.join(tmpInstallNMPath,   dirs[0]),
+                path.join(finalInstallNMPath, pluginName),
+                function (err) {
+                  if (err)
+                    return p.end(explain(err, '"'+pluginName+'" failed to install. See log output above.'))
+
+                  // enable the plugin
+                  // - use basename(), because plugins can be installed from the FS, in which case pluginName is a path
+                  var name = path.basename(pluginName)
+                  config.plugins[name] = true
+                  writePluginConfig(name, true)
+                  p.push(new Buffer('"'+pluginName+'" has been installed. Restart Scuttlebot server to enable the plugin.\n', 'utf-8'))
+                  p.end()
+                }
+              )
             } else
               p.end(new Error('"'+pluginName+'" failed to install. See log output above.'))
           })

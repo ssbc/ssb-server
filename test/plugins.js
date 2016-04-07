@@ -29,7 +29,7 @@ tape('install and load plugins', function (t) {
 
     console.log('installing plugin...')
     pull(
-      sbot.plugins.install(__dirname + '/test-plugin'),
+      sbot.plugins.install('test-plugin', { from: __dirname + '/test-plugin' }),
       pull.collect(function (err, out) {
         if (err) throw err
         console.log(out.map(function (b) { return b.toString('utf-8') }).join(''))
@@ -91,7 +91,7 @@ tape('install and load plugins', function (t) {
     })
   })
 
-  t.test('uninstall plugins', function (t) {
+  t.test('uninstall plugin', function (t) {
 
     resetSbot()
     var sbot = createSbot({
@@ -108,6 +108,83 @@ tape('install and load plugins', function (t) {
         console.log(out.map(function (b) { return b.toString('utf-8') }).join(''))
 
         t.throws(function () { fs.statSync(path.join(datadirPath, 'node_modules/test-plugin')) })
+
+        sbot.close(function () {
+          t.end()
+        })
+      })
+    )
+  })
+
+  t.test('install plugin under custom name', function (t) {
+
+    resetSbot()
+    var sbot = createSbot({
+      path: datadirPath,
+      port: 45451, host: 'localhost',
+      keys: aliceKeys
+    })
+
+    console.log('installing plugin...')
+    pull(
+      sbot.plugins.install('my-test-plugin', { from: __dirname + '/test-plugin' }),
+      pull.collect(function (err, out) {
+        if (err) throw err
+        console.log(out.map(function (b) { return b.toString('utf-8') }).join(''))
+
+        t.ok(fs.statSync(path.join(datadirPath, 'node_modules/my-test-plugin')))
+
+        sbot.close(function () {
+          t.end()
+        })
+      })
+    )
+  })
+
+  t.test('installed and enabled plugin is loaded, under custom name', function (t) {
+
+    var config = {
+      path: datadirPath,
+      port: 45451, host: 'localhost',
+      keys: aliceKeys,
+      plugins: {
+        'my-test-plugin': true
+      }
+    }
+    resetSbot()
+    require('../plugins/plugins').loadUserPlugins(createSbot, config)
+    var sbot = createSbot(config)
+
+    t.ok(sbot.test)
+    t.ok(sbot.test.ping)
+
+    sbot.test.ping('ping', function (err, res) {
+      if (err) throw err
+      t.equal(res, 'ping pong')
+
+      sbot.close(function () {
+        t.end()
+      })
+    })
+  })
+
+  t.test('uninstall plugin under custom name', function (t) {
+
+    resetSbot()
+    var sbot = createSbot({
+      path: datadirPath,
+      port: 45451, host: 'localhost',
+      keys: aliceKeys
+    })
+
+    console.log('uninstalling plugin...')
+    pull(
+      sbot.plugins.uninstall('my-test-plugin'),
+      pull.collect(function (err, out) {
+        if (err) throw err
+        console.log(out.map(function (b) { return b.toString('utf-8') }).join(''))
+
+        t.throws(function () { fs.statSync(path.join(datadirPath, 'node_modules/my-test-plugin')) })
 
         sbot.close(function () {
           t.end()
