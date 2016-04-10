@@ -39,7 +39,8 @@ function peerNext(peer, opts) {
 //detect if not connected to wifi or other network
 //(i.e. if there is only localhost)
 
-function isOffline () {
+function isOffline (e) {
+  if(ip.isLoopback(e.host)) return false
   var lo = Object.keys(os.networkInterfaces())
   return lo.length === 1 && lo[0] === 'lo'
 }
@@ -184,6 +185,7 @@ exports.isLegacy = isLegacy
 exports.isLocal = isLocal
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
+
 
 
 
