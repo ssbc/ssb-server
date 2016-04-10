@@ -30,7 +30,7 @@ module.exports = function (sbot, blobs, userQuotas, cb) {
 
       inflight ++
       pull(
-        sbot.links({dest: '&'+data.id}),
+        sbot.links({dest: data.id}),
         pull.drain(function (link) {
           if(!acc[link.source]) {
             acc[link.source] = true
@@ -59,3 +59,4 @@ module.exports = function (sbot, blobs, userQuotas, cb) {
     else          listeners.push(listener)
   }
 }
+
