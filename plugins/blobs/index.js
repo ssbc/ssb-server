@@ -67,9 +67,7 @@ module.exports = {
     var wantList = Replicate(sbot, config, notify, userQuotas)
 
     return {
-      get: valid.source(function (hash) {
-        return blobs.get(hash)
-      }, 'blobId'),
+      get: valid.source(blobs.get, 'blobId'),
 
       has: valid.async(function (hash, cb) {
         //emit blobs:has event when this api is called remotely.
@@ -78,10 +76,7 @@ module.exports = {
         blobs.has(hash, cb)
       }, 'blobId|array'),
 
-      size: valid.async(function (hash, cb) {
-        //sbot.emit('blobs:size', hash)
-        blobs.size(hash, cb)
-      }, 'blobId|array'),
+      size: valid.async(blobs.size, 'blobId|array'),
 
       add: valid.sink(function (hash, cb) {
         // cb once blob is successfully added.
@@ -106,13 +101,9 @@ module.exports = {
         })
       }, 'string?'),
 
-      rm: valid.async(function (hash, cb) {
-        return blobs.rm(hash, cb)
-      }, 'string'),
+      rm: valid.async(blobs.rm, 'string'),
 
-      ls: function (opts) {
-        return blobs.ls(opts)
-      },
+      ls: blobs.ls,
       // request to retrieve a blob,
       // calls back when that file is available.
       // - `opts.nowait`: call cb immediately if not found (dont register for callback)
@@ -132,9 +123,7 @@ module.exports = {
         })
       }, 'blobId', 'object?'),
 
-      changes: function () {
-        return notify.listen()
-      },
+      changes: notify.listen,
 
       quota: valid.sync(function (id) {
         return wantList.quota(id)
@@ -147,6 +136,11 @@ module.exports = {
     }
   }
 }
+
+
+
+
+
 
 
 
