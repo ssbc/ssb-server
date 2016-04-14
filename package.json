@@ -44,7 +44,7 @@
     "pull-stringify": "~1.2.2",
     "rimraf": "^2.4.2",
     "secret-stack": "^2.5.0",
-    "secure-scuttlebutt": "^15.0.4",
+    "secure-scuttlebutt": "git+https://github.com/ssbc/secure-scuttlebutt.git#b8de480bd262a69c357e80681dd60cf60c17681d",
     "ssb-client": "^3.0.1",
     "ssb-config": "^2.0.0",
     "ssb-feed": "^2.1.2",
