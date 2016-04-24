@@ -51,7 +51,16 @@ function formatter(id, level) {
   }
 }
 
-module.exports = function logging (server, conf) {
+exports.name = 'logging'
+exports.init = module.exports
+exports.manifest = {
+  log: 'sync'
+}
+exports.permissions = {
+  master: {allow: ['log']},
+}
+
+exports.init = function (server, conf) {
   var level = conf.logging && conf.logging.level && LOG_LEVELS.indexOf(conf.logging.level) || DEFAULT_LEVEL
   if (level === -1) {
     console.log('Warning, logging.level configured to an invalid value:', conf.logging.level)
@@ -69,6 +78,11 @@ module.exports = function logging (server, conf) {
     server.on('log:warning', formatter(id, color.yellow('warn')))
   if (level >= LOG_LEVELS.indexOf('error'))
     server.on('log:error',   formatter(id, color.red('err!')))
-}
 
-module.exports.init = module.exports
+  return {
+    log: function (levelName, plug, id, verb) {
+      server.emit('log:' + levelName, [].slice.call(arguments, 1))
+      return (LOG_LEVELS.indexOf(levelName) !== -1)
+    }
+  }
+}
