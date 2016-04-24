@@ -19,7 +19,7 @@ function indent (o) {
 }
 
 function isString(s) {
-  return 'string' === s
+  return 'string' === typeof s
 }
 
 function formatter(id, level) {
