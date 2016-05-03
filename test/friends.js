@@ -139,7 +139,7 @@ tape('correctly delete edges', function (t) {
 
   var sbot = createSbot({
       temp:'test-friends2',
-      port: 45451, host: 'localhost', timeout: 1000,
+      port: 45452, host: 'localhost', timeout: 1000,
       keys: aliceKeys
     })
 
@@ -237,7 +237,7 @@ tape('indirect friends', function (t) {
 
   var sbot = createSbot({
       temp:'test-friends3',
-      port: 45452, host: 'localhost', timeout: 1000,
+      port: 45453, host: 'localhost', timeout: 1000,
       keys: aliceKeys
     })
 

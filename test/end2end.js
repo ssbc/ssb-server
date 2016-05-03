@@ -35,7 +35,6 @@ tape('end2end a message, and test that indexes work', function (t) {
             aliceDb.links({type: 'msg'}),
             pull.collect(function (err, ary) {
               t.end()
-              aliceDb.close(true)
             })
           )
       })
@@ -63,7 +62,6 @@ tape('private.publish', function (t) {
             aliceDb.links({type: 'msg'}),
             pull.collect(function (err, ary) {
               t.end()
-              aliceDb.close(true)
             })
           )
       })
@@ -84,5 +82,6 @@ tape('private.unbox', function (t) {
       t.equal(plain.type, 'post')
       t.equal(plain.text, 'a scary secret')
       t.end()
+      aliceDb.close(true)
     })
 })
