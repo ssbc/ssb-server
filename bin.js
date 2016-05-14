@@ -8,9 +8,18 @@ var explain      = require('explain-error')
 var ssbKeys      = require('ssb-keys')
 var stringify    = require('pull-stringify')
 var createHash   = require('multiblob/util').createHash
-var config       = require('ssb-config/inject')(process.env.ssb_appname)
+var minimist     = require('minimist')
 var muxrpcli     = require('muxrpcli')
 var cmdAliases   = require('./lib/cli-cmd-aliases')
+
+//get config as cli options after --, options before that are
+//options to the command.
+var argv = process.argv.slice(2)
+var i = argv.indexOf('--')
+var conf = argv.slice(i+1)
+argv = argv.slice(0, i)
+
+var config = require('ssb-config/inject')(process.env.ssb_appname, minimist(conf))
 
 var keys = ssbKeys.loadOrCreateSync(path.join(config.path, 'secret'))
 if(keys.curve === 'k256')
@@ -19,7 +28,7 @@ if(keys.curve === 'k256')
 
 var manifestFile = path.join(config.path, 'manifest.json')
 
-if (process.argv[2] == 'server') {
+if (argv[0] == 'server') {
 
   // special server command:
   // import sbot and start the server
@@ -70,6 +79,7 @@ if (process.argv[2] == 'server') {
       if (/could not connect/.test(err.message)) {
         console.log('Error: Could not connect to the scuttlebot server.')
         console.log('Use the "server" command to start it.')
+        if(config.verbose) throw err
         process.exit(1)
       }
       throw err
@@ -100,7 +110,7 @@ if (process.argv[2] == 'server') {
       return blobsAddOverride(rpc)
 
     // run commandline flow
-    muxrpcli(process.argv.slice(2), manifest, rpc)
+    muxrpcli(argv, manifest, rpc, config.verbose)
   })
 }
 
@@ -120,4 +130,7 @@ function blobsAddOverride (rpc) {
     })
   )
 }
+
+
+
 
