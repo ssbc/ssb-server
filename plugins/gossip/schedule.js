@@ -48,7 +48,9 @@ function isOffline (e) {
 var isOnline = not(isOffline)
 
 function isLocal (e) {
-  return ip.isPrivate(e.host)
+  // don't rely on private ip address, because
+  // cjdns creates fake private ip addresses.
+  return ip.isPrivate(e.host) && e.type === 'local'
 }
 
 function isUnattempted (e) {
@@ -185,13 +187,4 @@ exports.isLegacy = isLegacy
 exports.isLocal = isLocal
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
-
-
-
-
-
-
-
-
-
 
