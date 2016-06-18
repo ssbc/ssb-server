@@ -148,9 +148,10 @@ module.exports = {
       },
       reconnect: function () {
         for(var id in server.peers)
-          server.peers[id].forEach(function (peer) {
-            peer.close(true)
-          })
+          if(id !== server.id) //don't disconnect local client
+            server.peers[id].forEach(function (peer) {
+              peer.close(true)
+            })
         return gossip.wakeup = Date.now()
       }
     }
