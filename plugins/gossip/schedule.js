@@ -1,6 +1,8 @@
 var nonPrivate = require('non-private-ip')
 var ip = require('ip')
 var onWakeup = require('on-wakeup')
+var onNetwork = require('on-change-network')
+
 var Stats = require('statistics')
 var os = require('os')
 var pull = require('pull-stream')
@@ -104,6 +106,10 @@ function (gossip, config, server) {
 
   var min = 60e3, hour = 60*60e3
 
+  //trigger hard reconnect after suspend or local network changes
+  onWakeup(gossip.reconnect)
+  onNetwork(gossip.reconnect)
+
   function conf(name, def) {
     if(!config.gossip) return def
     var value = config.gossip[name]
@@ -187,4 +193,5 @@ exports.isLegacy = isLegacy
 exports.isLocal = isLocal
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
+
 
