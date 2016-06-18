@@ -81,3 +81,9 @@ Events come in the following forms:
 { type: 'connect-failure', peer: }
 { type: 'disconnect', peer: }
 ```
+
+## reconnect: sync
+
+Tell sbot to reinitiate gossip connections now.
+
+

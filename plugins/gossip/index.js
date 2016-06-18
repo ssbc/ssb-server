@@ -52,6 +52,7 @@ module.exports = {
     var timer_ping = 5*6e4
 
     var gossip = {
+      wakeup: 0,
       peers: function () {
         return peers
       },
@@ -144,6 +145,13 @@ module.exports = {
         //between 10 seconds and 30 minutes, default 5 min
         timeout = Math.max(10e3, Math.min(timeout, 30*60e3))
         return ping({timeout: timeout})
+      },
+      reconnect: function () {
+        for(var id in server.peers)
+          server.peers[id].forEach(function (peer) {
+            peer.close(true)
+          })
+        return gossip.wakeup = Date.now()
       }
     }
 
@@ -198,6 +206,8 @@ module.exports = {
     return gossip
   }
 }
+
+
 
 
 
