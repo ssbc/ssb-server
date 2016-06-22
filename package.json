@@ -36,6 +36,7 @@
     "pull-abortable": "~4.0.0",
     "pull-cat": "~1.1.5",
     "pull-inactivity": "~2.1.1",
+    "pull-level": "^2.0.2",
     "pull-many": "~1.0.6",
     "pull-notify": "0.0.0",
     "pull-paramap": "~1.1.1",
@@ -54,7 +55,7 @@
     "ssb-msgs": "~5.0.0",
     "ssb-ref": "^2.0.0",
     "statistics": "^2.0.1",
-    "stream-to-pull-stream": "~1.6.5",
+    "stream-to-pull-stream": "^1.6.10",
     "zerr": "^1.0.0"
   },
   "devDependencies": {
