@@ -4,7 +4,7 @@ Scuttlebot is an open source **peer-to-peer log store** used as a database, iden
 It has:
 
  - Global replication
- - File-syncronization 
+ - File-synchronization 
  - End-to-end encryption
 
 Scuttlebot behaves just like a [Kappa Architecture DB](http://www.kappa-architecture.com/).
