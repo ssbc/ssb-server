@@ -17,7 +17,7 @@ var cmdAliases   = require('./lib/cli-cmd-aliases')
 var argv = process.argv.slice(2)
 var i = argv.indexOf('--')
 var conf = argv.slice(i+1)
-argv = ~i ? argv.slice(0) : argv
+argv = ~i ? argv.slice(0, i) : argv
 
 var config = require('ssb-config/inject')(process.env.ssb_appname, minimist(conf))
 
