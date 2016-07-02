@@ -11,6 +11,8 @@ var valid  = require('../../lib/validators')
 var apidoc = require('../../lib/apidocs').blobs
 var Replicate = require('./replication')
 
+var mbu = require('multiblob/util')
+
 // blobs plugin
 // methods to read/write the blobstore
 // and automated blob-fetching from the network
@@ -19,17 +21,22 @@ function isFunction (f) {
   return 'function' === typeof f
 }
 
-function desigil (hash) {
+function _desigil (hash) {
   return isBlob(hash) ? hash.substring(1) : hash
 }
 
-function resigil (hash) {
+function _resigil (hash) {
   return isBlob(hash) ? hash : '&'+hash
 }
 
 function isString (s) {
   return 'string' === typeof s
 }
+
+//desigil = _desigil
+//
+//resigil = _resigil
+
 
 module.exports = {
   name: 'blobs',
@@ -45,7 +52,14 @@ module.exports = {
 
     var blobs = sbot._blobs = Blobs({
       dir: path.join(config.path, 'blobs'),
-      hash: 'sha256'
+      hash: 'sha256',
+      encode: function (buf, alg) {
+        return _resigil(mbu.encode(buf, alg))
+      },
+      decode: function (str) {
+        return mbu.decode(_desigil(str))
+      },
+      isHash: isBlob
     })
 
     var userQuotas = {} // map of { feedId => quotaUsage }, for rate-limiting
@@ -53,21 +67,16 @@ module.exports = {
     var wantList = Replicate(sbot, config, notify, userQuotas)
 
     return {
-      get: valid.source(function (hash) {
-        return blobs.get(desigil(hash))
-      }, 'blobId'),
+      get: valid.source(blobs.get, 'blobId'),
 
       has: valid.async(function (hash, cb) {
         //emit blobs:has event when this api is called remotely.
         //needed to make tests pass. should probably remove this.
         if(this.id) sbot.emit('blobs:has', hash)
-        blobs.has(desigil(hash), cb)
+        blobs.has(hash, cb)
       }, 'blobId|array'),
 
-      size: valid.async(function (hash, cb) {
-        //sbot.emit('blobs:size', hash)
-        blobs.size(desigil(hash), cb)
-      }, 'blobId|array'),
+      size: valid.async(blobs.size, 'blobId|array'),
 
       add: valid.sink(function (hash, cb) {
         // cb once blob is successfully added.
@@ -75,9 +84,8 @@ module.exports = {
         // so this is only available when using this api 
         if(isFunction(hash)) cb = hash, hash = null
 
-        return blobs.add(desigil(hash), function (err, hash) {
+        return blobs.add(hash, function (err, hash) {
           if(!err) {
-            hash = resigil(hash)
             sbot.emit('blobs:got', hash)
             notify(hash)
             //wait until quotas have been calculated
@@ -93,18 +101,9 @@ module.exports = {
         })
       }, 'string?'),
 
-      rm: valid.async(function (hash, cb) {
-        return blobs.rm(desigil(hash), cb)
-      }, 'string'),
+      rm: valid.async(blobs.rm, 'string'),
 
-      ls: function (opts) {
-        return pull(blobs.ls(opts), pull.map(function (e) {
-          if(e.sync) return e
-          if(isString(e)) return resigil(e)
-          e.id = resigil(e.id)
-          return e
-        }))
-      },
+      ls: blobs.ls,
       // request to retrieve a blob,
       // calls back when that file is available.
       // - `opts.nowait`: call cb immediately if not found (dont register for callback)
@@ -117,16 +116,14 @@ module.exports = {
         if(!isBlob(hash)) return cb(new Error('not a hash:' + hash))
 
         sbot.emit('blobs:wants', hash)
-        blobs.has(desigil(hash), function (_, has) {
+        blobs.has(hash, function (_, has) {
           if (has) return cb(null, true)
           // update queue
           wantList.want(hash, id, cb)
         })
       }, 'blobId', 'object?'),
 
-      changes: function () {
-        return notify.listen()
-      },
+      changes: notify.listen,
 
       quota: valid.sync(function (id) {
         return wantList.quota(id)
@@ -139,3 +136,11 @@ module.exports = {
     }
   }
 }
+
+
+
+
+
+
+
+

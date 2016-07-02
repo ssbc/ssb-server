@@ -4,7 +4,7 @@ Scuttlebot is an open source **peer-to-peer log store** used as a database, iden
 It has:
 
  - Global replication
- - File-syncronization 
+ - File-synchronization
  - End-to-end encryption
 
 Scuttlebot behaves just like a [Kappa Architecture DB](http://www.kappa-architecture.com/).
@@ -102,7 +102,7 @@ Therefore, by itself, it would probably make a poor choice for implementing a cr
 
 - [Install](https://ssbc.github.io/docs/scuttlebot/install.html) - Setup instructions
 - [Tutorial](https://ssbc.github.io/docs/scuttlebot/tutorial.html) - Primer on developing with Scuttlebot
-- [API / CLI Reference](https://ssbc.github.io/docs/api/scuttlebot.html)
+- [API / CLI Reference](https://scuttlebot.io/apis/scuttlebot/ssb.html)
 
 ### Key Concepts
 
@@ -117,3 +117,5 @@ Therefore, by itself, it would probably make a poor choice for implementing a cr
 - [Design Challenge: Avoid Centralization and Singletons](https://ssbc.github.io/docs/articles/design-challenge-avoid-centralization-and-singletons.html)
 - [Design Challenge: Sybil Attacks](https://ssbc.github.io/docs/articles/design-challenge-sybil-attack.html)
 - [Using Trust in Open Networks](https://ssbc.github.io/docs/articles/using-trust-in-open-networks.html)
+
+

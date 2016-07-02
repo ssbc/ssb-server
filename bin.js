@@ -8,9 +8,18 @@ var explain      = require('explain-error')
 var ssbKeys      = require('ssb-keys')
 var stringify    = require('pull-stringify')
 var createHash   = require('multiblob/util').createHash
-var config       = require('ssb-config/inject')(process.env.ssb_appname)
+var minimist     = require('minimist')
 var muxrpcli     = require('muxrpcli')
 var cmdAliases   = require('./lib/cli-cmd-aliases')
+
+//get config as cli options after --, options before that are
+//options to the command.
+var argv = process.argv.slice(2)
+var i = argv.indexOf('--')
+var conf = argv.slice(i+1)
+argv = ~i ? argv.slice(0, i) : argv
+
+var config = require('ssb-config/inject')(process.env.ssb_appname, minimist(conf))
 
 var keys = ssbKeys.loadOrCreateSync(path.join(config.path, 'secret'))
 if(keys.curve === 'k256')
@@ -19,12 +28,13 @@ if(keys.curve === 'k256')
 
 var manifestFile = path.join(config.path, 'manifest.json')
 
-if (process.argv[2] == 'server') {
+if (argv[0] == 'server') {
 
   // special server command:
   // import sbot and start the server
 
   var createSbot = require('./')
+    .use(require('./plugins/plugins'))
     .use(require('./plugins/master'))
     .use(require('./plugins/gossip'))
     .use(require('./plugins/friends'))
@@ -36,7 +46,11 @@ if (process.argv[2] == 'server') {
     .use(require('./plugins/logging'))
     .use(require('./plugins/private'))
 
+  // add third-party plugins
+  require('./plugins/plugins').loadUserPlugins(createSbot, config)
+
   // start server
+
   config.keys = keys
   var server = createSbot(config)
 
@@ -69,6 +83,7 @@ if (process.argv[2] == 'server') {
       if (/could not connect/.test(err.message)) {
         console.log('Error: Could not connect to the scuttlebot server.')
         console.log('Use the "server" command to start it.')
+        if(config.verbose) throw err
         process.exit(1)
       }
       throw err
@@ -94,12 +109,13 @@ if (process.argv[2] == 'server') {
 
     // HACK
     // we need to output the hash of blobs that are added via blobs.add
-    // because muxrpc doesnt support the `sink` callback yet, we need this manual override:
+    // because muxrpc doesnt support the `sink` callback yet, we need this manual override
+    // -prf
     if (process.argv[2] === 'blobs.add')
       return blobsAddOverride(rpc)
 
     // run commandline flow
-    muxrpcli(process.argv.slice(2), manifest, rpc)
+    muxrpcli(argv, manifest, rpc, config.verbose)
   })
 }
 
@@ -119,4 +135,7 @@ function blobsAddOverride (rpc) {
     })
   )
 }
+
+
+
 

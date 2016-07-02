@@ -1,0 +1,577 @@
+{
+  "ts": 1458983392551,
+  "peers":[
+    {
+      "host": "188.166.252.233",
+      "port": 8008,
+      "key": "@uRECWB4KIeKoNMis2UYWyB2aQPvWmS3OePQvBj2zClg=.ed25519",
+      "source": "pub",
+      "announcers": 73,
+      "duration": {
+        "mean": 31904.760869565216,
+        "count": 46,
+        "stdev": 4283.4027066299295
+      },
+      "client": true,
+      "time": {
+        "connect": 1458983141389,
+        "hangup": 1458983172624,
+        "attempt": 1458983106552
+      },
+      "stateChange": 1458983172624,
+      "ping": {
+        "rtt": {
+          "mean": 0,
+          "count": 0,
+          "stdev": null
+        },
+        "skew": {
+          "mean": 0,
+          "count": 0,
+          "stdev": null
+        }
+      },
+      "active": true,
+      "failure": 0
+    },
+    {
+      "host": "176.58.117.63",
+      "port": 8008,
+      "key": "@J+0DGLgRn8H5tVLCcRUfN7NfUcTGEZKqML3krEOJjDY=.ed25519",
+      "source": "pub",
+      "announcers": 61,
+      "duration": {
+        "mean": 0,
+        "count": 1,
+        "stdev": 0
+      },
+      "time": {
+        "attempt": 1458953075788,
+        "hangup": 1458953080790
+      },
+      "stateChange": 1458953080790,
+      "active": false,
+      "failure": 1
+    },
+    {
+      "host": "88.198.115.222",
+      "port": 8008,
+      "key": "@im4Qn0fCzpD3YfsegHFLJzkNXYUb/nYnlfuCf+LmPuM=.ed25519",
+      "source": "pub",
+      "announcers": 20,
+      "duration": {
+        "mean": 0,
+        "count": 4,
+        "stdev": 0
+      },
+      "time": {
+        "attempt": 1458953251559,
+        "hangup": 1458953251864
+      },
+      "stateChange": 1458953251864,
+      "active": false,
+      "failure": 4
+    },
+    {
+      "port": 8008,
+      "key": "@J+0DGLgRn8H5tVLCcRUfN7NfUcTGEZKqML3krEOJjDY=.ed25519",
+      "host": "localhost",
+      "source": "pub",
+      "announcers": 2,
+      "duration": {
+        "mean": 0,
+        "count": 1,
+        "stdev": 0
+      },
+      "time": {
+        "attempt": 1458953201000,
+        "hangup": 1458953201006
+      },
+      "stateChange": 1458953201006,
+      "active": false,
+      "failure": 1
+    },
+    {
+      "host": "131.72.139.47",
+      "port": 8008,
+      "key": "@V+sfZ+X/MSUb+cO3GVI4gn1cCVVwz1+t6B+J9DlUkQs=.ed25519",
+      "source": "pub",
+      "announcers": 36,
+      "duration": {
+        "mean": 32998.13636363636,
+        "count": 22,
+        "stdev": 5928.972188219304
+      },
+      "time": {
+        "attempt": 1458983355392,
+        "connect": 1458983356298,
+        "hangup": 1458983280114
+      },
+      "stateChange": 1458983356298,
+      "state": "connected",
+      "client": true,
+      "ping": {
+        "rtt": {
+          "mean": 0,
+          "count": 0,
+          "stdev": null
+        },
+        "skew": {
+          "mean": 0,
+          "count": 0,
+          "stdev": null
+        }
+      },
+      "active": true,
+      "failure": 0
+    },
+    {
+      "host": "24.75.24.253",
+      "port": 8008,
+      "key": "@JMnMSsDHjwZfUlC2J8ZiIAOoxM5KJfsvewmVe39/wSM=.ed25519",
+      "source": "pub",
+      "announcers": 7,
+      "duration": {
+        "mean": 0,
+        "count": 1,
+        "stdev": 0
+      },
+      "time": {
+        "attempt": 1458953190929,
+        "hangup": 1458953195931
+      },
+      "stateChange": 1458953195931,
+      "active": false,
+      "failure": 1
+    },
+    {
+      "host": "45.33.29.124",
+      "port": 8008,
+      "key": "@0GLMsG6IgXdv+GjG0U5UnZlwxHnomlfmrlWugx8i4dg=.ed25519",
+      "source": "pub",
+      "announcers": 28,
+      "duration": {
+        "mean": 0,
+        "count": 2,
+        "stdev": 0
+      },
+      "time": {
+        "attempt": 1458957207322,
+        "hangup": 1458957208010
+      },
+      "stateChange": 1458957208010,
+      "active": false,
+      "failure": 2
+    },
+    {
+      "host": "74.207.246.247",
+      "port": 8008,
+      "key": "@omgyp7Pnrw+Qm0I6T6Fh5VvnKmodMXwnxTIesW2DgMg=.ed25519",
+      "source": "pub",
+      "announcers": 9,
+      "duration": {
+        "mean": 0,
+        "count": 3,
+        "stdev": 0
+      },
+      "time": {
+        "attempt": 1458971210200,
+        "hangup": 1458971215201
+      },
+      "stateChange": 1458971215201,
+      "active": false,
+      "failure": 3
+    },
+    {
+      "host": "188.166.107.197",
+      "port": 8008,
+      "key": "@/RM1Id8j05uitIt6iwMpiivnCqHcbcC1IHyi5FrvLLQ=.ed25519",
+      "source": "pub",
+      "announcers": 7,
+      "duration": {
+        "mean": 0,
+        "count": 1,
+        "stdev": 0
+      },
+      "time": {
+        "attempt": 1458971090648,
+        "hangup": 1458971090943
+      },
+      "stateChange": 1458971090943,
+      "active": false,
+      "failure": 1
+    },
+    {
+      "host": "24.75.24.253",
+      "port": 8008,
+      "key": "@WzvzUh2KMhAfWeJEpkI01BGlTtLXOei7GoB/dLVjcjE=.ed25519",
+      "source": "pub",
+      "announcers": 3,
+      "duration": {
+        "mean": 0,
+        "count": 2,
+        "stdev": 0
+      },
+      "time": {
+        "attempt": 1458953330661,
+        "hangup": 1458953335663
+      },
+      "stateChange": 1458953335663,
+      "active": false,
+      "failure": 2
+    },
+    {
+      "host": "9ithub.com",
+      "port": 8008,
+      "key": "@GLH9VPzvvU2KcnnUu2n5oxOqaTUtzw+Rk6fd/Kb9Si0=.ed25519",
+      "source": "pub",
+      "announcers": 3,
+      "duration": {
+        "mean": 0,
+        "count": 2,
+        "stdev": 0
+      },
+      "time": {
+        "attempt": 1458971894621,
+        "hangup": 1458971899623
+      },
+      "stateChange": 1458971899623,
+      "active": false,
+      "failure": 2
+    },
+    {
+      "host": "9ithub.com",
+      "port": 8008,
+      "key": "@D0GsAaMyt96Ze3q1YiiuzWhPkyou2fVTUgw8Xr+G7Jo=.ed25519",
+      "source": "pub",
+      "announcers": 6,
+      "duration": {
+        "mean": 0,
+        "count": 1,
+        "stdev": 0
+      },
+      "time": {
+        "attempt": 1458961886104,
+        "hangup": 1458961891107
+      },
+      "stateChange": 1458961891107,
+      "active": false,
+      "failure": 1
+    },
+    {
+      "host": "104.236.72.67",
+      "port": 8008,
+      "key": "@xBZ783+eCc9+vc/CHxR03y1nAcfULJUAOgd3zWsy1uY=.ed25519",
+      "source": "pub",
+      "announcers": 6,
+      "duration": {
+        "mean": 0,
+        "count": 4,
+        "stdev": 0
+      },
+      "time": {
+        "attempt": 1458953376539,
+        "hangup": 1458953376759
+      },
+      "stateChange": 1458953376759,
+      "active": false,
+      "failure": 4
+    },
+    {
+      "host": "newpi.ffhh",
+      "port": 8080,
+      "key": "@gYCJpN4eGDjHFnWW2Fcusj8O4QYbVDUW6rNYh7nNEnc=.ed25519",
+      "source": "pub",
+      "announcers": 2,
+      "duration": {
+        "mean": 0,
+        "count": 1,
+        "stdev": 0
+      },
+      "time": {
+        "attempt": 1458950587731,
+        "hangup": 1458950588413
+      },
+      "stateChange": 1458950588413,
+      "active": false,
+      "failure": 1
+    },
+    {
+      "host": "acab.mobi",
+      "port": 5228,
+      "key": "@Ia0xWQGJSTjRfYjHDDAFizXR9e8l5RQctTqYcbtR+Es=.ed25519",
+      "source": "pub",
+      "announcers": 9,
+      "duration": {
+        "mean": 0,
+        "count": 2,
+        "stdev": 0
+      },
+      "time": {
+        "attempt": 1458961704834,
+        "hangup": 1458961705136
+      },
+      "stateChange": 1458961705136,
+      "active": false,
+      "failure": 2
+    },
+    {
+      "host": "pi.bret.io",
+      "port": 8008,
+      "key": "@j3qWwQrWPzTM9zNgk0SI0FcqP1ULGquuINYEWfL330g=.ed25519",
+      "source": "pub",
+      "announcers": 50,
+      "duration": {
+        "mean": 32263.5625,
+        "count": 32,
+        "stdev": 1058.4539709376832
+      },
+      "time": {
+        "attempt": 1458983320400,
+        "connect": 1458983321181,
+        "hangup": 1458983352907
+      },
+      "stateChange": 1458983352907,
+      "client": true,
+      "ping": {
+        "rtt": {
+          "mean": 0,
+          "count": 0,
+          "stdev": null
+        },
+        "skew": {
+          "mean": 0,
+          "count": 0,
+          "stdev": null
+        }
+      },
+      "active": true,
+      "failure": 0
+    },
+    {
+      "host": "drinkbot.org",
+      "port": 8008,
+      "key": "@kOK9sfSLeFrQMtYaqLQ3nZE19v2IDiEwlpEdAqep3bw=.ed25519",
+      "source": "pub",
+      "announcers": 22,
+      "duration": {
+        "mean": 31111.65,
+        "count": 20,
+        "stdev": 278.72231252617365
+      },
+      "time": {
+        "attempt": 1458983212281,
+        "connect": 1458983212774,
+        "hangup": 1458983243562
+      },
+      "stateChange": 1458983243562,
+      "client": true,
+      "ping": {
+        "rtt": {
+          "mean": 0,
+          "count": 0,
+          "stdev": null
+        },
+        "skew": {
+          "mean": 0,
+          "count": 0,
+          "stdev": null
+        }
+      },
+      "active": true,
+      "failure": 0
+    },
+    {
+      "host": "128.199.132.182",
+      "port": 8008,
+      "key": "@DTNmX+4SjsgZ7xyDh5xxmNtFqa6pWi5Qtw7cE8aR9TQ=.ed25519",
+      "source": "pub",
+      "announcers": 22,
+      "duration": {
+        "mean": 3632843.1666666665,
+        "count": 18,
+        "stdev": 1312601.5419976406
+      },
+      "time": {
+        "attempt": 1458983143359,
+        "connect": 1458983143915,
+        "hangup": 1458982814101
+      },
+      "stateChange": 1458983143915,
+      "state": "connected",
+      "client": true,
+      "ping": {
+        "rtt": {
+          "mean": 234,
+          "count": 1,
+          "stdev": 0
+        },
+        "skew": {
+          "mean": -4,
+          "count": 1,
+          "stdev": 0
+        }
+      },
+      "active": true,
+      "failure": 0
+    },
+    {
+      "host": "mindeco.de",
+      "port": 110,
+      "key": "@Uki1+Hds2kkx4rOWl202SPfcsgsdaLHJ/Y6OfPnK1xk=.ed25519",
+      "source": "pub",
+      "announcers": 11,
+      "duration": {
+        "mean": 30915.4,
+        "count": 25,
+        "stdev": 4021.505538974173
+      },
+      "time": {
+        "attempt": 1458982853190,
+        "connect": 1458983037094,
+        "hangup": 1458983068852
+      },
+      "stateChange": 1458983068852,
+      "client": true,
+      "ping": {
+        "rtt": {
+          "mean": 0,
+          "count": 0,
+          "stdev": null
+        },
+        "skew": {
+          "mean": 0,
+          "count": 0,
+          "stdev": null
+        },
+        "fail": true
+      },
+      "active": true,
+      "failure": 0
+    },
+    {
+      "host": "pub.mixmix.io",
+      "port": 8008,
+      "key": "@uRECWB4KIeKoNMis2UYWyB2aQPvWmS3OePQvBj2zClg=.ed25519",
+      "source": "pub",
+      "announcers": 35,
+      "duration": {
+        "mean": 0,
+        "count": 0,
+        "stdev": null
+      },
+      "time": {
+        "attempt": 1458983140788
+      },
+      "stateChange": 1458983140788,
+      "state": "connected",
+      "active": true,
+      "failure": 0
+    },
+    {
+      "host": "178.62.206.163",
+      "port": 110,
+      "key": "@Uki1+Hds2kkx4rOWl202SPfcsgsdaLHJ/Y6OfPnK1xk=.ed25519",
+      "source": "pub",
+      "announcers": 23,
+      "duration": {
+        "mean": 0,
+        "count": 0,
+        "stdev": null
+      },
+      "time": {
+        "attempt": 1458983036198
+      },
+      "stateChange": 1458983036198,
+      "state": "connected",
+      "active": true,
+      "failure": 0
+    },
+    {
+      "host": "evbogue.com",
+      "port": 8008,
+      "key": "@9sCXwCJZJ9doPcx7oZ1gm7HNZapO2Z9iZ0FJHJdROio=.ed25519",
+      "source": "pub",
+      "announcers": 9,
+      "duration": {
+        "mean": 37290.125,
+        "count": 8,
+        "stdev": 8451.830414731177
+      },
+      "time": {
+        "attempt": 1458982816595,
+        "connect": 1458982818525,
+        "hangup": 1458982851463
+      },
+      "stateChange": 1458982851463,
+      "client": true,
+      "ping": {
+        "rtt": {
+          "mean": 0,
+          "count": 0,
+          "stdev": null
+        },
+        "skew": {
+          "mean": 0,
+          "count": 0,
+          "stdev": null
+        },
+        "fail": true
+      },
+      "active": true,
+      "failure": 0
+    },
+    {
+      "host": "104.131.122.139",
+      "port": 8008,
+      "key": "@kZ9Ra80lKWlmzfjxh5PFAjJWYlCHEPxbqxNajdzhPF8=.ed25519",
+      "source": "pub",
+      "announcers": 3,
+      "duration": {
+        "mean": 0,
+        "count": 2,
+        "stdev": 0
+      },
+      "time": {
+        "attempt": 1458953214645,
+        "hangup": 1458953214865
+      },
+      "stateChange": 1458953214865,
+      "active": false,
+      "failure": 2
+    },
+    {
+      "host": "45.33.29.124",
+      "port": 8008,
+      "key": "@HogU/jcIAkSD/Owzjwv4X140CEW0FIco7QxPM47BVa8=.ed25519",
+      "source": "pub",
+      "announcers": 27,
+      "duration": {
+        "mean": 31529.136363636364,
+        "count": 22,
+        "stdev": 427.74847063697473
+      },
+      "time": {
+        "attempt": 1458983282932,
+        "connect": 1458983283615,
+        "hangup": 1458983315097
+      },
+      "stateChange": 1458983315097,
+      "client": true,
+      "ping": {
+        "rtt": {
+          "mean": 0,
+          "count": 0,
+          "stdev": null
+        },
+        "skew": {
+          "mean": 0,
+          "count": 0,
+          "stdev": null
+        }
+      },
+      "active": true,
+      "failure": 0
+    }
+  ]
+}

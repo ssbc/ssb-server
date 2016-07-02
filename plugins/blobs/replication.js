@@ -50,6 +50,7 @@ module.exports = function (sbot, opts, notify, userQuotas) {
   // getting a use for each feed.
 
   function createJob(id, owner, cb) {
+    console.log('CREAT', id)
     toArray(owner).forEach(function (e) {
       if(e[0] !== '@') throw new Error('not a owner:'+e)
     })
