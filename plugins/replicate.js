@@ -217,6 +217,7 @@ module.exports = {
       // this is the cli client, just ignore.
       if(rpc.id === sbot.id) return
 
+      var startTS = Date.now()
       sbot.emit('log:info', ['replicate', rpc.id, 'start'])
       sbot.emit('replicate:start', rpc)
       replicate(sbot, config, rpc, function (err, final, initial) {
@@ -229,7 +230,7 @@ module.exports = {
           for (var author in final)
             progress[author] = final[author] - (initial[author] || 0)
 
-          var progressSummary = summarizeProgress(progress)
+          var progressSummary = summarizeProgress(progress, Date.now() - startTS)
           if (progressSummary)
             sbot.emit('log:notice', ['replicate', rpc.id, 'success', progressSummary])
           sbot.emit('replicate:finish', final)
@@ -245,7 +246,7 @@ module.exports = {
   }
 }
 
-function summarizeProgress (progress) {
+function summarizeProgress (progress, timeDelta) {
   // count the number of feeds updated, and the number of new messages
   var updatedFeeds = 0, newMessages = 0
   for (var author in progress) {
@@ -257,7 +258,13 @@ function summarizeProgress (progress) {
   // no message if no updates
   if (updatedFeeds === 0)
     return false
-  return 'Feeds updated: '+updatedFeeds+', New messages: '+newMessages
+
+  // create a nicely-formatted time
+  var timeDeltaMM = Math.floor(timeDelta / (1e3*60))
+  var timeDeltaSS = Math.floor((timeDelta % (1e3*60)) / 1e3)
+  var timeDeltaNice = ''+timeDeltaMM+'m'+timeDeltaSS+'s'
+
+  return 'Feeds updated: '+updatedFeeds+', New messages: '+newMessages+', in '+timeDeltaNice
 }
 
 
