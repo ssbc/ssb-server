@@ -77,7 +77,7 @@ if (argv[0] == 'server') {
     manifest: manifest,
     port: config.port,
     host: config.host||'localhost',
-    key: keys.id
+    key: config.key || keys.id
   }, function (err, rpc) {
     if(err) {
       if (/could not connect/.test(err.message)) {
@@ -135,6 +135,10 @@ function blobsAddOverride (rpc) {
     })
   )
 }
+
+
+
+
 
 
 
