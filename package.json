@@ -53,7 +53,7 @@
     "ssb-feed": "^2.1.2",
     "ssb-keys": "^5.1.2",
     "ssb-msgs": "~5.0.0",
-    "ssb-ref": "^2.0.0",
+    "ssb-ref": "^2.3.2",
     "statistics": "^2.0.1",
     "stream-to-pull-stream": "^1.6.10",
     "zerr": "^1.0.0"
