@@ -71,6 +71,7 @@ module.exports = {
         // check if the pubkey is one of our invite codes
         codesDB.get(pubkey, function (_, code) {
           //disallow if this invite has already been used.
+          console.log(code)
           if(code.used >= code.total) cb()
           else cb(null, code && code.permissions)
         })
@@ -106,7 +107,7 @@ module.exports = {
           id: keyCap.id,
           total: +n,
           used: 0,
-          permissions: {allow: ['invite.use'], deny: null}
+          permissions: {allow: ['invite.use', 'getAddress'], deny: null}
         }, function (err) {
           // emit the invite code: our server address, plus the key-seed
           if(err) cb(err)
@@ -227,4 +228,5 @@ module.exports = {
     }
   }
 }
+
 
