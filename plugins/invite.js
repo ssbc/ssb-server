@@ -7,6 +7,9 @@ var ip = require('ip')
 var mdm = require('mdmanifest')
 var valid = require('../lib/validators')
 var apidoc = require('../lib/apidocs').invite
+var ref = require('ssb-ref')
+
+var ssbClient = require('ssb-client')
 
 // invite plugin
 // adds methods for producing invite-codes,
@@ -18,6 +21,28 @@ function isFunction (f) {
 
 function isString (s) {
   return 'string' === typeof s
+}
+
+function isObject(o) {
+  return o && 'object' === typeof o
+}
+
+function parseMultiServerInvite (invite) {
+  var parts = invite.split('~')
+  .map(function (e) { return e.split(':') })
+
+  if(parts.length !== 2) return null
+  if(!/^(net|wss?)$/.test(parts[0][0])) return null
+  if(parts[1][0] !== 'shs') return null
+  if(parts[1].length !== 3) return null
+  var p2 = invite.split(':')
+  p2.pop()
+
+  return {
+    invite: invite,
+    remote: p2.join(':'),
+    key: '@'+p2.pop()+'.ed25519'
+  }
 }
 
 module.exports = {
@@ -45,13 +70,20 @@ module.exports = {
         // if no rights were already defined for this pubkey
         // check if the pubkey is one of our invite codes
         codesDB.get(pubkey, function (_, code) {
-          return cb(null, code && code.permissions)
+          //disallow if this invite has already been used.
+          if(code.used >= code.total) cb()
+          else cb(null, code && code.permissions)
         })
       })
     })
 
     return {
       create: valid.async(function (n, cb) {
+        var modern = false
+        if(isObject(n) && n.modern) {
+          n = 1
+          modern = true
+        }
         var addr = server.getAddress()
         var host = toAddress(addr).host
         if(!config.allowPrivate && (ip.isPrivate(host) || 'localhost' === host))
@@ -78,9 +110,13 @@ module.exports = {
         }, function (err) {
           // emit the invite code: our server address, plus the key-seed
           if(err) cb(err)
-          else cb(null, addr + '~' + seed.toString('base64'))
+          else if(modern && server.ws && server.ws.getAddress) {
+            cb(null, server.ws.getAddress()+':'+seed.toString('base64'))
+          }
+          else
+            cb(null, addr + '~' + seed.toString('base64'))
         })
-      }, 'number'),
+      }, 'number|object'),
       use: valid.async(function (req, cb) {
         var rpc = this
 
@@ -104,9 +140,9 @@ module.exports = {
             invite.used ++
 
             //never allow this to be used again
-            if(invite.used >= invite.total)
+            if(invite.used >= invite.total) {
               invite.permissions = {allow: [], deny: null}
-
+            }
             //TODO
             //okay so there is a small race condition here
             //if people use a code massively in parallel
@@ -123,7 +159,7 @@ module.exports = {
                 type: 'contact',
                 contact: req.feed,
                 following: true,
-                autofollow: true
+                pub: true
               }, cb)
             })
           })
@@ -133,15 +169,25 @@ module.exports = {
         // remove surrounding quotes, if found
         if (invite.charAt(0) === '"' && invite.charAt(invite.length - 1) === '"')
           invite = invite.slice(1, -1)
-
+        var opts
         // connect to the address in the invite code
         // using a keypair generated from the key-seed in the invite code
+        var modern = false
+        if(ref.isInvite(invite)) { //legacy invite
 
-        var parts = invite.split('~')
-        var addr = toAddress(parts[0])
+          var parts = invite.split('~')
+          opts = toAddress(parts[0])//.split(':')
+          //convert legacy code to multiserver invite code.
+          invite = 'net:'+opts.host+':'+opts.port+'~shs:'+opts.key.slice(1, -8)+':'+parts[1]
+        } else {
+          modern = true
+          opts = parseMultiServerInvite(invite)
+        }
 
-        createClient({ seed: parts[1] })
-        (addr, function (err, rpc) {
+        ssbClient(null, {
+          remote: invite,
+          manifest: {invite: {use: 'async'}, getAddress: 'async'}
+        }, function (err, rpc) {
           if(err) return cb(explain(err, 'could not connect to server'))
 
           // command the peer to follow me
@@ -154,15 +200,26 @@ module.exports = {
                 type: 'contact',
                 following: true,
                 autofollow: true,
-                contact: addr.link || addr.key
+                contact: opts.key
               }),
-              server.publish({
-                type: 'pub',
-                address: addr,
+              (
+                opts.host
+                ? server.publish({
+                    type: 'pub',
+                    address: opts
+                  })
+                : function (cb) { cb() }
+              )
+            ])
+            (function (err, results) {
+              if(err) return cb(err)
+              rpc.getAddress(function (err, addr) {
+                rpc.close()
+                //ignore err if this is new style invite
+                if(modern && err) return cb(err, addr)
+                if(server.gossip) server.gossip.add(addr, 'seed')
+                cb(null, results)
               })
-            ])(function (err, results) {
-              rpc.close()
-              cb(err, results)
             })
           })
         })
@@ -170,10 +227,4 @@ module.exports = {
     }
   }
 }
-
-
-
-
-
-
 
