@@ -9,6 +9,7 @@ var createSbot = require('../')
   .use(require('../plugins/master'))
   .use(require('../plugins/invite'))
   .use(require('../plugins/friends'))
+  .use(require('ssb-ws'))
 
 function all(stream, cb) {
   return pull(stream, pull.collect(cb))
@@ -201,7 +202,7 @@ tape('test invite.accept api with ipv6', function (t) {
 
     // use a local ipv6 address in the invite
     var inviteV6 = invite.replace(/^[0-9.]*/, '::1')
-    console.log(inviteV6)
+    console.log(inviteV6, invite)
 
     bob.invite.accept(inviteV6, function (err) {
       if(err) throw err
@@ -218,4 +219,59 @@ tape('test invite.accept api with ipv6', function (t) {
   })
 
 })
+
+tape('test invite.create with modern', function (t) {
+  var alice = createSbot({
+    temp: 'test-invite-alice2', timeout: 100,
+    allowPrivate: true,
+    keys: ssbKeys.generate()
+  })
+
+  var bob = createSbot({
+    temp: 'test-invite-bob2', timeout: 100,
+    keys: ssbKeys.generate()
+  })
+
+  var carol = createSbot({
+    temp: 'test-invite-carol2', timeout: 100,
+    keys: ssbKeys.generate()
+  })
+
+  //request a secret that with particular permissions.
+
+  alice.invite.create({modern: true}, function (err, invite) {
+    if(err) throw err
+    //test that invite is accepted with quotes around it.
+    t.ok(/^ws/.test(invite)) //should be over websockets
+    bob.invite.accept(JSON.stringify(invite), function (err) {
+      if(err) throw err
+      alice.friends.hops({
+        source: alice.id, dest: bob.id
+      }, function (err, hops) {
+        if(err) throw err
+        t.equal(hops[bob.id], 1, 'alice follows bob')
+        carol.invite.accept(invite, function (err) {
+          t.ok(err)
+//          if(err) throw err
+          alice.friends.hops({
+            source: alice.id, dest: bob.id
+          }, function (err, hops) {
+            if(err) throw err
+            t.equal(hops[carol.id], undefined)
+
+            console.log("END")
+            alice.close(true)
+            bob.close(true)
+            carol.close(true)
+
+            t.end()
+          })
+        })
+      })
+    })
+  })
+})
+
+
+
 
