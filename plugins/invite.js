@@ -71,8 +71,7 @@ module.exports = {
         // check if the pubkey is one of our invite codes
         codesDB.get(pubkey, function (_, code) {
           //disallow if this invite has already been used.
-          console.log(code)
-          if(code.used >= code.total) cb()
+          if(code && (code.used >= code.total)) cb()
           else cb(null, code && code.permissions)
         })
       })
@@ -228,5 +227,7 @@ module.exports = {
     }
   }
 }
+
+
 
 
