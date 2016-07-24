@@ -4,6 +4,7 @@ var tape = require('tape')
 var explain = require('explain-error')
 var pull = require('pull-stream')
 var u = require('../lib/util')
+var ssbClient = require('ssb-client')
 
 var createSbot = require('../')
   .use(require('../plugins/master'))
@@ -204,7 +205,7 @@ tape('test invite.accept api with ipv6', function (t) {
     var inviteV6 = invite.replace(/^[0-9.]*/, '::1')
     console.log(inviteV6, invite)
 
-    bob.invite.accept(inviteV6, function (err) {
+    bob.invite.accept(inviteV6, function (err, msg) {
       if(err) throw err
       alice.friends.hops({
         source: alice.id, dest: bob.id
@@ -243,7 +244,7 @@ tape('test invite.create with modern', function (t) {
     if(err) throw err
     //test that invite is accepted with quotes around it.
     t.ok(/^ws/.test(invite)) //should be over websockets
-    bob.invite.accept(JSON.stringify(invite), function (err) {
+    bob.invite.accept(JSON.stringify(invite), function (err, msg) {
       if(err) throw err
       alice.friends.hops({
         source: alice.id, dest: bob.id
@@ -273,5 +274,34 @@ tape('test invite.create with modern', function (t) {
 })
 
 
+tape('test invite.accept doesnt follow if already followed', function (t) {
 
+  var alice = createSbot({
+    temp: 'test-invite-alice3',
+    timeout: 100,
+    allowPrivate: true,
+    keys: ssbKeys.generate()
+  })
+
+  alice.publish({type: 'test', okay: true}, function (err, msg) {
+    if(err) throw err
+    console.log(msg)
+    alice.invite.create({modern: true}, function (err, invite) {
+      ssbClient(null, {
+        remote: invite,
+        manifest: {get: 'async', add: 'async'}
+      }, function (err, rpc) {
+        if(err) throw err
+        rpc.get(msg.key, function (err, value) {
+          t.ok(err)
+          console.log(value)
+          t.end()
+          alice.close()
+        })
+      })
+    })
+  })
+
+
+})
 
