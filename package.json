@@ -47,7 +47,7 @@
     "pull-stringify": "~1.2.2",
     "rimraf": "^2.4.2",
     "secret-stack": "^2.5.0",
-    "secure-scuttlebutt": "^15.0.4",
+    "secure-scuttlebutt": "^15.2.6",
     "ssb-client": "^4.0.2",
     "ssb-config": "^2.0.0",
     "ssb-feed": "^2.1.2",
