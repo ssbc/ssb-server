@@ -43,7 +43,8 @@ var SSB = {
 
     // main interface
     var ssb = create(path.join(opts.path, 'db'), null, opts.keys)
-    var feed = ssb.createFeed(opts.keys)
+    //treat the main feed as remote, because it's likely handled like that by others.
+    var feed = ssb.createFeed(opts.keys, {remote: true})
     var _close = api.close
     var close = function (cb) {
       // override to close the SSB database
