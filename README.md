@@ -16,6 +16,17 @@ This means Scuttlebots comprise a [global gossip-protocol mesh](https://en.wikip
 
 [![build status](https://secure.travis-ci.org/ssbc/scuttlebot.png)](http://travis-ci.org/ssbc/scuttlebot)
 
+## Applications
+
+There are already several applications built on scuttlebot,
+one of the best ways to learn about secure-scuttlebutt is to poke around in these applications.
+
+* [patchwork](http://github.com/ssbc/patchwork) is a discussion platform that we use to anything and everything concerning ssb and decentralization.
+* [patchbay](http://github.com/dominictarr/patchbay) is another take on patchwork - it's compatible, less polished, but more modular. The main goal of patchbay is to be very easy to add features to.
+* [git-ssb](https://github.com/clehner/git-ssb) is git (& github!) on top of secure-scuttlebutt. Although we still keep our repos on github, primary development is via git-ssb.
+
+it is recommended to get started with patchwork, and then look into git-ssb and patchbay.
+
 ## Example Usage
 
 ```bash
@@ -117,5 +128,6 @@ Therefore, by itself, it would probably make a poor choice for implementing a cr
 - [Design Challenge: Avoid Centralization and Singletons](https://ssbc.github.io/docs/articles/design-challenge-avoid-centralization-and-singletons.html)
 - [Design Challenge: Sybil Attacks](https://ssbc.github.io/docs/articles/design-challenge-sybil-attack.html)
 - [Using Trust in Open Networks](https://ssbc.github.io/docs/articles/using-trust-in-open-networks.html)
+
 
 
