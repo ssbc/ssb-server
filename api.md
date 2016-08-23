@@ -75,7 +75,7 @@ The range queries (gt, gte, lt, lte) filter against this receive timestap.
  - `lt` (less than), `lte` (less than or equal) define the higher bound of the range to be streamed. Only key/value pairs where the key is less than (or equal to) this option will be included in the range. When `reverse=true` the order will be reversed, but the records streamed will be the same.
  - `reverse` (boolean, default: `false`): a boolean, set true and the stream output will be reversed. Beware that due to the way LevelDB works, a reverse seek will be slower than a forward seek.
  - `keys` (boolean, default: `true`): whether the `data` event should contain keys. If set to `true` and `values` set to `false` then `data` events will simply be keys, rather than objects with a `key` property.
- - `values` (boolean, default: `true`): whether the `data` event should contain values. If set to `true` and `keys` set to `false` then `data` events will simply be values, rather than objects with a `value` property.
+ - `values` (boolean, default: `false`): whether the `data` event should contain values. If set to `true` and `keys` set to `false` then `data` events will simply be values, rather than objects with a `value` property.
  - `limit` (number, default: `-1`): limit the number of results collected by this stream. This number represents a *maximum* number of results and may not be reached if you get to the end of the data first. A value of `-1` means there is no limit. When `reverse=true` the highest keys will be returned instead of the lowest keys.
  - `fillCache` (boolean, default: `false`): wheather LevelDB's LRU-cache should be filled with data read.
  - `keyEncoding` / `valueEncoding` (string): the encoding applied to each read piece of data.
