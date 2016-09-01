@@ -93,12 +93,11 @@ function generateAnimals (sbot, feed, n, cb) {
 function latest (sbot, cb) {
   sbot.friends.hops({hops: 2}, function (err, keys) {
     if(err) return cb(err)
-    var get = sbot.sublevel('lst').get
-
     var n = 0, map = {}
     for(var k in keys) (function (key) {
       n++
-      get(key, function (err, value) {
+      sbot.latestSequence(key, function (err, value) {
+        console.log(value)
         map[key] = isNumber(value) ? value : value.sequence
         if(--n) return
         cb(null, map)
@@ -200,3 +199,4 @@ tape('replicate social network for animals', function (t) {
     })
   })
 })
+
