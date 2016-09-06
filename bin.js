@@ -4,6 +4,7 @@ var fs           = require('fs')
 var path         = require('path')
 var pull         = require('pull-stream')
 var toPull       = require('stream-to-pull-stream')
+var File         = require('pull-file')
 var explain      = require('explain-error')
 var ssbKeys      = require('ssb-keys')
 var stringify    = require('pull-stringify')
@@ -111,32 +112,35 @@ if (argv[0] == 'server') {
     // we need to output the hash of blobs that are added via blobs.add
     // because muxrpc doesnt support the `sink` callback yet, we need this manual override
     // -prf
-    if (process.argv[2] === 'blobs.add')
-      return blobsAddOverride(rpc)
+    if (process.argv[2] === 'blobs.add') {
+      var filename = process.argv[3]
+      var source =
+        isString(filename) ? File(process.argv[3])
+      : process.stdin.isTTY ? toPull.source(process.stdin)
+      : (function () {
+        console.error('USAGE:')
+        console.error('  blobs.add <filename> # add a file')
+        console.error('  source | blobs.add   # read from stdin')
+        process.exit(1)
+      })()
+      var hasher = createHash('sha256')
+      pull(
+        source,
+        hasher,
+        rpc.blobs.add(function (err) {
+          if (err) 
+            throw err
+          console.log('&'+hasher.digest)
+          process.exit()
+        })
+      )
+      return
+    }
 
     // run commandline flow
     muxrpcli(argv, manifest, rpc, config.verbose)
   })
 }
-
-// HACK helper
-// runs stdin through the hasher, then on to sbot for adding, then outputs the hash on success
-var createHash = require('multiblob/util').createHash
-function blobsAddOverride (rpc) {
-  var hasher = createHash('sha256')
-  pull(
-    toPull.source(process.stdin),
-    hasher,
-    rpc.blobs.add(function (err) {
-      if (err) 
-        throw err
-      console.log('&'+hasher.digest)
-      process.exit()
-    })
-  )
-}
-
-
 
 
 
