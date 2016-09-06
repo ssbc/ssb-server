@@ -35,6 +35,7 @@
     "osenv": "~0.1.0",
     "pull-abortable": "~4.0.0",
     "pull-cat": "~1.1.5",
+    "pull-file": "^0.5.0",
     "pull-inactivity": "~2.1.1",
     "pull-level": "^2.0.2",
     "pull-many": "~1.0.6",
