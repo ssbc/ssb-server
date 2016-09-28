@@ -18,7 +18,8 @@ module.exports = {
     local.on('data', function (buf) {
       if(buf.loopback) return
       var data = buf.toString()
-      sbot.gossip.add(data, 'local')
+      if(u.isAddress(u.toAddress(data)))
+        sbot.gossip.add(data, 'local')
     })
 
     setInterval(function () {
@@ -32,4 +33,5 @@ module.exports = {
     }, 1000)
   }
 }
+
 
