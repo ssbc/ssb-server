@@ -178,9 +178,8 @@ function (gossip, config, server) {
       })
     )
 
-    setInterval(function () {
-      connections()
-    }, 2e3).unref()
+    var int = setInterval(connections, 2e3)
+    if(int.unref) int.unref()
 
     connections()
 
@@ -193,5 +192,8 @@ exports.isLegacy = isLegacy
 exports.isLocal = isLocal
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
+
+
+
 
 
