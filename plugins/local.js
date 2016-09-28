@@ -1,4 +1,5 @@
 var broadcast = require('broadcast-stream')
+var u = require('../lib/util')
 
 // local plugin
 // broadcasts the address:port:pubkey triple of the sbot server
