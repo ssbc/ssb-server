@@ -9,13 +9,6 @@ var Observ = require('observ')
 var mdm = require('mdmanifest')
 var apidoc = require('../lib/apidocs').replicate
 
-var ssbClient = require('ssb-client')
-
-var DAY = 1000*60*60*24
-var LIMIT = [-1, -1, 100] // default rate-limits, by hops out
-
-var notify = Notify()
-
 // compatibility function for old implementations of `latestSequence`
 function toSeq (s) {
   return 'number' === typeof s ? s : s.sequence
@@ -24,72 +17,52 @@ function toSeq (s) {
 
 function last (a) { return a[a.length - 1] }
 
-// main log-replication behavior
-//function replicate(sbot, config, rpc, cb) {
-//
-//  // TODO
-//  // is `initial` and `to_recv` the same thing? do we need both?
-//  // -prf
-//  var aborter = Abort()
-//  var sources = many()
-//  var to_send = {} // { feedId => their latest seq } map for feeds requested by the peer
-//  var to_recv = {} // { feedId => our latest seq } map for feeds we request
-//  var initial = {} // { feedId => initial seq } map for feeds request, remembers what seq each feed was initially at
-//  var replicated = {} // { feedId => final seq } map for feeds request, tracks the final seq for each received feed
-//  var debounce = Debounce(100)
-//
-//  // track progress, and emit update events periodically
-//  debounce(function () {
-//    // HACK
-//    // This uses the information produced by normal replication 
-//    // to get a rough approximation for a progress-bar.
-//    // When the peer requests feeds, they'll tell us what sequence they have for each feed.
-//    // We track that in `to_send`.
-//    // We also track the sequence we have, for the feeds we're requesting, in `to_recv`.
-//    // If it so happens they have a higher sequence for a feed than we do, then
-//    // `to_send` will be higher than `to_recv`.
-//    // This means they have to request a feed for us to track that feed's progress, which is
-//    // often the case, but not always.
-//    // Works for now.
-//    // -prf (but code by dominic, blame him)
-//    var total = 0, progress = 0, feeds = 0
-//    for(var id in to_recv) {
-//      var feed_to_send    = to_send[id]    || 0
-//      var feed_to_recv    = to_recv[id]    || 0
-//      var feed_replicated = replicated[id] || 0
-//      if(to_send[id] != null && to_recv[id] != null) {
-//        feeds++
-//        if(feed_to_send > feed_to_recv) {
-//          total    += (feed_to_send    - feed_to_recv)
-//          progress += (feed_replicated - feed_to_recv)
-//        }
-//      }
-//    }
-//
-//    // emit progress event
-//    notify({
-//      type: 'progress',
-//      peerid: rpc.id,
-//      total: total,
-//      progress: progress,
-//      feeds: feeds,
-//      sync: !!(feeds && (progress >= total))
-//    })
-//  })
-//
-//}
-//
 module.exports = {
   name: 'replicate',
-  version: '1.0.0',
+  version: '2.0.0',
   manifest: mdm.manifest(apidoc),
   //replicate: replicate,
   init: function (sbot, config) {
 
+    var debounce = Debounce(200)
+
+    var notify = Notify()
     var newPeer = Notify()
 
+    pull(notify.listen(), pull.log())
+
+    var total=0, progress=0, start, count = 0, rate=0
     var to_send = {}
     var to_recv = {}
+
+    debounce(function () {
+      var _progress = progress, _total = total
+      progress = 0; total = 0
+      for(var k in to_send) progress += to_send[k]
+      for(var k in to_recv) total += to_recv[k]
+      if(_progress !== progress || _total !== total)
+        notify({
+          total: _total, progress: _progress, rate: rate
+        })
+    })
+
+    pull(
+      sbot.createLogStream({old: false, live: true, sync: false, keys: false}),
+      pull.drain(function (e) {
+        console.log(e)
+        //track writes per second, mainly used for developing initial sync.
+        if(!start) start = Date.now()
+        var time = (Date.now() - start)/1000
+        if(time >= 1) {
+          rate = count / time
+          start = Date.now()
+          count = 0
+        }
+        count ++
+        addPeer({id: e.author, sequence: e.sequence})
+      })
+    )
+
 
     //keep track of maximum requested value, per feed.
     sbot.createHistoryStream.hook(function (fn, args) {
@@ -107,24 +80,6 @@ module.exports = {
         return fn.apply(this, args)
     })
 
-    var start, count = 0
-
-    pull(
-      sbot.createLogStream({old: false, live: true, sync: false, keys: false}),
-      pull.drain(function (e) {
-        //track writes per second, mainly used for developing initial sync.
-        if(!start) start = Date.now()
-        var time = (Date.now() - start)/1000
-        if(time >= 1) {
-          start = Date.now()
-          console.error(count / time)
-          count = 0
-        }
-        count ++
-
-        addPeer({id: e.author, sequence: e.sequence})
-      })
-    )
 
     // collect the IDs of feeds we want to request
     var opts = config.replication || {}
@@ -152,14 +107,15 @@ module.exports = {
     }
 
     function addPeer (upto) {
+      if(upto.sync) return
       if(!upto.id) return console.log('invalid', upto)
       var isNew = false
-  
       if(to_send[upto.id] == null) isNew = true
 
       to_send[upto.id] = Math.max(to_send[upto.id] || 0, upto.sequence || upto.seq || 0)
 
       if(isNew) newPeer({id: upto.id, sequence: to_send[upto.id]})
+      debounce.set()
     }
 
     // create read-streams for the desired feeds
@@ -196,13 +152,11 @@ module.exports = {
     }
 
     sbot.on('rpc:connect', function(rpc) {
-      if(rpc.id === sbot.id) return
-      rpc.on('closed', function () {
-        console.log('rerep')
-        connected = false
-      })
-      localPeers()
       // this is the cli client, just ignore.
+      if(rpc.id === sbot.id) return
+
+      //check for local peers, or manual connections.
+      localPeers()
 
       var drain
 
@@ -216,11 +170,12 @@ module.exports = {
           pull(
             rpc.createHistoryStream({
               id: upto.id,
-              seq: upto.sequence,// + 1,
+              seq: upto.sequence + 1,
               live: true,
               keys: false
             }),
             pull.filter(function (e) {
+              //GUESSING. (maybe remove this?)
               //incase we where receiving messages from two peers at once,
               //and we have already seen this one, just skip it.
               if(to_send[e.author] < e.sequence) return true
@@ -236,24 +191,6 @@ module.exports = {
             sbot.emit('log:error', ['replication', rep.id, 'error', err])
         })
       )
-
-
-//      replicate(sbot, config, rpc, function (err, final, initial) {
-//        if(err) {
-//          sbot.emit('replicate:fail', err)
-//          sbot.emit('log:warning', ['replicate', rpc.id, 'error', err])
-//        } else {
-//          var progress = {}
-//          // subtract `initial` from `final` so `progress` represents a delta
-//          for (var author in final)
-//            progress[author] = final[author] - (initial[author] || 0)
-//
-//          var progressSummary = summarizeProgress(progress)
-//          if (progressSummary)
-//            sbot.emit('log:notice', ['replicate', rpc.id, 'success', progressSummary])
-//          sbot.emit('replicate:finish', final)
-//        }
-//      })
     })
 
     return {
@@ -277,6 +214,17 @@ function summarizeProgress (progress) {
     return false
   return 'Feeds updated: '+updatedFeeds+', New messages: '+newMessages
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 
