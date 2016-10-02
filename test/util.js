@@ -1,4 +1,4 @@
-var toAddress = require('../lib/util').parseAddress
+var ref = require('ssb-ref')
 
 exports.follow = function (id) {
   return {
@@ -19,7 +19,7 @@ exports.block = function unfollow(id) {
 exports.pub = function (address) {
   return {
     type: 'pub',
-    address: toAddress(address)
+    address: ref.parseAddress(address)
   }
 }
 
@@ -29,3 +29,4 @@ exports.file = function (hash) {
     file: hash
   }
 }
+

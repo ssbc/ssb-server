@@ -7,8 +7,6 @@ var ssbKeys   = require('ssb-keys')
 
 var u = require('./util')
 
-var toAddr    = require('../lib/util').toAddress
-
 // create 3 servers
 // give them all pub servers (on localhost)
 // and get them to follow each other...
@@ -91,6 +89,7 @@ tape('replicate between 3 peers', function (t) {
     }
   })
 })
+
 
 
 
