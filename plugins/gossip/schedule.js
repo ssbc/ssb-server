@@ -125,14 +125,12 @@ function (gossip, config, server) {
     if(connected.length > opts.quota) {
       return earliest(connected, connected.length - opts.quota)
         .forEach(function (peer) {
-          console.log('Disconnect', name, u.stringifyAddress(peer))
           gossip.disconnect(peer)
         })
     }
 
     select(peers, ts, and(filter, isOnline), opts)
       .forEach(function (peer) {
-        console.log('Connect', name, u.stringifyAddress(peer))
         gossip.connect(peer)
       })
   }
@@ -201,9 +199,6 @@ exports.isLegacy = isLegacy
 exports.isLocal = isLocal
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
-
-
-
 
 
 

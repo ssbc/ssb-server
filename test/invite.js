@@ -5,6 +5,7 @@ var explain = require('explain-error')
 var pull = require('pull-stream')
 var u = require('../lib/util')
 var ssbClient = require('ssb-client')
+var ref = require('ssb-ref')
 
 var createSbot = require('../')
   .use(require('../plugins/master'))
@@ -15,64 +16,6 @@ var createSbot = require('../')
 function all(stream, cb) {
   return pull(stream, pull.collect(cb))
 }
-
-tape('test invite api', function (t) {
-
-  var aliceKeys = ssbKeys.generate()
-
-  var alice = createSbot({
-    temp: 'test-invite-alice', timeout: 1000,
-    allowPrivate: true,
-    keys: aliceKeys
-  })
-
-  var bobKeys = ssbKeys.generate()
-  var bob = alice.createFeed(bobKeys) //bob
-
-  //request a secret that with particular permissions.
-
-  createSbot.createClient({keys: aliceKeys})
-  (alice.getAddress(), function (err, rpc) {
-    if(err) throw err
-
-    rpc.invite.create(1, function (err, invite) {
-      if(err) throw explain(err, 'cannot create invite code')
-
-      var parts = invite.split('~')
-      console.log(parts)
-      createSbot.createClient({seed: parts[1]})
-      (parts[0], function (err, rpc2) {
-        if(err) throw err
-
-        rpc2.invite.use({
-          feed: bob.id
-        }, function (err, msg) {
-            if(err) throw explain(err, 'bob cannot use invite code')
-
-          pull(
-            rpc.links({dest: bob.id, rel: 'contact', source: '@', keys: false}),
-            pull.collect(function (err, ary) {
-              if(err) throw err
-
-              var followed = ary[0]
-              delete followed.message
-
-              t.deepEqual(
-                ary[0],
-                {source: alice.id, dest: bob.id, rel: 'contact'}
-              )
-
-              alice.close(true)
-              console.log('done')
-              t.end()
-
-            })
-          )
-        })
-      })
-    })
-  })
-})
 
 tape('test invite.accept api', function (t) {
 
@@ -149,9 +92,10 @@ tape('test invite.accept doesnt follow if already followed', function (t) {
           if(err) throw err
           t.equal(ary.length, 1)
 
+          console.log(ary)
           t.deepEqual({
             type: 'pub',
-            address: u.toAddress(alice.address()),
+            address: ref.parseAddress(alice.address()),
           }, ary[0].value.content)
 
           all(bob.messagesByType('contact'), function (err, ary) {
@@ -202,7 +146,11 @@ tape('test invite.accept api with ipv6', function (t) {
     if(err) throw err
 
     // use a local ipv6 address in the invite
-    var inviteV6 = invite.replace(/^[0-9.]*/, '::1')
+//    if(/localhost/.test(invite))
+
+    var inviteV6
+        
+     = invite.replace(/localhost|([0-9.]*)/, '::1')
     console.log(inviteV6, invite)
 
     bob.invite.accept(inviteV6, function (err, msg) {
@@ -304,4 +252,8 @@ tape('test invite.accept doesnt follow if already followed', function (t) {
 
 
 })
+
+
+
+
 

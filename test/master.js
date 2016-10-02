@@ -18,20 +18,6 @@ var alice = createSbot({
 })
 
 tape('connect remote master', function (t) {
-
-  t.equal(alice.getAddress(), 'localhost:45451:'+alice.id)
-
-  t.deepEqual(
-    util.parseAddress(alice.getAddress()), {
-    host: 'localhost',
-    port: 45451,
-    key: alice.id
-  })
-
-  t.end()
-})
-
-tape('connect remote master', function (t) {
   createSbot.createClient({keys: bobKeys})
   (alice.getAddress(), function (err, rpc) {
     if(err) throw err
@@ -57,4 +43,5 @@ tape('non-master cannot use same methods', function (t) {
     })
   })
 })
+
 

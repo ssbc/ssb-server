@@ -6,7 +6,6 @@ var many = require('pull-many')
 var Cat = require('pull-cat')
 var Abort = require('pull-abortable')
 var Debounce = require('observ-debounce')
-var Observ = require('observ')
 var mdm = require('mdmanifest')
 var apidoc = require('../lib/apidocs').replicate
 
@@ -216,7 +215,5 @@ module.exports = {
     }
   }
 }
-
-
 
 
