@@ -5,7 +5,6 @@ var many = require('pull-many')
 var cat = require('pull-cat')
 var Abort = require('pull-abortable')
 var Debounce = require('observ-debounce')
-var Observ = require('observ')
 var mdm = require('mdmanifest')
 var apidoc = require('../lib/apidocs').replicate
 
@@ -259,6 +258,7 @@ function summarizeProgress (progress) {
     return false
   return 'Feeds updated: '+updatedFeeds+', New messages: '+newMessages
 }
+
 
 
 

@@ -27,24 +27,6 @@ function isObject(o) {
   return o && 'object' === typeof o
 }
 
-function parseMultiServerInvite (invite) {
-  var parts = invite.split('~')
-  .map(function (e) { return e.split(':') })
-
-  if(parts.length !== 2) return null
-  if(!/^(net|wss?)$/.test(parts[0][0])) return null
-  if(parts[1][0] !== 'shs') return null
-  if(parts[1].length !== 3) return null
-  var p2 = invite.split(':')
-  p2.pop()
-
-  return {
-    invite: invite,
-    remote: p2.join(':'),
-    key: '@'+p2.pop()+'.ed25519'
-  }
-}
-
 module.exports = {
   name: 'invite',
   version: '1.0.0',
@@ -85,7 +67,7 @@ module.exports = {
           modern = true
         }
         var addr = server.getAddress()
-        var host = toAddress(addr).host
+        var host = ref.parseAddress(addr).host
         if(!config.allowPrivate && (ip.isPrivate(host) || 'localhost' === host))
           return cb(new Error('Server has no public ip address, '
                             + 'cannot create useable invitation'))
@@ -113,8 +95,10 @@ module.exports = {
           else if(modern && server.ws && server.ws.getAddress) {
             cb(null, server.ws.getAddress()+':'+seed.toString('base64'))
           }
-          else
-            cb(null, addr + '~' + seed.toString('base64'))
+          else {
+            addr = ref.parseAddress(addr)
+            cb(null, [addr.host, addr.port, addr.key].join(':') + '~' + seed.toString('base64'))
+          }
         })
       }, 'number|object'),
       use: valid.async(function (req, cb) {
@@ -173,16 +157,18 @@ module.exports = {
         // connect to the address in the invite code
         // using a keypair generated from the key-seed in the invite code
         var modern = false
-        if(ref.isInvite(invite)) { //legacy invite
-
-          var parts = invite.split('~')
-          opts = toAddress(parts[0])//.split(':')
-          //convert legacy code to multiserver invite code.
-          invite = 'net:'+opts.host+':'+opts.port+'~shs:'+opts.key.slice(1, -8)+':'+parts[1]
-        } else {
-          modern = true
-          opts = parseMultiServerInvite(invite)
+        if(ref.isInvite(invite)) { //legacy ivite
+          if(ref.isLegacyInvite(invite)) {
+            var parts = invite.split('~')
+            opts = ref.parseAddress(parts[0])//.split(':')
+            //convert legacy code to multiserver invite code.
+            invite = 'net:'+opts.host+':'+opts.port+'~shs:'+opts.key.slice(1, -8)+':'+parts[1]
+          }
+          else
+            modern = true
         }
+
+        opts = ref.parseAddress(ref.parseInvite(invite).remote)
 
         ssbClient(null, {
           remote: invite,
@@ -227,7 +213,5 @@ module.exports = {
     }
   }
 }
-
-
 
 

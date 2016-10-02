@@ -6,6 +6,7 @@ var mdm = require('mdmanifest')
 var valid = require('../../lib/validators')
 var apidoc = require('../../lib/apidocs').gossip
 var u = require('../../lib/util')
+var ref = require('ssb-ref')
 var ping = require('pull-ping')
 var Stats = require('statistics')
 var isArray = Array.isArray
@@ -14,6 +15,10 @@ var Init = require('./init')
 
 function isFunction (f) {
   return 'function' === typeof f
+}
+
+function stringify(peer) {
+  return [peer.host, peer.port, peer.key].join(':')
 }
 
 /*
@@ -38,7 +43,7 @@ module.exports = {
   init: function (server, config) {
     var notify = Notify()
     var conf = config.gossip || {}
-    var home = u.toAddress(server.getAddress())
+    var home = ref.parseAddress(server.getAddress())
 
     //Known Peers
     var peers = []
@@ -57,7 +62,7 @@ module.exports = {
         return peers
       },
       get: function (addr) {
-        addr = u.toAddress(addr)
+        addr = ref.parseAddress(addr)
         return u.find(peers, function (a) {
           return (
             addr.port === a.port
@@ -67,7 +72,7 @@ module.exports = {
         })
       },
       connect: valid.async(function (addr, cb) {
-        addr = u.toAddress(addr)
+        addr = ref.parseAddress(addr)
         if (!addr || typeof addr != 'object')
           return cb(new Error('first param must be an address'))
 
@@ -115,8 +120,8 @@ module.exports = {
       },
       //add an address to the peer table.
       add: valid.sync(function (addr, source) {
-        addr = u.toAddress(addr)
-        if(!u.isAddress(addr))
+        addr = ref.parseAddress(addr)
+        if(!ref.isAddress(addr))
           throw new Error('not a valid address:' + JSON.stringify(addr))
         // check that this is a valid address, and not pointing at self.
 
@@ -165,7 +170,7 @@ module.exports = {
       //don't track clients that connect, but arn't considered peers.
       //maybe we should though?
       if(!peer) return
-      console.log('+connected', u.stringifyAddress(peer))
+      console.log('Connected', stringify(peer))
       //means that we have created this connection, not received it.
       peer.client = !!isClient
       peer.state = 'connected'
@@ -189,7 +194,7 @@ module.exports = {
       }
 
       rpc.on('closed', function () {
-        console.log('-disconnected', u.stringifyAddress(peer))
+        console.log('Disconnected', stringify(peer))
         //track whether we have successfully connected.
         //or how many failures there have been.
         var since = peer.stateChange
@@ -207,21 +212,5 @@ module.exports = {
     return gossip
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
