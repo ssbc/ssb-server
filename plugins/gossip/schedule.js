@@ -138,9 +138,16 @@ function (gossip, config, server) {
   }
 
 
+  var connecting = false
   function connections () {
+    if(connecting) return
+    connecting = true
+    setTimeout(function () {
+    connecting = false
     var ts = Date.now()
     var peers = gossip.peers()
+
+//    if(Math.random() > 0.1) return
 
     connect(peers, ts, 'attempt', exports.isUnattempted, {
         min: 0, quota: 10, factor: 0, max: 0, groupMin: 0,
@@ -168,6 +175,8 @@ function (gossip, config, server) {
       disable: !conf('local', true)
     })
 
+    }, 100*Math.random())
+
   }
 
     pull(
@@ -192,6 +201,7 @@ exports.isLegacy = isLegacy
 exports.isLocal = isLocal
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
+
 
 
 
