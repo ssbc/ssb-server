@@ -177,39 +177,34 @@ tape('read all history streams', function (t) {
     })
   )
 
-//  setTimeout(function () {
+  var wants = {}, n = 0, c = 0, start = Date.now()
 
-    ssbClient(bob, opts, function (err, sbot) {
+  //test just dumping everything!
+  //not through network connection, because createLogStream is not on public api
+  pull(
+    animalNetwork.createLogStream({keys: false}),
+    pull.through(function (n) {
+      c++
+    }),
+    dump.createWriteStream(function (err, data) {
       if(err) throw err
-
-      var wants = {}, n = 0, c = 0, start = Date.now()
-
-      //TODO, test just dumping everything!
+      var time = (Date.now() - start)/1000
+      console.log("dump all messages via createLogStream")
+      console.log('all histories dumped', c, 'messages in', time, 'at rate', c/time)
+      console.log('read back live:', live, 'over', h, 'histories', listeners, 'listeners')
       pull(
-        sbot.createLogStream({keys: false}),
-        pull.through(function (n) {
-          c++
-        }),
-        dump.createWriteStream(function (err, data) {
+        dump.createLogStream(),
+        pull.collect(function (err, ary) { 
           if(err) throw err
-          var time = (Date.now() - start)/1000
-          console.log("dump all messages via createLogStream")
-          console.log('all histories dumped', c, 'messages in', time, 'at rate', c/time)
-          console.log('read back live:', live, 'over', h, 'histories', listeners, 'listeners')
-          pull(
-            dump.createLogStream(),
-            pull.collect(function (err, ary) { 
-              if(err) throw err
-              t.ok(ary.length, F+N+2)
-              sbot.close()
-              dump.close()
-              t.end()
-            })
-          )
+          console.log(c)
+          t.equal(ary.length, F+N+2)
+          dump.close()
+          t.end()
         })
       )
     })
-//  }, 1000)
+  )
+
 })
 
 tape('replicate social network for animals', function (t) {
@@ -276,4 +271,9 @@ tape('shutdown', function (t) {
   animalNetwork.close(true)
   t.end()
 })
+
+
+
+
+
 
