@@ -11,12 +11,13 @@ var isArray = Array.isArray
 var createSbot = require('../')
   .use(require('../plugins/friends'))
   .use(require('../plugins/gossip'))
-  .use(require('../plugins/logging'))
+//  .use(require('../plugins/logging'))
 
 
 var sbot = createSbot({
   temp: 'gossip',
   keys: alice = ssbKeys.generate(),
+  timeout: 1000
 })
 
 tape('gossip: add and get peers', function (t) {
@@ -78,6 +79,10 @@ tape('ignore invalid pub messages', function (t) {
 })
 
 tape('cleanup', function (t) {
-  sbot.close(true)
+  sbot.close(true, function () {})
   t.end()
+  //I don't know why this is necessary
+  //because the other tests exit fine.
+  process.exit(0)
 })
+
