@@ -83,6 +83,9 @@ module.exports = {
       to_recv[upto.id] = Math.max(to_recv[upto.id] || 0, seq)
       if(this._emit) this._emit('call:createHistoryStream', args[0])
 
+      //if we are calling this locally, skip cleverness
+      if(this===sbot) return fn.call(this, upto)
+
       debounce.set()
 
       //handle creating lots of histor streams efficiently.
@@ -99,7 +102,7 @@ module.exports = {
         pushable.sequence = upto.sequence
         return p
       }
-      return fn(upto)
+      return fn.call(this, upto)
     })
 
     // collect the IDs of feeds we want to request
@@ -173,24 +176,24 @@ module.exports = {
     sbot.on('rpc:connect', function(rpc) {
       // this is the cli client, just ignore.
       if(rpc.id === sbot.id) return
-
       //check for local peers, or manual connections.
       localPeers()
       var drain
       sbot.emit('replicate:start', rpc)
-
+      rpc.on('closed', function () {
+        sbot.emit('replicate:finish', to_send)
+      })
       var SYNC = false
       pull(
         upto({live: opts.live}),
         drain = pull.drain(function (upto) {
           if(upto.sync) return
-
           feeds++
           debounce.set()
           pull(
             rpc.createHistoryStream({
               id: upto.id,
-              seq: (upto.sequence || upto.seq) + 1,
+              seq: (upto.sequence || upto.seq || 0) + 1,
               live: true,
               keys: false
             }),
@@ -215,5 +218,12 @@ module.exports = {
     }
   }
 }
+
+
+
+
+
+
+
 
 
