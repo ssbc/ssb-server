@@ -61,15 +61,15 @@ tape('alice blocks bob while he is connected, she should disconnect him', functi
     })
 
     bob.on('replicate:finish', function (vclock) {
-      t.equal(vclock[alice.id], 1)
-      console.log('OKAY')
+      //I don't care which messages bob doesn't have of alice's
+      t.ok(vclock[alice.id] < 2, 'bob has alices first message')
       alice.close();bob.close();carol.close()
       t.end()
     })
 
     var once = false
     var bobCancel = bob.post(function (op) {
-      console.log('BOB RECV', op)
+      console.log('BOB RECV', op, bob.id)
       if(once) throw new Error('should only be called once')
       once = true
       //should be the alice's follow(bob) message.
@@ -81,3 +81,7 @@ tape('alice blocks bob while he is connected, she should disconnect him', functi
     })
   })
 })
+
+
+
+

@@ -56,6 +56,7 @@ tape('alice blocks bob, and bob cannot connect to alice', function (t) {
     //get the next messages that are replicated to alice and bob,
     //and check that these are the correct follow messages.
     var bobCancel = bob.post(function (op) {
+      console.log('BOB_POST', op)
       //should be the alice's follow(bob) message.
       t.equal(op.value.author, alice.id)
       t.equal(op.value.content.contact, bob.id)
@@ -63,6 +64,7 @@ tape('alice blocks bob, and bob cannot connect to alice', function (t) {
     })
 
     var aliceCancel = alice.post(function (op) {
+      console.log('ALICE_POST', op)
       //should be the bob's follow(alice) message.
       t.equal(op.value.author, bob.id)
       t.equal(op.value.content.contact, alice.id)
@@ -101,15 +103,43 @@ tape('alice blocks bob, and bob cannot connect to alice', function (t) {
               //since bob is blocked, he should not be able to connect
               bob.connect(alice.getAddress(), function (err, rpc) {
                 t.ok(err, 'bob is blocked, should fail to connect to alice')
+
+
+                carol.post(function (msg) {
+                  console.log('CAROL RECV', msg, alice.id)
+                  if(msg.author === alice.id) {
+                    if(msg.sequence == 2)
+                      t.end()
+                  }
+                })
+
                 //but carol, should, because she is not blocked.
-                carol.connect(alice.getAddress(), function (err) {
-                  t.notOk(err)
+                carol.connect(alice.getAddress(), function (err, rpc) {
+                  if(err) throw err
+                  console.log('CAROL CONNECTED TO ALICE', carol.id, alice.id)
+//                  pull(
+//                    alice.createHistoryStream({id: alice.id, seq: 0}),
+//                    pull.collect(console.log)
+//                  )
+
+                  rpc.on('closed', function () {
+                    pull(
+                      carol.createHistoryStream({id: alice.id, seq: 0, live: false}),
+                      pull.collect(function (err, ary) {
+                        if(err) throw err
+
+                        t.ok(ary.length, 'carol replicated data from alice')
+                        console.log(alice.id, carol.id, err, ary)
+                        t.end()
+                     })
+                    )
+                  })
                 })
-                carol.once('replicate:finish', function (vclock) {
-                  t.equal(vclock[alice.id], 2)
-                  //in next test, bob connects to carol...
-                  t.end()
-                })
+//                carol.once('replicate:finish', function (vclock) {
+//                  t.equal(vclock[alice.id], 2)
+//                  //in next test, bob connects to carol...
+//                  t.end()
+//                })
               })
             })
           )
@@ -143,3 +173,11 @@ tape('cleanup!', function (t) {
   alice.close(true); bob.close(true); carol.close(true)
   t.end()
 })
+
+
+
+
+
+
+
+
