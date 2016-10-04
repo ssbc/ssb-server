@@ -1,6 +1,5 @@
 var broadcast = require('broadcast-stream')
-var u = require('../lib/util')
-
+var ref = require('ssb-ref')
 // local plugin
 // broadcasts the address:port:pubkey triple of the sbot server
 // on the LAN, using multicast UDP
@@ -19,7 +18,7 @@ module.exports = {
     local.on('data', function (buf) {
       if(buf.loopback) return
       var data = buf.toString()
-      if(u.isAddress(u.toAddress(data)))
+      if(ref.parseAddress(data))
         sbot.gossip.add(data, 'local')
     })
 
@@ -34,5 +33,6 @@ module.exports = {
     }, 1000)
   }
 }
+
 
 
