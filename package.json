@@ -49,7 +49,7 @@
     "ssb-feed": "^2.2.0",
     "ssb-keys": "^5.1.2",
     "ssb-msgs": "~5.0.0",
-    "ssb-ref": "^2.6.0",
+    "ssb-ref": "^2.6.1",
     "statistics": "^2.0.1",
     "stream-to-pull-stream": "^1.6.10",
     "zerr": "^1.0.0"
