@@ -48,7 +48,7 @@ exports.init = function (sbot, config) {
 
     var c = msg.value.content
     if (c.type == 'contact') {
-      mlib.asLinks(c.contact).forEach(function (link) {
+      mlib.asLinks(c.contact, 'feed').forEach(function (link) {
         if ('following' in c) {
           if (c.following)
             graphs.follow.edge(msg.value.author, link.link, true)
