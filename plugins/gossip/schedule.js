@@ -128,6 +128,7 @@ function (gossip, config, server) {
     }
 
     var selected = select(peers, ts, and(filter, isOnline), opts)
+
     selected
       .forEach(function (peer) {
         gossip.connect(peer)
@@ -196,6 +197,10 @@ exports.isLegacy = isLegacy
 exports.isLocal = isLocal
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
+
+
+
+
 
 
 

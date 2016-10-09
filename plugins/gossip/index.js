@@ -139,7 +139,7 @@ module.exports = {
           // new peer
           addr.source = source
           addr.announcers = 1
-          addr.duration = null
+          addr.duration = addr.duration || null
           peers.push(addr)
           notify({ type: 'discover', peer: addr, source: source || 'manual' })
           return addr
@@ -204,8 +204,9 @@ module.exports = {
         //or how many failures there have been.
         var since = peer.stateChange
         peer.stateChange = Date.now()
-        if(peer.state === 'connected') //may be "disconnecting"
-          peer.duration = stats(peer.duration, peer.stateChange - since)
+//        if(peer.state === 'connected') //may be "disconnecting"
+        peer.duration = stats(peer.duration, peer.stateChange - since)
+//        console.log(peer.duration)
         peer.state = undefined
         notify({ type: 'disconnect', peer: peer })
         server.emit('log:info', ['SBOT', rpc.id, 'disconnect'])
@@ -224,18 +225,25 @@ module.exports = {
         })
     })
 
-    setInterval(function () {
-      if(deepEqual(peers, last)) return
+    var int = setInterval(function () {
       var copy = JSON.parse(JSON.stringify(peers))
       copy.forEach(function (e) {
         delete e.state
       })
+      if(deepEqual(copy, last)) return
+      last = copy
+      console.log("WRITE GOSSIP STATE")
       stateFile.set(copy, console.log.bind(console))
     }, 10*1000)
+
+    if(int.unref) int.unref()
 
     return gossip
   }
 }
+
+
+
 
 
 
