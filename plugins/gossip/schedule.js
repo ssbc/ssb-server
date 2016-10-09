@@ -2,9 +2,8 @@ var nonPrivate = require('non-private-ip')
 var ip = require('ip')
 var onWakeup = require('on-wakeup')
 var onNetwork = require('on-change-network')
+var hasNetwork = require('has-network')
 
-var Stats = require('statistics')
-var os = require('os')
 var pull = require('pull-stream')
 var u = require('../../lib/util')
 
@@ -43,8 +42,7 @@ function peerNext(peer, opts) {
 
 function isOffline (e) {
   if(ip.isLoopback(e.host)) return false
-  var lo = Object.keys(os.networkInterfaces())
-  return lo.length === 1 && lo[0] === 'lo'
+  return !hasNetwork()
 }
 
 var isOnline = not(isOffline)
@@ -62,18 +60,18 @@ function isUnattempted (e) {
 //select peers which have never been successfully connected to yet,
 //but have been tried.
 function isInactive (e) {
-  return e.stateChange && e.duration.mean == 0
+  return e.stateChange && (!e.duration || e.duration.mean == 0)
 }
 
 function isLongterm (e) {
-  return e.ping && e.ping.rtt.mean > 0
+  return e.ping && e.ping.rtt && e.ping.rtt.mean > 0
 }
 
 //peers which we can connect to, but are not upgraded.
 //select peers which we can connect to, but are not upgraded to LT.
 //assume any peer is legacy, until we know otherwise...
 function isLegacy (peer) {
-  return peer.duration.mean > 0 && !exports.isLongterm(peer)
+  return peer.duration && peer.duration.mean > 0 && !exports.isLongterm(peer)
 }
 
 function isConnect (e) {
@@ -103,7 +101,7 @@ function select(peers, ts, filter, opts) {
 
 var schedule = exports = module.exports =
 function (gossip, config, server) { 
-
+//  return
   var min = 60e3, hour = 60*60e3
 
   //trigger hard reconnect after suspend or local network changes
@@ -129,7 +127,8 @@ function (gossip, config, server) {
         })
     }
 
-    select(peers, ts, and(filter, isOnline), opts)
+    var selected = select(peers, ts, and(filter, isOnline), opts)
+    selected
       .forEach(function (peer) {
         gossip.connect(peer)
       })
@@ -141,37 +140,35 @@ function (gossip, config, server) {
     if(connecting) return
     connecting = true
     setTimeout(function () {
-    connecting = false
-    var ts = Date.now()
-    var peers = gossip.peers()
+      connecting = false
+      var ts = Date.now()
+      var peers = gossip.peers()
 
-//    if(Math.random() > 0.1) return
-
-    connect(peers, ts, 'attempt', exports.isUnattempted, {
-        min: 0, quota: 10, factor: 0, max: 0, groupMin: 0,
-        disable: !conf('global', true)
-    })
-
-    //quota, groupMin, min, factor, max
-    connect(peers, ts, 'retry', exports.isInactive, {
-        min: 0,
-        quota: 3, factor: 5*60e3, max: 3*60*60e3, groupMin: 5*50e3
+      connect(peers, ts, 'attempt', exports.isUnattempted, {
+          min: 0, quota: 10, factor: 0, max: 0, groupMin: 0,
+          disable: !conf('global', true)
       })
 
-    connect(peers, ts, 'legacy', exports.isLegacy, {
-        quota: 3, factor: 5*min, max: 3*hour, groupMin: 5*min,
+      //quota, groupMin, min, factor, max
+      connect(peers, ts, 'retry', exports.isInactive, {
+          min: 0,
+          quota: 3, factor: 5*60e3, max: 3*60*60e3, groupMin: 5*50e3
+        })
+
+      connect(peers, ts, 'legacy', exports.isLegacy, {
+          quota: 3, factor: 5*min, max: 3*hour, groupMin: 5*min,
+          disable: !conf('global', true)
+        })
+
+      connect(peers, ts, 'longterm', exports.isLongterm, {
+        quota: 3, factor: 10e3, max: 10*min, groupMin: 5e3,
         disable: !conf('global', true)
       })
 
-    connect(peers, ts, 'longterm', exports.isLongterm, {
-      quota: 3, factor: 10e3, max: 10*min, groupMin: 5e3,
-      disable: !conf('global', true)
-    })
-
-    connect(peers, ts, 'local', exports.isLocal, {
-      quota: 3, factor: 2e3, max: 10*min, groupMin: 1e3,
-      disable: !conf('local', true)
-    })
+      connect(peers, ts, 'local', exports.isLocal, {
+        quota: 3, factor: 2e3, max: 10*min, groupMin: 1e3,
+        disable: !conf('local', true)
+      })
 
     }, 100*Math.random())
 
@@ -199,6 +196,11 @@ exports.isLegacy = isLegacy
 exports.isLocal = isLocal
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
+
+
+
+
+
 
 
 

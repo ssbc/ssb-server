@@ -8,10 +8,13 @@ var apidoc = require('../../lib/apidocs').gossip
 var u = require('../../lib/util')
 var ref = require('ssb-ref')
 var ping = require('pull-ping')
-var Stats = require('statistics')
+var stats = require('statistics')
 var isArray = Array.isArray
 var Schedule = require('./schedule')
 var Init = require('./init')
+var AtomicFile = require('atomic-file')
+var path = require('path')
+var deepEqual = require('deep-equal')
 
 function isFunction (f) {
   return 'function' === typeof f
@@ -44,6 +47,8 @@ module.exports = {
     var notify = Notify()
     var conf = config.gossip || {}
     var home = ref.parseAddress(server.getAddress())
+
+    var stateFile = AtomicFile(path.join(config.path, 'gossip.json'))
 
     //Known Peers
     var peers = []
@@ -91,7 +96,7 @@ module.exports = {
             p.stateChange = Date.now()
             notify({ type: 'connect-failure', peer: p })
             server.emit('log:info', ['SBOT', p.host+':'+p.port+p.key, 'connection failed', err.message || err])
-            p.duration.value(0)
+            p.duration = stats(p.duration, 0)
             return (cb && cb(err))
           }
           else {
@@ -134,7 +139,7 @@ module.exports = {
           // new peer
           addr.source = source
           addr.announcers = 1
-          addr.duration = Stats()
+          addr.duration = null
           peers.push(addr)
           notify({ type: 'discover', peer: addr, source: source || 'manual' })
           return addr
@@ -200,7 +205,7 @@ module.exports = {
         var since = peer.stateChange
         peer.stateChange = Date.now()
         if(peer.state === 'connected') //may be "disconnecting"
-          peer.duration.value(peer.stateChange - since)
+          peer.duration = stats(peer.duration, peer.stateChange - since)
         peer.state = undefined
         notify({ type: 'disconnect', peer: peer })
         server.emit('log:info', ['SBOT', rpc.id, 'disconnect'])
@@ -209,8 +214,28 @@ module.exports = {
       notify({ type: 'connect', peer: peer })
     })
 
+    var last
+    stateFile.get(function (err, ary) {
+      last = ary || []
+      if(Array.isArray(ary))
+        ary.forEach(function (v) {
+          delete v.state
+          var p = gossip.add(v, 'stored')
+        })
+    })
+
+    setInterval(function () {
+      if(deepEqual(peers, last)) return
+      var copy = JSON.parse(JSON.stringify(peers))
+      copy.forEach(function (e) {
+        delete e.state
+      })
+      stateFile.set(copy, console.log.bind(console))
+    }, 10*1000)
+
     return gossip
   }
 }
+
 
 
