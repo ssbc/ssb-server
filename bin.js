@@ -35,6 +35,7 @@ if (argv[0] == 'server') {
   // import sbot and start the server
 
   var createSbot = require('./')
+    .use(require('./plugins/plugins'))
     .use(require('./plugins/master'))
     .use(require('./plugins/gossip'))
     .use(require('./plugins/friends'))
@@ -45,6 +46,9 @@ if (argv[0] == 'server') {
     .use(require('./plugins/local'))
     .use(require('./plugins/logging'))
     .use(require('./plugins/private'))
+
+  // add third-party plugins
+  require('./plugins/plugins').loadUserPlugins(createSbot, config)
 
   // start server
 
@@ -137,8 +141,6 @@ if (argv[0] == 'server') {
     muxrpcli(argv, manifest, rpc, config.verbose)
   })
 }
-
-
 
 
 
