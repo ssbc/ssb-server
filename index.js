@@ -46,7 +46,8 @@ var SSB = {
     //treat the main feed as remote, because it's likely handled like that by others.
     var feed = ssb.createFeed(opts.keys, {remote: true})
     var _close = api.close
-    var close = function (cb) {
+    var close = function (arg, cb) {
+      if('function' === typeof arg) cb = arg
       // override to close the SSB database
       ssb.close(function (err) {
         if (err) throw err
