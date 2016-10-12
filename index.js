@@ -50,7 +50,8 @@ var SSB = {
       // override to close the SSB database
       ssb.close(function (err) {
         if (err) throw err
-        _close(cb)
+        _close()
+        cb && cb() //multiserver doesn't take a callback on close.
       })
     }
     return {
@@ -115,4 +116,7 @@ module.exports = SecretStack({
   appKey: require('./lib/ssb-cap')
 })
 .use(SSB)
+
+
+
 
