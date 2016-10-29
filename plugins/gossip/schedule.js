@@ -116,10 +116,8 @@ function (gossip, config, server) {
 
   function connect (peers, ts, name, filter, opts) {
     var connected = peers.filter(isConnect).filter(filter)
-      .filter(function (peer) {
-        return peer.stateChange + 10e3 < ts
-      })
 
+    //disconnect if over quota
     if(connected.length > opts.quota) {
       return earliest(connected, connected.length - opts.quota)
         .forEach(function (peer) {
@@ -127,8 +125,8 @@ function (gossip, config, server) {
         })
     }
 
+    //will return [] if the quota is full
     var selected = select(peers, ts, and(filter, isOnline), opts)
-
     selected
       .forEach(function (peer) {
         gossip.connect(peer)
@@ -145,21 +143,7 @@ function (gossip, config, server) {
       var ts = Date.now()
       var peers = gossip.peers()
 
-      connect(peers, ts, 'attempt', exports.isUnattempted, {
-          min: 0, quota: 10, factor: 0, max: 0, groupMin: 0,
-          disable: !conf('global', true)
-      })
-
-      //quota, groupMin, min, factor, max
-      connect(peers, ts, 'retry', exports.isInactive, {
-          min: 0,
-          quota: 3, factor: 5*60e3, max: 3*60*60e3, groupMin: 5*50e3
-        })
-
-      connect(peers, ts, 'legacy', exports.isLegacy, {
-          quota: 3, factor: 5*min, max: 3*hour, groupMin: 5*min,
-          disable: !conf('global', true)
-        })
+      var connected = peers.filter(isConnect).length
 
       connect(peers, ts, 'longterm', exports.isLongterm, {
         quota: 3, factor: 10e3, max: 10*min, groupMin: 5e3,
@@ -169,6 +153,34 @@ function (gossip, config, server) {
       connect(peers, ts, 'local', exports.isLocal, {
         quota: 3, factor: 2e3, max: 10*min, groupMin: 1e3,
         disable: !conf('local', true)
+      })
+
+      if(connected === 0)
+        connect(peers, ts, 'attempt', exports.isUnattempted, {
+          min: 0, quota: 1, factor: 0, max: 0, groupMin: 0,
+          disable: !conf('global', true)
+        })
+
+      //quota, groupMin, min, factor, max
+      connect(peers, ts, 'retry', exports.isInactive, {
+        min: 0,
+        quota: 3, factor: 5*60e3, max: 3*60*60e3, groupMin: 5*50e3
+      })
+
+      var longterm = peers.filter(isConnect).filter(exports.isLongterm).length
+
+      connect(peers, ts, 'legacy', exports.isLegacy, {
+        quota: 3 - longterm,
+        factor: 5*min, max: 3*hour, groupMin: 5*min,
+        disable: !conf('global', true)
+      })
+
+      peers.filter(isConnect).forEach(function (e) {
+        if((!exports.isLongterm(e) || e.state === 'connecting') && e.stateChange + 10e3 < ts) {
+          console.log('disconnect', exports.isLongterm(e), e.state, e.stateChange - ts)
+          gossip.disconnect(e)
+        }
+
       })
 
     }, 100*Math.random())
@@ -197,15 +209,4 @@ exports.isLegacy = isLegacy
 exports.isLocal = isLocal
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
-
-
-
-
-
-
-
-
-
-
-
 
