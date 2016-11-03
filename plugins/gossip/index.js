@@ -143,6 +143,9 @@ module.exports = {
           peers.push(addr)
           notify({ type: 'discover', peer: addr, source: source || 'manual' })
           return addr
+        } else if (source === 'local') {
+          // this peer is local to us, override old source
+          addr.source = 'local'
         }
         //don't count local over and over
         else if(f.source != 'local')
@@ -221,7 +224,10 @@ module.exports = {
       if(Array.isArray(ary))
         ary.forEach(function (v) {
           delete v.state
-          var p = gossip.add(v, 'stored')
+          // don't add local peers (wait to rediscover)
+          if(v.source !== 'local') {
+            gossip.add(v, 'stored')
+          }
         })
     })
 

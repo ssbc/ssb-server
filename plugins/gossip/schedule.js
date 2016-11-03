@@ -50,7 +50,7 @@ var isOnline = not(isOffline)
 function isLocal (e) {
   // don't rely on private ip address, because
   // cjdns creates fake private ip addresses.
-  return ip.isPrivate(e.host) && e.type === 'local'
+  return ip.isPrivate(e.host) && e.source === 'local'
 }
 
 function isUnattempted (e) {
@@ -143,7 +143,7 @@ function (gossip, config, server) {
       var ts = Date.now()
       var peers = gossip.peers()
 
-      var connected = peers.filter(isConnect).length
+      var connected = peers.filter(and(isConnect, not(isLocal))).length
 
       connect(peers, ts, 'longterm', exports.isLongterm, {
         quota: 3, factor: 10e3, max: 10*min, groupMin: 5e3,
@@ -176,11 +176,10 @@ function (gossip, config, server) {
       })
 
       peers.filter(isConnect).forEach(function (e) {
-        if((!exports.isLongterm(e) || e.state === 'connecting') && e.stateChange + 10e3 < ts) {
-          console.log('disconnect', exports.isLongterm(e), e.state, e.stateChange - ts)
+        var permanent = exports.isLongterm(e) || exports.isLocal(e)
+        if((!permanent || e.state === 'connecting') && e.stateChange + 10e3 < ts) {
           gossip.disconnect(e)
         }
-
       })
 
     }, 100*Math.random())
@@ -209,4 +208,3 @@ exports.isLegacy = isLegacy
 exports.isLocal = isLocal
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
-
