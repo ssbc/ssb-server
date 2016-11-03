@@ -24,6 +24,10 @@ function stringify(peer) {
   return [peer.host, peer.port, peer.key].join(':')
 }
 
+function isFriends (friends, a, b) {
+  return friends[a] && friends[b] && friends[a][b] && friends[b][a]
+}
+
 /*
 Peers : [{
   key: id,
@@ -65,6 +69,16 @@ module.exports = {
       wakeup: 0,
       peers: function () {
         return peers
+      },
+      connectToFriends: function () {
+        server.friends.all((err, friends) => {
+          if (err) return
+          peers.forEach(function(peer) {
+            if (!Schedule.isConnect(peer) && isFriends(friends, server.id, peer.key)) {
+              gossip.connect(peer, function() {})
+            }
+          })
+        })
       },
       get: function (addr) {
         addr = ref.parseAddress(addr)
