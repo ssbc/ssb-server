@@ -238,8 +238,9 @@ module.exports = {
       })
       if(deepEqual(copy, last)) return
       last = copy
-      console.log("WRITE GOSSIP STATE")
-      stateFile.set(copy, console.log.bind(console))
+      stateFile.set(copy, function(err) {
+        if (err) console.log(err)
+      })
     }, 10*1000)
 
     if(int.unref) int.unref()
