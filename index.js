@@ -42,15 +42,17 @@ var SSB = {
       throw new Error('opts.path *must* be provided, or use opts.temp=name to create a test instance')
 
     // main interface
-    var ssb = create(path.join(opts.path, 'db'), null, opts.keys)
+    var ssb = create(path.join(opts.path, 'db'), opts, opts.keys)
     //treat the main feed as remote, because it's likely handled like that by others.
     var feed = ssb.createFeed(opts.keys, {remote: true})
     var _close = api.close
-    var close = function (cb) {
+    var close = function (arg, cb) {
+      if('function' === typeof arg) cb = arg
       // override to close the SSB database
       ssb.close(function (err) {
         if (err) throw err
-        _close(cb)
+        _close()
+        cb && cb() //multiserver doesn't take a callback on close.
       })
     }
     return {
@@ -112,7 +114,13 @@ function usage (cmd) {
 }
 
 module.exports = SecretStack({
+  //this is just the default app key.
+  //it can be overridden by passing a appKey as option
+  //when creating a Sbot instance.
   appKey: require('./lib/ssb-cap')
 })
 .use(SSB)
+
+
+
 
