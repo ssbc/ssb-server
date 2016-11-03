@@ -155,7 +155,7 @@ function (gossip, config, server) {
         disable: !conf('local', true)
       })
 
-      if(connected === 0)
+      if(connected < 3)
         connect(peers, ts, 'attempt', exports.isUnattempted, {
           min: 0, quota: 1, factor: 0, max: 0, groupMin: 0,
           disable: !conf('global', true)
