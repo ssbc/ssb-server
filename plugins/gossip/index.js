@@ -1,7 +1,6 @@
 'use strict'
 var pull = require('pull-stream')
 var Notify = require('pull-notify')
-var toAddress = require('../../lib/util').toAddress
 var mdm = require('mdmanifest')
 var valid = require('../../lib/validators')
 var apidoc = require('../../lib/apidocs').gossip
@@ -9,7 +8,6 @@ var u = require('../../lib/util')
 var ref = require('ssb-ref')
 var ping = require('pull-ping')
 var stats = require('statistics')
-var isArray = Array.isArray
 var Schedule = require('./schedule')
 var Init = require('./init')
 var AtomicFile = require('atomic-file')
@@ -262,9 +260,3 @@ module.exports = {
     return gossip
   }
 }
-
-
-
-
-
-

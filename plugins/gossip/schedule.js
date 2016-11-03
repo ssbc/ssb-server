@@ -1,15 +1,9 @@
-var nonPrivate = require('non-private-ip')
 var ip = require('ip')
 var onWakeup = require('on-wakeup')
 var onNetwork = require('on-change-network')
 var hasNetwork = require('has-network')
 
 var pull = require('pull-stream')
-var u = require('../../lib/util')
-
-function rand(array) {
-  return array[~~(Math.random()*array.length)]
-}
 
 function not (fn) {
   return function (e) { return !fn(e) }
@@ -100,7 +94,7 @@ function select(peers, ts, filter, opts) {
 }
 
 var schedule = exports = module.exports =
-function (gossip, config, server) { 
+function (gossip, config, server) {
 //  return
   var min = 60e3, hour = 60*60e3
 
