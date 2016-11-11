@@ -227,7 +227,9 @@ module.exports = {
 
     var int = setInterval(function () {
       var copy = JSON.parse(JSON.stringify(peers))
-      copy.forEach(function (e) {
+      copy.filter(function (e) {
+        return e.source !== 'local'
+      }).forEach(function (e) {
         delete e.state
       })
       if(deepEqual(copy, last)) return
@@ -241,9 +243,5 @@ module.exports = {
     return gossip
   }
 }
-
-
-
-
 
 
