@@ -71,7 +71,7 @@ function isLongterm (e) {
 //select peers which we can connect to, but are not upgraded to LT.
 //assume any peer is legacy, until we know otherwise...
 function isLegacy (peer) {
-  return peer.duration && peer.duration.mean > 0 && !exports.isLongterm(peer)
+  return peer.duration && (peer.duration && peer.duration.mean > 0) && !exports.isLongterm(peer)
 }
 
 function isConnect (e) {
@@ -145,18 +145,18 @@ function (gossip, config, server) {
 
       var connected = peers.filter(isConnect).length
 
-      connect(peers, ts, 'longterm', exports.isLongterm, {
+      connect(peers, ts, 'longterm', isLongterm, {
         quota: 3, factor: 10e3, max: 10*min, groupMin: 5e3,
         disable: !conf('global', true)
       })
 
-      connect(peers, ts, 'local', exports.isLocal, {
+      connect(peers, ts, 'local', isLocal, {
         quota: 3, factor: 2e3, max: 10*min, groupMin: 1e3,
         disable: !conf('local', true)
       })
 
       if(connected === 0)
-        connect(peers, ts, 'attempt', exports.isUnattempted, {
+        connect(peers, ts, 'attempt', isUnattempted, {
           min: 0, quota: 1, factor: 0, max: 0, groupMin: 0,
           disable: !conf('global', true)
         })
@@ -167,7 +167,7 @@ function (gossip, config, server) {
         quota: 3, factor: 5*60e3, max: 3*60*60e3, groupMin: 5*50e3
       })
 
-      var longterm = peers.filter(isConnect).filter(exports.isLongterm).length
+      var longterm = peers.filter(isConnect).filter(isLongterm).length
 
       connect(peers, ts, 'legacy', exports.isLegacy, {
         quota: 3 - longterm,
@@ -176,8 +176,7 @@ function (gossip, config, server) {
       })
 
       peers.filter(isConnect).forEach(function (e) {
-        if((!exports.isLongterm(e) || e.state === 'connecting') && e.stateChange + 10e3 < ts) {
-          console.log('disconnect', exports.isLongterm(e), e.state, e.stateChange - ts)
+        if((!isLongterm(e) || e.state === 'connecting') && e.stateChange + 10e3 < ts) {
           gossip.disconnect(e)
         }
 
@@ -209,4 +208,5 @@ exports.isLegacy = isLegacy
 exports.isLocal = isLocal
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
+
 
