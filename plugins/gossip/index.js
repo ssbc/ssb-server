@@ -1,7 +1,6 @@
 'use strict'
 var pull = require('pull-stream')
 var Notify = require('pull-notify')
-var toAddress = require('../../lib/util').toAddress
 var mdm = require('mdmanifest')
 var valid = require('../../lib/validators')
 var apidoc = require('../../lib/apidocs').gossip
@@ -9,7 +8,6 @@ var u = require('../../lib/util')
 var ref = require('ssb-ref')
 var ping = require('pull-ping')
 var stats = require('statistics')
-var isArray = Array.isArray
 var Schedule = require('./schedule')
 var Init = require('./init')
 var AtomicFile = require('atomic-file')
@@ -143,6 +141,9 @@ module.exports = {
           peers.push(addr)
           notify({ type: 'discover', peer: addr, source: source || 'manual' })
           return addr
+        } else if (source === 'friends' || source === 'local') {
+          // this peer is a friend or local, override old source to prioritize gossip
+          f.source = source
         }
         //don't count local over and over
         else if(f.source != 'local')
@@ -221,7 +222,10 @@ module.exports = {
       if(Array.isArray(ary))
         ary.forEach(function (v) {
           delete v.state
-          var p = gossip.add(v, 'stored')
+          // don't add local peers (wait to rediscover)
+          if(v.source !== 'local') {
+            gossip.add(v, 'stored')
+          }
         })
     })
 
@@ -232,8 +236,9 @@ module.exports = {
       })
       if(deepEqual(copy, last)) return
       last = copy
-      console.log("WRITE GOSSIP STATE")
-      stateFile.set(copy, console.log.bind(console))
+      stateFile.set(copy, function(err) {
+        if (err) console.log(err)
+      })
     }, 10*1000)
 
     if(int.unref) int.unref()
@@ -241,9 +246,3 @@ module.exports = {
     return gossip
   }
 }
-
-
-
-
-
-

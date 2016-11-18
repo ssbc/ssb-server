@@ -19,6 +19,10 @@ function isString (s) {
   return 'string' === typeof s
 }
 
+function isFriend (friends, a, b) {
+  return friends[a] && friends[b] && friends[a][b] && friends[b][a]
+}
+
 exports.name = 'friends'
 exports.version = '1.0.0'
 exports.manifest = mdm.manifest(apidoc)
@@ -43,6 +47,17 @@ exports.init = function (sbot, config) {
     if (msg.sync) {
       syncCbs.forEach(function (cb) { cb() })
       syncCbs = null
+
+      if (sbot.gossip) {
+        // prioritize friends
+        var friends = graphs['follow'].toJSON()
+        sbot.gossip.peers().forEach(function(peer) {
+          if (isFriend(friends, sbot.id, peer.key)) {
+            sbot.gossip.add(peer, 'friends')
+          }
+        })
+      }
+
       return
     }
 
@@ -92,7 +107,7 @@ exports.init = function (sbot, config) {
       return graphs.follow.path(opts)
 
     }, 'string|object'),
-    
+
     createFriendStream: valid.source(function (opts) {
       opts = opts || {}
       var live = opts.live === true
