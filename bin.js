@@ -115,8 +115,8 @@ if (argv[0] == 'server') {
     if (process.argv[2] === 'blobs.add') {
       var filename = process.argv[3]
       var source =
-        isString(filename) ? File(process.argv[3])
-      : process.stdin.isTTY ? toPull.source(process.stdin)
+        filename ? File(process.argv[3])
+      : !process.stdin.isTTY ? toPull.source(process.stdin)
       : (function () {
         console.error('USAGE:')
         console.error('  blobs.add <filename> # add a file')

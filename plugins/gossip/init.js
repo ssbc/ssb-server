@@ -29,6 +29,3 @@ module.exports = function (gossip, config, server) {
   })
 
 }
-
-
-

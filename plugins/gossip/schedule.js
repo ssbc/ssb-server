@@ -1,15 +1,9 @@
-var nonPrivate = require('non-private-ip')
 var ip = require('ip')
 var onWakeup = require('on-wakeup')
 var onNetwork = require('on-change-network')
 var hasNetwork = require('has-network')
 
 var pull = require('pull-stream')
-var u = require('../../lib/util')
-
-function rand(array) {
-  return array[~~(Math.random()*array.length)]
-}
 
 function not (fn) {
   return function (e) { return !fn(e) }
@@ -50,7 +44,11 @@ var isOnline = not(isOffline)
 function isLocal (e) {
   // don't rely on private ip address, because
   // cjdns creates fake private ip addresses.
-  return ip.isPrivate(e.host) && e.type === 'local'
+  return ip.isPrivate(e.host) && e.source === 'local'
+}
+
+function isFriend (e) {
+  return e.source === 'friends'
 }
 
 function isUnattempted (e) {
@@ -100,7 +98,7 @@ function select(peers, ts, filter, opts) {
 }
 
 var schedule = exports = module.exports =
-function (gossip, config, server) { 
+function (gossip, config, server) {
 //  return
   var min = 60e3, hour = 60*60e3
 
@@ -115,6 +113,7 @@ function (gossip, config, server) {
   }
 
   function connect (peers, ts, name, filter, opts) {
+    opts.group = name
     var connected = peers.filter(isConnect).filter(filter)
 
     //disconnect if over quota
@@ -143,20 +142,43 @@ function (gossip, config, server) {
       var ts = Date.now()
       var peers = gossip.peers()
 
-      var connected = peers.filter(isConnect).length
-
-      connect(peers, ts, 'longterm', isLongterm, {
-        quota: 3, factor: 10e3, max: 10*min, groupMin: 5e3,
-        disable: !conf('global', true)
-      })
+      var connected = peers.filter(and(isConnect, not(isLocal), not(isFriend))).length
+      var connectedFriends = peers.filter(and(isConnect, isFriend)).length
 
       connect(peers, ts, 'local', isLocal, {
         quota: 3, factor: 2e3, max: 10*min, groupMin: 1e3,
         disable: !conf('local', true)
       })
 
-      if(connected === 0)
-        connect(peers, ts, 'attempt', isUnattempted, {
+      // prioritize friends
+      connect(peers, ts, 'friends', and(exports.isFriend, exports.isLongterm), {
+        quota: 2, factor: 10e3, max: 10*min, groupMin: 5e3,
+        disable: !conf('local', true)
+      })
+
+      if (connectedFriends < 2)
+        connect(peers, ts, 'attemptFriend', and(exports.isFriend, exports.isUnattempted), {
+          min: 0, quota: 1, factor: 0, max: 0, groupMin: 0,
+          disable: !conf('global', true)
+        })
+
+      connect(peers, ts, 'retryFriends', and(exports.isFriend, exports.isInactive), {
+        min: 0,
+        quota: 3, factor: 60e3, max: 3*60*60e3, groupMin: 5*60e3
+      })
+
+      // standard longterm peers
+      connect(peers, ts, 'longterm', and(
+        exports.isLongterm,
+        not(exports.isFriend),
+        not(exports.isLocal)
+      ), {
+        quota: 2, factor: 10e3, max: 10*min, groupMin: 5e3,
+        disable: !conf('global', true)
+      })
+
+      if(!connected)
+        connect(peers, ts, 'attempt', exports.isUnattempted, {
           min: 0, quota: 1, factor: 0, max: 0, groupMin: 0,
           disable: !conf('global', true)
         })
@@ -176,10 +198,10 @@ function (gossip, config, server) {
       })
 
       peers.filter(isConnect).forEach(function (e) {
-        if((!isLongterm(e) || e.state === 'connecting') && e.stateChange + 10e3 < ts) {
+        var permanent = exports.isLongterm(e) || exports.isLocal(e)
+        if((!permanent || e.state === 'connecting') && e.stateChange + 10e3 < ts) {
           gossip.disconnect(e)
         }
-
       })
 
     }, 100*Math.random())
@@ -206,7 +228,13 @@ exports.isInactive = isInactive
 exports.isLongterm = isLongterm
 exports.isLegacy = isLegacy
 exports.isLocal = isLocal
+exports.isFriend = isFriend
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
+
+
+
+
+
 
 
