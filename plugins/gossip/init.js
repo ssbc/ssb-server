@@ -16,6 +16,7 @@ module.exports = function (gossip, config, server) {
       type: 'pub', live: true, keys: false
     }),
     pull.drain(function (msg) {
+      if(msg.sync) return
       if(!msg.content.address) return
       if(ref.isAddress(msg.content.address))
         gossip.add(msg.content.address, 'pub')
