@@ -3,6 +3,8 @@ var pull = require('pull-stream')
 var ref = require('ssb-ref')
 
 module.exports = function (gossip, config, server) {
+  // TODO translate
+  if (config.offline) return void console.log("Running in offline mode: gossip disabled")
 
   // populate peertable with configured seeds (mainly used in testing)
   var seeds = config.seeds
