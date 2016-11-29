@@ -59,6 +59,13 @@ var SSB = {
       id                       : feed.id,
       keys                     : opts.keys,
 
+      //temporary!
+      _flumeUse                :
+        function (name, flumeview) {
+          ssb.use(name, flumeview)
+          return ssb[name]
+        },
+
       usage                    : valid.sync(usage, 'string?|boolean?'),
       close                    : valid.async(close),
 
