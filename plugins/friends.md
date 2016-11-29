@@ -58,7 +58,7 @@ createFriendStream({ start:, graph:, dunbar:, hops: , meta: }, cb)
 
 
 
-## get: sync
+## get: async
 
 Get the edge between two different feeds.
 

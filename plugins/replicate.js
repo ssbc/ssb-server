@@ -1,6 +1,6 @@
 'use strict'
 var pull = require('pull-stream')
-var para = require('pull-paramap')
+var Paramap = require('pull-paramap')
 var Notify = require('pull-notify')
 var many = require('pull-many')
 var Cat = require('pull-cat')
@@ -150,7 +150,7 @@ module.exports = {
       sbot.friends.createFriendStream(opts),
       // filter out duplicates, and also keep track of what we expect to receive
       // lookup the latest sequence from each user
-      para(function (data, cb) {
+      pull.asyncMap(function (data, cb) {
         if(data.sync) return cb(null, S = data)
         var id = data.id || data
         sbot.latestSequence(id, function (err, seq) {
@@ -218,6 +218,10 @@ module.exports = {
     }
   }
 }
+
+
+
+
 
 
 

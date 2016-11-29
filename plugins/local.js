@@ -18,8 +18,10 @@ module.exports = {
     local.on('data', function (buf) {
       if(buf.loopback) return
       var data = buf.toString()
-      if(ref.parseAddress(data))
+      if(ref.parseAddress(data)) {
+        console.log(data)
         sbot.gossip.add(data, 'local')
+      }
     })
 
     setInterval(function () {
