@@ -31,6 +31,7 @@
     "observ-debounce": "^1.1.1",
     "on-change-network": "0.0.2",
     "on-wakeup": "^1.0.0",
+    "osenv": "^0.1.3",
     "pull-abortable": "~4.0.0",
     "pull-cat": "~1.1.5",
     "pull-file": "^0.5.0",
