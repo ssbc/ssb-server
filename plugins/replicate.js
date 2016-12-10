@@ -116,8 +116,11 @@ module.exports = {
       if(!sbot.gossip) return
       sbot.gossip.peers()
         .forEach(function (e) {
-          if(to_send[e.key] == null)
-            addPeer({id: e.key, sequence: 0})
+          if(to_send[e.key] == null) {
+            sbot.latestSequence(e.key, function (err, seq) {
+              addPeer({id: e.key, sequence: seq})
+            })
+          }
         })
     }
 
@@ -155,8 +158,8 @@ module.exports = {
         var id = data.id || data
         sbot.latestSequence(id, function (err, seq) {
           cb(null, {
-            id: id, sequence: err ? 0 : toSeq(seq)
-          })
+              id: id, sequence: err ? 0 : toSeq(seq)
+            })
         })
       }, 32),
       pull.drain(addPeer)
@@ -193,12 +196,12 @@ module.exports = {
           pull(
             rpc.createHistoryStream({
               id: upto.id,
-              seq: (upto.sequence || upto.seq || 0) + 1,
+              sequence: (upto.sequence || upto.seq || 0) + 1,
               live: true,
               keys: false
             }),
             sbot.createWriteStream(function (err) {
-              if(err) console.error(err.stack)
+              if(err) console.error(err.message)
 
               feeds--
               debounce.set()
@@ -218,15 +221,6 @@ module.exports = {
     }
   }
 }
-
-
-
-
-
-
-
-
-
 
 
 

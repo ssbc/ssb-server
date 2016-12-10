@@ -109,7 +109,9 @@ module.exports = {
           if(err) return cb(err)
 
           // check if we're already following them
-          server.friends.all('follow', function(err, follows) {
+          server.friends.get(function (err, follows) {
+//          server.friends.all('follow', function(err, follows) {
+//            if(hops[req.feed] == 1)
             if (follows && follows[server.id] && follows[server.id][req.feed])
               return cb(new Error('already following'))
 

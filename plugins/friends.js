@@ -34,7 +34,8 @@ exports.init = function (sbot, config) {
 
   var index = sbot._flumeUse('friends', Reduce(1, function (g, rel) {
     if(!g) g = {}
-      G.addEdge(g, rel.from, rel.to, rel.value)
+
+    G.addEdge(g, rel.from, rel.to, rel.value)
     return g
   }, function (data) {
     if(data.value.content.type === 'contact' && ref.isFeed(data.value.content.contact))
@@ -48,20 +49,20 @@ exports.init = function (sbot, config) {
   return {
 
     get: function (opts, cb) {
-      console.log('friends.get', opts, cb)
       index.get(null, cb || opts)
     },
 
     createFriendStream: valid.source(function (opts) {
       opts = opts || {}
       var start = opts.start || sbot.id
-      var reachable = {}, g = {}
+      var reachable
       return pull(
         index.stream(opts),
         FlatMap(function (v) {
           var out = []
           if(!v) return []
           if(v.from && v.to) {
+            G.addEdge(g, v.from, v.to, v.value)
             var _reachable = G.hops(g, start, 0, opts.hops || 3, reachable)
             for(var k in _reachable) {
               if(reachable[k] == null)
@@ -85,6 +86,8 @@ exports.init = function (sbot, config) {
 
     hops: function (opts, cb) {
       opts = opts || {}
+      if(isString(opts))
+        opts = {start: opts}
       index.get(null, function (err, g) {
         if(err) cb(err)
         else cb(null, G.hops(g, opts.start || sbot.id, 0, opts.hops || 3))
@@ -92,12 +95,4 @@ exports.init = function (sbot, config) {
     }
   }
 }
-
-
-
-
-
-
-
-
 
