@@ -352,3 +352,7 @@ Outputs information in the following form:
 
 
 
+## since: sync
+
+get the current state of the internal flumelog
+

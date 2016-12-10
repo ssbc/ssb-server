@@ -11,7 +11,8 @@ var valid      = require('./lib/validators')
 var apidocs    = require('./lib/apidocs.js')
 
 function isString(s) { return 'string' === typeof s }
-
+function isObject(o) { return 'object' === typeof o }
+function isFunction (f) { return 'function' === typeof f }
 // create SecretStack definition
 var manifest = mdm.manifest(apidocs._)
 manifest.usage = 'sync'
@@ -55,6 +56,19 @@ var SSB = {
         cb && cb() //multiserver doesn't take a callback on close.
       })
     }
+
+    function since () {
+      var plugs = {}
+      for(var k in ssb) {
+        if(ssb[k] && isObject(ssb[k]) && isFunction(ssb[k].since))
+          plugs[k] = ssb[k].since.value
+      }
+      return {
+        since: ssb.since.value,
+        plugins: plugs
+      }
+    }
+
     return {
       id                       : feed.id,
       keys                     : opts.keys,
@@ -75,6 +89,8 @@ var SSB = {
 
       pre                      : ssb.pre,
       post                     : ssb.post,
+
+      since                    : since,
 
       getPublicKey             : ssb.getPublicKey,
       latest                   : ssb.latest,
