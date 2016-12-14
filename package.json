@@ -1,7 +1,7 @@
 {
   "name": "scuttlebot",
   "description": "A bot-server for the phoenix network",
-  "version": "9.4.1",
+  "version": "9.4.2",
   "homepage": "https://github.com/pfraze/scuttlebot",
   "repository": {
     "type": "git",
@@ -79,4 +79,3 @@
   "author": "Paul Frazee <pfrazee@gmail.com>",
   "license": "MIT"
 }
-
