@@ -54,6 +54,7 @@
     "ssb-keys": "^7.0.0",
     "ssb-msgs": "~5.0.0",
     "ssb-ref": "^2.6.2",
+    "ssb-ws": "^1.0.0",
     "statistics": "^3.0.0",
     "stream-to-pull-stream": "^1.6.10",
     "zerr": "^1.0.0"
@@ -66,7 +67,6 @@
     "level-test": "^2.0.1",
     "noderify": "~1.0.0",
     "ssb-msg-schemas": "~3.2.0",
-    "ssb-ws": "^0.3.1",
     "tape": "~4.0.0"
   },
   "bin": {
@@ -79,3 +79,4 @@
   "author": "Paul Frazee <pfrazee@gmail.com>",
   "license": "MIT"
 }
+
