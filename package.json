@@ -15,7 +15,7 @@
     "deep-equal": "^1.0.1",
     "explain-error": "~1.0.1",
     "graphmitter": "^1.6.3",
-    "has-network": "0.0.0",
+    "has-network": "0.0.1",
     "ip": "^0.3.3",
     "level-memview": "~0.0.0",
     "mdmanifest": "^1.0.4",
