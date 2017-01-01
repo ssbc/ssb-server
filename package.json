@@ -15,7 +15,7 @@
     "deep-equal": "^1.0.1",
     "explain-error": "~1.0.1",
     "graphmitter": "^1.6.3",
-    "has-network": "0.0.0",
+    "has-network": "0.0.1",
     "ip": "^0.3.3",
     "level-memview": "~0.0.0",
     "mdmanifest": "^1.0.4",
@@ -32,14 +32,14 @@
     "on-change-network": "0.0.2",
     "on-wakeup": "^1.0.0",
     "osenv": "^0.1.3",
-    "pull-abortable": "~4.0.0",
+    "pull-abortable": "~4.1.0",
     "pull-cat": "~1.1.5",
-    "pull-file": "^0.5.0",
+    "pull-file": "^1.0.0",
     "pull-inactivity": "~2.1.1",
     "pull-level": "^2.0.2",
     "pull-many": "~1.0.6",
-    "pull-notify": "0.0.0",
-    "pull-paramap": "~1.1.1",
+    "pull-notify": "0.1.1",
+    "pull-paramap": "~1.2.1",
     "pull-ping": "^2.0.2",
     "pull-pushable": "^2.0.0",
     "pull-stream": "^3.0.0",
@@ -52,7 +52,7 @@
     "ssb-client": "^4.0.2",
     "ssb-config": "^2.0.0",
     "ssb-keys": "^7.0.0",
-    "ssb-msgs": "~5.0.0",
+    "ssb-msgs": "~5.2.0",
     "ssb-ref": "^2.6.2",
     "ssb-ws": "^1.0.1",
     "statistics": "^3.0.0",
@@ -79,3 +79,5 @@
   "author": "Paul Frazee <pfrazee@gmail.com>",
   "license": "MIT"
 }
+
+
