@@ -1,11 +1,11 @@
 {
   "name": "scuttlebot",
-  "description": "A bot-server for the phoenix network",
+  "description": "network protocol layer for secure-scuttlebutt",
   "version": "9.4.2",
-  "homepage": "https://github.com/pfraze/scuttlebot",
+  "homepage": "https://github.com/ssbc/scuttlebot",
   "repository": {
     "type": "git",
-    "url": "git://github.com/pfraze/scuttlebot.git"
+    "url": "git://github.com/ssbc/scuttlebot.git"
   },
   "dependencies": {
     "atomic-file": "0.0.1",
