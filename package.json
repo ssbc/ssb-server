@@ -74,7 +74,8 @@
     "tape": "~4.0.0"
   },
   "bin": {
-    "sbot": "./sbot.js"
+    "sbot": "./bin.js",
+    "scuttlebot": "./bin.js"
   },
   "scripts": {
     "prepublish": "npm ls && npm test && noderify bin.js > sbot.js",
