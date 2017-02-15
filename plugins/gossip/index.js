@@ -151,6 +151,13 @@ module.exports = {
 
         return f
       }, 'string|object', 'string?'),
+      remove: function (addr) {
+        var peer = gossip.get(addr)
+        var index = peers.indexOf(peer)
+        if (~index) {
+          peers.splice(index, 1)
+        }
+      },
       ping: function (opts) {
         var timeout = config.timers && config.timers.ping || 5*60e3
         //between 10 seconds and 30 minutes, default 5 min
@@ -248,4 +255,3 @@ module.exports = {
     return gossip
   }
 }
-
