@@ -18,6 +18,16 @@ function toSeq (s) {
 
 function last (a) { return a[a.length - 1] }
 
+// if one of these shows up in a replication stream, the stream is dead
+var streamErrors = {
+  'unexpected end of parent stream': true, // stream closed okay
+  'unexpected hangup': true, // stream closed probably okay
+  'read EHOSTUNREACH': true, // unable to connect
+  'read ECONNRESET': true, // stream broke during read
+  'write EPIPE': true, // stream broke during write
+  'stream is closed': true, // rpc method called after stream ended
+}
+
 module.exports = {
   name: 'replicate',
   version: '2.0.0',
@@ -184,6 +194,7 @@ module.exports = {
         sbot.emit('replicate:finish', to_send)
       })
       var SYNC = false
+      var errorsSeen = {}
       pull(
         upto({live: opts.live}),
         drain = pull.drain(function (upto) {
@@ -198,7 +209,15 @@ module.exports = {
               keys: false
             }),
             sbot.createWriteStream(function (err) {
-              if(err) console.error(err.stack)
+              if(err) {
+                if(err.message in streamErrors) {
+                  drain.abort()
+                } else if(!(err.message in errorsSeen)) {
+                  errorsSeen[err.message] = true
+                  console.error('Error replicating with ' + rpc.id + ':\n  ',
+                    err.stack)
+                }
+              }
 
               feeds--
               debounce.set()
@@ -206,8 +225,8 @@ module.exports = {
           )
 
         }, function (err) {
-          if(err)
-            sbot.emit('log:error', ['replication', rep.id, 'error', err])
+          if(err && err !== true)
+            sbot.emit('log:error', ['replication', rpc.id, 'error', err])
         })
       )
     })
