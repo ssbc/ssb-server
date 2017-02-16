@@ -112,7 +112,7 @@ module.exports = {
         peer.state = 'disconnecting'
         peer.stateChange = Date.now()
         if(!peer || !peer.disconnect) cb && cb()
-        else peer.disconnect(null, function (err) {
+        else peer.disconnect(true, function (err) {
           peer.stateChange = Date.now()
         })
 
