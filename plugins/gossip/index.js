@@ -175,7 +175,14 @@ module.exports = {
       var peer = getPeer(rpc.id)
       //don't track clients that connect, but arn't considered peers.
       //maybe we should though?
-      if(!peer) return
+      if(!peer) {
+        console.log('Connected', rpc.id)
+        rpc.on('closed', function () {
+          console.log('Disconnected', rpc.id)
+        })
+        return
+      }
+
       console.log('Connected', stringify(peer))
       //means that we have created this connection, not received it.
       peer.client = !!isClient
