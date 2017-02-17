@@ -212,11 +212,20 @@ module.exports = {
               keys: false
             }),
             sbot.createWriteStream(function (err) {
-              if(err) {
+              if(err && !(err.message in errorsSeen)) {
+                errorsSeen[err.message] = true
                 if(err.message in streamErrors) {
                   drain.abort()
-                } else if(!(err.message in errorsSeen)) {
-                  errorsSeen[err.message] = true
+                  if(err.message === 'unexpected end of parent stream') {
+                    if (err instanceof Error) {
+                      // stream closed okay locally
+                    } else {
+                      // pre-emptively destroy the stream, assuming the other
+                      // end is packet-stream 2.0.0 sending end messages.
+                      rpc.close(err)
+                    }
+                  }
+                } else {
                   console.error('Error replicating with ' + rpc.id + ':\n  ',
                     err.stack)
                 }
