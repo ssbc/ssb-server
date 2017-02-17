@@ -22,9 +22,12 @@ function last (a) { return a[a.length - 1] }
 var streamErrors = {
   'unexpected end of parent stream': true, // stream closed okay
   'unexpected hangup': true, // stream closed probably okay
-  'read EHOSTUNREACH': true, // unable to connect
-  'read ECONNRESET': true, // stream broke during read
-  'write EPIPE': true, // stream broke during write
+  'read EHOSTUNREACH': true,
+  'read ECONNRESET': true,
+  'read ENETDOWN': true,
+  'read ETIMEDOUT': true,
+  'write ECONNRESET': true,
+  'write EPIPE': true,
   'stream is closed': true, // rpc method called after stream ended
 }
 
