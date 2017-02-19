@@ -176,10 +176,12 @@ module.exports = {
       //don't track clients that connect, but arn't considered peers.
       //maybe we should though?
       if(!peer) {
-        console.log('Connected', rpc.id)
-        rpc.on('closed', function () {
-          console.log('Disconnected', rpc.id)
-        })
+        if(rpc.id !== server.id) {
+          console.log('Connected', rpc.id)
+          rpc.on('closed', function () {
+            console.log('Disconnected', rpc.id)
+          })
+        }
         return
       }
 
