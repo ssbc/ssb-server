@@ -19,7 +19,6 @@ module.exports = {
       if(buf.loopback) return
       var data = buf.toString()
       if(ref.parseAddress(data)) {
-        console.log(data)
         sbot.gossip.add(data, 'local')
       }
     })
