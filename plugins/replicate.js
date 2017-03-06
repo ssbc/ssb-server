@@ -18,6 +18,19 @@ function toSeq (s) {
 
 function last (a) { return a[a.length - 1] }
 
+// if one of these shows up in a replication stream, the stream is dead
+var streamErrors = {
+  'unexpected end of parent stream': true, // stream closed okay
+  'unexpected hangup': true, // stream closed probably okay
+  'read EHOSTUNREACH': true,
+  'read ECONNRESET': true,
+  'read ENETDOWN': true,
+  'read ETIMEDOUT': true,
+  'write ECONNRESET': true,
+  'write EPIPE': true,
+  'stream is closed': true, // rpc method called after stream ended
+}
+
 module.exports = {
   name: 'replicate',
   version: '2.0.0',
@@ -187,6 +200,7 @@ module.exports = {
         sbot.emit('replicate:finish', to_send)
       })
       var SYNC = false
+      var errorsSeen = {}
       pull(
         upto({live: opts.live}),
         drain = pull.drain(function (upto) {
@@ -201,7 +215,24 @@ module.exports = {
               keys: false
             }),
             sbot.createWriteStream(function (err) {
-              if(err) console.error(err.message)
+              if(err && !(err.message in errorsSeen)) {
+                errorsSeen[err.message] = true
+                if(err.message in streamErrors) {
+                  drain.abort()
+                  if(err.message === 'unexpected end of parent stream') {
+                    if (err instanceof Error) {
+                      // stream closed okay locally
+                    } else {
+                      // pre-emptively destroy the stream, assuming the other
+                      // end is packet-stream 2.0.0 sending end messages.
+                      rpc.close(err)
+                    }
+                  }
+                } else {
+                  console.error('Error replicating with ' + rpc.id + ':\n  ',
+                    err.stack)
+                }
+              }
 
               feeds--
               debounce.set()
@@ -209,8 +240,8 @@ module.exports = {
           )
 
         }, function (err) {
-          if(err)
-            sbot.emit('log:error', ['replication', rep.id, 'error', err])
+          if(err && err !== true)
+            sbot.emit('log:error', ['replication', rpc.id, 'error', err])
         })
       )
     })
