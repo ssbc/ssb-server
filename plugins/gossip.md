@@ -37,6 +37,20 @@ add({ host:, port:, key: }, cb)
  - `port` (port number)
  - `key` (feedid)
 
+## remove: sync
+
+Remove an address from the peer table.
+
+```bash
+remove {addr}
+remove --host {string} --port {number} --key {feedid}
+```
+
+```js
+remove(addr)
+remove({ host:, port:, key: })
+```
+
 ## ping: duplex
 
 used internally by the gossip plugin to measure latency and clock skew
