@@ -99,7 +99,7 @@ module.exports = {
           pushable.splice(i, 1)
         })
         pushable.push(p)
-        pushable.sequence = upto.sequence
+        pushable.sequence = seq
         return p
       }
       return fn.call(this, upto)
