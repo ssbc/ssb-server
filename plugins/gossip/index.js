@@ -112,7 +112,7 @@ module.exports = {
         peer.state = 'disconnecting'
         peer.stateChange = Date.now()
         if(!peer || !peer.disconnect) cb && cb()
-        else peer.disconnect(null, function (err) {
+        else peer.disconnect(true, function (err) {
           peer.stateChange = Date.now()
         })
 
@@ -182,7 +182,16 @@ module.exports = {
       var peer = getPeer(rpc.id)
       //don't track clients that connect, but arn't considered peers.
       //maybe we should though?
-      if(!peer) return
+      if(!peer) {
+        if(rpc.id !== server.id) {
+          console.log('Connected', rpc.id)
+          rpc.on('closed', function () {
+            console.log('Disconnected', rpc.id)
+          })
+        }
+        return
+      }
+
       console.log('Connected', stringify(peer))
       //means that we have created this connection, not received it.
       peer.client = !!isClient
