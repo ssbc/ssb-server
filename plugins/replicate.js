@@ -127,11 +127,13 @@ module.exports = {
 
     function localPeers () {
       if(!sbot.gossip) return
-      sbot.gossip.peers()
-        .forEach(function (e) {
-          if(to_send[e.key] == null)
-            addPeer({id: e.key, sequence: 0})
-        })
+      sbot.gossip.peers().forEach(function (e) {
+        if (e.source === 'local' && to_send[e.key] == null) {
+          sbot.latestSequence(e.key, function (err, seq) {
+            addPeer({id: e.key, sequence: err ? 0 : toSeq(seq)})
+          })
+        }
+      })
     }
 
     //also request local peers.
