@@ -53,9 +53,11 @@ module.exports = {
       // only list loaded feeds once we know about all of them!
       var feeds = loadedFriends ? Object.keys(toSend).length : null
       var legacyProgress = 0
+      var legacyTotal = 0
 
       var pendingFeeds = new Set()
       var pendingPeers = {}
+      var legacyToRecv = {}
 
       Object.keys(pendingFeedsForPeer).forEach(function (peerId) {
         if (pendingFeedsForPeer[peerId]) {
@@ -76,13 +78,28 @@ module.exports = {
         legacyProgress += toSend[k]
       }
 
+      for (var id in peerHas) {
+        for (var k in peerHas[id]) {
+          legacyToRecv[k] = Math.max(peerHas[id][k], legacyToRecv[k] || 0)
+        }
+      }
+
+      for (var k in legacyToRecv) {
+        if (toSend[k] !== null) {
+          legacyTotal += legacyToRecv[k]
+        }
+      }
+
       var progress = {
         id: sbot.id,
         rate, // rate of messages written to sbot
-        progress: legacyProgress, // LEGACY: needed for test/random.js to pass
         feeds, // total number of feeds we want to replicate
         pendingPeers, // number of pending feeds per peer
-        incompleteFeeds: pendingFeeds.size // number of feeds with pending messages to download
+        incompleteFeeds: pendingFeeds.size, // number of feeds with pending messages to download
+
+        // LEGACY: Preserving old api. Needed for test/random.js to pass
+        progress: legacyProgress,
+        total: legacyTotal
       }
 
       if (!deepEqual(progress, lastProgress)) {
