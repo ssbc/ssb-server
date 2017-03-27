@@ -124,6 +124,12 @@ exports.init = function (sbot, config) {
         return ps.push(meta ? {id: to, hops: hops} : to)
       }
 
+      if (live) {
+        awaitSync(function () {
+          ps.push({sync: true})
+        })
+      }
+
       //by default, also emit your own key.
       if(opts.self !== false)
         push(start, 0)
