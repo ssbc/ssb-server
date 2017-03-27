@@ -2,9 +2,7 @@
 var pull = require('pull-stream')
 var para = require('pull-paramap')
 var Notify = require('pull-notify')
-var many = require('pull-many')
 var Cat = require('pull-cat')
-var Abort = require('pull-abortable')
 var Debounce = require('observ-debounce')
 var mdm = require('mdmanifest')
 var apidoc = require('../lib/apidocs').replicate
@@ -16,8 +14,6 @@ function toSeq (s) {
   return 'number' === typeof s ? s : s.sequence
 }
 
-function last (a) { return a[a.length - 1] }
-
 // if one of these shows up in a replication stream, the stream is dead
 var streamErrors = {
   'unexpected end of parent stream': true, // stream closed okay
@@ -28,7 +24,7 @@ var streamErrors = {
   'read ETIMEDOUT': true,
   'write ECONNRESET': true,
   'write EPIPE': true,
-  'stream is closed': true, // rpc method called after stream ended
+  'stream is closed': true // rpc method called after stream ended
 }
 
 module.exports = {
@@ -152,21 +148,21 @@ module.exports = {
       if(to_send[upto.id] == null) {
         to_send[upto.id] = Math.max(to_send[upto.id] || 0, upto.sequence || upto.seq || 0)
         newPeer({id: upto.id, sequence: to_send[upto.id] , type: 'new' })
-      } else
+      } else {
         to_send[upto.id] = Math.max(to_send[upto.id] || 0, upto.sequence || upto.seq || 0)
+      }
 
       debounce.set()
     }
 
 
     // create read-streams for the desired feeds
-    var S = false
     pull(
       sbot.friends.createFriendStream(opts),
       // filter out duplicates, and also keep track of what we expect to receive
       // lookup the latest sequence from each user
       para(function (data, cb) {
-        if(data.sync) return cb(null, S = data)
+        if(data.sync) return cb(null, data)
         var id = data.id || data
         sbot.latestSequence(id, function (err, seq) {
           cb(null, {
@@ -198,7 +194,6 @@ module.exports = {
       rpc.on('closed', function () {
         sbot.emit('replicate:finish', to_send)
       })
-      var SYNC = false
       var errorsSeen = {}
       pull(
         upto({live: opts.live}),
@@ -247,16 +242,7 @@ module.exports = {
 
     return {
       changes: notify.listen,
-      upto: upto,
+      upto: upto
     }
   }
 }
-
-
-
-
-
-
-
-
-
