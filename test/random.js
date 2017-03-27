@@ -233,9 +233,11 @@ tape('replicate social network for animals', function (t) {
     })
   })
 
+  var drain
+
   pull(
     animalFriends.replicate.changes(),
-    pull.drain(function (prog) {
+    drain = pull.drain(function (prog) {
       prog.id = 'animal friends'
       var target = F+N+3
       console.log(prog, target)
@@ -246,6 +248,7 @@ tape('replicate social network for animals', function (t) {
         var time = (Date.now() - start) / 1000
         console.log('replicated', target, 'messages in', time, 'at rate',target/time)
         animalFriends.close(true)
+        drain.abort()
         t.end()
       }
     })
