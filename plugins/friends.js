@@ -54,8 +54,10 @@ exports.init = function (sbot, config) {
 
     createFriendStream: valid.source(function (opts) {
       opts = opts || {}
+      var live = opts.live === true
       var meta = opts.meta === true
       var start = opts.start || sbot.id
+      var first = true
       var reachable
 
       return pull(
@@ -82,6 +84,12 @@ exports.init = function (sbot, config) {
             reachable = G.hops(g, start, 0, opts.hops || 3)
             for(var k in reachable)
               push(k, reachable[k])
+          }
+          if(first) {
+            first = false
+            if(live) {
+              out.push({sync: true})
+            }
           }
           return out
         })
