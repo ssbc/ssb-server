@@ -1,7 +1,7 @@
 {
   "name": "scuttlebot",
   "description": "network protocol layer for secure-scuttlebutt",
-  "version": "9.4.4",
+  "version": "9.5.0",
   "homepage": "https://github.com/ssbc/scuttlebot",
   "repository": {
     "type": "git",
@@ -40,6 +40,7 @@
     "pull-inactivity": "~2.1.1",
     "pull-level": "^2.0.2",
     "pull-many": "~1.0.6",
+    "pull-next": "0.0.2",
     "pull-notify": "0.1.1",
     "pull-paramap": "~1.2.1",
     "pull-ping": "^2.0.2",
@@ -65,7 +66,6 @@
   },
   "devDependencies": {
     "cat-names": "~1.0.2",
-    "deep-equal": "~1.0.0",
     "dog-names": "~1.0.2",
     "level-sublevel": "~6.3.15",
     "level-test": "^2.0.1",
