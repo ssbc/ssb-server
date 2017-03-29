@@ -54,11 +54,16 @@ exports.init = function (sbot, config) {
 
     createFriendStream: valid.source(function (opts) {
       opts = opts || {}
+      var meta = opts.meta === true
       var start = opts.start || sbot.id
       var reachable
+
       return pull(
         index.stream(opts),
         FlatMap(function (v) {
+          function push (to, hops) {
+            out.push(meta ? {id: to, hops: hops} : to)
+          }
           var out = []
           if(!v) return []
           if(v.from && v.to) {
@@ -66,7 +71,7 @@ exports.init = function (sbot, config) {
             var _reachable = G.hops(g, start, 0, opts.hops || 3, reachable)
             for(var k in _reachable) {
               if(reachable[k] == null)
-                out.push({id: k, hops: reachable[k] = _reachable[k]})
+                push(k, reachable[k] = _reachable[k])
               else if(reachable[k] > _reachable[k])
                 reachable[k] = _reachable[k]
               //else, we where already able to reach this node.
@@ -76,7 +81,7 @@ exports.init = function (sbot, config) {
             g = v
             reachable = G.hops(g, start, 0, opts.hops || 3)
             for(var k in reachable)
-              out.push({id: k, hops: reachable[k]})
+              push(k, reachable[k])
           }
           return out
         })
