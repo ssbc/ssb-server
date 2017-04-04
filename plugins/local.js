@@ -14,18 +14,33 @@ module.exports = {
   init: function (sbot, config) {
 
     var local = broadcast(config.port)
+    var addrs = {}
+    var lastSeen = {}
 
+    // cleanup old local peers
+    setInterval(function () {
+      Object.keys(lastSeen).forEach((key) => {
+        if (Date.now() - lastSeen[key] > 10e3) {
+          sbot.gossip.remove(addrs[key])
+          delete lastSeen[key]
+        }
+      })
+    }, 5e3)
+
+    // discover new local peers
     local.on('data', function (buf) {
-      if(buf.loopback) return
+      if (buf.loopback) return
       var data = buf.toString()
-      if(ref.parseAddress(data)) {
-        console.log(data)
+      var peer = ref.parseAddress(data)
+      if (peer && peer.key !== sbot.id) {
+        addrs[peer.key] = peer
+        lastSeen[peer.key] = Date.now()
         sbot.gossip.add(data, 'local')
       }
     })
 
+    // broadcast self
     setInterval(function () {
-      // broadcast self
       // TODO: sign beacons, so that receipient can be confidant
       // that is really your id.
       // (which means they can update their peer table)
@@ -35,6 +50,3 @@ module.exports = {
     }, 1000)
   }
 }
-
-
-

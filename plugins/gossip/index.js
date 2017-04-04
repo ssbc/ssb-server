@@ -112,7 +112,7 @@ module.exports = {
         peer.state = 'disconnecting'
         peer.stateChange = Date.now()
         if(!peer || !peer.disconnect) cb && cb()
-        else peer.disconnect(null, function (err) {
+        else peer.disconnect(true, function (err) {
           peer.stateChange = Date.now()
         })
 
@@ -151,6 +151,13 @@ module.exports = {
 
         return f
       }, 'string|object', 'string?'),
+      remove: function (addr) {
+        var peer = gossip.get(addr)
+        var index = peers.indexOf(peer)
+        if (~index) {
+          peers.splice(index, 1)
+        }
+      },
       ping: function (opts) {
         var timeout = config.timers && config.timers.ping || 5*60e3
         //between 10 seconds and 30 minutes, default 5 min
@@ -175,7 +182,16 @@ module.exports = {
       var peer = getPeer(rpc.id)
       //don't track clients that connect, but arn't considered peers.
       //maybe we should though?
-      if(!peer) return
+      if(!peer) {
+        if(rpc.id !== server.id) {
+          console.log('Connected', rpc.id)
+          rpc.on('closed', function () {
+            console.log('Disconnected', rpc.id)
+          })
+        }
+        return
+      }
+
       console.log('Connected', stringify(peer))
       //means that we have created this connection, not received it.
       peer.client = !!isClient
@@ -248,4 +264,3 @@ module.exports = {
     return gossip
   }
 }
-

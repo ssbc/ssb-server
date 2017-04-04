@@ -50,7 +50,10 @@ if (argv[0] == 'server') {
     .use(require('ssb-query'))
     .use(require('ssb-links'))
     .use(require('ssb-ws'))
-//
+
+  // add third-party plugins
+  require('./plugins/plugins').loadUserPlugins(createSbot, config)
+
   // start server
 
   config.keys = keys
@@ -79,6 +82,7 @@ if (argv[0] == 'server') {
     manifest: manifest,
     port: config.port,
     host: config.host||'localhost',
+    caps: config.caps,
     key: config.key || keys.id
   }, function (err, rpc) {
     if(err) {
