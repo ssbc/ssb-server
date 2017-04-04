@@ -15,7 +15,9 @@ function isObject(o) { return 'object' === typeof o }
 function isFunction (f) { return 'function' === typeof f }
 // create SecretStack definition
 var manifest = mdm.manifest(apidocs._)
+manifest.seq = 'async'
 manifest.usage = 'sync'
+manifest.clock = 'async'
 var SSB = {
   manifest: manifest,
   permissions: {
@@ -108,7 +110,8 @@ var SSB = {
       sublevel                 : ssb.sublevel,
       messagesByType           : valid.source(ssb.messagesByType, 'string|messagesByTypeOpts'),
       createWriteStream        : ssb.createWriteStream,
-//      createLatestLookupStream : ssb.createLatestLookupStream,
+      getVectorClock           : ssb.getVectorClock,
+      getAtSequence            : ssb.getAtSequence,
     }
   }
 }
@@ -143,7 +146,4 @@ module.exports = SecretStack({
   appKey: require('./lib/ssb-cap')
 })
 .use(SSB)
-
-
-
 
