@@ -244,65 +244,83 @@ module.exports = {
 
     sbot.on('rpc:connect', function(rpc) {
       // this is the cli client, just ignore.
+
       if(rpc.id === sbot.id) return
+      var errorsSeen = {}
 
       //check for local peers, or manual connections.
       localPeers()
 
       var drain
 
-      sbot.emit('replicate:start', rpc)
-      rpc.on('closed', function () {
-        sbot.emit('replicate:finish', toSend)
-      })
-      var errorsSeen = {}
-      pull(
-        upto({live: opts.live}),
-        drain = pull.drain(function (upto) {
-          if(upto.sync) return
+      function replicate(upto) {
+        pendingFeedsForPeer[rpc.id] = pendingFeedsForPeer[rpc.id] || new Set()
+        pendingFeedsForPeer[rpc.id].add(upto.id)
 
-          pendingFeedsForPeer[rpc.id] = pendingFeedsForPeer[rpc.id] || new Set()
-          pendingFeedsForPeer[rpc.id].add(upto.id)
+        debounce.set()
 
-          debounce.set()
-
-          pull(
-            createHistoryStreamWithSync(rpc, upto, function onSync () {
-              pendingFeedsForPeer[rpc.id].delete(upto.id)
-              debounce.set()
-            }),
-            sbot.createWriteStream(function (err) {
-              if(err && !(err.message in errorsSeen)) {
-                errorsSeen[err.message] = true
-                if(err.message in streamErrors) {
-                  drain.abort()
-                  if(err.message === 'unexpected end of parent stream') {
-                    if (err instanceof Error) {
-                      // stream closed okay locally
-                    } else {
-                      // pre-emptively destroy the stream, assuming the other
-                      // end is packet-stream 2.0.0 sending end messages.
-                      rpc.close(err)
-                    }
+        pull(
+          createHistoryStreamWithSync(rpc, upto, function onSync () {
+            pendingFeedsForPeer[rpc.id].delete(upto.id)
+            debounce.set()
+          }),
+          sbot.createWriteStream(function (err) {
+            if(err && !(err.message in errorsSeen)) {
+              errorsSeen[err.message] = true
+              if(err.message in streamErrors) {
+                drain.abort()
+                if(err.message === 'unexpected end of parent stream') {
+                  if (err instanceof Error) {
+                    // stream closed okay locally
+                  } else {
+                    // pre-emptively destroy the stream, assuming the other
+                    // end is packet-stream 2.0.0 sending end messages.
+                    rpc.close(err)
                   }
-                } else {
-                  console.error('Error replicating with ' + rpc.id + ':\n  ',
-                    err.stack)
                 }
+              } else {
+                console.error('Error replicating with ' + rpc.id + ':\n  ',
+                  err.stack)
               }
+            }
 
-              pendingFeedsForPeer[rpc.id].delete(upto.id)
-              debounce.set()
-            })
-          )
+            pendingFeedsForPeer[rpc.id].delete(upto.id)
+            debounce.set()
+          })
+        )
+      }
 
-        }, function (err) {
-          if(err && err !== true)
-            sbot.emit('log:error', ['replication', rpc.id, 'error', err])
+      sbot.latestSequence(sbot.id, function (err, seq) {
+        replicate({
+          id: sbot.id, sequence: err ? 0 : toSeq(seq)
         })
-      )
-    })
+      })
 
+
+      rpc.once('call:createHistoryStream', next)
+
+      function next () {
+
+        sbot.emit('replicate:start', rpc)
+
+        rpc.on('closed', function () {
+          sbot.emit('replicate:finish', toSend)
+        })
+
+        pull(
+          upto({live: opts.live}),
+          drain = pull.drain(function (upto) {
+            if(upto.sync) return
+            if(upto.id == sbot.id) return
+            replicate(upto)
+          }, function (err) {
+            if(err && err !== true)
+              sbot.emit('log:error', ['replication', rpc.id, 'error', err])
+          })
+        )
+
+      }
+    })
     return {
       changes: notify.listen,
       upto: upto,
@@ -341,3 +359,4 @@ function createHistoryStreamWithSync (rpc, upto, onSync) {
     }
   })
 }
+
