@@ -81,7 +81,6 @@ module.exports = {
 
         if(!addr.key) return cb(new Error('address must have ed25519 key'))
         // add peer to the table, incase it isn't already.
-        console.log('connect', addr)
         gossip.add(addr, 'manual')
         var p = gossip.get(addr)
         if(!p) return cb()
@@ -265,5 +264,4 @@ module.exports = {
     return gossip
   }
 }
-
 
