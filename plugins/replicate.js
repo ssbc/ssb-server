@@ -253,7 +253,7 @@ module.exports = {
 
       var drain
 
-      function replicate(upto) {
+      function replicate(upto, cb) {
         pendingFeedsForPeer[rpc.id] = pendingFeedsForPeer[rpc.id] || new Set()
         pendingFeedsForPeer[rpc.id].add(upto.id)
 
@@ -268,7 +268,7 @@ module.exports = {
             if(err && !(err.message in errorsSeen)) {
               errorsSeen[err.message] = true
               if(err.message in streamErrors) {
-                drain.abort()
+                cb(err)
                 if(err.message === 'unexpected end of parent stream') {
                   if (err instanceof Error) {
                     // stream closed okay locally
@@ -293,7 +293,7 @@ module.exports = {
       sbot.latestSequence(sbot.id, function (err, seq) {
         replicate({
           id: sbot.id, sequence: err ? 0 : toSeq(seq)
-        })
+        }, function () {})
       })
 
 
@@ -312,7 +312,9 @@ module.exports = {
           drain = pull.drain(function (upto) {
             if(upto.sync) return
             if(upto.id == sbot.id) return
-            replicate(upto)
+            replicate(upto, function (err) {
+              drain.abort()
+            })
           }, function (err) {
             if(err && err !== true)
               sbot.emit('log:error', ['replication', rpc.id, 'error', err])
@@ -359,4 +361,6 @@ function createHistoryStreamWithSync (rpc, upto, onSync) {
     }
   })
 }
+
+
 
