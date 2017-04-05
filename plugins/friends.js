@@ -58,8 +58,8 @@ exports.init = function (sbot, config) {
       var meta = opts.meta === true
       var start = opts.start || sbot.id
       var first = true
-      var reachable
-
+      var reachable = {}
+      g = g || {}
       return pull(
         index.stream(opts),
         FlatMap(function (v) {
