@@ -267,10 +267,9 @@ module.exports = function (sbot, notify, config) {
 
   sbot.on('rpc:connect', function(rpc) {
     // this is the cli client, just ignore.
-
+    console.log(rpc)
     if(rpc.id === sbot.id) return
     var errorsSeen = {}
-
     //check for local peers, or manual connections.
     localPeers()
 
@@ -313,13 +312,16 @@ module.exports = function (sbot, notify, config) {
       )
     }
 
-    //if we are not configured to use EBT, then fallback to createHistoryStream
-    sbot.latestSequence(sbot.id, function (err, seq) {
-      replicate({
-        id: sbot.id, sequence: err ? 0 : toSeq(seq)
-      }, function () {})
+    var replicate_self = false
+    rpc.once('fallback:replicate', function () {
+      //if we are not configured to use EBT, then fallback to createHistoryStream
+      replicated_self = true
+      sbot.latestSequence(sbot.id, function (err, seq) {
+        replicate({
+          id: sbot.id, sequence: err ? 0 : toSeq(seq)
+        }, function () {})
+      })
     })
-
 
     //trigger this if ebt.replicate fails...
     rpc.once('call:createHistoryStream', next)
@@ -336,7 +338,7 @@ module.exports = function (sbot, notify, config) {
         upto({live: opts.live}),
         drain = pull.drain(function (upto) {
           if(upto.sync) return
-          if(upto.id == sbot.id) return
+          if(upto.id == sbot.id && replicate_self) return
           replicate(upto, function (err) {
             drain.abort()
           })
@@ -350,6 +352,8 @@ module.exports = function (sbot, notify, config) {
   })
   return upto
 }
+
+
 
 
 
