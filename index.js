@@ -61,15 +61,34 @@ var SSB = {
 
     function since () {
       var plugs = {}
+      var sync = false
       for(var k in ssb) {
-        if(ssb[k] && isObject(ssb[k]) && isFunction(ssb[k].since))
+        if(ssb[k] && isObject(ssb[k]) && isFunction(ssb[k].since)) {
           plugs[k] = ssb[k].since.value
+          sync = sync || (plugs[k] === ssb.since.value)
+        }
       }
       return {
         since: ssb.since.value,
-        plugins: plugs
+        plugins: plugs,
+        sync: sync
       }
     }
+
+    var state = since()
+    setInterval(function (){
+      var _state = since()
+      if(state && !state.sync && !_state.sync && state.since == _state.since) {
+        console.log(state, _state)
+        //flume is stuck again.
+        require('fs').appendFileSync('stuck.log', JSON.stringify({
+          time: new Date(),
+          state: state
+        }, null, 2) + '\n\n')
+        throw new Error('flume is stuck')
+      }
+      state = _state
+    }, 1000).unref()
 
     return {
       id                       : feed.id,
@@ -146,4 +165,12 @@ module.exports = SecretStack({
   appKey: require('./lib/ssb-cap')
 })
 .use(SSB)
+
+
+
+
+
+
+
+
 
