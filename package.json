@@ -12,6 +12,7 @@
     "bash-color": "~0.0.3",
     "broadcast-stream": "~0.0.0",
     "cont": "~1.0.3",
+    "cross-spawn": "^5.1.0",
     "deep-equal": "^1.0.1",
     "explain-error": "~1.0.1",
     "graphmitter": "^1.6.3",
