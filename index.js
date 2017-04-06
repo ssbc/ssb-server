@@ -61,11 +61,11 @@ var SSB = {
 
     function since () {
       var plugs = {}
-      var sync = false
+      var sync = true
       for(var k in ssb) {
         if(ssb[k] && isObject(ssb[k]) && isFunction(ssb[k].since)) {
           plugs[k] = ssb[k].since.value
-          sync = sync || (plugs[k] === ssb.since.value)
+          sync = sync && (plugs[k] === ssb.since.value)
         }
       }
       return {
