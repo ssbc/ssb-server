@@ -39,7 +39,7 @@
     "pull-inactivity": "~2.1.1",
     "pull-level": "^2.0.2",
     "pull-many": "~1.0.6",
-    "pull-next": "0.0.2",
+    "pull-next": "^1.0.0",
     "pull-notify": "0.1.1",
     "pull-paramap": "~1.2.1",
     "pull-ping": "^2.0.2",
