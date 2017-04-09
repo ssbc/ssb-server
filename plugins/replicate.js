@@ -288,7 +288,10 @@ module.exports = {
                 }
               }
 
-              pendingFeedsForPeer[rpc.id].delete(upto.id)
+              if (pendingFeedsForPeer[rpc.id]) {
+                pendingFeedsForPeer[rpc.id].delete(upto.id)
+              }
+
               debounce.set()
             })
           )
