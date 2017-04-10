@@ -60,7 +60,7 @@ module.exports = {
       var legacyToRecv = {}
 
       Object.keys(pendingFeedsForPeer).forEach(function (peerId) {
-        if (pendingFeedsForPeer[peerId]) {
+        if (pendingFeedsForPeer[peerId] && pendingFeedsForPeer[peerId].size) {
           Object.keys(toSend).forEach(function (feedId) {
             if (peerHas[peerId] && peerHas[peerId][feedId]) {
               if (peerHas[peerId][feedId] > toSend[feedId]) {
@@ -68,9 +68,7 @@ module.exports = {
               }
             }
           })
-          if (pendingFeedsForPeer[peerId].size) {
-            pendingPeers[peerId] = pendingFeedsForPeer[peerId].size
-          }
+          pendingPeers[peerId] = pendingFeedsForPeer[peerId].size
         }
       })
 
@@ -251,6 +249,8 @@ module.exports = {
       sbot.emit('replicate:start', rpc)
       rpc.on('closed', function () {
         sbot.emit('replicate:finish', toSend)
+        delete pendingFeedsForPeer[rpc.id]
+        debounce.set()
       })
       var errorsSeen = {}
       pull(
@@ -288,7 +288,10 @@ module.exports = {
                 }
               }
 
-              pendingFeedsForPeer[rpc.id].delete(upto.id)
+              if (pendingFeedsForPeer[rpc.id]) {
+                pendingFeedsForPeer[rpc.id].delete(upto.id)
+              }
+
               debounce.set()
             })
           )
