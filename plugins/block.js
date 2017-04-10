@@ -48,6 +48,7 @@ exports.init = function (sbot) {
         //the recipient.
         pull.take(function (msg) {
           //handle when createHistoryStream is called with keys: true
+          if(msg.sync) return true
           if(!msg.content && msg.value.content)
             msg = msg.value
           if(msg.content.type !== 'contact') return true
