@@ -311,23 +311,18 @@ function createHistoryStreamWithSync (rpc, upto, onSync) {
   // HACK: createHistoryStream does not emit sync event, so we don't
   // know when it switches to live. Do it manually!
   var last = (upto.sequence || upto.seq || 0)
-  var state = null
   return pull(
     rpc.createHistoryStream({
       id: upto.id,
       seq: last + 1,
-      sync: false,
+      sync: false, // actual means true, see https://github.com/ssbc/scuttlebot/pull/383
       live: true,
       keys: false
     }),
     pull.filter(msg => {
-      if(msg.sync) return false
-      last = Math.max(last, msg.sequence)
+      if (msg.sync) return false
+      onSync && onSync()
       return true
     })
   )
 }
-
-
-
-
