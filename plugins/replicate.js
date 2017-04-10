@@ -320,9 +320,12 @@ function createHistoryStreamWithSync (rpc, upto, onSync) {
       keys: false
     }),
     pull.filter(msg => {
-      if (msg.sync) return false
-      onSync && onSync()
-      return true
+      if (msg.sync) {
+        onSync && onSync()
+        return false
+      } else {
+        return true
+      }
     })
   )
 }
