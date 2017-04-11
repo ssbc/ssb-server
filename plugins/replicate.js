@@ -273,7 +273,7 @@ module.exports = {
             }),
 
             // track sync completed progress
-            pull.through(detectSync(rpc.id, upto, peerHas, function () {
+            pull.through(detectSync(rpc.id, upto, toSend, peerHas, function () {
               if (pendingFeedsForPeer[rpc.id]) {
                 pendingFeedsForPeer[rpc.id].delete(upto.id)
                 debounce.set()
@@ -322,17 +322,24 @@ module.exports = {
   }
 }
 
-function detectSync (peerId, upto, peerHas, onSync) {
+function detectSync (peerId, upto, toSend, peerHas, onSync) {
   // HACK: createHistoryStream does not emit sync event, so we don't
   // know when it switches to live. Do it manually!
 
   var sync = false
-  var timeout = null
   var last = (upto.sequence || upto.seq || 0)
 
-  // check sync after 100ms, hopefully we have the info from the peer by then
-  // if not, falls back to the 3 second timeout
-  setTimeout(checkSync, 100)
+  // check sync after 500ms, hopefully we have the info from the peer by then
+  setTimeout(function () {
+    if (peerHas[peerId] && peerHas[peerId][upto.id] != null) {
+      checkSync()
+    } else {
+      // if we get here, the peer hasn't yet asked for this feed, or is not responding
+      // we can assume it doesn't have the feed, so lets call sync
+      console.log('timeout')
+      broadcastSync()
+    }
+  }, 500)
 
   return function (msg) {
     if (msg.sync) {
@@ -348,25 +355,18 @@ function detectSync (peerId, upto, peerHas, onSync) {
 
   function checkSync () {
     if (!sync) {
-      resetSyncTimeout()
       var availableSeq = peerHas[peerId] && peerHas[peerId][upto.id]
-      if (availableSeq && availableSeq === last) {
+      if (availableSeq === last || availableSeq < toSend[upto.id]) {
         // we've reached the maximum sequence this server has told us it knows about
+        // or we don't need anything from this server
         broadcastSync()
       }
     }
   }
 
-  function resetSyncTimeout () {
-    // assume that if we haven't received a message for 3 seconds that we're sync
-    clearTimeout(timeout)
-    timeout = setTimeout(broadcastSync, 3000)
-  }
-
   function broadcastSync () {
     if (!sync) {
       sync = true
-      clearTimeout(timeout)
       onSync && onSync()
     }
   }
