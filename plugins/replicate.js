@@ -264,7 +264,7 @@ module.exports = {
           debounce.set()
 
           pull(
-            createHistoryStreamWithSync(rpc, upto, function onSync () {
+            createHistoryStreamWithSync(rpc, upto, peerHas, function onSync () {
               pendingFeedsForPeer[rpc.id].delete(upto.id)
               debounce.set()
             }),
@@ -310,34 +310,53 @@ module.exports = {
   }
 }
 
-function createHistoryStreamWithSync (rpc, upto, onSync) {
+function createHistoryStreamWithSync (rpc, upto, peerHas, onSync) {
   // HACK: createHistoryStream does not emit sync event, so we don't
   // know when it switches to live. Do it manually!
   var last = (upto.sequence || upto.seq || 0)
-  var state = null
-  return pullNext(function () {
-    if (!state) {
-      state = 'old'
-      return pull(
-        rpc.createHistoryStream({
-          id: upto.id,
-          seq: last + 1,
-          live: false,
-          keys: false
-        }),
-        pull.through(msg => {
-          last = Math.max(last, msg.sequence)
-        })
-      )
-    } else if (state === 'old') {
-      state = 'sync'
-      onSync && onSync(true)
-      return rpc.createHistoryStream({
-        id: upto.id,
-        seq: last + 1,
-        live: true,
-        keys: false
-      })
+  var sync = false
+  var timeout = null
+
+  resetSyncTimeout()
+
+  return pull(
+    rpc.createHistoryStream({
+      id: upto.id,
+      seq: last + 1,
+      live: true,
+      keys: false
+    }),
+    pull.through(msg => {
+      if (msg.sync) {
+        broadcastSync()
+        return false
+      }
+
+      var availableSeq = peerHas[rpc.id] && peerHas[rpc.id][upto.id]
+      if (availableSeq && availableSeq === msg.sequence) {
+        // we've reached the maximum sequence this server has told us it knows about
+        broadcastSync()
+      }
+
+      if (!sync) {
+        resetSyncTimeout()
+      }
+
+      return true
+    })
+  )
+
+  function resetSyncTimeout () {
+    // assume that if we haven't received a message for 3 seconds that we're sync
+    clearTimeout(timeout)
+    timeout = setTimeout(broadcastSync, 3000)
+  }
+
+  function broadcastSync () {
+    if (!sync) {
+      sync = true
+      clearTimeout(timeout)
+      onSync && onSync()
     }
-  })
+  }
 }
