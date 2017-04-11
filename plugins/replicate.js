@@ -336,7 +336,6 @@ function detectSync (peerId, upto, toSend, peerHas, onSync) {
     } else {
       // if we get here, the peer hasn't yet asked for this feed, or is not responding
       // we can assume it doesn't have the feed, so lets call sync
-      console.log('timeout')
       broadcastSync()
     }
   }, 500)
