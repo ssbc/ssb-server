@@ -241,14 +241,15 @@ module.exports = {
       // this is the cli client, just ignore.
       if(rpc.id === sbot.id) return
 
-      //check for local peers, or manual connections.
+      // check for local peers, or manual connections.
       localPeers()
 
       var drain
-
       sbot.emit('replicate:start', rpc)
       rpc.on('closed', function () {
         sbot.emit('replicate:finish', toSend)
+
+        // if we disconnect from a peer, remove it from sync progress
         delete pendingFeedsForPeer[rpc.id]
         debounce.set()
       })
@@ -258,16 +259,27 @@ module.exports = {
         drain = pull.drain(function (upto) {
           if(upto.sync) return
 
+          // track sync start progress
           pendingFeedsForPeer[rpc.id] = pendingFeedsForPeer[rpc.id] || new Set()
           pendingFeedsForPeer[rpc.id].add(upto.id)
-
           debounce.set()
 
           pull(
-            createHistoryStreamWithSync(rpc, upto, peerHas, function onSync () {
-              pendingFeedsForPeer[rpc.id].delete(upto.id)
-              debounce.set()
+            rpc.createHistoryStream({
+              id: upto.id,
+              seq: (upto.sequence || upto.seq || 0) + 1,
+              live: true,
+              keys: false
             }),
+
+            // track sync completed progress
+            pull.through(detectSync(rpc.id, upto, peerHas, function () {
+              if (pendingFeedsForPeer[rpc.id]) {
+                pendingFeedsForPeer[rpc.id].delete(upto.id)
+                debounce.set()
+              }
+            })),
+
             sbot.createWriteStream(function (err) {
               if(err && !(err.message in errorsSeen)) {
                 errorsSeen[err.message] = true
@@ -288,11 +300,11 @@ module.exports = {
                 }
               }
 
+              // if stream closes, remove from pending progress
               if (pendingFeedsForPeer[rpc.id]) {
                 pendingFeedsForPeer[rpc.id].delete(upto.id)
+                debounce.set()
               }
-
-              debounce.set()
             })
           )
 
@@ -310,41 +322,40 @@ module.exports = {
   }
 }
 
-function createHistoryStreamWithSync (rpc, upto, peerHas, onSync) {
+function detectSync (peerId, upto, peerHas, onSync) {
   // HACK: createHistoryStream does not emit sync event, so we don't
   // know when it switches to live. Do it manually!
-  var last = (upto.sequence || upto.seq || 0)
+
   var sync = false
   var timeout = null
+  var last = (upto.sequence || upto.seq || 0)
 
-  resetSyncTimeout()
+  // check sync after 100ms, hopefully we have the info from the peer by then
+  // if not, falls back to the 3 second timeout
+  setTimeout(checkSync, 100)
 
-  return pull(
-    rpc.createHistoryStream({
-      id: upto.id,
-      seq: last + 1,
-      live: true,
-      keys: false
-    }),
-    pull.through(msg => {
-      if (msg.sync) {
-        broadcastSync()
-        return false
-      }
+  return function (msg) {
+    if (msg.sync) {
+      // surprise! This peer actually has a sync event!
+      broadcastSync()
+      return false
+    }
 
-      var availableSeq = peerHas[rpc.id] && peerHas[rpc.id][upto.id]
-      if (availableSeq && availableSeq === msg.sequence) {
+    last = msg.sequence
+    checkSync()
+    return true
+  }
+
+  function checkSync () {
+    if (!sync) {
+      resetSyncTimeout()
+      var availableSeq = peerHas[peerId] && peerHas[peerId][upto.id]
+      if (availableSeq && availableSeq === last) {
         // we've reached the maximum sequence this server has told us it knows about
         broadcastSync()
       }
-
-      if (!sync) {
-        resetSyncTimeout()
-      }
-
-      return true
-    })
-  )
+    }
+  }
 
   function resetSyncTimeout () {
     // assume that if we haven't received a message for 3 seconds that we're sync
