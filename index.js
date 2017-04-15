@@ -71,23 +71,33 @@ var SSB = {
       return {
         since: ssb.since.value,
         plugins: plugs,
-        sync: sync
+        sync: sync,
       }
     }
+
+    var _views, _prev
 
     var state = since()
     setInterval(function (){
       var _state = since()
+      if(_state.since == undefined) return
       if(state && !state.sync && !_state.sync && state.since == _state.since) {
-        console.log(state, _state)
-        //flume is stuck again.
-        require('fs').appendFileSync('stuck.log', JSON.stringify({
-          time: new Date(),
-          state: state
-        }, null, 2) + '\n\n')
-        throw new Error('flume is stuck')
+        var c = 0, t = 0
+
+        for(var k in _state.plugins) {
+          c += state.plugins[k]
+          t++
+        }
+
+        if(c/t !== _views || c/t != _state.since) {
+          console.log('Rebuilding Indexes:', c/t, _views, (c/t)/_state.since)
+        }
       }
+      else if(_state.since != _prev)
+        console.log("indexes synchronised:", _state.since)
+
       state = _state
+      _prev = state.since
     }, 1000).unref()
 
     return {
@@ -106,9 +116,8 @@ var SSB = {
 
       publish                  : valid.async(feed.add, 'string|msgContent'),
       add                      : valid.async(ssb.add, 'msg'),
-      get                      : valid.async(ssb.get, 'msgId'),
+      get                      : valid.async(ssb.get, 'msgId|number'),
 
-      pre                      : ssb.pre,
       post                     : ssb.post,
 
       since                    : since,
@@ -165,6 +174,24 @@ module.exports = SecretStack({
   appKey: require('./lib/ssb-cap')
 })
 .use(SSB)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
