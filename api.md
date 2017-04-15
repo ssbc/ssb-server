@@ -356,3 +356,4 @@ Outputs information in the following form:
 
 get the current state of the internal flumelog
 
+## getVectorClock: async
