@@ -1,7 +1,7 @@
 {
   "name": "scuttlebot",
   "description": "network protocol layer for secure-scuttlebutt",
-  "version": "9.5.0",
+  "version": "9.6.1",
   "homepage": "https://github.com/ssbc/scuttlebot",
   "repository": {
     "type": "git",
@@ -12,6 +12,7 @@
     "bash-color": "~0.0.3",
     "broadcast-stream": "~0.0.0",
     "cont": "~1.0.3",
+    "cross-spawn": "^5.1.0",
     "deep-equal": "^1.0.1",
     "explain-error": "^1.0.3",
     "flumeview-reduce": "^1.0.2",
@@ -40,7 +41,7 @@
     "pull-inactivity": "~2.1.1",
     "pull-level": "^2.0.2",
     "pull-many": "~1.0.6",
-    "pull-next": "0.0.2",
+    "pull-next": "^1.0.0",
     "pull-notify": "0.1.1",
     "pull-paramap": "~1.2.1",
     "pull-ping": "^2.0.2",
@@ -78,9 +79,12 @@
     "sbot": "./sbot.js"
   },
   "scripts": {
-    "prepublish": "npm ls && npm test && noderify bin.js > sbot.js",
+    "build": "noderify bin.js > sbot.js",
+    "prepublish": "npm ls && npm test && npm run build",
     "test": "set -e; for t in test/*.js; do node $t; done"
   },
   "author": "Paul Frazee <pfrazee@gmail.com>",
   "license": "MIT"
 }
+
+
