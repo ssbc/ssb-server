@@ -12,6 +12,8 @@ module.exports = {
   name: 'local',
   version: '2.0.0',
   init: function (sbot, config) {
+    if(config.gossip && config.gossip.local === false)
+      return
 
     var local = broadcast(config.port)
     var addrs = {}
