@@ -256,6 +256,11 @@ module.exports = {
       var errorsSeen = {}
       pull(
         upto({live: opts.live}),
+        pull.asyncMap(function (upto, cb) {
+          setImmediate(function () {
+            cb(null, upto)
+          })
+        }),
         drain = pull.drain(function (upto) {
           if(upto.sync) return
 
@@ -370,3 +375,4 @@ function detectSync (peerId, upto, toSend, peerHas, onSync) {
     }
   }
 }
+
