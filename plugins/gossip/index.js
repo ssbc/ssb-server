@@ -11,6 +11,7 @@ var stats = require('statistics')
 var Schedule = require('./schedule')
 var Init = require('./init')
 var AtomicFile = require('atomic-file')
+var fs = require('fs')
 var path = require('path')
 var deepEqual = require('deep-equal')
 
@@ -69,6 +70,25 @@ module.exports = {
     })
 
     var timer_ping = 5*6e4
+
+    function setConfig(name, value) {
+      config.gossip = config.gossip || {}
+      config.gossip[name] = value
+
+      var cfgPath = path.join(config.path, 'config')
+      var existingConfig = {}
+
+      // load ~/.ssb/config
+      try { existingConfig = JSON.parse(fs.readFileSync(cfgPath, 'utf-8')) }
+      catch (e) {}
+
+      // update the plugins config
+      existingConfig.gossip = existingConfig.gossip || {}
+      existingConfig.gossip[name] = value
+
+      // write to disc
+      fs.writeFileSync(cfgPath, JSON.stringify(existingConfig, null, 2), 'utf-8')
+    }
 
     var gossip = {
       wakeup: 0,
@@ -183,7 +203,17 @@ module.exports = {
               peer.close(true)
             })
         return gossip.wakeup = Date.now()
-      }
+      },
+      enable: valid.sync(function (type) {
+        type = type || 'global'
+        setConfig(type, true)
+        return 'enabled gossip type ' + type
+      }, 'string?'),
+      disable: valid.sync(function (type) {
+        type = type || 'global'
+        setConfig(type, false)
+        return 'disabled gossip type ' + type
+      }, 'string?')
     }
 
     closeScheduler = Schedule (gossip, config, server)
