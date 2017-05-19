@@ -55,7 +55,7 @@
     "ssb-config": "^2.0.0",
     "ssb-keys": "^7.0.0",
     "ssb-msgs": "~5.2.0",
-    "ssb-ref": "^2.6.2",
+    "ssb-ref": "^2.7.1",
     "ssb-ws": "^1.0.1",
     "statistics": "^3.0.0",
     "stream-to-pull-stream": "^1.6.10",
