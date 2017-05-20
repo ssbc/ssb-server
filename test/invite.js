@@ -267,7 +267,7 @@ tape('test invite with note', function (t) {
     keys: ssbKeys.generate()
   })
 
-  alice.invite.create(1, 'bob', function (err, invite) {
+  alice.invite.create({uses:1, note:'bob'}, function (err, invite) {
     if(err) throw err
     bob.invite.accept(invite, function (err) {
       if(err) throw err
