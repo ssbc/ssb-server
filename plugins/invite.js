@@ -60,11 +60,15 @@ module.exports = {
     })
 
     return {
-      create: valid.async(function (n, cb) {
+      create: valid.async(function (n, note, cb) {
         var modern = false
         if(isObject(n) && n.modern) {
           n = 1
           modern = true
+        }
+        if(isFunction(note)) {
+          cb = note
+          note = null
         }
         var addr = server.getAddress()
         var host = ref.parseAddress(addr).host
@@ -87,6 +91,7 @@ module.exports = {
         codesDB.put(keyCap.id,  {
           id: keyCap.id,
           total: +n,
+          note: note,
           used: 0,
           permissions: {allow: ['invite.use', 'getAddress'], deny: null}
         }, function (err) {
@@ -100,7 +105,7 @@ module.exports = {
             cb(null, [addr.host, addr.port, addr.key].join(':') + '~' + seed.toString('base64'))
           }
         })
-      }, 'number|object'),
+      }, 'number|object', 'string?'),
       use: valid.async(function (req, cb) {
         var rpc = this
 
@@ -143,7 +148,8 @@ module.exports = {
                 type: 'contact',
                 contact: req.feed,
                 following: true,
-                pub: true
+                pub: true,
+                note: invite.note || undefined
               }, cb)
             })
           })
