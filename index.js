@@ -102,10 +102,10 @@ var SSB = {
       state = _state
       _prev = state.since
     }, 1000)
-    */
 
     //unref is a node.js only api.
     if (int.unref) int.unref()
+    */
 
     return {
       id                       : feed.id,
@@ -181,4 +181,5 @@ module.exports = SecretStack({
   appKey: require('./lib/ssb-cap')
 })
 .use(SSB)
+
 
