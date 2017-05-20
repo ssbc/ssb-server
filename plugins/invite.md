@@ -8,11 +8,11 @@ Invite-token system, mainly used for pubs.
 Create a new invite code.
 
 ```bash
-create {n}
+create {n} [{note}]
 ```
 
 ```js
-create(n, cb)
+create(n[, note], cb)
 ```
 
 This produces an invite-code which encodes the sbot server's address, and a keypair seed.
@@ -20,6 +20,9 @@ The keypair seed is used to generate a keypair, which is then used to authentica
 The sbot server will then grant access to the `use` call.
 
 - `n` (number): How many times the invite can be used before it expires.
+- `note` (string): A note to associate with the invite code. The sbot server will
+    include this note in the follow message that it creates when `use` is
+    called.
 
 
 
