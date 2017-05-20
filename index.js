@@ -75,10 +75,13 @@ var SSB = {
       }
     }
 
+    //remove this, but we'll need something to make a progress bar
+    //otherwise people will get confused about what is happening.
+    /*
     var _views, _prev
 
     var state = since()
-    setInterval(function (){
+    var int = setInterval(function (){
       var _state = since()
       if(_state.since == undefined) return
       if(state && !state.sync && !_state.sync && state.since == _state.since) {
@@ -98,7 +101,11 @@ var SSB = {
 
       state = _state
       _prev = state.since
-    }, 1000).unref()
+    }, 1000)
+    */
+
+    //unref is a node.js only api.
+    if (int.unref) int.unref()
 
     return {
       id                       : feed.id,
@@ -174,30 +181,4 @@ module.exports = SecretStack({
   appKey: require('./lib/ssb-cap')
 })
 .use(SSB)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
