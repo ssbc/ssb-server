@@ -1,3 +1,4 @@
+'use strict'
 var crypto = require('crypto')
 var ssbKeys = require('ssb-keys')
 var toAddress = require('../lib/util').toAddress
@@ -25,6 +26,10 @@ function isString (s) {
 
 function isObject(o) {
   return o && 'object' === typeof o
+}
+
+function isNumber(n) {
+  return 'number' === typeof n && !isNaN(n)
 }
 
 module.exports = {
@@ -60,16 +65,17 @@ module.exports = {
     })
 
     return {
-      create: valid.async(function (n, note, cb) {
-        var modern = false
-        if(isObject(n) && n.modern) {
-          n = 1
-          modern = true
+      create: valid.async(function (opts, cb) {
+        opts = opts || {}
+        if(isNumber(opts))
+          opts = {uses: opts}
+        else if(isObject(opts)) {
+          if(opts.modern)
+            opts.uses = 1
         }
-        if(isFunction(note)) {
-          cb = note
-          note = null
-        }
+        else if(isFunction(opts))
+          cb = opts, opts = {}
+
         var addr = server.getAddress()
         var host = ref.parseAddress(addr).host
         if(!config.allowPrivate && (ip.isPrivate(host) || 'localhost' === host))
@@ -90,14 +96,14 @@ module.exports = {
         var owner = server.id
         codesDB.put(keyCap.id,  {
           id: keyCap.id,
-          total: +n,
-          note: note,
+          total: +opts.uses || 1,
+          note: opts.note,
           used: 0,
           permissions: {allow: ['invite.use', 'getAddress'], deny: null}
         }, function (err) {
           // emit the invite code: our server address, plus the key-seed
           if(err) cb(err)
-          else if(modern && server.ws && server.ws.getAddress) {
+          else if(opts.modern && server.ws && server.ws.getAddress) {
             cb(null, server.ws.getAddress()+':'+seed.toString('base64'))
           }
           else {
@@ -219,5 +225,4 @@ module.exports = {
     }
   }
 }
-
 
