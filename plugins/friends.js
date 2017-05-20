@@ -49,7 +49,7 @@ exports.init = function (sbot, config) {
   return {
 
     get: function (opts, cb) {
-      index.get(null, cb || opts)
+      index.get(opts, cb)
     },
 
     createFriendStream: valid.source(function (opts) {
@@ -108,4 +108,5 @@ exports.init = function (sbot, config) {
     }
   }
 }
+
 
