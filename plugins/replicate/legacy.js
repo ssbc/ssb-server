@@ -267,7 +267,6 @@ module.exports = function (sbot, notify, config) {
 
   sbot.on('rpc:connect', function(rpc) {
     // this is the cli client, just ignore.
-    console.log(rpc)
     if(rpc.id === sbot.id) return
     var errorsSeen = {}
     //check for local peers, or manual connections.
@@ -352,4 +351,5 @@ module.exports = function (sbot, notify, config) {
   })
   return upto
 }
+
 
