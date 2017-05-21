@@ -34,16 +34,21 @@ exports.init = function (sbot, config) {
 
   var index = sbot._flumeUse('friends', Reduce(1, function (g, rel) {
     if(!g) g = {}
-
+    if(!ref.isFeed(rel.from)) throw new Error('FROM is not id')
+    if(!ref.isFeed(rel.to)) {
+      console.log('???', rel)
+      throw new Error('TO is not id')
+    }
     G.addEdge(g, rel.from, rel.to, rel.value)
     return g
   }, function (data) {
-    if(data.value.content.type === 'contact' && ref.isFeed(data.value.content.contact))
+    if(data.value.content.type === 'contact' && ref.isFeed(data.value.content.contact)) {
       return {
         from: data.value.author,
         to: data.value.content.contact,
         value: data.value.content.following
       }
+    }
   }))
 
   return {
@@ -63,17 +68,24 @@ exports.init = function (sbot, config) {
       return pull(
         index.stream(opts),
         FlatMap(function (v) {
+          //this code handles real time streaming of the hops map.
           function push (to, hops) {
             out.push(meta ? {id: to, hops: hops} : to)
           }
           var out = []
           if(!v) return []
           if(v.from && v.to) {
+            //add edge from->to (value)
             G.addEdge(g, v.from, v.to, v.value)
+            //recalculate the portion of the graph, reachable in opts.hops
             var _reachable = G.hops(g, start, 0, opts.hops || 3, reachable)
+            //for each node currently reachable
             for(var k in _reachable) {
+              //check if it has _become_ reachable just now.
+              //if so add to the set
               if(reachable[k] == null)
                 push(k, reachable[k] = _reachable[k])
+              //if this has shortened the path, then update.
               else if(reachable[k] > _reachable[k])
                 reachable[k] = _reachable[k]
               //else, we where already able to reach this node.
@@ -108,5 +120,6 @@ exports.init = function (sbot, config) {
     }
   }
 }
+
 
 
