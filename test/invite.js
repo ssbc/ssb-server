@@ -171,18 +171,18 @@ tape('test invite.accept api with ipv6', function (t) {
 
 tape('test invite.create with modern', function (t) {
   var alice = createSbot({
-    temp: 'test-invite-alice2', timeout: 100,
+    temp: 'test-invite-alice5', timeout: 100,
     allowPrivate: true,
     keys: ssbKeys.generate()
   })
 
   var bob = createSbot({
-    temp: 'test-invite-bob2', timeout: 100,
+    temp: 'test-invite-bob5', timeout: 100,
     keys: ssbKeys.generate()
   })
 
   var carol = createSbot({
-    temp: 'test-invite-carol2', timeout: 100,
+    temp: 'test-invite-carol5', timeout: 100,
     keys: ssbKeys.generate()
   })
 
@@ -225,7 +225,7 @@ tape('test invite.create with modern', function (t) {
 tape('test invite.accept doesnt follow if already followed', function (t) {
 
   var alice = createSbot({
-    temp: 'test-invite-alice3',
+    temp: 'test-invite-alice6',
     timeout: 100,
     allowPrivate: true,
     keys: ssbKeys.generate()
@@ -257,13 +257,13 @@ tape('test invite.accept doesnt follow if already followed', function (t) {
 tape('test invite with note', function (t) {
 
   var alice = createSbot({
-    temp: 'test-invite-alice2', timeout: 100,
+    temp: 'test-invite-alice7', timeout: 100,
     allowPrivate: true,
     keys: ssbKeys.generate()
   })
 
   var bob = createSbot({
-    temp: 'test-invite-bob2', timeout: 100,
+    temp: 'test-invite-bob7', timeout: 100,
     keys: ssbKeys.generate()
   })
 
