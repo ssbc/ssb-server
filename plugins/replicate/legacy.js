@@ -275,6 +275,7 @@ module.exports = function (sbot, notify, config) {
     var drain
 
     function replicate(upto, cb) {
+      console.log(sbot.id.substring(0, 10), upto)
       pendingFeedsForPeer[rpc.id] = pendingFeedsForPeer[rpc.id] || new Set()
       pendingFeedsForPeer[rpc.id].add(upto.id)
 
@@ -312,21 +313,28 @@ module.exports = function (sbot, notify, config) {
     }
 
     var replicate_self = false
-    rpc.once('fallback:replicate', function () {
+    //if replicate.fallback is enabled
+    //then wait for the fallback event before
+    //starting to replicate by this strategy.
+    if(config.replicate && config.replicate.fallback)
+      rpc.once('fallback:replicate', fallback)
+    else
+      fallback()
+
+    function fallback () {
       //if we are not configured to use EBT, then fallback to createHistoryStream
+      if(replicate_self) return
       replicated_self = true
       sbot.latestSequence(sbot.id, function (err, seq) {
         replicate({
           id: sbot.id, sequence: err ? 0 : toSeq(seq)
         }, function () {})
       })
-    })
-
+    }
     //trigger this if ebt.replicate fails...
     rpc.once('call:createHistoryStream', next)
 
     function next () {
-
       sbot.emit('replicate:start', rpc)
 
       rpc.on('closed', function () {
@@ -337,7 +345,7 @@ module.exports = function (sbot, notify, config) {
         upto({live: opts.live}),
         drain = pull.drain(function (upto) {
           if(upto.sync) return
-          if(upto.id == sbot.id && replicate_self) return
+          if(upto.id == sbot.id && replicate_self) return replicate_self = true
           replicate(upto, function (err) {
             drain.abort()
           })
@@ -351,5 +359,7 @@ module.exports = function (sbot, notify, config) {
   })
   return upto
 }
+
+
 
 
