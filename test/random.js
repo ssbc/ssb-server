@@ -25,6 +25,15 @@ function isNumber (n) {
   return typeof n === 'number'
 }
 
+function once (fn) {
+  var called = false
+  return function () {
+    if(called) throw new Error('called twice!')
+    called = true
+    fn.apply(this, arguments)
+  }
+}
+
 var createSbot = require('../')
   .use(require('../plugins/friends'))
   .use(require('../plugins/replicate'))
@@ -94,18 +103,17 @@ function generateAnimals (sbot, feed, f, n, cb) {
 }
 
 function latest (sbot, cb) {
-  sbot.friends.hops({hops: 3}, function (err, keys) {
+  sbot.friends.hops({hops: 3}, once(function (err, keys) {
     if(err) return cb(err)
-    var n = 0, map = {}
+    var n = Object.keys(keys).length, map = {}
     for(var k in keys) (function (key) {
-      n++
-      sbot.latestSequence(key, function (err, value) {
+      sbot.latestSequence(key, once(function (err, value) {
         map[key] = isNumber(value) ? value : value.sequence
         if(--n) return
         cb(null, map)
-      })
+      }))
     })(k)
-  })
+  }))
 }
 
   var alice = ssbKeys.generate()
@@ -274,9 +282,4 @@ tape('shutdown', function (t) {
   animalNetwork.close(true)
   t.end()
 })
-
-
-
-
-
 
