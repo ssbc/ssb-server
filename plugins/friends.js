@@ -30,15 +30,10 @@ exports.version = '1.0.0'
 exports.manifest = mdm.manifest(apidoc)
 
 exports.init = function (sbot, config) {
-  var g = null
-
-  var index = sbot._flumeUse('friends', Reduce(1, function (g, rel) {
-    if(!g) g = {}
+  var g = {}
+  var index = sbot._flumeUse('friends', Reduce(1, function (_, rel) {
+    //if(!g) g = {}
     if(!ref.isFeed(rel.from)) throw new Error('FROM is not id')
-    if(!ref.isFeed(rel.to)) {
-      console.log('???', rel)
-      throw new Error('TO is not id')
-    }
     G.addEdge(g, rel.from, rel.to, rel.value)
     return g
   }, function (data) {
@@ -63,23 +58,30 @@ exports.init = function (sbot, config) {
       var meta = opts.meta === true
       var start = opts.start || sbot.id
       var first = true
-      var reachable = {}
-      g = g || {}
+      var reachable
+      if(!g) throw new Error('not initialized')
+      //g = g || {}
       return pull(
         index.stream(opts),
         FlatMap(function (v) {
+          if(!v) return []
+
           //this code handles real time streaming of the hops map.
           function push (to, hops) {
             out.push(meta ? {id: to, hops: hops} : to)
           }
           var out = []
-          if(!v) return []
           if(v.from && v.to) {
-            //add edge from->to (value)
-            G.addEdge(g, v.from, v.to, v.value)
+            if(!reachable) {
+              //this is is hack...
+              reachable = {}
+              reachable[sbot.id] = 0
+              push(sbot.id, 0)
+            }
             //recalculate the portion of the graph, reachable in opts.hops
-            var _reachable = G.hops(g, start, 0, opts.hops || 3, reachable)
-            //for each node currently reachable
+            //(but only the portion not already reachable)
+            var _reachable = G.hops(g, v.from, reachable[v.from], opts.hops || 3, reachable)
+
             for(var k in _reachable) {
               //check if it has _become_ reachable just now.
               //if so add to the set
@@ -92,8 +94,8 @@ exports.init = function (sbot, config) {
             }
           }
           else {
-            g = v
-            reachable = G.hops(g, start, 0, opts.hops || 3)
+            var _g = v
+            reachable = G.hops(_g, start, 0, opts.hops || 3)
             for(var k in reachable)
               push(k, reachable[k])
           }
@@ -103,6 +105,7 @@ exports.init = function (sbot, config) {
               out.push({sync: true})
             }
           }
+
           return out
         })
 
@@ -110,6 +113,8 @@ exports.init = function (sbot, config) {
     }, 'createFriendStreamOpts?'),
 
     hops: function (opts, cb) {
+      if(isFunction(opts))
+        cb = opts, opts = {}
       opts = opts || {}
       if(isString(opts))
         opts = {start: opts}
@@ -120,6 +125,5 @@ exports.init = function (sbot, config) {
     }
   }
 }
-
 
 
