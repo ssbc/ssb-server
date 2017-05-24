@@ -16,15 +16,14 @@
 FROM node:alpine
 MAINTAINER DeveloppSoft
 
+EXPOSE 8008
+
 USER root
 
 RUN apk update
-RUN apk add python python-dev alpine-sdk libsodium-dev libsodium
+RUN apk add python python-dev alpine-sdk
 
 RUN npm install scuttlebot@latest -g
 RUN npm install secure-scuttlebutt -g
-
-# Install plugins
-RUN npm install ssb-links ssb-query ssb-ws ssb-fulltext
 
 CMD /bin/ash
