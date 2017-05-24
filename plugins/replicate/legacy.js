@@ -5,6 +5,8 @@ var Notify = require('pull-notify')
 var Cat = require('pull-cat')
 var Debounce = require('observ-debounce')
 var deepEqual = require('deep-equal')
+var Obv = require('obv')
+var isFeed = require('ssb-ref').isFeed
 
 var Pushable = require('pull-pushable')
 
@@ -69,10 +71,31 @@ module.exports = function (sbot, notify, config) {
   var count = 0
   var rate = 0
   var loadedFriends = false
-  var toSend = {}
+  var toSend// = {}
   var peerHas = {}
   var pendingFeedsForPeer = {}
   var lastProgress = null
+
+  var newPeers = Notify()
+  var replicate = {}
+
+  function request (id) {
+    if(!replicate[id]) {
+      replicate[id] = true
+      newPeers({id:id, sequence: toSend[id] || 0})
+    }
+  }
+
+  sbot.getVectorClock(function (err, clock) {
+    if(err) throw err
+    toSend = clock
+  })
+
+  sbot.post(function (msg) {
+    //this should be part of ssb.getVectorClock
+    toSend[msg.value.author] = msg.value.sequence
+    debounce.set()
+  })
 
   debounce(function () {
     // only list loaded feeds once we know about all of them!
@@ -153,14 +176,22 @@ module.exports = function (sbot, notify, config) {
         })
       }
       count ++
-      addPeer({id: e.author, sequence: e.sequence})
+//remove, using getVectorClock handles this already.
+//      addPeer({id: e.author, sequence: e.sequence})
     })
   )
 
+  var chs = sbot.createHistoryStream
+
+//  sbot.createHistoryStream = function (opts) {
+//    console.log("CREATE HISTORY STREAM")
+//    if(this._emit) this._emit('call:createHistoryStream', args[0])
+//    return chs.call(this, opts)
+//  }
+//
   sbot.createHistoryStream.hook(function (fn, args) {
     var upto = args[0] || {}
     var seq = upto.sequence || upto.seq
-
     if(this._emit) this._emit('call:createHistoryStream', args[0])
 
     //if we are calling this locally, skip cleverness
@@ -172,7 +203,7 @@ module.exports = function (sbot, notify, config) {
 
     debounce.set()
 
-    //handle creating lots of histor streams efficiently.
+    //handle creating lots of history streams efficiently.
     //maybe this could be optimized in map-filter-reduce queries instead?
     if(toSend[upto.id] == null || (seq > toSend[upto.id])) {
       upto.old = false
@@ -196,6 +227,8 @@ module.exports = function (sbot, notify, config) {
   opts.live = true
   opts.meta = true
 
+  //XXX policy about replicating specific peers should be outside
+  //of this plugin.
   function localPeers () {
     if(!sbot.gossip) return
     sbot.gossip.peers().forEach(function (e) {
@@ -215,52 +248,57 @@ module.exports = function (sbot, notify, config) {
     if(int.unref) int.unref()
     localPeers()
   }
+  //XXX ^
 
   function friendsLoaded () {
     loadedFriends = true
     debounce.set()
   }
 
-  function addPeer (upto) {
-    if(upto.sync) return friendsLoaded()
-    if(!upto.id) return console.log('invalid', upto)
-
-    if(toSend[upto.id] == null) {
-      toSend[upto.id] = Math.max(toSend[upto.id] || 0, upto.sequence || upto.seq || 0)
-      newPeer({id: upto.id, sequence: toSend[upto.id] , type: 'new' })
-    } else {
-      toSend[upto.id] = Math.max(toSend[upto.id] || 0, upto.sequence || upto.seq || 0)
-    }
-
-    debounce.set()
-  }
-
+//  function addPeer (upto) {
+//    if(upto.sync) return friendsLoaded()
+//    if(!upto.id) return console.log('invalid', upto)
+//
+//    if(toSend[upto.id] == null) {
+//      toSend[upto.id] = Math.max(toSend[upto.id] || 0, upto.sequence || upto.seq || 0)
+//      newPeer({id: upto.id, sequence: toSend[upto.id] , type: 'new' })
+//    } else {
+//      toSend[upto.id] = Math.max(toSend[upto.id] || 0, upto.sequence || upto.seq || 0)
+//    }
+//
+//    debounce.set()
+//  }
+//
 
   // create read-streams for the desired feeds
-  pull(
-    sbot.friends.createFriendStream(opts),
-    // filter out duplicates, and also keep track of what we expect to receive
-    // lookup the latest sequence from each user
-    // TODO: use paramap?
-    pull.asyncMap(function (data, cb) {
-      if(data.sync) return cb(null, data)
-      var id = data.id || data
-      sbot.latestSequence(id, function (err, seq) {
-        cb(null, {
-          id: id, sequence: err ? 0 : toSeq(seq)
-        })
-      })
-    }, 32),
-    pull.drain(addPeer, friendsLoaded)
-  )
+//  pull(
+//    sbot.friends.createFriendStream(opts),
+//    // filter out duplicates, and also keep track of what we expect to receive
+//    // lookup the latest sequence from each user
+//    // TODO: use paramap?
+//    pull.asyncMap(function (data, cb) {
+//      if(data.sync) return cb(null, data)
+//      var id = data.id || data
+//      sbot.latestSequence(id, function (err, seq) {
+//        cb(null, {
+//          id: id, sequence: err ? 0 : toSeq(seq)
+//        })
+//      })
+//    }, 32),
+//    pull.drain(addPeer, friendsLoaded)
+//  )
 
   function upto (opts) {
     opts = opts || {}
-    var ary = Object.keys(toSend).map(function (k) {
-      return { id: k, sequence: toSend[k] }
+    var ary = Object.keys(replicate).map(function (k) {
+      return { id: k, sequence: toSend[k]||0 }
     })
     if(opts.live)
-      return Cat([pull.values(ary), pull.once({sync: true}), newPeer.listen()])
+      return Cat([
+        pull.values(ary),
+        pull.once({sync: true}),
+        newPeer.listen()
+      ])
 
     return pull.values(ary)
   }
@@ -275,7 +313,6 @@ module.exports = function (sbot, notify, config) {
     var drain
 
     function replicate(upto, cb) {
-      console.log(sbot.id.substring(0, 10), upto)
       pendingFeedsForPeer[rpc.id] = pendingFeedsForPeer[rpc.id] || new Set()
       pendingFeedsForPeer[rpc.id].add(upto.id)
 
@@ -290,7 +327,7 @@ module.exports = function (sbot, notify, config) {
           if(err && !(err.message in errorsSeen)) {
             errorsSeen[err.message] = true
             if(err.message in streamErrors) {
-              cb(err)
+              cb && cb(err)
               if(err.message === 'unexpected end of parent stream') {
                 if (err instanceof Error) {
                   // stream closed okay locally
@@ -301,8 +338,10 @@ module.exports = function (sbot, notify, config) {
                 }
               }
             } else {
-              console.error('Error replicating with ' + rpc.id + ':\n  ',
-                err.stack)
+              console.error(
+                'Error replicating with ' + rpc.id + ':\n  ',
+                err.stack
+              )
             }
           }
 
@@ -325,26 +364,37 @@ module.exports = function (sbot, notify, config) {
       //if we are not configured to use EBT, then fallback to createHistoryStream
       if(replicate_self) return
       replicated_self = true
-      sbot.latestSequence(sbot.id, function (err, seq) {
-        replicate({
-          id: sbot.id, sequence: err ? 0 : toSeq(seq)
-        }, function () {})
-      })
+//      console.log('replicate_self', sbot.id, toSend)
+      replicate({id: sbot.id, sequence: toSend[sbot.id] || 0})
+//      sbot.latestSequence(sbot.id, function (err, seq) {
+//        replicate({
+//          id: sbot.id, sequence: err ? 0 : toSeq(seq)
+//        }, function () {})
+//      })
     }
+
     //trigger this if ebt.replicate fails...
     rpc.once('call:createHistoryStream', next)
 
+    var started = false
     function next () {
+      if(started) return
+      started = true
       sbot.emit('replicate:start', rpc)
 
       rpc.on('closed', function () {
+        console.log(toSend)
         sbot.emit('replicate:finish', toSend)
       })
 
+      //make sure we wait until the clock is loaded
       pull(
         upto({live: opts.live}),
         drain = pull.drain(function (upto) {
           if(upto.sync) return
+          if(!isFeed(upto.id)) throw new Error('expected feed!')
+          if(!Number.isInteger(upto.sequence)) throw new Error('expected sequence!')
+
           if(upto.id == sbot.id && replicate_self) return replicate_self = true
           replicate(upto, function (err) {
             drain.abort()
@@ -357,8 +407,15 @@ module.exports = function (sbot, notify, config) {
 
     }
   })
-  return upto
+
+  return {
+    request: request,
+    upto: upto,
+    changes: notify.listen
+  }
+//  return upto
 }
+
 
 
 
