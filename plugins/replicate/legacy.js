@@ -65,7 +65,7 @@ function createHistoryStreamWithSync (rpc, upto, onSync) {
 module.exports = function (sbot, notify, config) {
   var debounce = Debounce(200)
   var listeners = {}
-  var newPeer = Notify()
+  var newPeers = Notify()
 
   var start = null
   var count = 0
@@ -76,7 +76,6 @@ module.exports = function (sbot, notify, config) {
   var pendingFeedsForPeer = {}
   var lastProgress = null
 
-  var newPeers = Notify()
   var replicate = {}
 
   function request (id) {
@@ -176,19 +175,11 @@ module.exports = function (sbot, notify, config) {
         })
       }
       count ++
-//remove, using getVectorClock handles this already.
-//      addPeer({id: e.author, sequence: e.sequence})
     })
   )
 
   var chs = sbot.createHistoryStream
 
-//  sbot.createHistoryStream = function (opts) {
-//    console.log("CREATE HISTORY STREAM")
-//    if(this._emit) this._emit('call:createHistoryStream', args[0])
-//    return chs.call(this, opts)
-//  }
-//
   sbot.createHistoryStream.hook(function (fn, args) {
     var upto = args[0] || {}
     var seq = upto.sequence || upto.seq
@@ -232,11 +223,8 @@ module.exports = function (sbot, notify, config) {
   function localPeers () {
     if(!sbot.gossip) return
     sbot.gossip.peers().forEach(function (e) {
-      if (e.source === 'local' && toSend[e.key] == null) {
-        sbot.latestSequence(e.key, function (err, seq) {
-          addPeer({id: e.key, sequence: err ? 0 : toSeq(seq)})
-        })
-      }
+      if (e.source === 'local' && toSend[e.key] == null)
+        request(e.key)
     })
   }
 
@@ -255,39 +243,6 @@ module.exports = function (sbot, notify, config) {
     debounce.set()
   }
 
-//  function addPeer (upto) {
-//    if(upto.sync) return friendsLoaded()
-//    if(!upto.id) return console.log('invalid', upto)
-//
-//    if(toSend[upto.id] == null) {
-//      toSend[upto.id] = Math.max(toSend[upto.id] || 0, upto.sequence || upto.seq || 0)
-//      newPeer({id: upto.id, sequence: toSend[upto.id] , type: 'new' })
-//    } else {
-//      toSend[upto.id] = Math.max(toSend[upto.id] || 0, upto.sequence || upto.seq || 0)
-//    }
-//
-//    debounce.set()
-//  }
-//
-
-  // create read-streams for the desired feeds
-//  pull(
-//    sbot.friends.createFriendStream(opts),
-//    // filter out duplicates, and also keep track of what we expect to receive
-//    // lookup the latest sequence from each user
-//    // TODO: use paramap?
-//    pull.asyncMap(function (data, cb) {
-//      if(data.sync) return cb(null, data)
-//      var id = data.id || data
-//      sbot.latestSequence(id, function (err, seq) {
-//        cb(null, {
-//          id: id, sequence: err ? 0 : toSeq(seq)
-//        })
-//      })
-//    }, 32),
-//    pull.drain(addPeer, friendsLoaded)
-//  )
-
   function upto (opts) {
     opts = opts || {}
     var ary = Object.keys(replicate).map(function (k) {
@@ -297,7 +252,7 @@ module.exports = function (sbot, notify, config) {
       return Cat([
         pull.values(ary),
         pull.once({sync: true}),
-        newPeer.listen()
+        newPeers.listen()
       ])
 
     return pull.values(ary)
@@ -364,13 +319,7 @@ module.exports = function (sbot, notify, config) {
       //if we are not configured to use EBT, then fallback to createHistoryStream
       if(replicate_self) return
       replicated_self = true
-//      console.log('replicate_self', sbot.id, toSend)
       replicate({id: sbot.id, sequence: toSend[sbot.id] || 0})
-//      sbot.latestSequence(sbot.id, function (err, seq) {
-//        replicate({
-//          id: sbot.id, sequence: err ? 0 : toSeq(seq)
-//        }, function () {})
-//      })
     }
 
     //trigger this if ebt.replicate fails...
@@ -383,7 +332,6 @@ module.exports = function (sbot, notify, config) {
       sbot.emit('replicate:start', rpc)
 
       rpc.on('closed', function () {
-        console.log(toSend)
         sbot.emit('replicate:finish', toSend)
       })
 
@@ -413,10 +361,7 @@ module.exports = function (sbot, notify, config) {
     upto: upto,
     changes: notify.listen
   }
-//  return upto
 }
-
-
 
 
 

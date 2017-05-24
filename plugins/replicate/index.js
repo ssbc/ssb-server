@@ -17,6 +17,13 @@ module.exports = {
     if(!config.replicate || config.replicate.legacy !== false) {
       var replicate = Legacy.call(this, sbot, notify, config)
 
+      var c = 0
+
+      //to change the replication policy, override this file
+      //and make different calls to replicate.request(id)
+      //to add things is easy, you just call replicate.request(id)
+      //calls to replicate.request(id) are ephemeral,
+      //and must be made each time run sbot.
       pull(
         sbot.friends.createFriendStream({live: true, meta: false}),
         // filter out duplicates, and also keep track of what we expect to receive
@@ -32,4 +39,5 @@ module.exports = {
     }
   }
 }
+
 
