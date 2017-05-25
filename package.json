@@ -25,7 +25,7 @@
     "multiblob": "^1.10.1",
     "multicb": "^1.0.0",
     "muxrpc": "^6.1.1",
-    "muxrpc-validation": "^2.0.0",
+    "muxrpc-validation": "^3.0.0",
     "muxrpcli": "^1.0.0",
     "mv": "^2.1.1",
     "non-private-ip": "~1.1.0",
