@@ -78,8 +78,14 @@ module.exports = function (sbot, notify, config) {
 
   var replicate = {}
 
-  function request (id) {
-    if(!replicate[id]) {
+  function request (id, unfollow) {
+    if(unfollow === false) {
+      if(replicate[id]) {
+        delete replicate[id]
+        newPeers({id:id, sequence: -1})
+      }
+    }
+    else if(!replicate[id]) {
       replicate[id] = true
       newPeers({id:id, sequence: toSend[id] || 0})
     }
@@ -362,6 +368,7 @@ module.exports = function (sbot, notify, config) {
     changes: notify.listen
   }
 }
+
 
 
 
