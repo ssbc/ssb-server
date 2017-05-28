@@ -53,7 +53,7 @@
     "secret-stack": "^3.2.0",
     "secure-scuttlebutt": "^16.2.0",
     "ssb-blobs": "^1.0.1",
-    "ssb-client": "^4.0.2",
+    "ssb-client": "^4.4.1",
     "ssb-config": "^2.0.0",
     "ssb-ebt": "0.0.7",
     "ssb-keys": "^7.0.0",
