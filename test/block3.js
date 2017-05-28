@@ -78,10 +78,7 @@ tape('alice blocks bob while he is connected, she should disconnect him', functi
       t.equal(op.value.content.contact, bob.id)
       alice.publish(u.block(bob.id))
       (function (err) { if(err) throw err })
-    })
+    }, false)
   })
 })
-
-
-
 
