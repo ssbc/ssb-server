@@ -93,43 +93,6 @@ exports.init = function (sbot, config) {
             }
             reachable = _reachable
           }
-
-//          var out = []
-//          if(v.from && v.to) {
-//            if(!reachable) {
-//              //this is is hack...
-//              reachable = {}
-//              reachable[sbot.id] = 0
-//              push(sbot.id, 0)
-//            }
-//            //recalculate the portion of the graph, reachable in opts.hops
-//            //(but only the portion not already reachable)
-//            var _reachable = G.hops(g, v.from, reachable[v.from], opts.hops || 3, reachable)
-//
-//            for(var k in _reachable) {
-//              //check if it has _become_ reachable just now.
-//              //if so add to the set
-//              if(reachable[k] == null)
-//                push(k, reachable[k] = _reachable[k])
-//              //if this has shortened the path, then update.
-//              else if(reachable[k] > _reachable[k])
-//                reachable[k] = _reachable[k]
-//              //else, we where already able to reach this node.
-//            }
-//          }
-//          else {
-//            var _g = v
-//            reachable = G.hops(_g, start, 0, opts.hops || 3)
-//            for(var k in reachable)
-//              push(k, reachable[k])
-//          }
-//          if(first) {
-//            first = false
-//            if(live) {
-//              out.push({sync: true})
-//            }
-//          }
-//
           return out
         })
 
@@ -149,19 +112,5 @@ exports.init = function (sbot, config) {
     }
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
