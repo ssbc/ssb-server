@@ -8,6 +8,7 @@ var mdm         = require('mdmanifest')
 var valid       = require('../lib/validators')
 var apidoc      = require('../lib/apidocs').friends
 var ref         = require('ssb-ref')
+var Obv         = require('obv')
 
 var F           = require('ssb-friends')
 var block       = require('ssb-friends/block')
@@ -33,8 +34,10 @@ exports.version = '1.0.0'
 exports.manifest = mdm.manifest(apidoc)
 
 exports.init = function (sbot, config) {
-  var g = {}
-  var index = sbot._flumeUse('friends', Reduce(2, function (_, rel) {
+  var post = Obv()
+  post.set({})
+  var index = sbot._flumeUse('friends', Reduce(2, function (g, rel) {
+    if(!g) g = {}
     G.addEdge(g, rel.from, rel.to, rel.value)
     return g
   }, function (data) {
@@ -52,8 +55,15 @@ exports.init = function (sbot, config) {
     }
   }))
 
-  return {
+  index.since(function () {
+    //it looks async but this will always be sync after loading
+    index.get(null, function (_, v) {
+      post.set(v)
+    })
+  })
 
+  return {
+    post: post,
     get: function (opts, cb) {
       index.get(opts, cb)
     },
@@ -74,7 +84,7 @@ exports.init = function (sbot, config) {
             out.push(meta ? {id: to, hops: hops} : to)
           }
 
-          var out = []
+          var out = [], g = post.value
 
           //the edge has already been added to g
           if(!reachable) {
@@ -112,5 +122,8 @@ exports.init = function (sbot, config) {
     }
   }
 }
+
+
+
 
 
