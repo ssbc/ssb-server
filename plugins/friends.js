@@ -8,6 +8,10 @@ var mdm         = require('mdmanifest')
 var valid       = require('../lib/validators')
 var apidoc      = require('../lib/apidocs').friends
 var ref         = require('ssb-ref')
+var Obv         = require('obv')
+
+var F           = require('ssb-friends')
+var block       = require('ssb-friends/block')
 
 // friends plugin
 // methods to analyze the social graph
@@ -30,24 +34,36 @@ exports.version = '1.0.0'
 exports.manifest = mdm.manifest(apidoc)
 
 exports.init = function (sbot, config) {
-  var g = {}
-  var index = sbot._flumeUse('friends', Reduce(1, function (_, rel) {
-    //if(!g) g = {}
-    if(!ref.isFeed(rel.from)) throw new Error('FROM is not id')
+  var post = Obv()
+  post.set({})
+  var index = sbot._flumeUse('friends', Reduce(2, function (g, rel) {
+    if(!g) g = {}
     G.addEdge(g, rel.from, rel.to, rel.value)
     return g
   }, function (data) {
     if(data.value.content.type === 'contact' && ref.isFeed(data.value.content.contact)) {
+      var tristate = (
+        data.value.content.following ? true
+      : data.value.content.flagged || data.value.content.blocking ? false
+      : null
+      )
       return {
         from: data.value.author,
         to: data.value.content.contact,
-        value: data.value.content.following
+        value: tristate
       }
     }
   }))
 
-  return {
+  index.since(function () {
+    //it looks async but this will always be sync after loading
+    index.get(null, function (_, v) {
+      post.set(v)
+    })
+  })
 
+  return {
+    post: post,
     get: function (opts, cb) {
       index.get(opts, cb)
     },
@@ -57,10 +73,7 @@ exports.init = function (sbot, config) {
       var live = opts.live === true
       var meta = opts.meta === true
       var start = opts.start || sbot.id
-      var first = true
       var reachable
-      if(!g) throw new Error('not initialized')
-      //g = g || {}
       return pull(
         index.stream(opts),
         FlatMap(function (v) {
@@ -70,42 +83,26 @@ exports.init = function (sbot, config) {
           function push (to, hops) {
             out.push(meta ? {id: to, hops: hops} : to)
           }
-          var out = []
-          if(v.from && v.to) {
-            if(!reachable) {
-              //this is is hack...
-              reachable = {}
-              reachable[sbot.id] = 0
-              push(sbot.id, 0)
-            }
-            //recalculate the portion of the graph, reachable in opts.hops
-            //(but only the portion not already reachable)
-            var _reachable = G.hops(g, v.from, reachable[v.from], opts.hops || 3, reachable)
 
-            for(var k in _reachable) {
-              //check if it has _become_ reachable just now.
-              //if so add to the set
-              if(reachable[k] == null)
-                push(k, reachable[k] = _reachable[k])
-              //if this has shortened the path, then update.
-              else if(reachable[k] > _reachable[k])
-                reachable[k] = _reachable[k]
-              //else, we where already able to reach this node.
-            }
-          }
-          else {
-            var _g = v
-            reachable = G.hops(_g, start, 0, opts.hops || 3)
+          var out = [], g = post.value
+
+          //the edge has already been added to g
+          if(!reachable) {
+            reachable = F.reachable(g, start, block)
             for(var k in reachable)
-              push(k, reachable[k])
-          }
-          if(first) {
-            first = false
-            if(live) {
-              out.push({sync: true})
+              if(block.isWanted(reachable[k]))
+                push(k, reachable[k][0])
+          } else {
+            var _reachable = F.reachable(g, start, block)
+            var patch = F.diff(reachable, _reachable)
+            for(var k in patch) {
+              if(patch[k] == null)
+                push(k, -1)
+              else if(block.isWanted(patch[k]))
+                push(k, patch[k][0])
             }
+            reachable = _reachable
           }
-
           return out
         })
 
@@ -125,5 +122,8 @@ exports.init = function (sbot, config) {
     }
   }
 }
+
+
+
 
 
