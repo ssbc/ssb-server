@@ -30,9 +30,13 @@ exports.init = function (sbot) {
 
   sbot.createHistoryStream.hook(function (fn, args) {
     var opts = args[0], id = this.id
-    if(opts.id !== this.id && isBlocked({source: opts.id, dest: this.id}))
-      return fn({id: null, sequence: 0})
-    else
+    //reminder: this.id is the remote caller.
+    if(opts.id !== this.id && isBlocked({source: opts.id, dest: id})) {
+      return function (abort, cb) {
+        //just give them the cold shoulder
+      }
+//      return fn({id: null, sequence: 0})
+    } else
       return pull(
         fn.apply(this, args),
         //break off this feed if they suddenly block
@@ -58,3 +62,4 @@ exports.init = function (sbot) {
   return {isBlocked: valid.sync(isBlocked, 'feedId|isBlockedOpts') }
 
 }
+

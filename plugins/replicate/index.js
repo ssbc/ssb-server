@@ -25,13 +25,16 @@ module.exports = {
       //calls to replicate.request(id) are ephemeral,
       //and must be made each time run sbot.
       pull(
-        sbot.friends.createFriendStream({live: true, meta: false}),
+        sbot.friends.createFriendStream({live: true, meta: true}),
         // filter out duplicates, and also keep track of what we expect to receive
         // lookup the latest sequence from each user
         // TODO: use paramap?
-        pull.drain(function (id) {
-          if(id.sync) return
-          replicate.request(id)
+        pull.drain(function (data) {
+          if(data.sync) return
+          if(data.hops >= 0)
+            replicate.request(data.id)
+          else
+            replicate.request(data.id, false)
         })
       )
 
@@ -39,5 +42,6 @@ module.exports = {
     }
   }
 }
+
 
 

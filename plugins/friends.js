@@ -94,9 +94,9 @@ exports.init = function (sbot, config) {
                 push(k, reachable[k][0])
           } else {
             var _reachable = F.reachable(g, start, block)
-            var patch = F.diff(reachable, _reachable)
+            var patch = F.diff(reachable, _reachable, block)
             for(var k in patch) {
-              if(patch[k] == null)
+              if(patch[k] == null || patch[k][0] == null || patch[k][0] > patch[k][1])
                 push(k, -1)
               else if(block.isWanted(patch[k]))
                 push(k, patch[k][0])
@@ -122,8 +122,3 @@ exports.init = function (sbot, config) {
     }
   }
 }
-
-
-
-
-
