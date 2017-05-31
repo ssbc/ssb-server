@@ -11,7 +11,7 @@ var pull    = require('pull-stream')
 // make sure the friends plugin analyzes correctly
 
 var createSbot = require('../')
-  .use(require('../plugins/friends'))
+  .use(require('ssb-friends'))
 
 
 function sort (ary) {

@@ -12,7 +12,7 @@ var u = require('./util')
 // and get them to follow each other...
 
 var createSbot = require('../')
-  .use(require('../plugins/friends'))
+  .use(require('ssb-friends'))
   .use(require('../plugins/replicate'))
   .use(require('../plugins/gossip'))
   .use(require('../plugins/logging'))

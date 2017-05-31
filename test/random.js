@@ -37,7 +37,7 @@ function once (fn) {
 }
 
 var createSbot = require('../')
-  .use(require('../plugins/friends'))
+  .use(require('ssb-friends'))
   .use(require('../plugins/replicate'))
   .use(require('../plugins/gossip'))
 

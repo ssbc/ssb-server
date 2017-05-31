@@ -10,7 +10,7 @@ var ref = require('ssb-ref')
 var createSbot = require('../')
   .use(require('../plugins/master'))
   .use(require('../plugins/invite'))
-  .use(require('../plugins/friends'))
+  .use(require('ssb-friends'))
   .use(require('ssb-ws'))
 
 function all(stream, cb) {

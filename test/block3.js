@@ -4,8 +4,7 @@ var pull = require('pull-stream')
 var u    = require('./util')
 
 var replicate = require('../plugins/replicate')
-var friends   = require('../plugins/friends')
-var block   = require('../plugins/block')
+var friends   = require('ssb-friends')
 var ssbKeys = require('ssb-keys')
 var toAddress = require('../lib/util').toAddress
 
@@ -19,9 +18,8 @@ var toAddress = require('../lib/util').toAddress
 // 3. carol will not give bob any, she will not give him any data from alice.
 
 var createSbot = require('../')
-    .use(require('../plugins/friends'))
+    .use(require('ssb-friends'))
     .use(require('../plugins/replicate'))
-    .use(require('../plugins/block'))
 
 var alice = createSbot({
     temp: 'test-block-alice', timeout: 1000,
@@ -81,4 +79,6 @@ tape('alice blocks bob while he is connected, she should disconnect him', functi
     }, false)
   })
 })
+
+
 

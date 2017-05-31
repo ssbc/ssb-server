@@ -5,9 +5,8 @@ var ssbKeys = require('ssb-keys')
 var u = require('./util')
 
 var createSbot = require('../')
-    .use(require('../plugins/friends'))
+    .use(require('ssb-friends'))
     .use(require('../plugins/replicate'))
-    .use(require('../plugins/block'))
 
 var alice = createSbot({
     temp: 'test-block-alice', //timeout: 1400,
@@ -57,4 +56,5 @@ tape('alice blocks bob while he is connected, she should disconnect him', functi
 
   })
 })
+
 

@@ -9,7 +9,7 @@ var u = require('./util')
 var isArray = Array.isArray
 
 var createSbot = require('../')
-  .use(require('../plugins/friends'))
+  .use(require('ssb-friends'))
   .use(require('../plugins/gossip'))
 //  .use(require('../plugins/logging'))
 
