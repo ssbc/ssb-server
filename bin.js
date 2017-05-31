@@ -38,18 +38,17 @@ if (argv[0] == 'server') {
     .use(require('./plugins/plugins'))
     .use(require('./plugins/master'))
     .use(require('./plugins/gossip'))
-    .use(require('./plugins/friends'))
     .use(require('./plugins/replicate'))
+    .use(require('ssb-friends'))
     .use(require('ssb-blobs'))
     .use(require('./plugins/invite'))
-//    .use(require('./plugins/block'))
     .use(require('./plugins/local'))
     .use(require('./plugins/logging'))
     .use(require('./plugins/private'))
     .use(require('ssb-query'))
     .use(require('ssb-links'))
     .use(require('ssb-ws'))
-    .use(require('ssb-ebt'))
+//    .use(require('ssb-ebt'))
 
   // add third-party plugins
 //  require('./plugins/plugins').loadUserPlugins(createSbot, config)
@@ -146,6 +145,8 @@ if (argv[0] == 'server') {
     muxrpcli(argv, manifest, rpc, config.verbose)
   })
 }
+
+
 
 
 
