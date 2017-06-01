@@ -5,8 +5,8 @@ var ssbKeys = require('ssb-keys')
 var u = require('./util')
 
 var createSbot = require('../')
-  .use(require('ssb-friends'))
   .use(require('../plugins/replicate'))
+  .use(require('ssb-friends'))
 
 var toAddress = require('../lib/util').toAddress
 
@@ -253,6 +253,9 @@ tape('cleanup!', function (t) {
   alice.close(true); bob.close(true); carol.close(true)
   t.end()
 })
+
+
+
 
 
 

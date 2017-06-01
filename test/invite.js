@@ -10,6 +10,8 @@ var ref = require('ssb-ref')
 var createSbot = require('../')
   .use(require('../plugins/master'))
   .use(require('../plugins/invite'))
+  .use(require('../plugins/replicate'))
+
   .use(require('ssb-friends'))
   .use(require('ssb-ws'))
 
@@ -290,6 +292,7 @@ tape('test invite with note', function (t) {
     })
   })
 })
+
 
 
 

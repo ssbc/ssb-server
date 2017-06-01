@@ -18,8 +18,8 @@ var toAddress = require('../lib/util').toAddress
 // 3. carol will not give bob any, she will not give him any data from alice.
 
 var createSbot = require('../')
-    .use(require('ssb-friends'))
     .use(require('../plugins/replicate'))
+    .use(require('ssb-friends'))
 
 var alice = createSbot({
     temp: 'test-block-alice', timeout: 1000,
@@ -79,6 +79,7 @@ tape('alice blocks bob while he is connected, she should disconnect him', functi
     }, false)
   })
 })
+
 
 
 

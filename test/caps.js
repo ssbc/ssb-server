@@ -12,8 +12,8 @@ var u = require('./util')
 // and get them to follow each other...
 
 var createSbot = require('../')
-  .use(require('ssb-friends'))
   .use(require('../plugins/replicate'))
+  .use(require('ssb-friends'))
   .use(require('../plugins/gossip'))
   .use(require('../plugins/logging'))
 
@@ -110,4 +110,5 @@ tape('cleanup', function (t) {
   dbC.close()
   t.end()
 })
+
 

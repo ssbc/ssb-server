@@ -37,8 +37,8 @@ function once (fn) {
 }
 
 var createSbot = require('../')
-  .use(require('ssb-friends'))
   .use(require('../plugins/replicate'))
+  .use(require('ssb-friends'))
   .use(require('../plugins/gossip'))
 
 function generateAnimals (sbot, feed, f, n, cb) {
@@ -292,4 +292,5 @@ tape('shutdown', function (t) {
   animalNetwork.close(true)
   t.end()
 })
+
 

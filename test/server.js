@@ -12,8 +12,8 @@ var u = require('./util')
 // and get them to follow each other...
 
 var createSbot = require('../')
-  .use(require('ssb-friends'))
   .use(require('../plugins/replicate'))
+  .use(require('ssb-friends'))
   .use(require('../plugins/gossip'))
   .use(require('../plugins/logging'))
 
@@ -89,6 +89,7 @@ tape('replicate between 3 peers', function (t) {
     }
   })
 })
+
 
 
 
