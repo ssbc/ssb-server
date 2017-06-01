@@ -81,7 +81,7 @@
   },
   "scripts": {
     "build": "noderify bin.js > sbot.js",
-    "prepublish": "npm ls && npm test && npm run build",
+    "prepublishOnly": "npm ls && npm test && npm run build",
     "test": "set -e; for t in test/*.js; do node $t; done"
   },
   "author": "Paul Frazee <pfrazee@gmail.com>",
