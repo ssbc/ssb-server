@@ -172,30 +172,11 @@ module.exports = {
 module.exports.loadUserPlugins = function (createSbot, config) {
   // iterate all modules
   var nodeModulesPath = path.join(config.path, 'node_modules')
-  try {
-    console.log('Loading plugins from', nodeModulesPath)
-    fs.readdirSync(nodeModulesPath).forEach(function (filename) {
-      if (filename.charAt(0) == '.')
-        return // ignore
-      if (!config.plugins[filename])
-        return console.log('Skipping disabled plugin "'+filename+'"')
-      console.log('Loading plugin "'+filename+'"')
-
-      try {
-        // load module
-        var plugin = require(path.join(nodeModulesPath, filename))
-
-        // check the signature
-        assertSbotPlugin(plugin)
-
-        // load
-        createSbot.use(plugin)
-      } catch (e) {
-        console.error('Error loading plugin "'+filename+'":', e.message)
-      }
-    })
-  } catch (e) {
-    // node_modules dne, ignore
+  //instead of testing all plugins, only load things explicitly
+  //enabled in the config
+  for(var k in config.plugins) {
+    if(config.plugins[k])
+      createSbot.use(require(path.join(nodeModulesPath, k)))
   }
 }
 
@@ -222,3 +203,4 @@ function validatePluginName (name) {
     return false
   return true
 }
+
