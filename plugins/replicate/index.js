@@ -24,12 +24,11 @@ module.exports = {
 
       return replicate
     }
+    else
+      return {
+        request: function () {},
+        changes: function () { return function (abort, cb) { cb(true) } }
+      }
   }
 }
-
-
-
-
-
-
 
