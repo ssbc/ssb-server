@@ -176,15 +176,11 @@ module.exports.loadUserPlugins = function (createSbot, config) {
   //enabled in the config
   for(var k in config.plugins) {
     if(config.plugins[k]) {
-      try {
-        var plugin = require(path.join(nodeModulesPath, k))
-        assertSbotPlugin(plugin)
-        if (createSbot.plugins.some(plug => plug.name === plugin.name))
-          throw new Error('already loaded')
-        createSbot.use(plugin)
-      } catch (e) {
-        console.error('Error loading plugin "'+k+'":', e.message)
-      }
+    if (createSbot.plugins.some(plug => plug.name === k))
+      throw new Error('already loaded plugin named:'+k)
+      var plugin = require(path.join(nodeModulesPath, k))
+      assertSbotPlugin(plugin)
+      createSbot.use(plugin)
     }
   }
 }
@@ -212,4 +208,9 @@ function validatePluginName (name) {
     return false
   return true
 }
+
+
+
+
+
 
