@@ -175,8 +175,17 @@ module.exports.loadUserPlugins = function (createSbot, config) {
   //instead of testing all plugins, only load things explicitly
   //enabled in the config
   for(var k in config.plugins) {
-    if(config.plugins[k])
-      createSbot.use(require(path.join(nodeModulesPath, k)))
+    if(config.plugins[k]) {
+      try {
+        var plugin = require(path.join(nodeModulesPath, k))
+        assertSbotPlugin(plugin)
+        if (createSbot.plugins.some(plug => plug.name === plugin.name))
+          throw new Error('already loaded')
+        createSbot.use(plugin)
+      } catch (e) {
+        console.error('Error loading plugin "'+k+'":', e.message)
+      }
+    }
   }
 }
 
