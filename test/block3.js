@@ -60,7 +60,7 @@ tape('alice blocks bob while he is connected, she should disconnect him', functi
 
     bob.on('replicate:finish', function (vclock) {
       //I don't care which messages bob doesn't have of alice's
-      t.ok(vclock[alice.id] < 2, 'bob has alices first message')
+      t.ok(vclock[alice.id] < 2 || vclock[alice.id] == null, 'bob does not receive the message where alice blocked him')
       alice.close();bob.close();carol.close()
       t.end()
     })
@@ -79,6 +79,7 @@ tape('alice blocks bob while he is connected, she should disconnect him', functi
     }, false)
   })
 })
+
 
 
 
