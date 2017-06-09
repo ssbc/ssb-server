@@ -74,7 +74,7 @@ module.exports = {
       fs.writeFileSync(cfgPath, JSON.stringify(existingConfig, null, 2), 'utf-8')
     }
 
-    return { 
+    return {
       install: valid.source(function (pluginName, opts) {
         var p = pushable()
         var dryRun = opts && opts['dry-run']
@@ -174,11 +174,17 @@ module.exports.loadUserPlugins = function (createSbot, config) {
   var nodeModulesPath = path.join(config.path, 'node_modules')
   //instead of testing all plugins, only load things explicitly
   //enabled in the config
-  for(var k in config.plugins) {
-    if(config.plugins[k]) {
-    if (createSbot.plugins.some(plug => plug.name === k))
-      throw new Error('already loaded plugin named:'+k)
-      var plugin = require(path.join(nodeModulesPath, k))
+  for(var module_name in config.plugins) {
+    if(config.plugins[module_name]) {
+    var name = config.plugins[module_name]
+    if(name === true)
+      name = /^ssb-/.test(module_name) ? module_name.substring(4) : module_name
+
+    if (createSbot.plugins.some(plug => plug.name === name))
+      throw new Error('already loaded plugin named:'+name)
+      var plugin = require(path.join(nodeModulesPath, module_name))
+      if(plugin.name !== name)
+        throw new Error('plugin at:'+module_name+' expected name:'+name+' but had:'+plugin.name)
       assertSbotPlugin(plugin)
       createSbot.use(plugin)
     }
@@ -208,9 +214,5 @@ function validatePluginName (name) {
     return false
   return true
 }
-
-
-
-
 
 
