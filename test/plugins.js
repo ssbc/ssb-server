@@ -50,7 +50,7 @@ tape('install and load plugins', function (t) {
       port: 45451, host: 'localhost',
       keys: aliceKeys,
       plugins: {
-        'test-plugin': true
+        'test-plugin': 'test'
       }
     }
     resetSbot()
@@ -148,7 +148,7 @@ tape('install and load plugins', function (t) {
       port: 45451, host: 'localhost',
       keys: aliceKeys,
       plugins: {
-        'my-test-plugin': true
+        'my-test-plugin': 'test'
       }
     }
     resetSbot()
