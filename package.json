@@ -77,7 +77,7 @@
     "tape": "~4.0.0"
   },
   "bin": {
-    "sbot": "./sbot.js"
+    "sbot": "./bin.js"
   },
   "scripts": {
     "build": "noderify bin.js > sbot.js",
