@@ -72,7 +72,6 @@
     "dog-names": "~1.0.2",
     "level-sublevel": "~6.3.15",
     "level-test": "^2.0.1",
-    "noderify": "~1.0.0",
     "ssb-msg-schemas": "~3.2.0",
     "tape": "~4.0.0"
   },
@@ -80,10 +79,11 @@
     "sbot": "./bin.js"
   },
   "scripts": {
-    "build": "noderify bin.js > sbot.js",
-    "prepublishOnly": "npm ls && npm test && npm run build",
+    "prepublishOnly": "npm ls && npm test",
     "test": "set -e; for t in test/*.js; do node $t; done"
   },
   "author": "Paul Frazee <pfrazee@gmail.com>",
   "license": "MIT"
 }
+
+
