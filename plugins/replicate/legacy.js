@@ -30,38 +30,6 @@ var streamErrors = {
   'stream is closed': true, // rpc method called after stream ended
 }
 
-function createHistoryStreamWithSync (rpc, upto, onSync) {
-  // HACK: createHistoryStream does not emit sync event, so we don't
-  // know when it switches to live. Do it manually!
-  var last = (upto.sequence || upto.seq || 0)
-  var state = null
-  return pullNext(function () {
-    if (!state) {
-      state = 'old'
-      return pull(
-        rpc.createHistoryStream({
-          id: upto.id,
-          seq: last + 1,
-          live: false,
-          keys: false
-        }),
-        pull.through(msg => {
-          last = Math.max(last, msg.sequence)
-        })
-      )
-    } else if (state === 'old') {
-      state = 'sync'
-      onSync && onSync(true)
-      return rpc.createHistoryStream({
-        id: upto.id,
-        seq: last + 1,
-        live: true,
-        keys: false
-      })
-    }
-  })
-}
-
 module.exports = function (sbot, notify, config) {
   var debounce = Debounce(200)
   var listeners = {}
