@@ -7,8 +7,8 @@ var Debounce = require('observ-debounce')
 var deepEqual = require('deep-equal')
 var Obv = require('obv')
 var isFeed = require('ssb-ref').isFeed
-
 var Pushable = require('pull-pushable')
+var detectSync = require('../../lib/detect-sync')
 
 // compatibility function for old implementations of `latestSequence`
 function toSeq (s) {
@@ -280,10 +280,21 @@ module.exports = function (sbot, notify, config) {
       debounce.set()
 
       pull(
-        createHistoryStreamWithSync(rpc, upto, function onSync () {
-          pendingFeedsForPeer[rpc.id].delete(upto.id)
-          debounce.set()
+        rpc.createHistoryStream({
+          id: upto.id,
+          seq: (upto.sequence || upto.seq || 0) + 1,
+          live: true,
+          keys: false
         }),
+
+        pull.through(detectSync(rpc.id, upto, toSend, peerHas, function () {
+          if (pendingFeedsForPeer[rpc.id]) {
+            // this peer has finished syncing, remove from progress
+            pendingFeedsForPeer[rpc.id].delete(upto.id)
+            debounce.set()
+          }
+        })),
+
         sbot.createWriteStream(function (err) {
           if(err && !(err.message in errorsSeen)) {
             errorsSeen[err.message] = true
@@ -306,8 +317,11 @@ module.exports = function (sbot, notify, config) {
             }
           }
 
-          pendingFeedsForPeer[rpc.id].delete(upto.id)
-          debounce.set()
+          // if stream closes, remove from pending progress
+          if (pendingFeedsForPeer[rpc.id]) {
+            pendingFeedsForPeer[rpc.id].delete(upto.id)
+            debounce.set()
+          }
         })
       )
     }
@@ -339,6 +353,10 @@ module.exports = function (sbot, notify, config) {
 
       rpc.on('closed', function () {
         sbot.emit('replicate:finish', toSend)
+
+        // if we disconnect from a peer, remove it from sync progress
+        delete pendingFeedsForPeer[rpc.id]
+        debounce.set()
       })
 
       //make sure we wait until the clock is loaded
@@ -368,7 +386,3 @@ module.exports = function (sbot, notify, config) {
     changes: notify.listen
   }
 }
-
-
-
-
