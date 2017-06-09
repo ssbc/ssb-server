@@ -77,39 +77,16 @@ var SSB = {
 
     //remove this, but we'll need something to make a progress bar
     //otherwise people will get confused about what is happening.
-    /*
-    var _views, _prev
 
-    var state = since()
-    var int = setInterval(function (){
-      var _state = since()
-      if(_state.since == undefined) return
-      if(state && !state.sync && !_state.sync && state.since == _state.since) {
-        var c = 0, t = 0
-
-        for(var k in _state.plugins) {
-          c += state.plugins[k]
-          t++
-        }
-
-        if(c/t !== _views || c/t != _state.since) {
-          console.log('Rebuilding Indexes:', c/t, _views, (c/t)/_state.since)
-        }
-      }
-      else if(_state.since != _prev)
-        console.log("indexes synchronised:", _state.since)
-
-      state = _state
-      _prev = state.since
-    }, 1000)
-
-    //unref is a node.js only api.
-    if (int.unref) int.unref()
-    */
+    
 
     return {
       id                       : feed.id,
       keys                     : opts.keys,
+
+      progress                 : function () {
+        return ssb.progress
+      },
 
       //temporary!
       _flumeUse                :
@@ -181,5 +158,6 @@ module.exports = SecretStack({
   appKey: require('./lib/ssb-cap')
 })
 .use(SSB)
+
 
 
