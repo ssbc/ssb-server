@@ -38,7 +38,6 @@ module.exports = function (sbot, notify, config) {
   var start = null
   var count = 0
   var rate = 0
-  var loadedFriends = false
   var toSend = {}
   var peerHas = {}
   var pendingFeedsForPeer = {}
@@ -72,7 +71,7 @@ module.exports = function (sbot, notify, config) {
 
   debounce(function () {
     // only list loaded feeds once we know about all of them!
-    var feeds = loadedFriends ? Object.keys(toSend).length : null
+    var feeds = Object.keys(toSend).length
     var legacyProgress = 0
     var legacyTotal = 0
 
@@ -211,11 +210,6 @@ module.exports = function (sbot, notify, config) {
     localPeers()
   }
   //XXX ^
-
-  function friendsLoaded () {
-    loadedFriends = true
-    debounce.set()
-  }
 
   function upto (opts) {
     opts = opts || {}
