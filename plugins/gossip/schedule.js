@@ -1,3 +1,4 @@
+'use strict'
 var ip = require('ip')
 var onWakeup = require('on-wakeup')
 var onNetwork = require('on-change-network')
@@ -35,7 +36,7 @@ function peerNext(peer, opts) {
 //(i.e. if there is only localhost)
 
 function isOffline (e) {
-  if(ip.isLoopback(e.host)) return false
+  if(ip.isLoopback(e.host) || e.host == 'localhost') return false
   return !hasNetwork()
 }
 
@@ -105,7 +106,7 @@ function select(peers, ts, filter, opts) {
 var schedule = exports = module.exports =
 function (gossip, config, server) {
 //  return
-  var min = 60e3, hour = 60*60e3
+  var min = 60e3, hour = 60*60e3, closed = false
 
   //trigger hard reconnect after suspend or local network changes
   onWakeup(gossip.reconnect)
@@ -140,9 +141,9 @@ function (gossip, config, server) {
 
   var connecting = false
   function connections () {
-    if(connecting) return
+    if(connecting || closed) return
     connecting = true
-    setTimeout(function () {
+    var timer = setTimeout(function () {
       connecting = false
       var ts = Date.now()
       var peers = gossip.peers()
@@ -155,7 +156,7 @@ function (gossip, config, server) {
         connect(peers, ts, 'seeds', isSeed, {
           quota: 3, factor: 2e3, max: 10*min, groupMin: 1e3,
         })
-
+      return //XXX
       if(conf('local', true))
         connect(peers, ts, 'local', isLocal, {
           quota: 3, factor: 2e3, max: 10*min, groupMin: 1e3,
@@ -213,7 +214,7 @@ function (gossip, config, server) {
       })
 
     }, 100*Math.random())
-
+    if(timer.unref) timer.unref()
   }
 
     pull(
@@ -228,6 +229,11 @@ function (gossip, config, server) {
     if(int.unref) int.unref()
 
     connections()
+
+  return function onClose () {
+    closed = true
+
+  }
 
 }
 
