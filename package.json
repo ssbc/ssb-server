@@ -60,6 +60,7 @@
     "ssb-keys": "^7.0.0",
     "ssb-links": "^3.0.0",
     "ssb-msgs": "~5.2.0",
+    "ssb-private": "^0.1.2",
     "ssb-query": "^1.0.0",
     "ssb-ref": "^2.7.1",
     "ssb-ws": "^1.0.1",
