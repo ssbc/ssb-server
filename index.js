@@ -78,11 +78,15 @@ var SSB = {
     //remove this, but we'll need something to make a progress bar
     //otherwise people will get confused about what is happening.
 
-    
+
 
     return {
       id                       : feed.id,
       keys                     : opts.keys,
+
+      ready                    : function () {
+        return ssb.ready.value
+      },
 
       progress                 : function () {
         return ssb.progress
@@ -158,6 +162,3 @@ module.exports = SecretStack({
   appKey: require('./lib/ssb-cap')
 })
 .use(SSB)
-
-
-
