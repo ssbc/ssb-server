@@ -145,6 +145,10 @@ function (gossip, config, server) {
     connecting = true
     var timer = setTimeout(function () {
       connecting = false
+
+      // don't attempt to connect while migration is running
+      if (!server.ready()) return
+
       var ts = Date.now()
       var peers = gossip.peers()
 
@@ -245,4 +249,3 @@ exports.isLocal = isLocal
 exports.isFriend = isFriend
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
-
