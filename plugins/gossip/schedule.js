@@ -105,7 +105,6 @@ function select(peers, ts, filter, opts) {
 
 var schedule = exports = module.exports =
 function (gossip, config, server) {
-//  return
   var min = 60e3, hour = 60*60e3, closed = false
 
   //trigger hard reconnect after suspend or local network changes
@@ -115,7 +114,7 @@ function (gossip, config, server) {
   function conf(name, def) {
     if(config.gossip == null) return def
     var value = config.gossip[name]
-    return (value === undefined || value === '') ? def : value
+    return (value == null || value === '') ? def : value
   }
 
   function connect (peers, ts, name, filter, opts) {
@@ -160,7 +159,7 @@ function (gossip, config, server) {
         connect(peers, ts, 'seeds', isSeed, {
           quota: 3, factor: 2e3, max: 10*min, groupMin: 1e3,
         })
-      return //XXX
+
       if(conf('local', true))
         connect(peers, ts, 'local', isLocal, {
           quota: 3, factor: 2e3, max: 10*min, groupMin: 1e3,
@@ -236,7 +235,6 @@ function (gossip, config, server) {
 
   return function onClose () {
     closed = true
-
   }
 
 }
@@ -249,3 +247,7 @@ exports.isLocal = isLocal
 exports.isFriend = isFriend
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
+
+
+
+
