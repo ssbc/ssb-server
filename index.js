@@ -10,6 +10,8 @@ var cmdAliases = require('./lib/cli-cmd-aliases')
 var valid      = require('./lib/validators')
 var apidocs    = require('./lib/apidocs.js')
 
+var startTime = 0
+
 function isString(s) { return 'string' === typeof s }
 function isObject(o) { return 'object' === typeof o }
 function isFunction (f) { return 'function' === typeof f }
@@ -85,7 +87,10 @@ var SSB = {
       keys                     : opts.keys,
 
       ready                    : function () {
-        return ssb.ready.value
+        if (ssb.ready.value) {
+          if (!startTime) startTime = Date.now()
+          return (Date.now() - startTime > 5e3)
+        }
       },
 
       progress                 : function () {
