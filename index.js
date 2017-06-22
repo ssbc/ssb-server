@@ -92,6 +92,10 @@ var SSB = {
         return ssb.progress
       },
 
+      status                   : function () {
+        return {db: ssb.status, sync: since() }
+      },
+
       //temporary!
       _flumeUse                :
         function (name, flumeview) {

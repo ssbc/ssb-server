@@ -49,6 +49,8 @@ module.exports = {
 
     var stateFile = AtomicFile(path.join(config.path, 'gossip.json'))
 
+    var status = {}
+
     //Known Peers
     var peers = []
 
@@ -57,6 +59,12 @@ module.exports = {
         return e && e.key === id
       })
     }
+
+    server.status.hook(function (fn) {
+      var _status = fn()
+      _status.gossip = status
+      return _status
+    })
 
     server.close.hook(function (fn, args) {
       closed = true
@@ -192,6 +200,7 @@ module.exports = {
 
     server.on('rpc:connect', function (rpc, isClient) {
       var peer = getPeer(rpc.id)
+      status[rpc.id] = peer
       //don't track clients that connect, but arn't considered peers.
       //maybe we should though?
       if(!peer) {
@@ -228,6 +237,7 @@ module.exports = {
       }
 
       rpc.on('closed', function () {
+        delete status[rpc.id]
         console.log('Disconnected', stringify(peer))
         //track whether we have successfully connected.
         //or how many failures there have been.

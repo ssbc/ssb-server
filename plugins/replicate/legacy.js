@@ -348,3 +348,4 @@ module.exports = function (sbot, notify, config) {
     changes: notify.listen
   }
 }
+
