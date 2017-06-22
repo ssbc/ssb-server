@@ -11,9 +11,14 @@ function isFunction (f) {
 module.exports = {
   name: 'local',
   version: '2.0.0',
-  init: function (sbot, config) {
+  init: function init (sbot, config) {
     if(config.gossip && config.gossip.local === false)
-      return
+      return {
+        init: function () {
+          delete this.init
+          init(sbot, config)
+        }
+      }
 
     var local = broadcast(config.port)
     var addrs = {}
@@ -43,6 +48,8 @@ module.exports = {
 
     // broadcast self
     setInterval(function () {
+      if(config.gossip && config.gossip.local === false)
+        return
       // TODO: sign beacons, so that receipient can be confidant
       // that is really your id.
       // (which means they can update their peer table)

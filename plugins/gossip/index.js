@@ -207,6 +207,8 @@ module.exports = {
       enable: valid.sync(function (type) {
         type = type || 'global'
         setConfig(type, true)
+        if(type === 'local' && server.local && server.local.init)
+          server.local.init()
         return 'enabled gossip type ' + type
       }, 'string?'),
       disable: valid.sync(function (type) {
