@@ -43,6 +43,7 @@ module.exports = {
   },
   init: function (server, config) {
     var notify = Notify()
+    var closed = false, closeScheduler
     var conf = config.gossip || {}
     var home = ref.parseAddress(server.getAddress())
 
@@ -56,6 +57,16 @@ module.exports = {
         return e && e.key === id
       })
     }
+
+    server.close.hook(function (fn, args) {
+      closed = true
+      closeScheduler()
+      for(var id in server.peers)
+        server.peers[id].forEach(function (peer) {
+          peer.close(true)
+        })
+      return fn.apply(this, args)
+    })
 
     var timer_ping = 5*6e4
 
@@ -75,6 +86,7 @@ module.exports = {
         })
       },
       connect: valid.async(function (addr, cb) {
+        console.log("CONNECT", addr)
         addr = ref.parseAddress(addr)
         if (!addr || typeof addr != 'object')
           return cb(new Error('first param must be an address'))
@@ -174,7 +186,7 @@ module.exports = {
       }
     }
 
-    Schedule (gossip, config, server)
+    closeScheduler = Schedule (gossip, config, server)
     Init (gossip, config, server)
     //get current state
 
@@ -264,4 +276,6 @@ module.exports = {
     return gossip
   }
 }
+
+
 

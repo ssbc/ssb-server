@@ -1,3 +1,4 @@
+'use strict'
 var ip = require('ip')
 var onWakeup = require('on-wakeup')
 var onNetwork = require('on-change-network')
@@ -35,7 +36,7 @@ function peerNext(peer, opts) {
 //(i.e. if there is only localhost)
 
 function isOffline (e) {
-  if(ip.isLoopback(e.host)) return false
+  if(ip.isLoopback(e.host) || e.host == 'localhost') return false
   return !hasNetwork()
 }
 
@@ -104,8 +105,7 @@ function select(peers, ts, filter, opts) {
 
 var schedule = exports = module.exports =
 function (gossip, config, server) {
-//  return
-  var min = 60e3, hour = 60*60e3
+  var min = 60e3, hour = 60*60e3, closed = false
 
   //trigger hard reconnect after suspend or local network changes
   onWakeup(gossip.reconnect)
@@ -114,7 +114,7 @@ function (gossip, config, server) {
   function conf(name, def) {
     if(config.gossip == null) return def
     var value = config.gossip[name]
-    return (value === undefined || value === '') ? def : value
+    return (value == null || value === '') ? def : value
   }
 
   function connect (peers, ts, name, filter, opts) {
@@ -140,10 +140,14 @@ function (gossip, config, server) {
 
   var connecting = false
   function connections () {
-    if(connecting) return
+    if(connecting || closed) return
     connecting = true
-    setTimeout(function () {
+    var timer = setTimeout(function () {
       connecting = false
+
+      // don't attempt to connect while migration is running
+      if (!server.ready()) return
+
       var ts = Date.now()
       var peers = gossip.peers()
 
@@ -213,7 +217,7 @@ function (gossip, config, server) {
       })
 
     }, 100*Math.random())
-
+    if(timer.unref) timer.unref()
   }
 
     pull(
@@ -229,6 +233,10 @@ function (gossip, config, server) {
 
     connections()
 
+  return function onClose () {
+    closed = true
+  }
+
 }
 
 exports.isUnattempted = isUnattempted
@@ -239,4 +247,7 @@ exports.isLocal = isLocal
 exports.isFriend = isFriend
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
+
+
+
 
