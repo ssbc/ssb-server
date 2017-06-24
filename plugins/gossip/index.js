@@ -23,6 +23,29 @@ function stringify(peer) {
   return [peer.host, peer.port, peer.key].join(':')
 }
 
+function isObject (o) {
+  return o && 'object' == typeof o
+}
+
+function toBase64 (s) {
+  if(isString(s)) return s
+  else s.toString('base64') //assume a buffer
+}
+
+function isString (s) {
+  return 'string' == typeof s
+}
+
+function coearseAddress (address) {
+  if(isObject(address)) {
+    var protocol = 'net'
+    if (address.host.endsWith(".onion"))
+        protocol = 'onion'
+    return [protocol, address.host, address.port].join(':') +'~'+['shs', toBase64(address.key)].join(':')
+  }
+  return address
+}
+
 /*
 Peers : [{
   key: id,
@@ -50,6 +73,8 @@ module.exports = {
 
     var stateFile = AtomicFile(path.join(config.path, 'gossip.json'))
 
+    var status = {}
+
     //Known Peers
     var peers = []
 
@@ -58,6 +83,32 @@ module.exports = {
         return e && e.key === id
       })
     }
+
+    function simplify (peer) {
+      return {
+        address: coearseAddress(peer),
+        source: peer.source,
+        state: peer.state, stateChange: peer.stateChange,
+        failure: peer.failure,
+        client: peer.client,
+        stats: {
+          duration: peer.duration || undefined,
+          rtt: peer.ping ? peer.ping.rtt : undefined,
+          skew: peer.ping ? peer.ping.skew : undefined,
+        }
+      }
+    }
+
+    server.status.hook(function (fn) {
+      var _status = fn()
+      _status.gossip = status
+      peers.forEach(function (peer) {
+        if(peer.stateChange + 3e3 > Date.now() || peer.state === 'connected')
+          status[peer.key] = simplify(peer)
+      })
+      return _status
+
+    })
 
     server.close.hook(function (fn, args) {
       closed = true
@@ -119,8 +170,9 @@ module.exports = {
 
         p.stateChange = Date.now()
         p.state = 'connecting'
-        server.connect(p, function (err, rpc) {
+        server.connect(coearseAddress(p), function (err, rpc) {
           if (err) {
+            p.error = err.stack
             p.state = undefined
             p.failure = (p.failure || 0) + 1
             p.stateChange = Date.now()
@@ -130,6 +182,7 @@ module.exports = {
             return (cb && cb(err))
           }
           else {
+            delete p.error
             p.state = 'connected'
             p.failure = 0
           }
@@ -236,6 +289,8 @@ module.exports = {
         return
       }
 
+      status[rpc.id] = simplify(peer)
+
       console.log('Connected', stringify(peer))
       //means that we have created this connection, not received it.
       peer.client = !!isClient
@@ -260,6 +315,7 @@ module.exports = {
       }
 
       rpc.on('closed', function () {
+        delete status[rpc.id]
         console.log('Disconnected', stringify(peer))
         //track whether we have successfully connected.
         //or how many failures there have been.
@@ -267,7 +323,6 @@ module.exports = {
         peer.stateChange = Date.now()
 //        if(peer.state === 'connected') //may be "disconnecting"
         peer.duration = stats(peer.duration, peer.stateChange - since)
-//        console.log(peer.duration)
         peer.state = undefined
         notify({ type: 'disconnect', peer: peer })
         server.emit('log:info', ['SBOT', rpc.id, 'disconnect'])
@@ -308,6 +363,5 @@ module.exports = {
     return gossip
   }
 }
-
 
 

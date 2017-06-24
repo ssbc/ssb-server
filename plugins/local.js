@@ -8,6 +8,14 @@ function isFunction (f) {
   return 'function' === typeof f
 }
 
+/*
+  idea: instead of broadcasting constantly,
+  broadcast at startup, or when ip address changes (change networks)
+  or when you receive a boardcast.
+
+  this should use network more efficiently.
+*/
+
 module.exports = {
   name: 'local',
   version: '2.0.0',
@@ -46,6 +54,16 @@ module.exports = {
       }
     })
 
+    sbot.status.hook(function (fn) {
+      var _status = fn()
+      if(!isEmpty(addrs)) {
+        _status.local = {}
+        for(var k in addrs)
+          _status.local[k] = {address: addrs[k], seen: lastSeen[k]}
+      }
+      return _status
+    })
+
     // broadcast self
     setInterval(function () {
       if(config.gossip && config.gossip.local === false)
@@ -59,3 +77,4 @@ module.exports = {
     }, 1000)
   }
 }
+
