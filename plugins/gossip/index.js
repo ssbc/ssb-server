@@ -63,6 +63,10 @@ module.exports = {
     server.status.hook(function (fn) {
       var _status = fn()
       _status.gossip = status
+      peers.forEach(function (peer) {
+        if(peer.stateChange + 3e3 > Date.now())
+          status[peer.key] = peer
+      })
       return _status
     })
 
@@ -109,6 +113,7 @@ module.exports = {
         p.state = 'connecting'
         server.connect(p, function (err, rpc) {
           if (err) {
+            p.error = err.stack
             p.state = undefined
             p.failure = (p.failure || 0) + 1
             p.stateChange = Date.now()
@@ -118,6 +123,7 @@ module.exports = {
             return (cb && cb(err))
           }
           else {
+            delete p.error
             p.state = 'connected'
             p.failure = 0
           }
@@ -286,6 +292,8 @@ module.exports = {
     return gossip
   }
 }
+
+
 
 
 
