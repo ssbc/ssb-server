@@ -8,6 +8,12 @@ function isFunction (f) {
   return 'function' === typeof f
 }
 
+function isEmpty (o) {
+  for(var k in o)
+    return false
+  return true
+}
+
 /*
   idea: instead of broadcasting constantly,
   broadcast at startup, or when ip address changes (change networks)
