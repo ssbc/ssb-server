@@ -101,3 +101,31 @@ Events come in the following forms:
 Tell sbot to reinitiate gossip connections now.
 
 
+## enable: sync
+
+Update the config to enable a gossip type.
+
+```bash
+enable {type}
+```
+```js
+enable(type, cb)
+```
+
+ - type (string): The type of gossip to enable: local, global, or seed. Default
+     global.
+
+
+## disable: sync
+
+Update the config to disable a gossip type.
+
+```bash
+disable {type}
+```
+```js
+disable(type, cb)
+```
+
+ - type (string): The type of gossip to enable: local, global, or seed. Default
+     global.

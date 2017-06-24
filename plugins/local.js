@@ -8,12 +8,31 @@ function isFunction (f) {
   return 'function' === typeof f
 }
 
+function isEmpty (o) {
+  for(var k in o)
+    return false
+  return true
+}
+
+/*
+  idea: instead of broadcasting constantly,
+  broadcast at startup, or when ip address changes (change networks)
+  or when you receive a boardcast.
+
+  this should use network more efficiently.
+*/
+
 module.exports = {
   name: 'local',
   version: '2.0.0',
-  init: function (sbot, config) {
+  init: function init (sbot, config) {
     if(config.gossip && config.gossip.local === false)
-      return
+      return {
+        init: function () {
+          delete this.init
+          init(sbot, config)
+        }
+      }
 
     var local = broadcast(config.port)
     var addrs = {}
@@ -41,8 +60,20 @@ module.exports = {
       }
     })
 
+    sbot.status.hook(function (fn) {
+      var _status = fn()
+      if(!isEmpty(addrs)) {
+        _status.local = {}
+        for(var k in addrs)
+          _status.local[k] = {address: addrs[k], seen: lastSeen[k]}
+      }
+      return _status
+    })
+
     // broadcast self
     setInterval(function () {
+      if(config.gossip && config.gossip.local === false)
+        return
       // TODO: sign beacons, so that receipient can be confidant
       // that is really your id.
       // (which means they can update their peer table)
@@ -52,3 +83,4 @@ module.exports = {
     }, 1000)
   }
 }
+
