@@ -10,7 +10,9 @@ var ref = require('ssb-ref')
 var createSbot = require('../')
   .use(require('../plugins/master'))
   .use(require('../plugins/invite'))
-  .use(require('../plugins/friends'))
+  .use(require('../plugins/replicate'))
+
+  .use(require('ssb-friends'))
   .use(require('ssb-ws'))
 
 function all(stream, cb) {
@@ -171,18 +173,18 @@ tape('test invite.accept api with ipv6', function (t) {
 
 tape('test invite.create with modern', function (t) {
   var alice = createSbot({
-    temp: 'test-invite-alice2', timeout: 100,
+    temp: 'test-invite-alice5', timeout: 100,
     allowPrivate: true,
     keys: ssbKeys.generate()
   })
 
   var bob = createSbot({
-    temp: 'test-invite-bob2', timeout: 100,
+    temp: 'test-invite-bob5', timeout: 100,
     keys: ssbKeys.generate()
   })
 
   var carol = createSbot({
-    temp: 'test-invite-carol2', timeout: 100,
+    temp: 'test-invite-carol5', timeout: 100,
     keys: ssbKeys.generate()
   })
 
@@ -225,7 +227,7 @@ tape('test invite.create with modern', function (t) {
 tape('test invite.accept doesnt follow if already followed', function (t) {
 
   var alice = createSbot({
-    temp: 'test-invite-alice3',
+    temp: 'test-invite-alice6',
     timeout: 100,
     allowPrivate: true,
     keys: ssbKeys.generate()
@@ -253,6 +255,43 @@ tape('test invite.accept doesnt follow if already followed', function (t) {
 
 })
 
+
+tape('test invite with note', function (t) {
+
+  var alice = createSbot({
+    temp: 'test-invite-alice7', timeout: 100,
+    allowPrivate: true,
+    keys: ssbKeys.generate()
+  })
+
+  var bob = createSbot({
+    temp: 'test-invite-bob7', timeout: 100,
+    keys: ssbKeys.generate()
+  })
+
+  alice.invite.create({uses:1, note:'bob'}, function (err, invite) {
+    if(err) throw err
+    bob.invite.accept(invite, function (err) {
+      if(err) throw err
+
+      all(alice.messagesByType('contact'), function (err, ary) {
+        t.equal(ary.length, 1)
+
+        t.deepEqual({
+          type: 'contact',
+          contact: bob.id,
+          following: true,
+          pub: true,
+          note: 'bob',
+        }, ary[0].value.content)
+
+        alice.close(true)
+        bob.close(true)
+        t.end()
+      })
+    })
+  })
+})
 
 
 

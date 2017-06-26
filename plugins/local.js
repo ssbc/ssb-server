@@ -8,24 +8,72 @@ function isFunction (f) {
   return 'function' === typeof f
 }
 
+function isEmpty (o) {
+  for(var k in o)
+    return false
+  return true
+}
+
+/*
+  idea: instead of broadcasting constantly,
+  broadcast at startup, or when ip address changes (change networks)
+  or when you receive a boardcast.
+
+  this should use network more efficiently.
+*/
+
 module.exports = {
   name: 'local',
   version: '2.0.0',
-  init: function (sbot, config) {
+  init: function init (sbot, config) {
+    if(config.gossip && config.gossip.local === false)
+      return {
+        init: function () {
+          delete this.init
+          init(sbot, config)
+        }
+      }
 
     var local = broadcast(config.port)
+    var addrs = {}
+    var lastSeen = {}
 
+    // cleanup old local peers
+    setInterval(function () {
+      Object.keys(lastSeen).forEach((key) => {
+        if (Date.now() - lastSeen[key] > 10e3) {
+          sbot.gossip.remove(addrs[key])
+          delete lastSeen[key]
+        }
+      })
+    }, 5e3)
+
+    // discover new local peers
     local.on('data', function (buf) {
-      if(buf.loopback) return
+      if (buf.loopback) return
       var data = buf.toString()
-      if(ref.parseAddress(data)) {
-        console.log(data)
+      var peer = ref.parseAddress(data)
+      if (peer && peer.key !== sbot.id) {
+        addrs[peer.key] = peer
+        lastSeen[peer.key] = Date.now()
         sbot.gossip.add(data, 'local')
       }
     })
 
+    sbot.status.hook(function (fn) {
+      var _status = fn()
+      if(!isEmpty(addrs)) {
+        _status.local = {}
+        for(var k in addrs)
+          _status.local[k] = {address: addrs[k], seen: lastSeen[k]}
+      }
+      return _status
+    })
+
+    // broadcast self
     setInterval(function () {
-      // broadcast self
+      if(config.gossip && config.gossip.local === false)
+        return
       // TODO: sign beacons, so that receipient can be confidant
       // that is really your id.
       // (which means they can update their peer table)
@@ -35,6 +83,4 @@ module.exports = {
     }, 1000)
   }
 }
-
-
 

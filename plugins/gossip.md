@@ -37,6 +37,20 @@ add({ host:, port:, key: }, cb)
  - `port` (port number)
  - `key` (feedid)
 
+## remove: sync
+
+Remove an address from the peer table.
+
+```bash
+remove {addr}
+remove --host {string} --port {number} --key {feedid}
+```
+
+```js
+remove(addr)
+remove({ host:, port:, key: })
+```
+
 ## ping: duplex
 
 used internally by the gossip plugin to measure latency and clock skew
@@ -87,3 +101,31 @@ Events come in the following forms:
 Tell sbot to reinitiate gossip connections now.
 
 
+## enable: sync
+
+Update the config to enable a gossip type.
+
+```bash
+enable {type}
+```
+```js
+enable(type, cb)
+```
+
+ - type (string): The type of gossip to enable: local, global, or seed. Default
+     global.
+
+
+## disable: sync
+
+Update the config to disable a gossip type.
+
+```bash
+disable {type}
+```
+```js
+disable(type, cb)
+```
+
+ - type (string): The type of gossip to enable: local, global, or seed. Default
+     global.

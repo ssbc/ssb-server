@@ -1,3 +1,4 @@
+
 var pull      = require('pull-stream')
 var paramap   = require('pull-paramap')
 var ssbKeys   = require('ssb-keys')
@@ -10,6 +11,7 @@ var cats = require('cat-names')
 var dogs = require('dog-names')
 
 var generated = {}, F=100,N=10000
+
 
 //build a random network, with n members.
 function bar (prog) {
@@ -25,9 +27,18 @@ function isNumber (n) {
   return typeof n === 'number'
 }
 
+function once (fn) {
+  var called = false
+  return function () {
+    if(called) throw new Error('called twice!')
+    called = true
+    fn.apply(this, arguments)
+  }
+}
+
 var createSbot = require('../')
-  .use(require('../plugins/friends'))
   .use(require('../plugins/replicate'))
+  .use(require('ssb-friends'))
   .use(require('../plugins/gossip'))
 
 function generateAnimals (sbot, feed, f, n, cb) {
@@ -94,24 +105,29 @@ function generateAnimals (sbot, feed, f, n, cb) {
 }
 
 function latest (sbot, cb) {
-  sbot.friends.hops({hops: 3}, function (err, keys) {
+  sbot.friends.hops({hops: 3}, once(function (err, keys) {
     if(err) return cb(err)
-    var n = 0, map = {}
+    var n = Object.keys(keys).length, map = {}
+    console.log('Generated network:')
+    console.log(keys)
+    if(n !== F+1) throw new Error('not enough feeds:'+n+', expected:'+(F+1))
+    
     for(var k in keys) (function (key) {
-      n++
-      sbot.latestSequence(key, function (err, value) {
+      sbot.latestSequence(key, once(function (err, value) {
+        if(err) {
+          console.log(key, err, value)
+          throw err
+        }
         map[key] = isNumber(value) ? value : value.sequence
         if(--n) return
         cb(null, map)
-      })
+      }))
     })(k)
-  })
+  }))
 }
 
   var alice = ssbKeys.generate()
   var bob   = ssbKeys.generate()
-
-
 
 var animalNetwork = createSbot({
   temp: 'test-random-animals',
@@ -127,9 +143,10 @@ pull(
   })
 )
 
+
 tape('generate random network', function (t) {
   var start = Date.now()
-  generateAnimals(animalNetwork, {add: animalNetwork.publish}, F, N, function (err) {
+  generateAnimals(animalNetwork, {add: animalNetwork.publish, id: animalNetwork.id}, F, N, function (err) {
     if(err) throw err
     console.log('replicate GRAPH')
     var c = 0
@@ -154,6 +171,7 @@ tape('generate random network', function (t) {
 })
 
 tape('read all history streams', function (t) {
+
   var opts = {
     host: 'localhost', port: 45451,
     key: alice.id,
@@ -194,7 +212,7 @@ tape('read all history streams', function (t) {
       console.log('read back live:', live, 'over', h, 'histories', listeners, 'listeners')
       pull(
         dump.createLogStream(),
-        pull.collect(function (err, ary) { 
+        pull.collect(function (err, ary) {
           if(err) throw err
           console.log(c)
           t.equal(ary.length, F+N+2)
@@ -227,25 +245,28 @@ tape('replicate social network for animals', function (t) {
 
   animalFriends.on('rpc:connect', function (rpc) {
     connections++
-    console.log("CONNECT", c)
+    c++
+    console.log("CONNECT", connections)
     rpc.on('closed', function () {
-      console.log("DISCONNECT", -c)
+      console.log("DISCONNECT", --connections)
     })
   })
 
+  var drain
+
   pull(
     animalFriends.replicate.changes(),
-    pull.drain(function (prog) {
+    drain = pull.drain(function (prog) {
       prog.id = 'animal friends'
       var target = F+N+3
-      console.log(prog, target)
-//      progress.push(prog)
-//      process.stdout.write(bar(prog))
+      process.stdout.write(bar(prog))
       if(prog.progress === target) {
         console.log("DONE!!!!")
         var time = (Date.now() - start) / 1000
         console.log('replicated', target, 'messages in', time, 'at rate',target/time)
+        t.equal(c, 1, 'everything replicated within a single connection')
         animalFriends.close(true)
+        drain.abort()
         t.end()
       }
     })
@@ -271,9 +292,5 @@ tape('shutdown', function (t) {
   animalNetwork.close(true)
   t.end()
 })
-
-
-
-
 
 

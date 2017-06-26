@@ -1,3 +1,4 @@
+'use strict'
 var ip = require('ip')
 var onWakeup = require('on-wakeup')
 var onNetwork = require('on-change-network')
@@ -35,7 +36,7 @@ function peerNext(peer, opts) {
 //(i.e. if there is only localhost)
 
 function isOffline (e) {
-  if(ip.isLoopback(e.host)) return false
+  if(ip.isLoopback(e.host) || e.host == 'localhost') return false
   return !hasNetwork()
 }
 
@@ -44,7 +45,12 @@ var isOnline = not(isOffline)
 function isLocal (e) {
   // don't rely on private ip address, because
   // cjdns creates fake private ip addresses.
-  return ip.isPrivate(e.host) && e.source === 'local'
+  // ignore localhost addresses, because sometimes they get broadcast.
+  return !ip.isLoopback(e.host) && ip.isPrivate(e.host) && e.source === 'local'
+}
+
+function isSeed (e) {
+  return e.source === 'seed'
 }
 
 function isFriend (e) {
@@ -99,17 +105,16 @@ function select(peers, ts, filter, opts) {
 
 var schedule = exports = module.exports =
 function (gossip, config, server) {
-//  return
-  var min = 60e3, hour = 60*60e3
+  var min = 60e3, hour = 60*60e3, closed = false
 
   //trigger hard reconnect after suspend or local network changes
   onWakeup(gossip.reconnect)
   onNetwork(gossip.reconnect)
 
   function conf(name, def) {
-    if(!config.gossip) return def
+    if(config.gossip == null) return def
     var value = config.gossip[name]
-    return (value === undefined || value === '') ? def : value
+    return (value == null || value === '') ? def : value
   }
 
   function connect (peers, ts, name, filter, opts) {
@@ -135,67 +140,74 @@ function (gossip, config, server) {
 
   var connecting = false
   function connections () {
-    if(connecting) return
+    if(connecting || closed) return
     connecting = true
-    setTimeout(function () {
+    var timer = setTimeout(function () {
       connecting = false
+
+      // don't attempt to connect while migration is running
+      if (!server.ready()) return
+
       var ts = Date.now()
       var peers = gossip.peers()
 
       var connected = peers.filter(and(isConnect, not(isLocal), not(isFriend))).length
+
       var connectedFriends = peers.filter(and(isConnect, isFriend)).length
 
-      connect(peers, ts, 'local', isLocal, {
-        quota: 3, factor: 2e3, max: 10*min, groupMin: 1e3,
-        disable: !conf('local', true)
-      })
-
-      // prioritize friends
-      connect(peers, ts, 'friends', and(exports.isFriend, exports.isLongterm), {
-        quota: 2, factor: 10e3, max: 10*min, groupMin: 5e3,
-        disable: !conf('local', true)
-      })
-
-      if (connectedFriends < 2)
-        connect(peers, ts, 'attemptFriend', and(exports.isFriend, exports.isUnattempted), {
-          min: 0, quota: 1, factor: 0, max: 0, groupMin: 0,
-          disable: !conf('global', true)
+      if(conf('seed', true))
+        connect(peers, ts, 'seeds', isSeed, {
+          quota: 3, factor: 2e3, max: 10*min, groupMin: 1e3,
         })
 
-      connect(peers, ts, 'retryFriends', and(exports.isFriend, exports.isInactive), {
-        min: 0,
-        quota: 3, factor: 60e3, max: 3*60*60e3, groupMin: 5*60e3
-      })
-
-      // standard longterm peers
-      connect(peers, ts, 'longterm', and(
-        exports.isLongterm,
-        not(exports.isFriend),
-        not(exports.isLocal)
-      ), {
-        quota: 2, factor: 10e3, max: 10*min, groupMin: 5e3,
-        disable: !conf('global', true)
-      })
-
-      if(!connected)
-        connect(peers, ts, 'attempt', exports.isUnattempted, {
-          min: 0, quota: 1, factor: 0, max: 0, groupMin: 0,
-          disable: !conf('global', true)
+      if(conf('local', true))
+        connect(peers, ts, 'local', isLocal, {
+          quota: 3, factor: 2e3, max: 10*min, groupMin: 1e3,
         })
 
-      //quota, groupMin, min, factor, max
-      connect(peers, ts, 'retry', exports.isInactive, {
-        min: 0,
-        quota: 3, factor: 5*60e3, max: 3*60*60e3, groupMin: 5*50e3
-      })
+      if(conf('global', true)) {
+        // prioritize friends
+        connect(peers, ts, 'friends', and(exports.isFriend, exports.isLongterm), {
+          quota: 2, factor: 10e3, max: 10*min, groupMin: 5e3,
+        })
 
-      var longterm = peers.filter(isConnect).filter(isLongterm).length
+        if (connectedFriends < 2)
+          connect(peers, ts, 'attemptFriend', and(exports.isFriend, exports.isUnattempted), {
+            min: 0, quota: 1, factor: 0, max: 0, groupMin: 0,
+          })
 
-      connect(peers, ts, 'legacy', exports.isLegacy, {
-        quota: 3 - longterm,
-        factor: 5*min, max: 3*hour, groupMin: 5*min,
-        disable: !conf('global', true)
-      })
+        connect(peers, ts, 'retryFriends', and(exports.isFriend, exports.isInactive), {
+          min: 0,
+          quota: 3, factor: 60e3, max: 3*60*60e3, groupMin: 5*60e3,
+        })
+
+        // standard longterm peers
+        connect(peers, ts, 'longterm', and(
+          exports.isLongterm,
+          not(exports.isFriend),
+          not(exports.isLocal)
+        ), {
+          quota: 2, factor: 10e3, max: 10*min, groupMin: 5e3,
+        })
+
+        if(!connected)
+          connect(peers, ts, 'attempt', exports.isUnattempted, {
+            min: 0, quota: 1, factor: 0, max: 0, groupMin: 0,
+          })
+
+        //quota, groupMin, min, factor, max
+        connect(peers, ts, 'retry', exports.isInactive, {
+          min: 0,
+          quota: 3, factor: 5*60e3, max: 3*60*60e3, groupMin: 5*50e3,
+        })
+
+        var longterm = peers.filter(isConnect).filter(isLongterm).length
+
+        connect(peers, ts, 'legacy', exports.isLegacy, {
+          quota: 3 - longterm,
+          factor: 5*min, max: 3*hour, groupMin: 5*min,
+        })
+      }
 
       peers.filter(isConnect).forEach(function (e) {
         var permanent = exports.isLongterm(e) || exports.isLocal(e)
@@ -205,7 +217,7 @@ function (gossip, config, server) {
       })
 
     }, 100*Math.random())
-
+    if(timer.unref) timer.unref()
   }
 
     pull(
@@ -221,6 +233,10 @@ function (gossip, config, server) {
 
     connections()
 
+  return function onClose () {
+    closed = true
+  }
+
 }
 
 exports.isUnattempted = isUnattempted
@@ -231,9 +247,6 @@ exports.isLocal = isLocal
 exports.isFriend = isFriend
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
-
-
-
 
 
 

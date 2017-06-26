@@ -352,7 +352,18 @@ Outputs information in the following form:
 
 
 
-## since: sync
+## progress: sync
 
-get the current state of the internal flumelog
+returns an object reflecting the progress state of various plugins.
+the return value is a `{}` with subobjects showing `{start,current,target}`
+to represent progress. Currently implemented are `migration` (legacy->flume)
+migration progress and `indexes` (index regeneration).
 
+
+## status: sync
+
+returns an object reflecting the status of various ssb operations,
+such as db read activity, connection statuses, etc, etc. The purpose is to provide
+an overview of how ssb is working.
+
+## getVectorClock: async

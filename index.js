@@ -15,7 +15,9 @@ function isObject(o) { return 'object' === typeof o }
 function isFunction (f) { return 'function' === typeof f }
 // create SecretStack definition
 var manifest = mdm.manifest(apidocs._)
+manifest.seq = 'async'
 manifest.usage = 'sync'
+manifest.clock = 'async'
 var SSB = {
   manifest: manifest,
   permissions: {
@@ -59,19 +61,35 @@ var SSB = {
 
     function since () {
       var plugs = {}
+      var sync = true
       for(var k in ssb) {
-        if(ssb[k] && isObject(ssb[k]) && isFunction(ssb[k].since))
+        if(ssb[k] && isObject(ssb[k]) && isFunction(ssb[k].since)) {
           plugs[k] = ssb[k].since.value
+          sync = sync && (plugs[k] === ssb.since.value)
+        }
       }
       return {
         since: ssb.since.value,
-        plugins: plugs
+        plugins: plugs,
+        sync: sync,
       }
     }
 
     return {
       id                       : feed.id,
       keys                     : opts.keys,
+
+      ready                    : function () {
+        return ssb.ready.value
+      },
+
+      progress                 : function () {
+        return ssb.progress
+      },
+
+      status                   : function () {
+        return {db: ssb.status, sync: since() }
+      },
 
       //temporary!
       _flumeUse                :
@@ -85,9 +103,8 @@ var SSB = {
 
       publish                  : valid.async(feed.add, 'string|msgContent'),
       add                      : valid.async(ssb.add, 'msg'),
-      get                      : valid.async(ssb.get, 'msgId'),
+      get                      : valid.async(ssb.get, 'msgId|number'),
 
-      pre                      : ssb.pre,
       post                     : ssb.post,
 
       since                    : since,
@@ -108,7 +125,8 @@ var SSB = {
       sublevel                 : ssb.sublevel,
       messagesByType           : valid.source(ssb.messagesByType, 'string|messagesByTypeOpts'),
       createWriteStream        : ssb.createWriteStream,
-//      createLatestLookupStream : ssb.createLatestLookupStream,
+      getVectorClock           : ssb.getVectorClock,
+      getAtSequence            : ssb.getAtSequence,
     }
   }
 }
@@ -143,7 +161,3 @@ module.exports = SecretStack({
   appKey: require('./lib/ssb-cap')
 })
 .use(SSB)
-
-
-
-

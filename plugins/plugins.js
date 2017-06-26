@@ -6,7 +6,7 @@ var cat = require('pull-cat')
 var many = require('pull-many')
 var pushable = require('pull-pushable')
 var toPull = require('stream-to-pull-stream')
-var spawn = require('child_process').spawn
+var spawn = require('cross-spawn')
 var mkdirp = require('mkdirp')
 var osenv = require('osenv')
 var rimraf = require('rimraf')
@@ -74,7 +74,7 @@ module.exports = {
       fs.writeFileSync(cfgPath, JSON.stringify(existingConfig, null, 2), 'utf-8')
     }
 
-    return { 
+    return {
       install: valid.source(function (pluginName, opts) {
         var p = pushable()
         var dryRun = opts && opts['dry-run']
@@ -172,30 +172,22 @@ module.exports = {
 module.exports.loadUserPlugins = function (createSbot, config) {
   // iterate all modules
   var nodeModulesPath = path.join(config.path, 'node_modules')
-  try {
-    console.log('Loading plugins from', nodeModulesPath)
-    fs.readdirSync(nodeModulesPath).forEach(function (filename) {
-      if (filename.charAt(0) == '.')
-        return // ignore
-      if (!config.plugins[filename])
-        return console.log('Skipping disabled plugin "'+filename+'"')
-      console.log('Loading plugin "'+filename+'"')
+  //instead of testing all plugins, only load things explicitly
+  //enabled in the config
+  for(var module_name in config.plugins) {
+    if(config.plugins[module_name]) {
+    var name = config.plugins[module_name]
+    if(name === true)
+      name = /^ssb-/.test(module_name) ? module_name.substring(4) : module_name
 
-      try {
-        // load module
-        var plugin = require(path.join(nodeModulesPath, filename))
-
-        // check the signature
-        assertSbotPlugin(plugin)
-
-        // load
-        createSbot.use(plugin)
-      } catch (e) {
-        console.error('Error loading plugin "'+filename+'":', e.message)
-      }
-    })
-  } catch (e) {
-    // node_modules dne, ignore
+    if (createSbot.plugins.some(plug => plug.name === name))
+      throw new Error('already loaded plugin named:'+name)
+      var plugin = require(path.join(nodeModulesPath, module_name))
+      if(plugin.name !== name)
+        throw new Error('plugin at:'+module_name+' expected name:'+name+' but had:'+plugin.name)
+      assertSbotPlugin(plugin)
+      createSbot.use(plugin)
+    }
   }
 }
 
@@ -222,3 +214,5 @@ function validatePluginName (name) {
     return false
   return true
 }
+
+

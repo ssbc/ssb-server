@@ -7,10 +7,8 @@ var u         = require('./util')
 var ssbKeys = require('ssb-keys')
 
 var createSbot = require('../')
-  .use(require('../plugins/friends'))
   .use(require('../plugins/replicate'))
-//  .use(require('../plugins/gossip'))
-//  .use(require('../plugins/logging'))
+  .use(require('ssb-friends'))
 
 tape('replicate between 3 peers', function (t) {
 
@@ -70,3 +68,5 @@ tape('replicate between 3 peers', function (t) {
 
   })
 })
+
+

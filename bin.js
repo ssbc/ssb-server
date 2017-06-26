@@ -12,6 +12,7 @@ var createHash   = require('multiblob/util').createHash
 var minimist     = require('minimist')
 var muxrpcli     = require('muxrpcli')
 var cmdAliases   = require('./lib/cli-cmd-aliases')
+var ProgressBar  = require('./lib/progress')
 
 //get config as cli options after --, options before that are
 //options to the command.
@@ -38,19 +39,20 @@ if (argv[0] == 'server') {
     .use(require('./plugins/plugins'))
     .use(require('./plugins/master'))
     .use(require('./plugins/gossip'))
-    .use(require('./plugins/friends'))
-//    .use(require('./plugins/friends2'))
     .use(require('./plugins/replicate'))
+    .use(require('ssb-friends'))
     .use(require('ssb-blobs'))
-//    .use(require('./plugins/invite'))
-//    .use(require('./plugins/block'))
+    .use(require('./plugins/invite'))
     .use(require('./plugins/local'))
     .use(require('./plugins/logging'))
     .use(require('./plugins/private'))
     .use(require('ssb-query'))
     .use(require('ssb-links'))
     .use(require('ssb-ws'))
-//
+
+  // add third-party plugins
+  require('./plugins/plugins').loadUserPlugins(createSbot, config)
+
   // start server
 
   config.keys = keys
@@ -58,6 +60,9 @@ if (argv[0] == 'server') {
 
   // write RPC manifest to ~/.ssb/manifest.json
   fs.writeFileSync(manifestFile, JSON.stringify(server.getManifest(), null, 2))
+
+  if(process.stdout.isTTY)
+    ProgressBar(server.progress)
 } else {
 
   // normal command:
@@ -79,6 +84,7 @@ if (argv[0] == 'server') {
     manifest: manifest,
     port: config.port,
     host: config.host||'localhost',
+    caps: config.caps,
     key: config.key || keys.id
   }, function (err, rpc) {
     if(err) {
@@ -142,12 +148,5 @@ if (argv[0] == 'server') {
     muxrpcli(argv, manifest, rpc, config.verbose)
   })
 }
-
-
-
-
-
-
-
 
 
