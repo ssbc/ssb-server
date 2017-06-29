@@ -55,7 +55,7 @@
     "ssb-blobs": "^1.0.1",
     "ssb-client": "^4.4.1",
     "ssb-config": "^2.0.0",
-    "ssb-friends": "^2.0.1",
+    "ssb-friends": "^2.0.5",
     "ssb-keys": "^7.0.0",
     "ssb-links": "^3.0.0",
     "ssb-msgs": "~5.2.0",
