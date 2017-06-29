@@ -1,7 +1,7 @@
 {
   "name": "scuttlebot",
   "description": "network protocol layer for secure-scuttlebutt",
-  "version": "10.2.1",
+  "version": "10.3.0",
   "homepage": "https://github.com/ssbc/scuttlebot",
   "repository": {
     "type": "git",
@@ -55,7 +55,6 @@
     "ssb-blobs": "^1.0.1",
     "ssb-client": "^4.4.1",
     "ssb-config": "^2.0.0",
-    "ssb-ebt": "0.0.7",
     "ssb-friends": "^2.0.1",
     "ssb-keys": "^7.0.0",
     "ssb-links": "^3.0.0",
@@ -77,7 +76,8 @@
     "tape": "~4.0.0"
   },
   "bin": {
-    "sbot": "./bin.js"
+    "sbot": "./bin.js",
+    "scuttlebot": "./bin.js"
   },
   "scripts": {
     "prepublishOnly": "npm ls && npm test",
