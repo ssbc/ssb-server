@@ -276,6 +276,10 @@ module.exports = {
     //get current state
 
     server.on('rpc:connect', function (rpc, isClient) {
+
+      // if we're not ready, close this connection immediately
+      if (!server.ready() && rpc.id !== server.id) return rpc.close()
+
       var peer = getPeer(rpc.id)
       //don't track clients that connect, but arn't considered peers.
       //maybe we should though?
