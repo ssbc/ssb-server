@@ -241,6 +241,7 @@ module.exports = {
         var index = peers.indexOf(peer)
         if (~index) {
           peers.splice(index, 1)
+          notify({ type: 'remove', peer: peer })
         }
       },
       ping: function (opts) {
