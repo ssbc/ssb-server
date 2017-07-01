@@ -98,6 +98,8 @@ var SSB = {
           return ssb[name]
         },
 
+      stream: ssb.stream, //read the raw log
+
       usage                    : valid.sync(usage, 'string?|boolean?'),
       close                    : valid.async(close),
 

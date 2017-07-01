@@ -367,3 +367,7 @@ such as db read activity, connection statuses, etc, etc. The purpose is to provi
 an overview of how ssb is working.
 
 ## getVectorClock: async
+
+## stream: source
+
+stream the raw flumelog
