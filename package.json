@@ -61,7 +61,7 @@
     "ssb-msgs": "~5.2.0",
     "ssb-query": "^1.0.0",
     "ssb-ref": "^2.7.1",
-    "ssb-ws": "^1.0.1",
+    "ssb-ws": "^1.0.3",
     "statistics": "^3.0.0",
     "stream-to-pull-stream": "^1.6.10",
     "zerr": "^1.0.0"
