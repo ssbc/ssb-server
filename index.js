@@ -74,8 +74,8 @@ var SSB = {
         sync: sync,
       }
     }
-
-    return {
+    var self
+    return self = {
       id                       : feed.id,
       keys                     : opts.keys,
 
@@ -88,7 +88,7 @@ var SSB = {
       },
 
       status                   : function () {
-        return {db: ssb.status, sync: since() }
+        return {progress: self.progress(), db: ssb.status, sync: since() }
       },
 
       //temporary!
