@@ -185,6 +185,7 @@ module.exports = {
         opts = ref.parseAddress(ref.parseInvite(invite).remote)
 
         ssbClient(null, {
+          caps: config.caps,
           remote: invite,
           manifest: {invite: {use: 'async'}, getAddress: 'async'}
         }, function (err, rpc) {
