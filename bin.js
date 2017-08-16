@@ -12,7 +12,7 @@ var createHash   = require('multiblob/util').createHash
 var minimist     = require('minimist')
 var muxrpcli     = require('muxrpcli')
 var cmdAliases   = require('./lib/cli-cmd-aliases')
-var ProgressBar  = require('./lib/progress')
+// var ProgressBar  = require('./lib/progress')
 
 //get config as cli options after --, options before that are
 //options to the command.
@@ -49,6 +49,7 @@ if (argv[0] == 'server') {
     .use(require('ssb-query'))
     .use(require('ssb-links'))
     .use(require('ssb-ws'))
+    .use(require('ssb-ebt'))
 
   // add third-party plugins
   require('./plugins/plugins').loadUserPlugins(createSbot, config)
@@ -61,8 +62,8 @@ if (argv[0] == 'server') {
   // write RPC manifest to ~/.ssb/manifest.json
   fs.writeFileSync(manifestFile, JSON.stringify(server.getManifest(), null, 2))
 
-  if(process.stdout.isTTY)
-    ProgressBar(server.progress)
+  //if(process.stdout.isTTY)
+    //ProgressBar(server.progress)
 } else {
 
   // normal command:
