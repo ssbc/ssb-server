@@ -2,7 +2,6 @@
 var ip = require('ip')
 var onWakeup = require('on-wakeup')
 var onNetwork = require('on-change-network')
-var hasNetwork = require('../../lib/has-network-debounced')
 
 var pull = require('pull-stream')
 
@@ -30,17 +29,6 @@ function maxStateChange (M, e) {
 function peerNext(peer, opts) {
   return (peer.stateChange|0) + delay(peer.failure|0, opts.factor, opts.max)
 }
-
-
-//detect if not connected to wifi or other network
-//(i.e. if there is only localhost)
-
-function isOffline (e) {
-  if(ip.isLoopback(e.host) || e.host == 'localhost') return false
-  return !hasNetwork()
-}
-
-var isOnline = not(isOffline)
 
 function isLocal (e) {
   // don't rely on private ip address, because
@@ -130,7 +118,7 @@ function (gossip, config, server) {
     }
 
     //will return [] if the quota is full
-    var selected = select(peers, ts, and(filter, isOnline), opts)
+    var selected = select(peers, ts, and(filter), opts)
     selected
       .forEach(function (peer) {
         gossip.connect(peer)
