@@ -1,7 +1,7 @@
 {
   "name": "scuttlebot",
   "description": "network protocol layer for secure-scuttlebutt",
-  "version": "10.4.4",
+  "version": "10.4.6",
   "homepage": "https://github.com/ssbc/scuttlebot",
   "repository": {
     "type": "git",
@@ -31,6 +31,7 @@
     "mv": "^2.1.1",
     "non-private-ip": "~1.1.0",
     "observ-debounce": "^1.1.1",
+    "obv": "0.0.1",
     "on-change-network": "0.0.2",
     "on-wakeup": "^1.0.0",
     "osenv": "^0.1.3",
