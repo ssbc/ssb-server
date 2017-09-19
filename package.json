@@ -1,7 +1,7 @@
 {
   "name": "scuttlebot",
   "description": "network protocol layer for secure-scuttlebutt",
-  "version": "10.4.5",
+  "version": "10.4.6",
   "homepage": "https://github.com/ssbc/scuttlebot",
   "repository": {
     "type": "git",
