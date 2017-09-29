@@ -137,6 +137,13 @@ function (gossip, config, server) {
       })
   }
 
+  function currentlyDownloading () {
+    // don't schedule gossip if currently downloading messages
+    if (server.lastMessageAt && server.lastMessageAt > Date.now() - 500) {
+      console.log('skip gossip')
+      return true
+    }
+  }
 
   var connecting = false
   function connections () {
@@ -146,7 +153,7 @@ function (gossip, config, server) {
       connecting = false
 
       // don't attempt to connect while migration is running
-      if (!server.ready()) return
+      if (!server.ready() || currentlyDownloading()) return
 
       var ts = Date.now()
       var peers = gossip.peers()
@@ -247,7 +254,3 @@ exports.isLocal = isLocal
 exports.isFriend = isFriend
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
-
-
-
-
