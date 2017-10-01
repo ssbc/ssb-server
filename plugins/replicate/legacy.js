@@ -196,7 +196,7 @@ module.exports = function (sbot, notify, config) {
   function localPeers () {
     if(!sbot.gossip) return
     sbot.gossip.peers().forEach(function (e) {
-      if (e.source === 'local' && toSend[e.key] == null)
+      if (e.source === 'local')
         request(e.key)
     })
   }
