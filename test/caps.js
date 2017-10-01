@@ -64,11 +64,11 @@ tape('signatures not accepted if made from different caps', function (t) {
 
 
   dbA.publish({type: 'test', foo: true}, function (err, msg) {
-
+    if(err) throw err
     console.log(msg)
     dbB.add(msg.value, function (err) {
       t.ok(err) //should not be valid in this universe
-      t.ok(/signature was invalid/.test(err.message))
+      t.ok(/invalid signature/.test(err.message))
       console.log(err.stack)
       t.end()
 
