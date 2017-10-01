@@ -1,3 +1,5 @@
+//WARNING: this test currently only passes
+//if the computer has a network.
 var sbot = require('../')
 var ssbKeys = require('ssb-keys')
 var tape = require('tape')
@@ -42,6 +44,7 @@ tape('test invite.accept api', function (t) {
   alice.invite.create(1, function (err, invite) {
     if(err) throw err
     //test that invite is accepted with quotes around it.
+    console.log('INVITE', invite)
     bob.invite.accept(JSON.stringify(invite), function (err) {
       if(err) throw err
       alice.friends.hops({
@@ -148,7 +151,6 @@ tape('test invite.accept api with ipv6', function (t) {
     if(err) throw err
 
     // use a local ipv6 address in the invite
-//    if(/localhost/.test(invite))
 
     var inviteV6
         
@@ -194,6 +196,7 @@ tape('test invite.create with modern', function (t) {
     if(err) throw err
     //test that invite is accepted with quotes around it.
     t.ok(/^ws/.test(invite)) //should be over websockets
+    console.log(invite)
     bob.invite.accept(JSON.stringify(invite), function (err, msg) {
       if(err) throw err
       alice.friends.hops({
@@ -203,7 +206,6 @@ tape('test invite.create with modern', function (t) {
         t.equal(hops[bob.id], 1, 'alice follows bob')
         carol.invite.accept(invite, function (err) {
           t.ok(err)
-//          if(err) throw err
           alice.friends.hops({
             source: alice.id, dest: bob.id
           }, function (err, hops) {
@@ -251,8 +253,6 @@ tape('test invite.accept doesnt follow if already followed', function (t) {
       })
     })
   })
-
-
 })
 
 
@@ -292,7 +292,6 @@ tape('test invite with note', function (t) {
     })
   })
 })
-
 
 
 

@@ -1,7 +1,7 @@
 {
   "name": "scuttlebot",
   "description": "network protocol layer for secure-scuttlebutt",
-  "version": "10.4.6",
+  "version": "10.4.7",
   "homepage": "https://github.com/ssbc/scuttlebot",
   "repository": {
     "type": "git",
@@ -10,11 +10,12 @@
   "dependencies": {
     "atomic-file": "0.0.1",
     "bash-color": "~0.0.3",
-    "broadcast-stream": "~0.0.0",
+    "broadcast-stream": "^0.2.0",
     "cont": "~1.0.3",
     "cross-spawn": "^5.1.0",
     "deep-equal": "^1.0.1",
     "explain-error": "^1.0.3",
+    "flumelog-offset": "^3.2.2",
     "flumeview-reduce": "^1.1.0",
     "graphreduce": "^3.0.2",
     "has-network": "0.0.1",
