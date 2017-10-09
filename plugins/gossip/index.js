@@ -157,7 +157,7 @@ module.exports = {
         })
       },
       connect: valid.async(function (addr, cb) {
-        console.log("CONNECT", addr)
+        server.emit('log:info', ['CONNECT', addr])
         addr = ref.parseAddress(addr)
         if (!addr || typeof addr != 'object')
           return cb(new Error('first param must be an address'))
@@ -286,9 +286,9 @@ module.exports = {
       //maybe we should though?
       if(!peer) {
         if(rpc.id !== server.id) {
-          console.log('Connected', rpc.id)
+          server.emit('log:info', ['Connected', rpc.id])
           rpc.on('closed', function () {
-            console.log('Disconnected', rpc.id)
+            server.emit('log:info', ['Disconnected', rpc.id])
           })
         }
         return
@@ -296,7 +296,7 @@ module.exports = {
 
       status[rpc.id] = simplify(peer)
 
-      console.log('Connected', stringify(peer))
+      server.emit('log:info', ['Connected', stringify(peer)])
       //means that we have created this connection, not received it.
       peer.client = !!isClient
       peer.state = 'connected'
@@ -321,7 +321,7 @@ module.exports = {
 
       rpc.on('closed', function () {
         delete status[rpc.id]
-        console.log('Disconnected', stringify(peer))
+        server.emit('log:info', ['Disconnected', stringify(peer)])
         //track whether we have successfully connected.
         //or how many failures there have been.
         var since = peer.stateChange
