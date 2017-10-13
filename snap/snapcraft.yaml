@@ -1,0 +1,29 @@
+name: scuttlebot
+version: master
+summary: The gossip and replication server for Secure Scuttlebutt
+description: |
+  Scuttlebot is an open source peer-to-peer log store used as a database,
+  identity provider, and messaging system. It has:
+
+    Global replication
+    File-synchronization
+    End-to-end encryption
+
+  Scuttlebot behaves just like a Kappa Architecture DB. In the background, it
+  syncs with known peers. Peers do not have to be trusted, and can share logs
+  and files on behalf of other peers, as each log is an unforgeable append-only
+  message feed. This means Scuttlebots comprise a global gossip-protocol
+  mesh without any host dependencies.
+
+grade: devel # must be 'stable' to release into candidate/stable channels
+confinement: devmode # use 'strict' once you have the right plugs and slots
+
+apps:
+  sbot:
+    command: sbot
+    plugs: [home, network, network-bind]
+
+parts:
+  scuttlebot:
+    source: .
+    plugin: nodejs
