@@ -183,8 +183,8 @@ module.exports.loadUserPlugins = function (createSbot, config) {
     if (createSbot.plugins.some(plug => plug.name === name))
       throw new Error('already loaded plugin named:'+name)
       var plugin = require(path.join(nodeModulesPath, module_name))
-      if(plugin.name !== name)
-        throw new Error('plugin at:'+module_name+' expected name:'+name+' but had:'+plugin.name)
+      if(!plugin || plugin.name !== name)
+        throw new Error('plugin at:'+module_name+' expected name:'+name+' but had:'+(plugin||{}).name)
       assertSbotPlugin(plugin)
       createSbot.use(plugin)
     }
