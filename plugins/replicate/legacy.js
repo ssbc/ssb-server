@@ -80,7 +80,7 @@ module.exports = function (sbot, notify, config) {
     var legacyToRecv = {}
 
     Object.keys(pendingFeedsForPeer).forEach(function (peerId) {
-      if (pendingFeedsForPeer[peerId]) {
+      if (pendingFeedsForPeer[peerId] && pendingFeedsForPeer[peerId].size) {
         Object.keys(toSend).forEach(function (feedId) {
           if (peerHas[peerId] && peerHas[peerId][feedId]) {
             if (peerHas[peerId][feedId] > toSend[feedId]) {
@@ -88,9 +88,7 @@ module.exports = function (sbot, notify, config) {
             }
           }
         })
-        if (pendingFeedsForPeer[peerId].size) {
-          pendingPeers[peerId] = pendingFeedsForPeer[peerId].size
-        }
+        pendingPeers[peerId] = pendingFeedsForPeer[peerId].size
       }
     })
 
@@ -350,4 +348,3 @@ module.exports = function (sbot, notify, config) {
     changes: notify.listen
   }
 }
-
