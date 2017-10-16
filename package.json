@@ -1,7 +1,7 @@
 {
   "name": "scuttlebot",
   "description": "network protocol layer for secure-scuttlebutt",
-  "version": "10.4.7",
+  "version": "10.4.10",
   "homepage": "https://github.com/ssbc/scuttlebot",
   "repository": {
     "type": "git",
@@ -10,7 +10,7 @@
   "dependencies": {
     "atomic-file": "0.0.1",
     "bash-color": "~0.0.3",
-    "broadcast-stream": "^0.2.0",
+    "broadcast-stream": "^0.2.1",
     "cont": "~1.0.3",
     "cross-spawn": "^5.1.0",
     "deep-equal": "^1.0.1",
@@ -53,7 +53,7 @@
     "pull-stringify": "~1.2.2",
     "rimraf": "^2.4.2",
     "secret-stack": "^4.0.0",
-    "secure-scuttlebutt": "^16.3.2",
+    "secure-scuttlebutt": "^16.3.8",
     "ssb-blobs": "^1.0.1",
     "ssb-client": "^4.4.1",
     "ssb-config": "^2.0.0",
