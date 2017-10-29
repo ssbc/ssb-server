@@ -12,7 +12,6 @@ var dogs = require('dog-names')
 
 var generated = {}, F=100,N=10000
 
-
 //build a random network, with n members.
 function bar (prog) {
   var r = prog.progress/prog.total
@@ -191,7 +190,8 @@ tape('read all history streams', function (t) {
   pull(
     dump.createLogStream({live: true, keys: false}),
     pull.drain(function (e) {
-      live ++
+      if(!(live ++ % 100))
+      console.log('live', live)
     })
   )
 
