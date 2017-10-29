@@ -68,7 +68,7 @@ tape('signatures not accepted if made from different caps', function (t) {
     console.log(msg)
     dbB.add(msg.value, function (err) {
       t.ok(err) //should not be valid in this universe
-      t.ok(/invalid signature/.test(err.message))
+      t.ok(/invalid/.test(err.message))
       console.log(err.stack)
       t.end()
 
