@@ -103,6 +103,7 @@ var SSB = {
 
       publish                  : valid.async(feed.add, 'string|msgContent'),
       add                      : valid.async(ssb.add, 'msg'),
+      queue                      : valid.async(ssb.queue, 'msg'),
       get                      : valid.async(ssb.get, 'msgId|number'),
 
       post                     : ssb.post,
@@ -161,3 +162,4 @@ module.exports = SecretStack({
   appKey: require('./lib/ssb-cap')
 })
 .use(SSB)
+

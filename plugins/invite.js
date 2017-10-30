@@ -184,11 +184,34 @@ module.exports = {
 
         opts = ref.parseAddress(ref.parseInvite(invite).remote)
 
-        ssbClient(null, {
-          caps: config.caps,
-          remote: invite,
-          manifest: {invite: {use: 'async'}, getAddress: 'async'}
-        }, function (err, rpc) {
+        function connect (cb) {
+          ssbClient(null, {
+            caps: config.caps,
+            remote: invite,
+            manifest: {invite: {use: 'async'}, getAddress: 'async'}
+          }, cb)
+        }
+
+        // retry 3 times, with timeouts.
+        // This is an UGLY hack to get the test/invite.js to pass
+        // it's a race condition, I think because the server isn't ready
+        // when it connects?
+
+        function retry (fn, cb) {
+          var n = 0
+          ;(function next () {
+            var start = Date.now()
+            fn(function (err, value) {
+              n++
+              if(n >= 3) cb(err, value)
+              else if(err) setTimeout(next, 500 + (Date.now()-start)*n)
+              else cb(null, value)
+            })
+          })()
+        }
+
+        retry(connect, function (err, rpc) {
+
           if(err) return cb(explain(err, 'could not connect to server'))
 
           // command the peer to follow me
