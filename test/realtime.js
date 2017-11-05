@@ -45,9 +45,8 @@ tape('replicate between 3 peers', function (t) {
       })
     )
     var l = 12
-    var int = setInterval(function () {
+    setTimeout(function next () {
       if(!--l) {
-        clearInterval(int)
         var _ary = []
           pull(
             bob.createHistoryStream({id: alice.id, sequence: 0, keys: false}),
@@ -63,10 +62,10 @@ tape('replicate between 3 peers', function (t) {
           function (err, msg){
             if(err) throw err
             console.log('added', msg.key, msg.value.sequence)
+            setTimeout(next, 200)
           })
     }, 200)
 
   })
 })
-
 
