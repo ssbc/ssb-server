@@ -60,7 +60,7 @@
     "ssb-client": "^4.4.1",
     "ssb-config": "^2.0.0",
     "ssb-friends": "^2.3.2",
-    "ssb-keys": "^7.0.12",
+    "ssb-keys": "^7.0.13",
     "ssb-links": "^3.0.0",
     "ssb-msgs": "~5.2.0",
     "ssb-query": "^1.0.0",
