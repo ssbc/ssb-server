@@ -94,10 +94,10 @@ function select(peers, ts, filter, opts) {
   //opts: { quota, groupMin, min, factor, max }
   var type = peers.filter(filter)
   var unconnect = type.filter(not(isConnect))
-  var count = Math.max(opts.quota - type.filter(isConnect).length, 0)
   var min = unconnect.reduce(maxStateChange, 0) + opts.groupMin
   if(ts < min) return []
 
+  var count = Math.min(opts.quota, type.filter(isConnect).length)
   return earliest(unconnect.filter(function (peer) {
     return peerNext(peer, opts) < ts
   }), count)
