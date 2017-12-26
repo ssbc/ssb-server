@@ -71,7 +71,12 @@ module.exports = {
     var conf = config.gossip || {}
     var home = ref.parseAddress(server.getAddress())
 
-    var stateFile = AtomicFile(path.join(config.path, 'gossip.json'))
+    var gossipJsonPath = path.join(config.path, 'gossip.json')
+    var stateFile = AtomicFile(gossipJsonPath)
+    stateFile.get(function (err, ary) {
+      var peers = ary || []
+      server.emit('log:info', ['SBOT', ''+peers.length+' peers loaded from', gossipJsonPath])
+    })
 
     var status = {}
 
@@ -157,7 +162,7 @@ module.exports = {
         })
       },
       connect: valid.async(function (addr, cb) {
-        server.emit('log:info', ['SBOT', addr, 'CONNECT', addr])
+        server.emit('log:info', ['SBOT', stringify(addr), 'CONNECTING'])
         addr = ref.parseAddress(addr)
         if (!addr || typeof addr != 'object')
           return cb(new Error('first param must be an address'))
@@ -177,7 +182,7 @@ module.exports = {
             p.failure = (p.failure || 0) + 1
             p.stateChange = Date.now()
             notify({ type: 'connect-failure', peer: p })
-            server.emit('log:info', ['SBOT', p.host+':'+p.port+p.key, 'connection failed', err.message || err])
+            server.emit('log:info', ['SBOT', stringify(p), 'ERR', 'connection failed', err.message || err])
             p.duration = stats(p.duration, 0)
             return (cb && cb(err))
           }
@@ -208,6 +213,7 @@ module.exports = {
       },
       //add an address to the peer table.
       add: valid.sync(function (addr, source) {
+
         addr = ref.parseAddress(addr)
         if(!ref.isAddress(addr))
           throw new Error('not a valid address:' + JSON.stringify(addr))
@@ -284,7 +290,7 @@ module.exports = {
       var peer = getPeer(rpc.id)
       status[rpc.id] = simplify(peer)
 
-      server.emit('log:info', ['SBOT', stringify(peer), 'Connected'])
+      server.emit('log:info', ['SBOT', stringify(peer), 'CONNECTED'])
       //means that we have created this connection, not received it.
       peer.client = !!isClient
       peer.state = 'connected'
@@ -309,7 +315,6 @@ module.exports = {
 
       rpc.on('closed', function () {
         delete status[rpc.id]
-      server.emit('log:info', ['SBOT', stringify(peer), 'Disconnected'])
         //track whether we have successfully connected.
         //or how many failures there have been.
         var since = peer.stateChange
@@ -318,7 +323,7 @@ module.exports = {
         peer.duration = stats(peer.duration, peer.stateChange - since)
         peer.state = undefined
         notify({ type: 'disconnect', peer: peer })
-        server.emit('log:info', ['SBOT', rpc.id, 'disconnect'])
+        server.emit('log:info', ['SBOT', stringify(peer), 'DISCONNECTED'])
       })
 
       notify({ type: 'connect', peer: peer })

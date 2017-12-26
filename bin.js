@@ -13,6 +13,7 @@ var minimist     = require('minimist')
 var muxrpcli     = require('muxrpcli')
 var cmdAliases   = require('./lib/cli-cmd-aliases')
 var ProgressBar  = require('./lib/progress')
+var packageJson  = require('./package.json')
 
 //get config as cli options after --, options before that are
 //options to the command.
@@ -31,6 +32,8 @@ if(keys.curve === 'k256')
 var manifestFile = path.join(config.path, 'manifest.json')
 
 if (argv[0] == 'server') {
+  console.log(packageJson.name, packageJson.version, config.path, 'logging.level:'+config.logging.level)
+  console.log('my key ID:', keys.public)
 
   // special server command:
   // import sbot and start the server
@@ -135,7 +138,7 @@ if (argv[0] == 'server') {
         source,
         hasher,
         rpc.blobs.add(function (err) {
-          if (err) 
+          if (err)
             throw err
           console.log('&'+hasher.digest)
           process.exit()
