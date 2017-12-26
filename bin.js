@@ -64,7 +64,7 @@ if (argv[0] == 'server') {
   // write RPC manifest to ~/.ssb/manifest.json
   fs.writeFileSync(manifestFile, JSON.stringify(server.getManifest(), null, 2))
 
-  if(process.stdout.isTTY)
+  if(process.stdout.isTTY && (config.logging.level != 'info'))
     ProgressBar(server.progress)
 } else {
 
