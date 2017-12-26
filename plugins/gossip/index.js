@@ -282,18 +282,6 @@ module.exports = {
       if (!server.ready() && rpc.id !== server.id) return rpc.close()
 
       var peer = getPeer(rpc.id)
-      //don't track clients that connect, but arn't considered peers.
-      //maybe we should though?
-      if(!peer) {
-        if(rpc.id !== server.id) {
-          server.emit('log:info', ['SBOT', rpc.id, 'Connected'])
-          rpc.on('closed', function () {
-            server.emit('log:info', ['SBOT', rpc.id, 'Disconnected'])
-          })
-        }
-        return
-      }
-
       status[rpc.id] = simplify(peer)
 
       server.emit('log:info', ['SBOT', stringify(peer), 'Connected'])
