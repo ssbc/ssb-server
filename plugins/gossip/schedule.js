@@ -86,21 +86,17 @@ function isConnect (e) {
 function earliest(peers, n) {
   return peers.sort(function (a, b) {
     return a.stateChange - b.stateChange
-  }).slice(0, Math.max(n, 0))
+  }).slice(0, n)
 }
 
 function select(peers, ts, filter, opts) {
   if(opts.disable) return []
   //opts: { quota, groupMin, min, factor, max }
   var type = peers.filter(filter)
-  var unconnect = type.filter(not(isConnect))
-  var min = unconnect.reduce(maxStateChange, 0) + opts.groupMin
-  if(ts < min) return []
-
-  var count = Math.min(opts.quota, type.filter(isConnect).length)
-  return earliest(unconnect.filter(function (peer) {
-    return peerNext(peer, opts) < ts
-  }), count)
+  var unconnecteds = type.filter(not(isConnect))
+  var waitedLongEnough = unconnecteds.filter(peer => peerNext(peer, opts) < ts)
+  var peersReadyToConnect = earliest(waitedLongEnough , opts.quota)
+  return peersReadyToConnect
 }
 
 var schedule = exports = module.exports =
