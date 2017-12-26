@@ -208,7 +208,7 @@ function (gossip, config, server) {
       peers.filter(isConnect).forEach(function (e) {
         var permanent = exports.isLongterm(e) || exports.isLocal(e)
         if((!permanent || e.state === 'connecting') && e.stateChange + 10e3 < ts) {
-          gossip.disconnect(e)
+          gossip.handshakeTimeout(e)
         }
       })
 

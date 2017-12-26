@@ -196,6 +196,10 @@ module.exports = {
 
       }, 'string|object'),
 
+      handshakeTimeout: function(peer) {
+        server.emit('log:info', ['SBOT', stringify(peer), 'TIMEOUT handshake did not complete in 10s'])
+        this.disconnect(peer)
+      },
       disconnect: valid.async(function (addr, cb) {
         var peer = this.get(addr)
 
