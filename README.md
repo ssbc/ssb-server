@@ -30,6 +30,11 @@ it is recommended to get started with patchwork, and then look into git-ssb and 
 ## Example Usage
 
 ```bash
+# Start the server with extra log detail:
+sbot server --logging.level=info
+```
+
+```bash
 # In bash:
 
 # publish a message
