@@ -182,7 +182,7 @@ module.exports = {
             p.failure = (p.failure || 0) + 1
             p.stateChange = Date.now()
             notify({ type: 'connect-failure', peer: p })
-            server.emit('log:info', ['SBOT', stringify(p), 'ERR', 'connection failed', err.message || err])
+            server.emit('log:info', ['SBOT', stringify(p), 'ERR', (err.message || err)])
             p.duration = stats(p.duration, 0)
             return (cb && cb(err))
           }
