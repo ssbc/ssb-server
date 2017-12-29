@@ -306,7 +306,7 @@ module.exports = {
 
       status[rpc.id] = simplify(peer)
 
-      server.emit('log:info', ['SBOT', stringify(peer), 'CONNECTED'])
+      server.emit('log:info', ['SBOT', stringify(peer), 'PEER JOINED'])
       //means that we have created this connection, not received it.
       peer.client = !!isClient
       peer.state = 'connected'
@@ -331,6 +331,9 @@ module.exports = {
 
       rpc.on('closed', function () {
         delete status[rpc.id]
+        server.emit('log:info', ['SBOT', stringify(peer),
+                         ['DISCONNECTED. state was', peer.state, 'for',
+                         (new Date() - peer.stateChange)/1000, 'seconds'].join(' ')])
         //track whether we have successfully connected.
         //or how many failures there have been.
         var since = peer.stateChange
@@ -339,7 +342,6 @@ module.exports = {
         peer.duration = stats(peer.duration, peer.stateChange - since)
         peer.state = undefined
         notify({ type: 'disconnect', peer: peer })
-        server.emit('log:info', ['SBOT', stringify(peer), 'DISCONNECTED'])
       })
 
       notify({ type: 'connect', peer: peer })
