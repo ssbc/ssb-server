@@ -6,6 +6,10 @@ var hasNetwork = require('../../lib/has-network-debounced')
 
 var pull = require('pull-stream')
 
+function stringify(peer) {
+  return [peer.host, peer.port, peer.key].join(':')
+}
+
 function not (fn) {
   return function (e) { return !fn(e) }
 }
@@ -215,7 +219,8 @@ function (gossip, config, server) {
       peers.filter(isConnect).forEach(function (e) {
         var permanent = exports.isLongterm(e) || exports.isLocal(e)
         if((!permanent || e.state === 'connecting') && e.stateChange + 10e3 < ts) {
-          gossip.handshakeTimeout(e)
+          server.emit('log:info', ['SBOT', stringify(e), 'TIMEOUT handshake did not complete in 10s'])
+          gossip.disconnect(e)
         }
       })
 
