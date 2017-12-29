@@ -176,7 +176,10 @@ module.exports = {
             var parts = invite.split('~')
             opts = ref.parseAddress(parts[0])//.split(':')
             //convert legacy code to multiserver invite code.
-            invite = 'net:'+opts.host+':'+opts.port+'~shs:'+opts.key.slice(1, -8)+':'+parts[1]
+            var protocol = 'net:'
+            if (opts.host.endsWith(".onion"))
+              protocol = 'onion:'
+            invite = protocol+opts.host+':'+opts.port+'~shs:'+opts.key.slice(1, -8)+':'+parts[1]
           }
           else
             modern = true
