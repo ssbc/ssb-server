@@ -28,9 +28,12 @@ one of the best ways to learn about secure-scuttlebutt is to poke around in thes
 it is recommended to get started with patchwork, and then look into git-ssb and patchbay.
 
 ## Example Usage
-
 ```bash
 # In bash:
+
+# Start the server with extra log detail
+# Leave this running in its own terminal/window
+sbot server --logging.level=info
 
 # publish a message
 sbot publish --type post --text "My First Post!"
