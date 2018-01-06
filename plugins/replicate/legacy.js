@@ -241,6 +241,8 @@ module.exports = function (sbot, notify, config) {
 
       debounce.set()
 
+      var sync = false
+
       pull(
         rpc.createHistoryStream({
           id: upto.id,
@@ -250,12 +252,19 @@ module.exports = function (sbot, notify, config) {
         }),
 
         pull.through(detectSync(rpc.id, upto, toSend, peerHas, function () {
+          sync = true
           if (pendingFeedsForPeer[rpc.id]) {
             // this peer has finished syncing, remove from progress
             pendingFeedsForPeer[rpc.id].delete(upto.id)
             debounce.set()
           }
         })),
+
+        pull.through(() => {
+          if (!sync) {
+            sbot.lastMessageAt = Date.now()
+          }
+        }),
 
         sbot.createWriteStream(function (err) {
           if(err && !(err.message in errorsSeen)) {
