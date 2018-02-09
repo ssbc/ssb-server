@@ -31,7 +31,7 @@
     "muxrpc-validation": "^2.0.0",
     "muxrpcli": "^1.0.0",
     "mv": "^2.1.1",
-    "non-private-ip": "~1.1.0",
+    "non-private-ip": "^1.4.3",
     "observ-debounce": "^1.1.1",
     "obv": "0.0.1",
     "on-change-network": "0.0.2",
