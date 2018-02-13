@@ -6,6 +6,10 @@ var hasNetwork = require('../../lib/has-network-debounced')
 
 var pull = require('pull-stream')
 
+function stringify(peer) {
+  return [peer.host, peer.port, peer.key].join(':')
+}
+
 function not (fn) {
   return function (e) { return !fn(e) }
 }
@@ -86,21 +90,17 @@ function isConnect (e) {
 function earliest(peers, n) {
   return peers.sort(function (a, b) {
     return a.stateChange - b.stateChange
-  }).slice(0, Math.max(n, 0))
+  }).slice(0, n)
 }
 
 function select(peers, ts, filter, opts) {
   if(opts.disable) return []
   //opts: { quota, groupMin, min, factor, max }
   var type = peers.filter(filter)
-  var unconnect = type.filter(not(isConnect))
-  var count = Math.max(opts.quota - type.filter(isConnect).length, 0)
-  var min = unconnect.reduce(maxStateChange, 0) + opts.groupMin
-  if(ts < min) return []
-
-  return earliest(unconnect.filter(function (peer) {
-    return peerNext(peer, opts) < ts
-  }), count)
+  var unconnecteds = type.filter(not(isConnect))
+  var waitedLongEnough = unconnecteds.filter(peer => peerNext(peer, opts) < ts)
+  var peersReadyToConnect = earliest(waitedLongEnough , opts.quota)
+  return peersReadyToConnect
 }
 
 var schedule = exports = module.exports =
@@ -219,6 +219,7 @@ function (gossip, config, server) {
       peers.filter(isConnect).forEach(function (e) {
         var permanent = exports.isLongterm(e) || exports.isLocal(e)
         if((!permanent || e.state === 'connecting') && e.stateChange + 10e3 < ts) {
+          server.emit('log:info', ['SBOT', stringify(e), 'TIMEOUT handshake did not complete in 10s'])
           gossip.disconnect(e)
         }
       })

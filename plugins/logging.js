@@ -58,7 +58,6 @@ module.exports = function logging (server, conf) {
     console.log('Should be one of:', LOG_LEVELS.join(', '))
     level = DEFAULT_LEVEL
   }
-  console.log('Log level:', LOG_LEVELS[level])
 
   var id = server.id
   if (level >= LOG_LEVELS.indexOf('info'))
