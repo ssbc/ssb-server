@@ -137,9 +137,14 @@ function (gossip, config, server) {
       })
   }
 
-  function currentlyDownloading () {
+  var lastMessageAt
+  server.post(function (data) {
+    if(data.value.author != server.id) lastMessageAt = Date.now()
+  })
+
+  function isCurrentlyDownloading () {
     // don't schedule gossip if currently downloading messages
-    if (server.lastMessageAt && server.lastMessageAt > Date.now() - 500) {
+    if (lastMessageAt && lastMessageAt > Date.now() - 500) {
       console.log('skip gossip')
       return true
     }
@@ -153,7 +158,7 @@ function (gossip, config, server) {
       connecting = false
 
       // don't attempt to connect while migration is running
-      if (!server.ready() || currentlyDownloading()) return
+      if (!server.ready() || isCurrentlyDownloading()) return
 
       var ts = Date.now()
       var peers = gossip.peers()
