@@ -260,12 +260,6 @@ module.exports = function (sbot, notify, config) {
           }
         })),
 
-        pull.through(() => {
-          if (!sync) {
-            sbot.lastMessageAt = Date.now()
-          }
-        }),
-
         sbot.createWriteStream(function (err) {
           if(err && !(err.message in errorsSeen)) {
             errorsSeen[err.message] = true
@@ -357,3 +351,4 @@ module.exports = function (sbot, notify, config) {
     changes: notify.listen
   }
 }
+
