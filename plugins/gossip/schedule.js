@@ -145,7 +145,6 @@ function (gossip, config, server) {
   function isCurrentlyDownloading () {
     // don't schedule gossip if currently downloading messages
     if (lastMessageAt && lastMessageAt > Date.now() - 500) {
-      console.log('skip gossip')
       return true
     }
   }
