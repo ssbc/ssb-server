@@ -48,7 +48,7 @@ if (argv[0] == 'server') {
     .use(require('./plugins/invite'))
     .use(require('./plugins/local'))
     .use(require('./plugins/logging'))
-    .use(require('./plugins/private'))
+    .use(require('ssb-private'))
     .use(require('ssb-query'))
     .use(require('ssb-links'))
     .use(require('ssb-ws'))
