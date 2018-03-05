@@ -7,6 +7,7 @@ var u = require('./util')
 var createSbot = require('../')
   .use(require('../plugins/replicate'))
   .use(require('ssb-friends'))
+  .use(require('ssb-ebt'))
 
 var toAddress = require('../lib/util').toAddress
 
@@ -26,25 +27,29 @@ function once (fn) {
 // 2. alice never tries to connect to bob. (removed from peers)
 // 3. carol will not give bob any, she will not give him any data from alice.
 
+var crypto = require('crypto')
+function seed (name) {
+  return crypto.createHash('sha256').update(name).digest()
+}
+
 var alice = createSbot({
   temp:'test-block-alice', timeout: 1400,
-  keys:ssbKeys.generate()
+  keys:ssbKeys.generate(null, seed('alice')),
+  replicate: { legacy: false }
 })
 
 var bob = createSbot({
   temp: 'test-block-bob', timeout: 600,
-  keys:ssbKeys.generate()
+  keys:ssbKeys.generate(null, seed('bob')),
+  replicate: { legacy: false }
 })
 
 var carol = createSbot({
   temp: 'test-block-carol', timeout: 600,
-  keys:ssbKeys.generate()
-})
+  keys:ssbKeys.generate(null, seed('carol')),
+  replicate: { legacy: false }
 
-//carol.post(function (data) {
-//  console.log('CAROL RECEIVED', names[data.value.author])
-//  console.log(data.value)
-//})
+})
 
 var names = {}
 names[alice.id] = 'alice'
@@ -52,12 +57,6 @@ names[bob.id] = 'bob'
 names[carol.id] = 'carol'
 
 tape('alice blocks bob, and bob cannot connect to alice', function (t) {
-
-//  console.log({
-//    alice: alice.id,
-//    bob: bob.id,
-//    carol: carol.id
-//  })
 
   //in the beginning alice and bob follow each other
   cont.para([
@@ -78,7 +77,6 @@ tape('alice blocks bob, and bob cannot connect to alice', function (t) {
     //get the next messages that are replicated to alice and bob,
     //and check that these are the correct follow messages.
     var bobCancel = bob.post(once(function (op) {
-      console.log('BOB_POST', op)
       //should be the alice's follow(bob) message.
       t.equal(op.value.author, alice.id, 'bob expected message from alice')
       t.equal(op.value.content.contact, bob.id, 'bob expected message to be about bob')
@@ -86,7 +84,6 @@ tape('alice blocks bob, and bob cannot connect to alice', function (t) {
     }), false)
 
     var aliceCancel = alice.post(once(function (op) {
-      console.log('ALICE_POST', op)
       //should be the bob's follow(alice) message.
       t.equal(op.value.author, bob.id, 'alice expected to receive a message from bob')
       t.equal(op.value.content.contact, alice.id, 'alice expected received message to be about alice')
@@ -97,10 +94,6 @@ tape('alice blocks bob, and bob cannot connect to alice', function (t) {
 
       rpc.close(true, function () {
         aliceCancel(); bobCancel()
-        console.log('ALICE BLOCKS BOB', {
-          source: alice.id, dest: bob.id
-        })
-
         alice.publish(u.block(bob.id))
         (function (err) {
           if(err) throw err
@@ -130,7 +123,6 @@ tape('alice blocks bob, and bob cannot connect to alice', function (t) {
 
 
                   var carolCancel = carol.post(function (msg) {
-                    console.log('CAROL RECV', msg, alice.id)
                     if(msg.author === alice.id) {
                       if(msg.sequence == 2)
                         t.end()
@@ -140,7 +132,6 @@ tape('alice blocks bob, and bob cannot connect to alice', function (t) {
                   //but carol, should, because she is not blocked.
                   carol.connect(alice.getAddress(), function (err, rpc) {
                     if(err) throw err
-                    console.log('CAROL CONNECTED TO ALICE', carol.id, alice.id)
                     rpc.on('closed', function () {
                       carolCancel()
                       pull(
@@ -169,9 +160,7 @@ tape('carol does not let bob replicate with alice', function (t) {
   //first, carol should have already replicated with alice.
   //emits this event when did not allow bob to get this data.
   bob.once('replicate:finish', function (vclock) {
-    console.log('BOB REPLICATED FROM CAROL')
     t.equal(vclock[alice.id], 1)
-    console.log('ALICE:', alice.id)
     //t.end()
   })
   bob.connect(carol.getAddress(), function(err, rpc) {
@@ -182,9 +171,8 @@ tape('carol does not let bob replicate with alice', function (t) {
   })
 })
 
-
 tape('alice does not replicate messages from bob, but carol does', function (t) {
-
+  console.log("**********************************************************")
   var friends = 0
   carol.friends.get(console.log)
   pull(carol.friends.createFriendStream({meta: true, live: true}), pull.drain(function (v) {
@@ -196,9 +184,8 @@ tape('alice does not replicate messages from bob, but carol does', function (t) 
     cont(alice.publish)(u.follow(carol.id)),
     cont(bob.publish)({type:'post', text: 'hello'}),
     cont(carol.publish)(u.follow(bob.id))
-  ]) (function () {
+  ]) (function (err, r) {
     var recv = {alice: 0, carol: 0}
-
     carol.post(function (msg) {
       recv.carol ++
       //will receive one message from bob and carol
@@ -207,17 +194,12 @@ tape('alice does not replicate messages from bob, but carol does', function (t) 
     alice.post(function (msg) {
       recv.alice ++
       //alice will only receive the message from carol, but not bob.
-      console.log("ALICE_RECV", names[msg.value.author], msg)
       t.equal(msg.value.author, carol.id)
     }, false)
 
-    console.log("carol's friends")
     carol.friends.get(function (err, g) {
       t.ok(g[carol.id][bob.id])
     })
-    console.log("alices friends")
-    alice.friends.get(console.log)
-
 
     var n = 2
     carol.connect(alice.getAddress(), cb)
@@ -233,10 +215,14 @@ tape('alice does not replicate messages from bob, but carol does', function (t) 
         carol.createLogStream(),
         pull.collect(function (err, ary) {
           if(err) throw err
-          console.log(ary)
-          t.deepEqual(recv, {carol: 2, alice: 2})
-          t.equal(friends, 3, "carol's createFriendStream has 3 peers")
-          t.end()
+          carol.getVectorClock(function (err, vclock) {
+            t.equals(vclock[alice.id], 3)
+            t.equals(vclock[bob.id], 2)
+            t.equals(vclock[carol.id], 2)
+
+            t.equal(friends, 3, "carol's createFriendStream has 3 peers")
+            t.end()
+          })
         })
       )
     }
@@ -253,6 +239,23 @@ tape('cleanup!', function (t) {
   alice.close(true); bob.close(true); carol.close(true)
   t.end()
 })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

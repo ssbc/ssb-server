@@ -8,6 +8,7 @@ var ssbKeys = require('ssb-keys')
 
 var createSbot = require('../')
   .use(require('../plugins/replicate'))
+  .use(require('ssb-ebt'))
   .use(require('ssb-friends'))
 
 tape('replicate between 3 peers', function (t) {
@@ -15,6 +16,7 @@ tape('replicate between 3 peers', function (t) {
   var bob = createSbot({
       temp: 'test-bob',
 //      port: 45452, host: 'localhost',
+      replicate: {legacy: false},
       keys: ssbKeys.generate()
     })
 
@@ -22,6 +24,7 @@ tape('replicate between 3 peers', function (t) {
       temp: 'test-alice',
   //    port: 45453, host: 'localhost',
       seeds: [bob.getAddress()],
+      replicate: {legacy: false},
       keys: ssbKeys.generate()
     })
 
@@ -68,4 +71,5 @@ tape('replicate between 3 peers', function (t) {
 
   })
 })
+
 
