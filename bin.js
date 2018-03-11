@@ -52,7 +52,6 @@ if (argv[0] == 'server') {
     .use(require('ssb-links'))
     .use(require('ssb-ws'))
     .use(require('ssb-ebt'))
-    .use(require('ssb-ooo'))
   // add third-party plugins
   require('./plugins/plugins').loadUserPlugins(createSbot, config)
 
@@ -151,6 +150,7 @@ if (argv[0] == 'server') {
     muxrpcli(argv, manifest, rpc, config.verbose)
   })
 }
+
 
 
 

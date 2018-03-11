@@ -64,7 +64,6 @@
     "ssb-keys": "^7.0.13",
     "ssb-links": "^3.0.2",
     "ssb-msgs": "~5.2.0",
-    "ssb-ooo": "^1.0.9",
     "ssb-query": "^1.0.0",
     "ssb-ref": "^2.9.1",
     "ssb-ws": "^1.0.3",
@@ -92,3 +91,4 @@
   "author": "Paul Frazee <pfrazee@gmail.com>",
   "license": "MIT"
 }
+
