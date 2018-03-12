@@ -155,11 +155,16 @@ function usage (cmd) {
   return mdm.usage(apidocs._, cmd)
 }
 
-module.exports = SecretStack({
-  //this is just the default app key.
-  //it can be overridden by passing a appKey as option
-  //when creating a Sbot instance.
-  appKey: require('./lib/ssb-cap')
-})
-.use(SSB)
+function createSbot() {
+  return SecretStack({
+    //this is just the default app key.
+    //it can be overridden by passing a appKey as option
+    //when creating a Sbot instance.
+    appKey: require('./lib/ssb-cap')
+  })
+    .use(SSB)
+}
+const stack = createSbot()
+stack.createSbot = createSbot
 
+module.exports = stack
