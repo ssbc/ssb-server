@@ -164,7 +164,7 @@ function createSbot() {
   })
     .use(SSB)
 }
-const stack = createSbot()
-stack.createSbot = createSbot
+module.exports = createSbot()
+module.exports.createSbot = createSbot
 
-module.exports = stack
+
