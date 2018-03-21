@@ -20,6 +20,7 @@ var toAddress = require('../lib/util').toAddress
 var createSbot = require('../')
     .use(require('../plugins/replicate'))
     .use(require('ssb-friends'))
+    .use(require('ssb-ebt'))
 
 var alice = createSbot({
     temp: 'test-block-alice', timeout: 1000,
@@ -79,6 +80,7 @@ tape('alice blocks bob while he is connected, she should disconnect him', functi
     }, false)
   })
 })
+
 
 
 

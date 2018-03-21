@@ -38,6 +38,7 @@ function once (fn) {
 var createSbot = require('../')
   .use(require('../plugins/replicate'))
   .use(require('ssb-friends'))
+  .use(require('ssb-ebt'))
   .use(require('../plugins/gossip'))
 
 function generateAnimals (sbot, feed, f, n, cb) {
@@ -131,7 +132,7 @@ function latest (sbot, cb) {
 var animalNetwork = createSbot({
   temp: 'test-random-animals',
   port: 45451, host: 'localhost', timeout: 20001,
-  replication: {hops: 3}, keys: alice
+  replication: {hops: 3, legacy: false}, keys: alice
 })
 
 pull(
@@ -235,7 +236,7 @@ tape('replicate social network for animals', function (t) {
   var animalFriends = createSbot({
     temp: 'test-random-animals2',
     port: 45452, host: 'localhost', timeout: 20001,
-    replication: {hops: 3},
+    replicate: {hops: 3, legacy: false},
     progress: true,
     seeds: [animalNetwork.getAddress()],
     keys: bob
@@ -254,23 +255,38 @@ tape('replicate social network for animals', function (t) {
 
   var drain
 
-  pull(
-    animalFriends.replicate.changes(),
-    drain = pull.drain(function (prog) {
-      prog.id = 'animal friends'
+//  pull(
+//    animalFriends.replicate.changes(),
+//    drain = pull.drain(function (prog) {
+//      prog.id = 'animal friends'
+//      var target = F+N+3
+//      process.stdout.write(bar(prog))
+//      if(prog.progress === target) {
+//        console.log("DONE!!!!")
+//        var time = (Date.now() - start) / 1000
+//        console.log('replicated', target, 'messages in', time, 'at rate',target/time)
+//        t.equal(c, 1, 'everything replicated within a single connection')
+//        animalFriends.close(true)
+//        drain.abort()
+//        t.end()
+//      }
+//    })
+//  )
+
+  require('../lib/progress')(animalFriends.progress)
+
+  var int = setInterval(function () {
+    var prog = animalFriends.progress()
+    if(prog.ebt && prog.ebt.current === prog.ebt.target) {
       var target = F+N+3
-      process.stdout.write(bar(prog))
-      if(prog.progress === target) {
-        console.log("DONE!!!!")
-        var time = (Date.now() - start) / 1000
-        console.log('replicated', target, 'messages in', time, 'at rate',target/time)
-        t.equal(c, 1, 'everything replicated within a single connection')
-        animalFriends.close(true)
-        drain.abort()
-        t.end()
-      }
-    })
-  )
+      var time = (Date.now() - start) / 1000
+      console.log('replicated', target, 'messages in', time, 'at rate',target/time)
+      clearInterval(int)
+      t.equal(c, 1, 'everything replicated within a single connection')
+      animalFriends.close(true)
+      t.end()
+    }
+  }, 200)
 
   animalFriends.logging = true
 
@@ -292,5 +308,10 @@ tape('shutdown', function (t) {
   animalNetwork.close(true)
   t.end()
 })
+
+
+
+
+
 
 

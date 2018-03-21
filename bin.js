@@ -48,11 +48,10 @@ if (argv[0] == 'server') {
     .use(require('./plugins/invite'))
     .use(require('./plugins/local'))
     .use(require('./plugins/logging'))
-    .use(require('./plugins/private'))
     .use(require('ssb-query'))
     .use(require('ssb-links'))
     .use(require('ssb-ws'))
-
+    .use(require('ssb-ebt'))
   // add third-party plugins
   require('./plugins/plugins').loadUserPlugins(createSbot, config)
 
@@ -152,5 +151,7 @@ if (argv[0] == 'server') {
     muxrpcli(argv, manifest, rpc, config.verbose)
   })
 }
+
+
 
 

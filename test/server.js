@@ -13,6 +13,7 @@ var u = require('./util')
 
 var createSbot = require('../')
   .use(require('../plugins/replicate'))
+//  .use(require('ssb-ebt'))
   .use(require('ssb-friends'))
   .use(require('../plugins/gossip'))
   .use(require('../plugins/logging'))
@@ -24,6 +25,7 @@ tape('replicate between 3 peers', function (t) {
     temp: 'server-alice',
     port: 45451, timeout: 1400,
     keys: alice = ssbKeys.generate(),
+    //replicate: {legacy: false},
     level: 'info'
   })
   var dbB = createSbot({
@@ -31,6 +33,7 @@ tape('replicate between 3 peers', function (t) {
     port: 45452, timeout: 1400,
     keys: bob = ssbKeys.generate(),
     seeds: [dbA.getAddress()],
+    //replicate: {legacy: false},
     level: 'info'
   })
   var dbC = createSbot({
@@ -38,6 +41,7 @@ tape('replicate between 3 peers', function (t) {
     port: 45453, timeout: 1400,
     keys: carol = ssbKeys.generate(),
     seeds: [dbA.getAddress()],
+    //replicate: {legacy: false},
     level: 'info'
   })
 
@@ -89,8 +93,4 @@ tape('replicate between 3 peers', function (t) {
     }
   })
 })
-
-
-
-
 
