@@ -20,7 +20,7 @@ function isFunction (f) {
 }
 
 function stringify(peer) {
-  return [peer.host, peer.port, peer.key].join(':')
+  return [peer.source, peer.host, peer.port, peer.key].join(':')
 }
 
 function isObject (o) {
@@ -38,6 +38,11 @@ function isString (s) {
 
 function coearseAddress (address) {
   if(isObject(address)) {
+    if (address.source === 'dht') {
+      return ['dht', address.host, 1].join(':') +
+        '~' +
+        ['shs', toBase64(address.key)].join(':')
+    }
     var protocol = 'net'
     if (address.host.endsWith(".onion"))
         protocol = 'onion'
