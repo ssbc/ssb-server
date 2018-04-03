@@ -356,7 +356,9 @@ module.exports = {
         ary.forEach(function (v) {
           delete v.state
           // don't add local peers (wait to rediscover)
-          if(v.source !== 'local') {
+          if (v.source === 'dht') {
+            gossip.add(v, 'dht')
+          } else if (v.source !== 'local') {
             gossip.add(v, 'stored')
           }
         })
