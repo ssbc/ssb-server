@@ -45,7 +45,7 @@ sbot feed
 sbot log
 
 # stream all messages by one feed, ordered by sequence number
-sbot hist $FEED_ID
+sbot hist --id $FEED_ID
 ```
 ```js
 // In javascript:
@@ -86,7 +86,7 @@ ssbClient(function (err, sbot) {
 
   // stream all messages by one feed, ordered by sequence number
   pull(
-    sbot.createHistoryStream(feedId),
+    sbot.createHistoryStream({ id: < feedId > }),
     pull.collect(function (err, msgs) {
       // msgs[0].key == hash(msgs[0].value)
       // msgs[0].value...
