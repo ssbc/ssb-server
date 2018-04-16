@@ -44,8 +44,6 @@ module.exports = {
     var codes = {}
     var codesDB = server.sublevel('codes')
 
-    var createClient = this.createClient
-
     //add an auth hook.
     server.auth.hook(function (fn, args) {
       var pubkey = args[0], cb = args[1]
@@ -254,4 +252,5 @@ module.exports = {
     }
   }
 }
+
 

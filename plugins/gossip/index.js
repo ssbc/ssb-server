@@ -69,7 +69,6 @@ module.exports = {
     var notify = Notify()
     var closed = false, closeScheduler
     var conf = config.gossip || {}
-    var home = ref.parseAddress(server.getAddress())
 
     var gossipJsonPath = path.join(config.path, 'gossip.json')
     var stateFile = AtomicFile(gossipJsonPath)
@@ -220,8 +219,7 @@ module.exports = {
           throw new Error('not a valid address:' + JSON.stringify(addr))
         // check that this is a valid address, and not pointing at self.
 
-        if(addr.key === home.key) return
-        if(addr.host === home.host && addr.port === home.port) return
+        if(addr.key === server.id) return
 
         var f = gossip.get(addr)
 
@@ -376,6 +374,8 @@ module.exports = {
     return gossip
   }
 }
+
+
 
 
 
