@@ -1,6 +1,7 @@
 var tape = require('tape')
 var util = require('../lib/util')
 var ssbKeys = require('ssb-keys')
+var ssbClient = require('ssb-client')
 
 var aliceKeys = ssbKeys.generate()
 var bobKeys   = ssbKeys.generate()
@@ -14,12 +15,17 @@ var alice = createSbot({
   temp: 'master',
   host: 'localhost',
   master: bobKeys.id,
-  keys: aliceKeys
+  keys: aliceKeys,
+  caps: {shs: require('crypto').randomBytes(32).toString('base64') }
 })
 
 tape('connect remote master', function (t) {
-  createSbot.createClient({keys: bobKeys})
-  (alice.getAddress(), function (err, rpc) {
+  console.log(alice.config)
+  ssbClient(bobKeys, {
+    remote: alice.getAddress(),
+    manifest: alice.manifest(),
+    caps: alice.config.caps,
+  }, function (err, rpc) {
     if(err) throw err
     rpc.publish({
       type: 'msg', value: 'written by bob', from: bobKeys.id
@@ -31,8 +37,11 @@ tape('connect remote master', function (t) {
 })
 
 tape('non-master cannot use same methods', function (t) {
-  createSbot.createClient({keys: carolKeys})
-  (alice.getAddress(), function (err, rpc) {
+  ssbClient(carolKeys, {
+    remote: alice.getAddress(),
+    manifest: alice.manifest(),
+    caps: alice.config.caps
+  }, function (err, rpc) {
     if(err) throw err
     rpc.publish({
       type: 'msg', value: 'written by ca', from: bobKeys.id
@@ -43,5 +52,10 @@ tape('non-master cannot use same methods', function (t) {
     })
   })
 })
+
+
+
+
+
 
 
