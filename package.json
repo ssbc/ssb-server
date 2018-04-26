@@ -86,6 +86,7 @@
   },
   "scripts": {
     "start": "node bin server",
+    "docker": "docker build -t streamplace/scuttlebot .",
     "prepublishOnly": "npm ls && npm test",
     "test": "set -e; for t in test/*.js; do node $t; done"
   },
