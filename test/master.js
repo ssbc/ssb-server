@@ -9,6 +9,9 @@ var carolKeys = ssbKeys.generate()
 
 var createSbot = require('../')
   .use(require('../plugins/master'))
+var caps = {
+  shs: require('crypto').randomBytes(32).toString('base64')
+}
 
 var alice = createSbot({
   port: 45451, timeout: 2001,
@@ -16,7 +19,7 @@ var alice = createSbot({
   host: 'localhost',
   master: bobKeys.id,
   keys: aliceKeys,
-  caps: {shs: require('crypto').randomBytes(32).toString('base64') }
+  caps: caps
 })
 
 tape('connect remote master', function (t) {
@@ -24,7 +27,7 @@ tape('connect remote master', function (t) {
   ssbClient(bobKeys, {
     remote: alice.getAddress(),
     manifest: alice.manifest(),
-    caps: alice.config.caps,
+    caps: caps,
   }, function (err, rpc) {
     if(err) throw err
     rpc.publish({
@@ -40,7 +43,7 @@ tape('non-master cannot use same methods', function (t) {
   ssbClient(carolKeys, {
     remote: alice.getAddress(),
     manifest: alice.manifest(),
-    caps: alice.config.caps
+    caps: caps
   }, function (err, rpc) {
     if(err) throw err
     rpc.publish({
@@ -52,10 +55,4 @@ tape('non-master cannot use same methods', function (t) {
     })
   })
 })
-
-
-
-
-
-
 
