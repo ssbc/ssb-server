@@ -74,8 +74,9 @@ module.exports = {
         else if(isFunction(opts))
           cb = opts, opts = {}
 
-        var addr = server.getAddress()
+        var addr = server.getAddress().split(';').shift()
         var host = ref.parseAddress(addr).host
+
         if(!config.allowPrivate && (ip.isPrivate(host) || 'localhost' === host))
           return cb(new Error('Server has no public ip address, '
                             + 'cannot create useable invitation'))
@@ -101,8 +102,13 @@ module.exports = {
         }, function (err) {
           // emit the invite code: our server address, plus the key-seed
           if(err) cb(err)
-          else if(opts.modern && server.ws && server.ws.getAddress) {
-            cb(null, server.ws.getAddress()+':'+seed.toString('base64'))
+          else if(opts.modern) {
+            var ws_addr = server.getAddress().split(';').sort(function (a, b) {
+               return +/^ws/.test(b) - +/^ws/.test(a)
+            }).shift()
+            console.log(ws_addr)
+            if(!/^ws/.test(ws_addr)) throw new Error('not a ws address:'+ws_addr)
+            cb(null, ws_addr+':'+seed.toString('base64'))
           }
           else {
             addr = ref.parseAddress(addr)
@@ -183,6 +189,8 @@ module.exports = {
             modern = true
         }
 
+        console.log(invite)
+        console.log(ref.parseInvite(invite))
         opts = ref.parseAddress(ref.parseInvite(invite).remote)
 
         function connect (cb) {
@@ -218,7 +226,7 @@ module.exports = {
           // command the peer to follow me
           rpc.invite.use({ feed: server.id }, function (err, msg) {
             if(err) return cb(explain(err, 'invite not accepted'))
-            
+
             // follow and announce the pub
             cont.para([
               server.publish({
@@ -252,5 +260,4 @@ module.exports = {
     }
   }
 }
-
 
