@@ -106,7 +106,6 @@ module.exports = {
             var ws_addr = server.getAddress().split(';').sort(function (a, b) {
                return +/^ws/.test(b) - +/^ws/.test(a)
             }).shift()
-            console.log(ws_addr)
             if(!/^ws/.test(ws_addr)) throw new Error('not a ws address:'+ws_addr)
             cb(null, ws_addr+':'+seed.toString('base64'))
           }
@@ -189,8 +188,6 @@ module.exports = {
             modern = true
         }
 
-        console.log(invite)
-        console.log(ref.parseInvite(invite))
         opts = ref.parseAddress(ref.parseInvite(invite).remote)
 
         function connect (cb) {
