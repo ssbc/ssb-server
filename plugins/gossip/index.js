@@ -206,7 +206,7 @@ module.exports = {
           cb && cb()
         })
 
-      }, 'string|object'),
+      }, {cbOptional: true }, 'string|object'),
 
       changes: function () {
         return notify.listen()
