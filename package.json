@@ -76,7 +76,7 @@
     "cat-names": "^1.0.2",
     "dog-names": "^1.0.2",
     "level-sublevel": "^6.6.1",
-    "level-test": "^2.0.1",
+    "level-test": "^3.0.0",
     "ssb-msg-schemas": "^6.3.0",
     "tape": "^4.9.0"
   },
