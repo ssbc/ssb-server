@@ -134,7 +134,12 @@ tape('test invite.accept doesnt follow if already followed', function (t) {
   })
 })
 
-tape('test invite.accept api with ipv6', function (t) {
+if (process.env.TRAVIS === 'true') {
+  console.warn('IPv6 is unsupported under Travis CI, test skipped')
+  var skipIPv6 = true
+}
+
+tape('test invite.accept api with ipv6', { skip: skipIPv6 }, function (t) {
 
   var alice = createSbot({
     temp: 'test-invite-alice4', timeout: 100,
