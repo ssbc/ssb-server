@@ -55,7 +55,7 @@
     "pull-stringify": "^2.0.0",
     "rimraf": "^2.4.2",
     "secret-stack": "^4.1.0",
-    "secure-scuttlebutt": "^18.0.3",
+    "secure-scuttlebutt": "github:christianbundy/secure-scuttlebutt#level-test-3",
     "sodium-native": "^2.0.0",
     "ssb-blobs": "^1.1.5",
     "ssb-client": "^4.5.7",
