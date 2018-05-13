@@ -99,9 +99,9 @@ var SSB = {
         },
 
       usage                    : valid.sync(usage, 'string?|boolean?'),
-      close                    : valid.async(close),
+      close                    : valid.async(close, {cbOptional: true}),
 
-      publish                  : valid.async(feed.add, 'string|msgContent'),
+      publish                  : valid.async(feed.add, {cbOptional: true}, 'string|msgContent'),
       add                      : valid.async(ssb.add, 'msg'),
       queue                      : valid.async(ssb.queue, 'msg'),
       get                      : valid.async(ssb.get, 'msgId|number'),

@@ -193,7 +193,7 @@ module.exports = {
           cb && cb(null, rpc)
         })
 
-      }, 'string|object'),
+      }, {cbOptional: true}, 'string|object'),
 
       disconnect: valid.async(function (addr, cb) {
         var peer = this.get(addr)
@@ -206,7 +206,7 @@ module.exports = {
           cb && cb()
         })
 
-      }, 'string|object'),
+      }, {cbOptional: true }, 'string|object'),
 
       changes: function () {
         return notify.listen()
