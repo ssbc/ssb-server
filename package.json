@@ -18,7 +18,6 @@
     "flumedb": "^0.4.2",
     "flumelog-offset": "^3.2.6",
     "flumeview-reduce": "^1.3.13",
-    "graphreduce": "^3.0.2",
     "has-network": "0.0.1",
     "ip": "^0.3.3",
     "level-memview": "~0.0.0",
