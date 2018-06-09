@@ -16,7 +16,7 @@
     "deep-equal": "^1.0.1",
     "explain-error": "^1.0.3",
     "flumedb": "^0.4.2",
-    "flumelog-offset": "^3.2.6",
+    "flumelog-offset": "^3.3.1",
     "flumeview-reduce": "^1.3.13",
     "has-network": "0.0.1",
     "ip": "^0.3.3",
