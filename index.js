@@ -169,6 +169,14 @@ function createSbot() {
     appKey: require('./lib/ssb-cap')
   })
     .use(SSB)
+    .use(function (ssk, config) {
+      var Onion = require('multiserver/plugins/onion')
+
+      ssk.multiserver.transport(function (instance) {
+        return Onion({})
+      })
+    })
+
 }
 module.exports = createSbot()
 module.exports.createSbot = createSbot
