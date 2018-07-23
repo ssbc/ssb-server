@@ -165,6 +165,12 @@ The range queries (gt, gte, lt, lte) filter against the sequence number.
  - `keyEncoding` / `valueEncoding` (string): the encoding applied to each read piece of data.
 
 
+## createWriteStream: sink
+
+write a number of messages to the local store.
+will error if messages are not valid, but will accept
+messages that the sbot doesn't replicate.
+
 
 ## links: source
 
