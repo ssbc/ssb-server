@@ -176,7 +176,17 @@ function createSbot() {
         return Onion({})
       })
     })
+    .use(function (ssk, config) {
+      var Noauth = require('multiserver/plugins/noauth')
 
+      ssk.multiserver.transform(function (instance) {
+        return Noauth({
+          keys: {
+            publicKey: Buffer.from(config.keys.public, 'base64')
+          }
+        })
+      })
+    })
 }
 module.exports = createSbot()
 module.exports.createSbot = createSbot
