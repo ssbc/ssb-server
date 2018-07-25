@@ -245,14 +245,14 @@ This is the recommended method for publishing new messages, as it handles the ta
 
 ## getAddress: sync
 
-Get the address of the server.
+Get the address of the server. Default scope is public.
 
 ```bash
-getAddress
+getAddress {scope}
 ```
 
 ```js
-getAddress(cb)
+getAddress(scope, cb)
 ```
 
 

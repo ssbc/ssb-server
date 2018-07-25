@@ -172,19 +172,25 @@ function createSbot() {
     .use(function (ssk, config) {
       var Onion = require('multiserver/plugins/onion')
 
-      ssk.multiserver.transport(function (instance) {
-        return Onion({})
+      ssk.multiserver.transport({
+        name: 'onion',
+        create: function (conf) {
+          return Onion(conf)
+        }
       })
     })
     .use(function (ssk, config) {
       var Noauth = require('multiserver/plugins/noauth')
 
-      ssk.multiserver.transform(function (instance) {
-        return Noauth({
-          keys: {
-            publicKey: Buffer.from(config.keys.public, 'base64')
-          }
-        })
+      ssk.multiserver.transform({
+        name: 'noauth',
+        create: function () {
+          return Noauth({
+            keys: {
+              publicKey: Buffer.from(config.keys.public, 'base64')
+            }
+          })
+        }
       })
     })
 }
