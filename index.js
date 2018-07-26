@@ -180,6 +180,19 @@ function createSbot() {
       })
     })
     .use(function (ssk, config) {
+      var WS = require('multiserver/plugins/ws')
+
+      ssk.multiserver.transport({
+        name: 'ws',
+        create: function (conf) {
+          if (!conf.port)
+            conf.port = 1024+(~~(Math.random()*(65536-1024)))
+
+          return WS(conf)
+        }
+      })
+    })
+    .use(function (ssk, config) {
       var Noauth = require('multiserver/plugins/noauth')
 
       ssk.multiserver.transform({

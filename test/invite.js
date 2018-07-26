@@ -1,11 +1,8 @@
 //WARNING: this test currently only passes
 //if the computer has a network.
-var sbot = require('../')
 var ssbKeys = require('ssb-keys')
 var tape = require('tape')
-var explain = require('explain-error')
 var pull = require('pull-stream')
-var u = require('../lib/util')
 var ssbClient = require('ssb-client')
 var ref = require('ssb-ref')
 
@@ -19,6 +16,17 @@ var createSbot = require('../')
 
 function all(stream, cb) {
   return pull(stream, pull.collect(cb))
+}
+
+var wsConnections = {
+  incoming: {
+    net: [{ scope: "public", "transform": "shs" }],
+    ws: [{ scope: "public", "transform": "shs" }]
+  },
+  outgoing: {
+    net: [{ transform: "shs" }],
+    ws: [{ transform: "shs" }]
+  }
 }
 
 tape('test invite.accept api', function (t) {
@@ -182,7 +190,8 @@ tape('test invite.create with modern', function (t) {
   var alice = createSbot({
     temp: 'test-invite-alice5', timeout: 100,
     allowPrivate: true,
-    keys: ssbKeys.generate()
+    keys: ssbKeys.generate(),
+    connections: wsConnections
   })
 
   var bob = createSbot({
@@ -237,7 +246,8 @@ tape('test invite.accept doesnt follow if already followed', function (t) {
     temp: 'test-invite-alice6',
     timeout: 100,
     allowPrivate: true,
-    keys: ssbKeys.generate()
+    keys: ssbKeys.generate(),
+    connections: wsConnections
   })
 
   alice.publish({type: 'test', okay: true}, function (err, msg) {

@@ -74,7 +74,7 @@ module.exports = {
         else if(isFunction(opts))
           cb = opts, opts = {}
 
-        var addr = server.getAddress('public').split(';').shift()
+        var addr = server.getAddress().split(';').shift()
         var host = ref.parseAddress(addr).host
 
         if (opts.host)
