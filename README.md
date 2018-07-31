@@ -133,4 +133,6 @@ Therefore, by itself, it would probably make a poor choice for implementing a cr
 - [Using Trust in Open Networks](https://ssbc.github.io/docs/articles/using-trust-in-open-networks.html)
 
 
+# License
 
+MIT
