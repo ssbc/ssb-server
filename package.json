@@ -23,7 +23,7 @@
     "multiblob": "^1.13.0",
     "multicb": "^1.0.0",
     "multiserver": "^1.12.0",
-    "muxrpc": "^7.0.0",
+    "muxrpc": "^6.4.0",
     "muxrpc-validation": "^2.0.0",
     "muxrpcli": "^1.0.0",
     "mv": "^2.1.1",
