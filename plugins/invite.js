@@ -76,6 +76,9 @@ module.exports = {
 
         var addr = server.getAddress()
         var host = ref.parseAddress(addr).host
+        if(typeof host !== 'string') {
+          return cb(new Error('Could not parse host portion from server address:', addr))
+        }
         if(!config.allowPrivate && (ip.isPrivate(host) || 'localhost' === host))
           return cb(new Error('Server has no public ip address, '
                             + 'cannot create useable invitation'))
