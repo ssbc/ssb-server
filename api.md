@@ -199,44 +199,6 @@ The objects in this stream will be of the form:
  - `values` (boolean, default: `true`): whether the `data` event should contain values. If set to `true` and `keys` set to `false` then `data` events will simply be values, rather than objects with a `value` property.
 
 
-
-## relatedMessages: async
-
-Retrieve the tree of messages related to the given id.
-
-```bash
-relatedMessages --id {msgid} [--rel value] [--count] [--parent]
-```
-
-```js
-relatedMessages ({ id:, rel:, count:, parent: }, cb)
-```
-
-This is ideal for collecting things like threaded replies.
-The output is a recursive structure like this:
-
-``` js
-{
-  key: <id>,
-  value: <msg>,
-  related: [
-    <recursive>,...
-  ],
-  //number of messages below this point. (when opts.count = true)
-  count: <int>,
-  //the message this message links to. this will not appear on the bottom level.
-  //(when opts.parent = true)
-  parent: <parent_id>
-}
-```
-
- - `id` (MsgID): Root message, fetches messages related message to its ID.
- - `rel` (string, optional): Filters the links by the relation string.
- - `count` (boolean, default: `false`): Include a `count` of each message's decendant messages.
- - `parent` (boolean, default: `false`): Include the `parent` id of each message.
-
-
-
 ## add: async
 
 Add a well-formed message to the database.
