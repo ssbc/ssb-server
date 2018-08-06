@@ -9,6 +9,7 @@ var mdm        = require('mdmanifest')
 var cmdAliases = require('./lib/cli-cmd-aliases')
 var valid      = require('./lib/validators')
 var apidocs    = require('./lib/apidocs.js')
+var pkg        = require('./package.json')
 
 function isString(s) { return 'string' === typeof s }
 function isObject(o) { return 'object' === typeof o }
@@ -18,6 +19,8 @@ var manifest = mdm.manifest(apidocs._)
 manifest.seq = 'async'
 manifest.usage = 'sync'
 manifest.clock = 'async'
+manifest.version = 'sync'
+
 var SSB = {
   manifest: manifest,
   permissions: {
@@ -89,6 +92,10 @@ var SSB = {
 
       status                   : function () {
         return {progress: self.progress(), db: ssb.status, sync: since() }
+      },
+
+      version                  : function () {
+        return pkg.version
       },
 
       //temporary!
