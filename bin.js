@@ -106,12 +106,12 @@ if (argv[0] == 'server') {
     }
 
     // add some extra commands
-    manifest.version = 'async'
+//    manifest.version = 'async'
     manifest.config = 'sync'
-    rpc.version = function (cb) {
-      console.log(packageJson.version)
-      cb()
-    }
+//    rpc.version = function (cb) {
+//      console.log(packageJson.version)
+//      cb()
+//    }
     rpc.config = function (cb) {
       console.log(JSON.stringify(config, null, 2))
       cb()

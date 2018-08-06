@@ -373,3 +373,7 @@ such as db read activity, connection statuses, etc, etc. The purpose is to provi
 an overview of how ssb is working.
 
 ## getVectorClock: async
+
+## version: sync
+
+return the current version number of the running server
