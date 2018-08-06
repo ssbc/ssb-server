@@ -109,7 +109,7 @@ if (argv[0] == 'server') {
     manifest.version = 'async'
     manifest.config = 'sync'
     rpc.version = function (cb) {
-      console.log(require('./package.json').version)
+      console.log(packageJson.version)
       cb()
     }
     rpc.config = function (cb) {
