@@ -123,7 +123,6 @@ var SSB = {
       latestSequence           : valid.async(ssb.latestSequence, 'feedId'),
       createFeed               : ssb.createFeed,
       whoami                   : function () { return { id: feed.id } },
-      relatedMessages          : valid.async(ssb.relatedMessages, 'relatedMessagesOpts'),
       query                    : ssb.query,
       createFeedStream         : valid.source(ssb.createFeedStream, 'readStreamOpts?'),
       createHistoryStream      : valid.source(ssb.createHistoryStream, ['createHistoryStreamOpts'], ['feedId', 'number?', 'boolean?']),
