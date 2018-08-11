@@ -50,6 +50,9 @@ if (argv[0] == 'server') {
     .use(require('./plugins/logging'))
     .use(require('ssb-query'))
     .use(require('ssb-links'))
+    .use(require('ssb-backlinks'))
+    .use(require('ssb-about'))
+    .use(require('ssb-private'))
     .use(require('ssb-ws'))
     .use(require('ssb-ebt'))
   // add third-party plugins
