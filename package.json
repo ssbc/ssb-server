@@ -22,7 +22,7 @@
     "mkdirp": "~0.5.0",
     "multiblob": "^1.13.0",
     "multicb": "^1.0.0",
-    "multiserver": "ssbc/multiserver#3fe47b65d47ec37eec4401a4339d0b953350c887",
+    "multiserver": "ssbc/multiserver#32e1e1fb893932466f6648eb3d1f3e1c898ecb31",
     "muxrpc": "^6.4.0",
     "muxrpc-validation": "^2.0.0",
     "muxrpcli": "^1.0.0",
