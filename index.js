@@ -198,7 +198,7 @@ function createSbot() {
       ssk.multiserver.transport({
         name: 'unix',
         create: function () {
-          return us({ })
+          return us({ path: config.path })
         }
       })
     })
