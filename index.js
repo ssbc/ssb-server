@@ -166,6 +166,7 @@ function createSbot() {
     //this is just the default app key.
     //it can be overridden by passing a appKey as option
     //when creating a Sbot instance.
+    host: process.env.ssb_host,
     appKey: require('./lib/ssb-cap')
   })
     .use(SSB)
