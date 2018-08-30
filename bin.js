@@ -60,6 +60,26 @@ if (argv[0] == 'server') {
   config.keys = keys
   var server = createSbot(config)
 
+  server.on('rpc:connect', function (rpc, isClient) {
+    if (rpc.id == '@' + keys.public) return
+
+    pull(
+      server.friends.hopStream(),
+      pull.drain(s => {
+        try {
+          var hops = s[rpc.id]
+          if (hops == undefined || hops > config.friends.hops) {
+            server.emit('log:info', ['SBOT', 'closing connection outside hops: ', hops])
+            rpc.close(true, function() { })
+          }
+        } catch (e) {
+          server.emit('log:info', ['SBOT', 'closing connection outside hops'])
+          rpc.close(true, function() { })
+        }
+      })
+    )
+  })
+
   // write RPC manifest to ~/.ssb/manifest.json
   fs.writeFileSync(manifestFile, JSON.stringify(server.getManifest(), null, 2))
 
