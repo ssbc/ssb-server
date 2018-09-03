@@ -56,7 +56,7 @@ Peers : [{
 */
 
 module.exports = {
-  name: 'connection-manager',
+  name: 'gossip',
   version: '1.0.0',
   manifest: mdm.manifest(apidoc),
   permissions: {
