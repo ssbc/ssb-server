@@ -80,7 +80,7 @@ module.exports = {
         if (opts.host)
           host = opts.host
 
-        if(!config.allowPrivate && (ip.isPrivate(host) || 'localhost' === host))
+        if(!config.allowPrivate && (ip.isPrivate(host) || 'localhost' === host || host === ''))
           return cb(new Error('Server has no public ip address, '
                             + 'cannot create useable invitation'))
 
