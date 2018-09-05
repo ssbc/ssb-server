@@ -14,36 +14,6 @@ var AtomicFile = require('atomic-file')
 var path = require('path')
 var deepEqual = require('deep-equal')
 
-function isFunction (f) {
-  return typeof f === 'function'
-}
-
-function stringify (peer) {
-  return [peer.host, peer.port, peer.key].join(':')
-}
-
-function isObject (o) {
-  return o && typeof o === 'object'
-}
-
-function toBase64 (s) {
-  if (isString(s)) return s
-  else s.toString('base64') // assume a buffer
-}
-
-function isString (s) {
-  return typeof s === 'string'
-}
-
-function coerceAddress (address) {
-  if (isObject(address)) {
-    var protocol = 'net'
-    if (address.host.endsWith('.onion')) { protocol = 'onion' }
-    return [protocol, address.host, address.port].join(':') + '~' + ['shs', toBase64(address.key)].join(':')
-  }
-  return address
-}
-
 /*
 Peers : [{
   key: id,
@@ -57,27 +27,29 @@ Peers : [{
 
 module.exports = {
   name: 'gossip',
-  version: '1.0.0',
+  version: '2.0.0',
   manifest: mdm.manifest(apidoc),
   permissions: {
     anonymous: {allow: ['ping']}
   },
   init: function (server, config) {
-    var connectionManager = ConnectionManager({connectToPeer: function (address, cb) {
-      server.connect(address.address, cb)
-    }})
+    var notify = Notify()
+    var connectionManager = ConnectionManager({
+      connectToPeer: server.connect,
+      notifyChanges: notify
+    })
+
+    connectionManager.connections.setMax(5)
 
     // TODO: add start / stop scheduler to the pluging api. We want to be able to startup with scheduler stopped
     connectionManager.connections.start()
-
-    var notify = Notify()
 
     var gossipJsonPath = path.join(config.path, 'gossip.json')
     var stateFile = AtomicFile(gossipJsonPath)
     var status = {}
 
     // Known Peers
-    var peers = []
+    var peers = new Set()
 
     function getPeer (id) {
       return u.find(peers, function (e) {
@@ -87,7 +59,7 @@ module.exports = {
 
     function simplify (peer) {
       return {
-        address: coerceAddress(peer),
+        address: toMultiserverAddress(peer),
         source: peer.source,
         state: peer.state,
         failure: peer.failure,
@@ -108,43 +80,46 @@ module.exports = {
       return fn.apply(this, args)
     })
 
-    var timer_ping = 5 * 6e4
+    var timerPing = 5 * 6e4
 
     var gossip = {
-      wakeup: 0,
       peers: function () {
-        return peers
+        var ary = []
+        peers.forEach(ary.push)
+        return ary
       },
       connect: valid.async(function (addr, cb) {
-        addr = ref.parseAddress(addr)
         console.log('something called connection manager connect.')
-        connectionManager.addRoute(addr)
-        // TODO: do immediate connect
-        //
+        var multiserverAddress = toMultiserverAddress(addr)
+        connectionManager.addRoute({multiserverAddress, isLongterm: true})
         cb()
       }, 'string|object'),
 
       disconnect: valid.async(function (addr, cb) {
         console.log('something called connection manager disconnect.')
+        var multiserverAddress = toMultiserverAddress(addr)
+        connectionManager.removeRoute(multiserverAddress)
         cb()
       }, 'string|object'),
 
       changes: function () {
+        console.log('Something Called Changes')
         return notify.listen()
       },
       // add an address to the peer table.
       add: valid.sync(function (addr, source) {
-        addr = ref.parseAddress(addr)
         if (!ref.isAddress(addr)) { throw new Error('not a valid address:' + JSON.stringify(addr)) }
         // check that this is a valid address, and not pointing at self.
 
         if (addr.key === server.id) return
 
-        connectionManager.peer.addRoute({address: addr, isLocal: source === 'local'})
+        var multiserverAddress = toMultiserverAddress(addr)
+        connectionManager.peer.addRoute({multiserverAddress, isLocal: source === 'local'})
       }, 'string|object', 'string?'),
 
       remove: function (addr) {
-        connectionManager.peer.removeRoute({address: addr})
+        var multiserverAddress = toMultiserverAddress(addr)
+        connectionManager.peer.removeRoute({multiserverAddress})
       },
 
       ping: function (opts) {
@@ -199,11 +174,11 @@ module.exports = {
 
       if (isClient) {
         // default ping is 5 minutes...
-        var pp = ping({serve: true, timeout: timer_ping}, function (_) {})
+        var pp = ping({serve: true, timeout: timerPing}, function (_) {})
         peer.ping = {rtt: pp.rtt, skew: pp.skew}
         pull(
           pp,
-          rpc.gossip.ping({timeout: timer_ping}, function (err) {
+          rpc.gossip.ping({timeout: timerPing}, function (err) {
             if (err.name === 'TypeError') peer.ping.fail = true
           }),
           pp
@@ -243,7 +218,7 @@ module.exports = {
     })
 
     var int = setInterval(function () {
-      var copy = JSON.parse(JSON.stringify(peers))
+      var copy = JSON.parse(JSON.stringify(gossip.peers()))
       copy.filter(function (e) {
         return e.source !== 'local'
       }).forEach(function (e) {
@@ -262,4 +237,39 @@ module.exports = {
     return gossip
   }
 
+}
+
+function isFunction (f) {
+  return typeof f === 'function'
+}
+
+function stringify (peer) {
+  return [peer.host, peer.port, peer.key].join(':')
+}
+
+function isObject (o) {
+  return o && typeof o === 'object'
+}
+
+function toBase64 (s) {
+  if (isString(s)) return s
+  else s.toString('base64') // assume a buffer
+}
+
+function isString (s) {
+  return typeof s === 'string'
+}
+
+var feedIdRegex = new RegExp(ref.feedIdRegex)
+
+function toMultiserverAddress (address) {
+  if (isObject(address)) {
+    if (ref.isFeed(address.key)) {
+      address.key = address.key.match(feedIdRegex)[1]
+    }
+    var protocol = 'net'
+    if (address.host.endsWith('.onion')) { protocol = 'onion' }
+    return [protocol, address.host, address.port].join(':') + '~' + ['shs', toBase64(address.key)].join(':')
+  }
+  return address
 }
