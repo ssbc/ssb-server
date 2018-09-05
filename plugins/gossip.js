@@ -61,7 +61,7 @@ module.exports = {
     connectionManager.connections.setMax(numConnections || 3)
 
     var disableGossipAtStartup = config.gossip && config.gossip.disable_at_startup
-    if (!disableGossipAtStartup) {
+    if (!disableGossipAtStartup && hasNetwork()) {
       connectionManager.connections.start()
     }
 
