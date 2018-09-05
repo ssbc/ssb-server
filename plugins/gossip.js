@@ -62,7 +62,6 @@ module.exports = {
 
     var gossipJsonPath = path.join(config.path, 'gossip.json')
     var stateFile = AtomicFile(gossipJsonPath)
-    var status = {}
 
     // Known Peers
     var peers = new Set()
@@ -71,21 +70,6 @@ module.exports = {
       return u.find(peers, function (e) {
         return e && e.key === id
       })
-    }
-
-    function simplify (peer) {
-      return {
-        address: toMultiserverAddress(peer),
-        source: peer.source,
-        state: peer.state,
-        failure: peer.failure,
-        client: peer.client,
-        stats: {
-          duration: peer.duration || undefined,
-          rtt: peer.ping ? peer.ping.rtt : undefined,
-          skew: peer.ping ? peer.ping.skew : undefined
-        }
-      }
     }
 
     server.status.hook(function (fn) {
@@ -173,8 +157,6 @@ module.exports = {
         return
       }
 
-      status[rpc.id] = simplify(peer)
-
       server.emit('log:info', ['SBOT', stringify(peer), 'PEER JOINED'])
       // means that we have created this connection, not received it.
       peer.client = !!isClient
@@ -202,7 +184,6 @@ module.exports = {
       }
 
       rpc.on('closed', function () {
-        delete status[rpc.id]
         server.emit('log:info', ['SBOT', stringify(peer),
           ['DISCONNECTED. state was', peer.state, 'for',
             (new Date() - peer.stateChange) / 1000, 'seconds'].join(' ')])
