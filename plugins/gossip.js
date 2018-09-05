@@ -37,6 +37,12 @@ module.exports = {
   },
   init: function (server, config) {
     var notify = Notify()
+    var peers = {}
+
+    var eventTypeToEvent = {
+      connect: 'connected',
+      disconnect: 'disconnected'
+    }
 
     pull(
       notify.listen(),
@@ -48,6 +54,10 @@ module.exports = {
       notifyChanges: function (notification, multiserverAddress) {
         var parsedPeer = ref.parseAddress(multiserverAddress)
         notification.peer = parsedPeer
+
+        peers[multiserverAddress] = parsedPeer
+        peers[multiserverAddress].state = eventTypeToEvent[notification.type]
+
         notify(notification)
       }
     })
@@ -73,13 +83,8 @@ module.exports = {
     var gossipJsonPath = path.join(config.path, 'gossip.json')
     var stateFile = AtomicFile(gossipJsonPath)
 
-    // Known Peers
-    var peers = new Set()
-
     function getPeer (id) {
-      return u.find(peers, function (e) {
-        return e && e.key === id
-      })
+      return peers[id]
     }
 
     server.status.hook(function (fn) {
@@ -94,9 +99,9 @@ module.exports = {
 
     var gossip = {
       peers: function () {
-        var ary = []
-        peers.forEach(ary.push)
-        return ary
+        return Object.keys(peers).map(function (key) {
+          return peers[key]
+        })
       },
       connect: valid.async(function (addr, cb) {
         console.log('something called connection manager connect.')
