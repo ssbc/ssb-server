@@ -44,11 +44,6 @@ module.exports = {
       disconnect: 'disconnected'
     }
 
-    pull(
-      notify.listen(),
-      pull.log()
-    )
-
     var connectionManager = ConnectionManager({
       connectToPeer: server.connect,
       notifyChanges: function (notification, multiserverAddress) {
@@ -104,21 +99,18 @@ module.exports = {
         })
       },
       connect: valid.async(function (addr, cb) {
-        console.log('something called connection manager connect.')
         var multiserverAddress = toMultiserverAddress(addr)
         connectionManager.addRoute({multiserverAddress, isLongterm: true})
         cb()
       }, 'string|object'),
 
       disconnect: valid.async(function (addr, cb) {
-        console.log('something called connection manager disconnect.')
         var multiserverAddress = toMultiserverAddress(addr)
         connectionManager.removeRoute(multiserverAddress)
         cb()
       }, 'string|object'),
 
       changes: function () {
-        console.log('Something Called Changes')
         return notify.listen()
       },
       // add an address to the peer table.
@@ -249,11 +241,6 @@ module.exports = {
     return gossip
   }
 
-}
-
-function isOffline (e) {
-  if (ip.isLoopback(e.host) || e.host == 'localhost') return false
-  return !hasNetwork()
 }
 
 function isFunction (f) {
