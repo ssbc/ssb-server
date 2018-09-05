@@ -78,8 +78,8 @@ module.exports = {
     var gossipJsonPath = path.join(config.path, 'gossip.json')
     var stateFile = AtomicFile(gossipJsonPath)
 
-    function getPeer (id) {
-      return peers[id]
+    function getPeer (multiserverAddress) {
+      return peers[multiserverAddress]
     }
 
     server.status.hook(function (fn) {
@@ -119,6 +119,8 @@ module.exports = {
         // check that this is a valid address, and not pointing at self.
 
         if (addr.key === server.id) return
+
+        peers[addr.key] = addr
 
         var multiserverAddress = toMultiserverAddress(addr)
         connectionManager.peer.addRoute({multiserverAddress, isLocal: source === 'local'})
