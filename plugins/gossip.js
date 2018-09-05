@@ -120,7 +120,7 @@ module.exports = {
 
         if (addr.key === server.id) return
 
-        peers[addr.key] = addr
+        // peers[addr.key] = addr
 
         var multiserverAddress = toMultiserverAddress(addr)
         connectionManager.peer.addRoute({multiserverAddress, isLocal: source === 'local'})
