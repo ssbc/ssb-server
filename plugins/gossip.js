@@ -13,7 +13,10 @@ var stats = require('statistics')
 var AtomicFile = require('atomic-file')
 var path = require('path')
 var deepEqual = require('deep-equal')
-
+var onWakeup = require('on-wakeup')
+var onNetwork = require('on-change-network')
+var ip = require('ip')
+var hasNetwork = require('../lib/has-network-debounced')
 /*
 Peers : [{
   key: id,
@@ -39,10 +42,23 @@ module.exports = {
       notifyChanges: notify
     })
 
-    connectionManager.connections.setMax(5)
+    var numConnections = config.gossip && config.gossip.connections
+    connectionManager.connections.setMax(numConnections || 3)
 
-    // TODO: add start / stop scheduler to the pluging api. We want to be able to startup with scheduler stopped
-    connectionManager.connections.start()
+    var disableGossipAtStartup = config.gossip && config.gossip.disable_at_startup
+    if (!disableGossipAtStartup) {
+      connectionManager.connections.start()
+    }
+
+    function restartConnectionManager () {
+      connectionManager.connections.stop()
+
+      if (hasNetwork()) {
+        connectionManager.connections.start()
+      }
+    }
+    onWakeup(restartConnectionManager)
+    onNetwork(restartConnectionManager)
 
     var gossipJsonPath = path.join(config.path, 'gossip.json')
     var stateFile = AtomicFile(gossipJsonPath)
@@ -237,6 +253,11 @@ module.exports = {
     return gossip
   }
 
+}
+
+function isOffline (e) {
+  if (ip.isLoopback(e.host) || e.host == 'localhost') return false
+  return !hasNetwork()
 }
 
 function isFunction (f) {
