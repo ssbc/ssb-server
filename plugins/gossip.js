@@ -37,9 +37,19 @@ module.exports = {
   },
   init: function (server, config) {
     var notify = Notify()
+
+    pull(
+      notify.listen(),
+      pull.log()
+    )
+
     var connectionManager = ConnectionManager({
       connectToPeer: server.connect,
-      notifyChanges: notify
+      notifyChanges: function (notification, multiserverAddress) {
+        var parsedPeer = ref.parseAddress(multiserverAddress)
+        notification.peer = parsedPeer
+        notify(notification)
+      }
     })
 
     var numConnections = config.gossip && config.gossip.connections
