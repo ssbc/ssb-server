@@ -193,6 +193,15 @@ function createSbot() {
       })
     })
     .use(function (ssk, config) {
+      var Unix = require('multiserver/plugins/unix-socket')
+      ssk.multiserver.transport({
+        name: 'unix',
+        create: function (conf) {
+          return Unix(config)
+        }
+      })
+    })
+    .use(function (ssk, config) {
       var Noauth = require('multiserver/plugins/noauth')
 
       ssk.multiserver.transform({
