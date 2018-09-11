@@ -79,7 +79,7 @@ module.exports = {
       // (which means they can update their peer table)
       // Oh if this includes your local address,
       // then it becomes unforgeable.
-      local.write(sbot.getAddress())
+      local.write(sbot.getAddress('private'))
     }, 1000)
   }
 }
