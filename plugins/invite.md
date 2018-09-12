@@ -8,11 +8,11 @@ Invite-token system, mainly used for pubs.
 Create a new invite code.
 
 ```bash
-create {n} [{note}, {host}]
+create {n} [{note}, {external}]
 ```
 
 ```js
-create(n[, note, host], cb)
+create(n[, note, external], cb)
 ```
 
 This produces an invite-code which encodes the sbot servers public address, and a keypair seed.
@@ -23,6 +23,7 @@ The sbot server will then grant access to the `use` call.
 - `note` (string): A note to associate with the invite code. The sbot server will
     include this note in the follow message that it creates when `use` is
     called.
+- `external` (string): An external hostname to use
 
 
 ## accept: async

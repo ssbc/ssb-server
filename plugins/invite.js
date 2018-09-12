@@ -77,8 +77,8 @@ module.exports = {
         var addr = server.getAddress().split(';').shift()
         var host = ref.parseAddress(addr).host
 
-        if (opts.host)
-          host = opts.host
+        if (opts.external)
+          host = opts.external
 
         if(!config.allowPrivate && (ip.isPrivate(host) || 'localhost' === host || host === ''))
           return cb(new Error('Server has no public ip address, '
@@ -114,7 +114,7 @@ module.exports = {
           }
           else {
             addr = ref.parseAddress(addr)
-            cb(null, [addr.host, addr.port, addr.key].join(':') + '~' + seed.toString('base64'))
+            cb(null, [opts.external ? opts.external : addr.host, addr.port, addr.key].join(':') + '~' + seed.toString('base64'))
           }
         })
       }, 'number|object', 'string?'),
