@@ -134,6 +134,7 @@ var SSB = {
       createWriteStream        : ssb.createWriteStream,
       getVectorClock           : ssb.getVectorClock,
       getAtSequence            : ssb.getAtSequence,
+      addUnboxer               : ssb.addUnboxer,
     }
   }
 }
