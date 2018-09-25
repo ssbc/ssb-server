@@ -111,7 +111,7 @@ var SSB = {
       publish                  : valid.async(feed.add, 'string|msgContent'),
       add                      : valid.async(ssb.add, 'msg'),
       queue                      : valid.async(ssb.queue, 'msg'),
-      get                      : valid.async(ssb.get, 'msgId|number|object'),
+      get                      : valid.async(ssb.get, 'msgLink|number|object'),
 
       post                     : ssb.post,
 
