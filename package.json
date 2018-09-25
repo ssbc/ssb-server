@@ -60,7 +60,7 @@
     "ssb-links": "^3.0.2",
     "ssb-msgs": "~5.2.0",
     "ssb-query": "^2.1.0",
-    "ssb-ref": "^2.9.1",
+    "ssb-ref": "^2.12.0",
     "ssb-ws": "^2.1.1",
     "statistics": "^3.0.0",
     "stream-to-pull-stream": "^1.6.10",
