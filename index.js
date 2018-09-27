@@ -47,25 +47,25 @@ var SSB = {
     if(!opts.path)
       throw new Error('opts.path *must* be provided, or use opts.temp=name to create a test instance')
 
-    var mappers = []
-    var mapChain = (val, cb) => {
-      let idx = 0
-      const chainNext = (err, val) => {
-        if (err) cb(err)
-        if (idx <= mappers.length - 1) {
-          idx += 1
-          mappers[idx - 1](val, chainNext)
-        } else {
+    var maps = []
+    var chainMaps = (val, cb) => {
+      let idx = -1 // haven't entered the chain yet
+      const next = (err, val) => {
+        idx += 1
+        if (err || idx === maps.length)
           cb(err, val)
-        }
+        else
+          maps[idx](val, next)
       }
-      chainNext(null, val)
+      next(null, val)
     }
 
     if(!opts.map)
       opts.map = (val, cb) => {
-        if (!mappers.length) return cb(null, val)
-        mapChain(val, cb)
+        if (!maps)
+          cb(null, val)
+        else
+          chainMaps(val, cb)
       }
 
     // main interface
@@ -157,7 +157,7 @@ var SSB = {
       getAtSequence            : ssb.getAtSequence,
       addUnboxer               : ssb.addUnboxer,
       addMap                   : function(fn) {
-        mappers.push(fn)
+        maps.push(fn)
       }
     }
   }
