@@ -47,14 +47,29 @@ var SSB = {
     if(!opts.path)
       throw new Error('opts.path *must* be provided, or use opts.temp=name to create a test instance')
 
-    var mapper = null
+    var mappers = []
+
+    var mapChain = (val, cb) => {
+      let idx = 0
+      const chainNext = (err, val) => {
+        if (err) cb(err)
+
+        if (idx <= mappers.length - 1) {
+          idx += 1
+          mappers[idx - 1](val, chainNext)
+        } else {
+          cb(err, val)
+        }
+      }
+
+      chainNext(null, val)
+    }
 
     if(!opts.map)
       opts.map = (val, cb) => {
-        if (isFunction(mapper))
-          mapper(val, cb)
-        else
-          cb(null, val)
+        if (!mappers.length) return cb(null, val)
+
+        mapChain(val, cb)
       }
 
 
@@ -146,8 +161,8 @@ var SSB = {
       getVectorClock           : ssb.getVectorClock,
       getAtSequence            : ssb.getAtSequence,
       addUnboxer               : ssb.addUnboxer,
-      setMap                    : function(fn) {
-        mapper = fn
+      addMap                    : function(fn) {
+        mappers.push(fn)
       }
     }
   }
@@ -250,7 +265,7 @@ function createSbot() {
         alg: 'sha256'
       })
 
-      ssk.setMap((val, cb) => {
+      ssk.addMap((val, cb) => {
         if (!isBlobContent(val.value.content)) return cb(null, val)
 
         pull(
@@ -282,8 +297,7 @@ function createSbot() {
             }
           })
         )
-      }
-      )
+      })
     })
 }
 module.exports = createSbot()
