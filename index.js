@@ -47,6 +47,64 @@ var SSB = {
     if(!opts.path)
       throw new Error('opts.path *must* be provided, or use opts.temp=name to create a test instance')
 
+    // <blob-content>
+    var pull = require('pull-stream')
+    var Blobs = require('multiblob')
+    var console = require('console')
+
+    function isBlobString (s) {
+      return isString(s) && 0 === s.indexOf('&');
+    }
+
+    function isBlobContent (c) {
+      return 'object' === typeof c &&'blob' === c.type && isBlobString(c.blob);
+    }
+
+    function getBlobHash (x) {
+      return x.slice(1)
+    }
+
+    var blobs = Blobs({
+      dir: path.join(opts.path, 'blobs'),
+      alg: 'sha256'
+    })
+
+    if (!opts.map) opts.map = (val, cb) => {
+      if (!isBlobContent(val.value.content)) return cb(null, val)
+
+      pull(
+        blobs.get(getBlobHash(val.value.content.blob)),
+        pull.collect(function (err, bufs) {
+          if (err) {
+            console.warn(
+              `Key: ${val.key}`,
+              `Blob: ${val.value.content.blob}`,
+              err
+            )
+            cb(null, val)
+          } else {
+            try {
+              var contentString = Buffer.concat(bufs)
+              var blobContent = JSON.parse(contentString)
+              val.value.blob = val.value.content.blob
+              val.value.content = blobContent
+              val.value.blobContent = true
+            } catch(e) {
+              console.warn(
+                `Key: ${val.key}`,
+                `Blob: ${val.value.content.blob}`,
+                `Content: ${contentString}`,
+                e
+              )
+            }
+
+            cb(null, val)
+          }
+        })
+      )
+    }
+    // </blob-content>
+
     // main interface
     var ssb = create(path.join(opts.path, 'db'), opts, opts.keys)
     //treat the main feed as remote, because it's likely handled like that by others.
