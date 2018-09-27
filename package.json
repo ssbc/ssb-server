@@ -1,7 +1,7 @@
 {
   "name": "scuttlebot",
   "description": "network protocol layer for secure-scuttlebutt",
-  "version": "12.0.1",
+  "version": "12.2.0",
   "homepage": "https://github.com/ssbc/scuttlebot",
   "repository": {
     "type": "git",
@@ -56,11 +56,11 @@
     "ssb-config": "^2.3.0",
     "ssb-ebt": "^5.1.4",
     "ssb-friends": "^3.1.3",
-    "ssb-keys": "^7.0.13",
+    "ssb-keys": "^7.1.1",
     "ssb-links": "^3.0.2",
     "ssb-msgs": "~5.2.0",
     "ssb-query": "^2.1.0",
-    "ssb-ref": "^2.9.1",
+    "ssb-ref": "^2.12.0",
     "ssb-ws": "^2.1.1",
     "statistics": "^3.0.0",
     "stream-to-pull-stream": "^1.6.10",
