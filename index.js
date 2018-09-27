@@ -245,48 +245,35 @@ function createSbot() {
         }
       })
     })
-    .use(function (ssk, config) { 
-      var console = require('console')
-      var pull = require('pull-stream')
-      var Blobs = require('multiblob')
+    .use(function (ssk, config) {
+      const console = require('console')
+      const pull = require('pull-stream')
 
-      function isBlobString (s) {
-        return isString(s) && 0 === s.indexOf('&');
-      }
-      function isBlobContent (c) {
-        return 'object' === typeof c &&'blob' === c.type && isBlobString(c.blob);
-      }
-      function getBlobHash (x) {
-        return x.slice(1)
-      }
-
-      var blobs = Blobs({
-        dir: path.join(config.path, 'blobs'),
-        alg: 'sha256'
-      })
+      const isBlobContent = c =>
+        'blob' === c.type && isString(c.blob) && 0 === c.blob.indexOf('&')
 
       ssk.addMap((val, cb) => {
         if (!isBlobContent(val.value.content)) return cb(null, val)
 
+        const hash = val.value.content.blob
         pull(
-          blobs.get(getBlobHash(val.value.content.blob)),
+          ssk.blobs.get(hash),
           pull.collect(function (err, bufs) {
             if (err) {
-              console.warn(
-                `Key: ${val.key}`,
-                `Blob: ${val.value.content.blob}`,
-                err
-              )
-              cb(null, val)
+              ssk.blobs.want(hash, function (err) {
+                cb(err, val)
+              })
             } else {
+              ssk.blobs.push(hash)
               try {
-                var contentString = Buffer.concat(bufs)
-                var blobContent = JSON.parse(contentString)
+                const contentString = Buffer.concat(bufs)
+                const blobContent = JSON.parse(contentString)
                 val.value.blob = val.value.content.blob
                 val.value.content = blobContent
                 val.value.blobContent = true
               } catch(e) {
-                console.warn(
+                console.error(
+                  'Invalid JSON?',
                   `Key: ${val.key}`,
                   `Blob: ${val.value.content.blob}`,
                   `Content: ${contentString}`,
