@@ -245,47 +245,6 @@ function createSbot() {
         }
       })
     })
-    .use(function (ssk, config) {
-      const console = require('console')
-      const pull = require('pull-stream')
-
-      const isBlobContent = c =>
-        'blob' === c.type && isString(c.blob) && 0 === c.blob.indexOf('&')
-
-      ssk.addMap((val, cb) => {
-        if (!isBlobContent(val.value.content)) return cb(null, val)
-
-        const hash = val.value.content.blob
-        pull(
-          ssk.blobs.get(hash),
-          pull.collect(function (err, bufs) {
-            if (err) {
-              ssk.blobs.want(hash, function (err) {
-                cb(err, val)
-              })
-            } else {
-              ssk.blobs.push(hash)
-              try {
-                const contentString = Buffer.concat(bufs)
-                const blobContent = JSON.parse(contentString)
-                val.value.blob = val.value.content.blob
-                val.value.content = blobContent
-                val.value.blobContent = true
-              } catch(e) {
-                console.error(
-                  'Invalid JSON?',
-                  `Key: ${val.key}`,
-                  `Blob: ${val.value.content.blob}`,
-                  `Content: ${contentString}`,
-                  e
-                )
-              }
-              cb(null, val)
-            }
-          })
-        )
-      })
-    })
 }
 module.exports = createSbot()
 module.exports.createSbot = createSbot
