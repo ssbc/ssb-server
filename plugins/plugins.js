@@ -133,7 +133,7 @@ module.exports = {
                   var name = path.basename(pluginName)
                   config.plugins[name] = true
                   writePluginConfig(name, true)
-                  p.push(new Buffer('"'+pluginName+'" has been installed. Restart Scuttlebot server to enable the plugin.\n', 'utf-8'))
+                  p.push(Buffer.from('"'+pluginName+'" has been installed. Restart Scuttlebot server to enable the plugin.\n', 'utf-8'))
                   p.end()
                 }
               )
@@ -141,7 +141,7 @@ module.exports = {
               p.end(new Error('"'+pluginName+'" failed to install. See log output above.'))
           })
         return cat([
-          pull.values([new Buffer('Installing "'+pluginName+'"...\n', 'utf-8')]),
+          pull.values([Buffer.from('Installing "'+pluginName+'"...\n', 'utf-8')]),
           many([toPull(child.stdout), toPull(child.stderr)]),
           p
         ])
@@ -156,7 +156,7 @@ module.exports = {
         rimraf(modulePath, function (err) {
           if (!err) {
             writePluginConfig(pluginName, false)
-            p.push(new Buffer('"'+pluginName+'" has been uninstalled. Restart Scuttlebot server to disable the plugin.\n', 'utf-8'))
+            p.push(Buffer.from('"'+pluginName+'" has been uninstalled. Restart Scuttlebot server to disable the plugin.\n', 'utf-8'))
             p.end()
           } else
             p.end(err)

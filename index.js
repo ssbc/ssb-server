@@ -42,7 +42,7 @@ var SSB = {
     mkdirp.sync(dbPath)
 
     if(!opts.keys)
-      opts.keys = ssbKeys.generate('ed25519', opts.seed && new Buffer(opts.seed, 'base64'))
+      opts.keys = ssbKeys.generate('ed25519', opts.seed && Buffer.from(opts.seed, 'base64'))
 
     if(!opts.path)
       throw new Error('opts.path *must* be provided, or use opts.temp=name to create a test instance')
