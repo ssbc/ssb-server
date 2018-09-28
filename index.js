@@ -47,6 +47,27 @@ var SSB = {
     if(!opts.path)
       throw new Error('opts.path *must* be provided, or use opts.temp=name to create a test instance')
 
+    var maps = []
+    var chainMaps = (val, cb) => {
+      let idx = -1 // haven't entered the chain yet
+      const next = (err, val) => {
+        idx += 1
+        if (err || idx === maps.length)
+          cb(err, val)
+        else
+          maps[idx](val, next)
+      }
+      next(null, val)
+    }
+
+    if(!opts.map)
+      opts.map = (val, cb) => {
+        if (!maps)
+          cb(null, val)
+        else
+          chainMaps(val, cb)
+      }
+
     // main interface
     var ssb = create(path.join(opts.path, 'db'), opts, opts.keys)
     //treat the main feed as remote, because it's likely handled like that by others.
@@ -135,6 +156,9 @@ var SSB = {
       getVectorClock           : ssb.getVectorClock,
       getAtSequence            : ssb.getAtSequence,
       addUnboxer               : ssb.addUnboxer,
+      addMap                   : function(fn) {
+        maps.push(fn)
+      }
     }
   }
 }
