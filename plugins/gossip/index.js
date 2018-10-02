@@ -28,7 +28,7 @@ function isObject (o) {
 }
 
 function toBase64 (s) {
-  if(isString(s)) return s
+  if(isString(s)) return s.substring(1, s.indexOf('.'))
   else s.toString('base64') //assume a buffer
 }
 
@@ -48,11 +48,21 @@ function coearseAddress (address) {
 
 /*
 Peers : [{
+  //modern:
+  address: <multiserver address>,
+
+
+  //legacy
   key: id,
   host: ip,
   port: int,
+
   //to be backwards compatible with patchwork...
   announcers: {length: int}
+  //TODO: availability
+  //availability: 0-1, //online probability estimate
+
+  //where this peer was added from. TODO: remove "pub" peers.
   source: 'pub'|'manual'|'local'
 }]
 */
@@ -90,7 +100,7 @@ module.exports = {
 
     function simplify (peer) {
       return {
-        address: coearseAddress(peer),
+        address: peer.address || coearseAddress(peer),
         source: peer.source,
         state: peer.state, stateChange: peer.stateChange,
         failure: peer.failure,
@@ -151,30 +161,37 @@ module.exports = {
         return peers
       },
       get: function (addr) {
-        addr = ref.parseAddress(addr)
-        return u.find(peers, function (a) {
-          return (
-            addr.port === a.port
-            && addr.host === a.host
-            && addr.key === a.key
-          )
-        })
+        //addr = ref.parseAddress(addr)
+        if(ref.isFeed(addr)) return getPeer(addr)
+        else if(ref.isFeed(addr.key)) return getPeer(addr.key)
+        else throw new Error('must provide id:'+JSON.stringify(addr))
+//        return u.find(peers, function (a) {
+//          return (
+//            addr.port === a.port
+//            && addr.host === a.host
+//            && addr.key === a.key
+//          )
+//        })
       },
       connect: valid.async(function (addr, cb) {
         server.emit('log:info', ['SBOT', stringify(addr), 'CONNECTING'])
-        addr = ref.parseAddress(addr)
+        console.log("CONNECT", addr)
+        if(!addr.address)
+          addr = ref.parseAddress(addr)
         if (!addr || typeof addr != 'object')
           return cb(new Error('first param must be an address'))
 
-        if(!addr.key) return cb(new Error('address must have ed25519 key'))
+        if(!addr.address)
+          if(!addr.key) return cb(new Error('address must have ed25519 key'))
         // add peer to the table, incase it isn't already.
         gossip.add(addr, 'manual')
         var p = gossip.get(addr)
+        console.log("ADD?", addr, p)
         if(!p) return cb()
 
         p.stateChange = Date.now()
         p.state = 'connecting'
-        server.connect(coearseAddress(p), function (err, rpc) {
+        server.connect(p.address, function (err, rpc) {
           if (err) {
             p.error = err.stack
             p.state = undefined
@@ -214,7 +231,11 @@ module.exports = {
       //add an address to the peer table.
       add: valid.sync(function (addr, source) {
 
-        addr = ref.parseAddress(addr)
+        if(isObject(addr)) {
+          addr.address = coearseAddress(addr)
+        }
+        else
+          addr = ref.parseAddress(addr)
         if(!ref.isAddress(addr))
           throw new Error('not a valid address:' + JSON.stringify(addr))
         // check that this is a valid address, and not pointing at self.
@@ -374,9 +395,4 @@ module.exports = {
     return gossip
   }
 }
-
-
-
-
-
 
