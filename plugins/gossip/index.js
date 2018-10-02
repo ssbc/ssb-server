@@ -176,6 +176,8 @@ module.exports = {
 //        })
       },
       connect: valid.async(function (addr, cb) {
+        if(ref.isFeed(addr))
+          addr = gossip.get(addr)
         server.emit('log:info', ['SBOT', stringify(addr), 'CONNECTING'])
         if(!ref.isAddress(addr.address))
           addr = ref.parseAddress(addr)
