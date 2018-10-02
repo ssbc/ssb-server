@@ -79,10 +79,8 @@ tape('ignore invalid pub messages', function (t) {
 })
 
 tape('cleanup', function (t) {
-  sbot.close(true, function () {})
+  sbot.close()
   t.end()
-  //I don't know why this is necessary
-  //because the other tests exit fine.
-  process.exit(0)
 })
+
 
