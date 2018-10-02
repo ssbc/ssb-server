@@ -20,29 +20,35 @@ var sbot = createSbot({
   timeout: 1000
 })
 
+var localhost = {
+  host: 'localhost', port: 8888,
+  key: ssbKeys.generate().id
+}
+var ip = {
+  host: '182.23.49.132', port: 8881,
+  key: ssbKeys.generate().id
+}
+var example = {
+  host: 'example.com', port: 8889,
+  key: ssbKeys.generate().id
+}
+
+var peers = JSON.parse(JSON.stringify([localhost, ip, example]))
+var peers2 = peers.map(function (e) {
+  var k = ssbKeys.generate().id
+  return 'net:'+e.host+':'+(e.port+1)+'~shs:'+k.substring(1, k.indexOf('.')) 
+})
+
 tape('gossip: add and get peers', function (t) {
 
   t.ok(isArray(sbot.gossip.peers()))
 
-  var localhost = {
-    host: 'localhost', port: 8888,
-    key: ssbKeys.generate().id
-  }
-  var ip = {
-    host: '182.23.49.132', port: 8881,
-    key: ssbKeys.generate().id
-  }
-  var example = {
-    host: 'example.com', port: 8889,
-    key: ssbKeys.generate().id
-  }
 
-  var peers = JSON.parse(JSON.stringify([localhost, ip, example]))
+  //clone input, because gossip mutates it.
   sbot.gossip.add(localhost)
   sbot.gossip.add(ip)
   sbot.gossip.add(example)
 
-  console.log(sbot.gossip.peers())
   t.deepEqual(
     sbot.gossip.peers().map(function (e) {
       console.log(e, ref.parseAddress(e.address))
@@ -53,6 +59,20 @@ tape('gossip: add and get peers', function (t) {
 
   t.end()
 
+})
+
+tape('gossip: add string address', function (t) {
+  peers2.forEach(function (e) {
+    sbot.gossip.add(e, 'manual')
+  })
+  console.log(sbot.gossip.peers())
+  t.deepEqual(
+    sbot.gossip.peers().map(function (e) {
+      return e.address
+    }).slice(3),
+    peers2
+  )
+  t.end()
 })
 
 tape('gossip: errors on invalid peers', function (t) {
@@ -90,6 +110,9 @@ tape('cleanup', function (t) {
   sbot.close()
   t.end()
 })
+
+
+
 
 
 
