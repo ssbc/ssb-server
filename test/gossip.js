@@ -4,7 +4,7 @@ var deepEqual = require('deep-equal')
 var tape      = require('tape')
 var pull      = require('pull-stream')
 var ssbKeys   = require('ssb-keys')
-
+var ref       = require('ssb-ref')
 var u = require('./util')
 var isArray = Array.isArray
 
@@ -37,11 +37,19 @@ tape('gossip: add and get peers', function (t) {
     key: ssbKeys.generate().id
   }
 
+  var peers = JSON.parse(JSON.stringify([localhost, ip, example]))
   sbot.gossip.add(localhost)
   sbot.gossip.add(ip)
   sbot.gossip.add(example)
 
-  t.deepEqual(sbot.gossip.peers(), [localhost, ip, example])
+  console.log(sbot.gossip.peers())
+  t.deepEqual(
+    sbot.gossip.peers().map(function (e) {
+      console.log(e, ref.parseAddress(e.address))
+      return ref.parseAddress(e.address)
+    }),
+    peers
+  )
 
   t.end()
 
@@ -82,5 +90,8 @@ tape('cleanup', function (t) {
   sbot.close()
   t.end()
 })
+
+
+
 
 
