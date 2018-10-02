@@ -38,8 +38,10 @@ function isString (s) {
 
 function coearseAddress (address) {
   if(isObject(address)) {
+    if(ref.isAddress(address.address))
+      return address.address
     var protocol = 'net'
-    if (address.host.endsWith(".onion"))
+    if (address.host && address.host.endsWith(".onion"))
         protocol = 'onion'
     return [protocol, address.host, address.port].join(':') +'~'+['shs', toBase64(address.key)].join(':')
   }
@@ -175,8 +177,7 @@ module.exports = {
       },
       connect: valid.async(function (addr, cb) {
         server.emit('log:info', ['SBOT', stringify(addr), 'CONNECTING'])
-        console.log("CONNECT", addr)
-        if(!addr.address)
+        if(!ref.isAddress(addr.address))
           addr = ref.parseAddress(addr)
         if (!addr || typeof addr != 'object')
           return cb(new Error('first param must be an address'))
@@ -186,7 +187,6 @@ module.exports = {
         // add peer to the table, incase it isn't already.
         gossip.add(addr, 'manual')
         var p = gossip.get(addr)
-        console.log("ADD?", addr, p)
         if(!p) return cb()
 
         p.stateChange = Date.now()
@@ -234,9 +234,14 @@ module.exports = {
         if(isObject(addr)) {
           addr.address = coearseAddress(addr)
         }
-        else
-          addr = ref.parseAddress(addr)
-        if(!ref.isAddress(addr))
+        else {
+         console.log('parse:', addr)
+         var _addr = ref.parseAddress(addr)
+          if(!_addr) throw new Error('not a valid address:'+addr)
+          _addr.address = addr
+          addr = _addr
+        }
+        if(!ref.isAddress(addr.address) /*&& !ref.isAddress(addr)*/)
           throw new Error('not a valid address:' + JSON.stringify(addr))
         // check that this is a valid address, and not pointing at self.
 
@@ -275,7 +280,7 @@ module.exports = {
         //between 10 seconds and 30 minutes, default 5 min
         timeout = Math.max(10e3, Math.min(timeout, 30*60e3))
         return ping({timeout: timeout})
-      },
+1      },
       reconnect: function () {
         for(var id in server.peers)
           if(id !== server.id) //don't disconnect local client
