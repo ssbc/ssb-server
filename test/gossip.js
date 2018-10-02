@@ -57,6 +57,10 @@ tape('gossip: add and get peers', function (t) {
     peers
   )
 
+  sbot.gossip.peers().forEach(function (e) {
+    t.equal(sbot.gossip.get(e.key).key, e.key)
+  })
+
   t.end()
 
 })
@@ -110,11 +114,4 @@ tape('cleanup', function (t) {
   sbot.close()
   t.end()
 })
-
-
-
-
-
-
-
 
