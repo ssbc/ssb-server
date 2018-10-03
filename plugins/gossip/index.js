@@ -282,7 +282,7 @@ module.exports = {
         //between 10 seconds and 30 minutes, default 5 min
         timeout = Math.max(10e3, Math.min(timeout, 30*60e3))
         return ping({timeout: timeout})
-1      },
+      },
       reconnect: function () {
         for(var id in server.peers)
           if(id !== server.id) //don't disconnect local client
