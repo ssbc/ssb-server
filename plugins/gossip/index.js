@@ -215,7 +215,7 @@ module.exports = {
       }, 'string|object'),
 
       disconnect: valid.async(function (addr, cb) {
-        var peer = this.get(addr)
+        var peer = gossip.get(addr)
 
         peer.state = 'disconnecting'
         peer.stateChange = Date.now()
