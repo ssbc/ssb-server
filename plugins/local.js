@@ -56,6 +56,8 @@ module.exports = {
       if (peer && peer.key !== sbot.id) {
         addrs[peer.key] = peer
         lastSeen[peer.key] = Date.now()
+        //note: add the raw data, not the parsed data.
+        //so we still have the whole address, including protocol (eg, websockets)
         sbot.gossip.add(data, 'local')
       }
     })
@@ -83,4 +85,5 @@ module.exports = {
     }, 1000)
   }
 }
+
 
