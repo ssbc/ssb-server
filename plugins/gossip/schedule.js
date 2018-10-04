@@ -236,7 +236,7 @@ function (gossip, config, server) {
       pull.drain(function (ev) {
         if(ev.type == 'disconnect')
           connections()
-      })
+      }, function () {})
     )
 
     var int = setInterval(connections, 2e3)
@@ -258,4 +258,6 @@ exports.isLocal = isLocal
 exports.isFriend = isFriend
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
+
+
 

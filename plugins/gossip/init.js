@@ -22,6 +22,8 @@ module.exports = function (gossip, config, server) {
         if(!msg.content.address) return
         if(ref.isAddress(msg.content.address))
           gossip.add(msg.content.address, 'pub')
+      }, function () {
+        //this can happen if the database closes
       })
     )
 
