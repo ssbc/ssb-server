@@ -46,7 +46,7 @@ function isLocal (e) {
   // don't rely on private ip address, because
   // cjdns creates fake private ip addresses.
   // ignore localhost addresses, because sometimes they get broadcast.
-  return !ip.isLoopback(e.host) && ip.isPrivate(e.host) && e.source === 'local'
+  return e.host && !ip.isLoopback(e.host) && ip.isPrivate(e.host) && e.source === 'local'
 }
 
 function isSeed (e) {

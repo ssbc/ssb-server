@@ -176,8 +176,11 @@ module.exports = {
 //        })
       },
       connect: valid.async(function (addr, cb) {
-        if(ref.isFeed(addr))
+        if(ref.isFeed(addr)) {
+          var id = addr
           addr = gossip.get(addr)
+          if(!addr) return cb(new Error('do not know address for feed:'+id))
+        }
         server.emit('log:info', ['SBOT', stringify(addr), 'CONNECTING'])
         if(!ref.isAddress(addr.address))
           addr = ref.parseAddress(addr)
@@ -232,19 +235,25 @@ module.exports = {
       },
       //add an address to the peer table.
       add: valid.sync(function (addr, source) {
+        if(Object.keys(addr).length == 1 && addr.key)
+          throw new Error('cannot add a peer if we only know their key')
+        if(Object.keys(addr).length == 2 && addr.key && !addr.address)
+          throw new Error('cannot add a peer if we only know their key')
 
         if(isObject(addr)) {
           addr.address = coearseAddress(addr)
         }
-        else {
+        else if(ref.isAddress(addr)) {
          console.log('parse:', addr)
          var _addr = ref.parseAddress(addr)
-          if(!_addr) throw new Error('not a valid address:'+addr)
+        if(!_addr) throw new Error('not a valid address (1):'+addr)
           _addr.address = addr
           addr = _addr
         }
+        else
+          throw new Error('not a valid address (3):'+addr)
         if(!ref.isAddress(addr.address) /*&& !ref.isAddress(addr)*/)
-          throw new Error('not a valid address:' + JSON.stringify(addr))
+          throw new Error('not a valid address (2):' + JSON.stringify(addr))
         // check that this is a valid address, and not pointing at self.
 
         if(addr.key === server.id) return
@@ -402,4 +411,7 @@ module.exports = {
     return gossip
   }
 }
+
+
+
 
