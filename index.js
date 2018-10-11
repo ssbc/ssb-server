@@ -170,42 +170,17 @@ function createSbot() {
     appKey: require('./lib/ssb-cap')
   })
     .use(SSB)
-    .use(function (ssk, config) {
-      var Onion = require('multiserver/plugins/onion')
-
-      ssk.multiserver.transport({
-        name: 'onion',
-        create: function (conf) {
-          return Onion(conf)
-        }
-      })
-    })
-    .use(function (ssk, config) {
-      var Unix = require('multiserver/plugins/unix-socket')
-      ssk.multiserver.transport({
-        name: 'unix',
-        create: function (conf) {
-          return Unix(config)
-        }
-      })
-    })
-    .use(function (ssk, config) {
-      var Noauth = require('multiserver/plugins/noauth')
-
-      ssk.multiserver.transform({
-        name: 'noauth',
-        create: function () {
-          return Noauth({
-            keys: {
-              publicKey: Buffer.from(config.keys.public, 'base64')
-            }
-          })
-        }
-      })
-    })
+    .use(require('./plugins/onion'))
+    .use(require('./plugins/unix-socket'))
+    .use(require('./plugins/no-auth'))
 }
 module.exports = createSbot()
 module.exports.createSbot = createSbot
+
+
+
+
+
 
 
 
