@@ -170,15 +170,9 @@ function createSbot() {
     appKey: require('./lib/ssb-cap')
   })
     .use(SSB)
-    .use(require('./plugins/onion'))
-    .use(require('./plugins/unix-socket'))
-    .use(require('./plugins/no-auth'))
 }
 module.exports = createSbot()
 module.exports.createSbot = createSbot
-
-
-
 
 
 
