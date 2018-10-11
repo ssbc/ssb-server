@@ -7,7 +7,7 @@ var ssbKeys   = require('ssb-keys')
 var ref       = require('ssb-ref')
 var u = require('./util')
 var isArray = Array.isArray
-
+var crypto = require('crypto')
 var createSbot = require('../')
 //  .use(require('ssb-friends'))
   .use(require('../plugins/gossip'))
@@ -79,6 +79,29 @@ tape('gossip: add string address', function (t) {
   t.end()
 })
 
+tape('gossip: add complex multiserver address', function (t) {
+  var a = crypto.randomBytes(32).toString('base64')
+  var b = crypto.randomBytes(32).toString('base64')
+  var c = crypto.randomBytes(32).toString('base64')
+  var addresses = [
+    'ws://host.com:4030~shs:'+a,
+    'onion:othuerocheureoth.onion~shs:'+c,
+    'tunnel:@'+b+'.ed25519:@'+a+'.ed25519~shs:'+a
+  ]
+  addresses.forEach(function (e) {
+    sbot.gossip.add(e, 'manual')
+  })
+  console.log(sbot.gossip.peers())
+  t.deepEqual(
+    sbot.gossip.peers().map(function (e) {
+      return e.address
+    }).slice(6),
+    addresses
+  )
+  t.end()
+})
+
+
 tape('gossip: errors on invalid peers', function (t) {
 
   var pk = ssbKeys.generate().id
@@ -114,4 +137,6 @@ tape('cleanup', function (t) {
   sbot.close()
   t.end()
 })
+
+
 
