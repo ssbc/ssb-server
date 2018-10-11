@@ -181,19 +181,6 @@ function createSbot() {
       })
     })
     .use(function (ssk, config) {
-      var WS = require('multiserver/plugins/ws')
-
-      ssk.multiserver.transport({
-        name: 'ws',
-        create: function (conf) {
-          if (!conf.port)
-            conf.port = 1024+(~~(Math.random()*(65536-1024)))
-
-          return WS(conf)
-        }
-      })
-    })
-    .use(function (ssk, config) {
       var Unix = require('multiserver/plugins/unix-socket')
       ssk.multiserver.transport({
         name: 'unix',
@@ -219,5 +206,6 @@ function createSbot() {
 }
 module.exports = createSbot()
 module.exports.createSbot = createSbot
+
 
 
