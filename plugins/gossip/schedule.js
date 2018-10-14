@@ -125,7 +125,7 @@ function (gossip, config, server) {
     if(connected.length > opts.quota) {
       return earliest(connected, connected.length - opts.quota)
         .forEach(function (peer) {
-          gossip.disconnect(peer)
+          gossip.disconnect(peer.key)
         })
     }
 
@@ -133,7 +133,7 @@ function (gossip, config, server) {
     var selected = select(peers, ts, and(filter, isOnline), opts)
     selected
       .forEach(function (peer) {
-        gossip.connect(peer)
+        gossip.connect(peer.key)
       })
   }
 
@@ -223,7 +223,7 @@ function (gossip, config, server) {
       peers.filter(isConnect).forEach(function (e) {
         var permanent = exports.isLongterm(e) || exports.isLocal(e)
         if((!permanent || e.state === 'connecting') && e.stateChange + 10e3 < ts) {
-          gossip.disconnect(e)
+          gossip.disconnect(e.key)
         }
       })
 

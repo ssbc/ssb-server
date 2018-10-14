@@ -84,7 +84,7 @@ tape('gossip: add complex multiserver address', function (t) {
   var b = crypto.randomBytes(32).toString('base64')
   var c = crypto.randomBytes(32).toString('base64')
   var addresses = [
-    'ws://host.com:4030~shs:'+a,
+    'ws://host.com:4030~shs:'+b,
     'onion:othuerocheureoth.onion~shs:'+c,
     'tunnel:@'+b+'.ed25519:@'+a+'.ed25519~shs:'+a
   ]
@@ -133,10 +133,20 @@ tape('ignore invalid pub messages', function (t) {
 
 })
 
+tape('test removal of a peer', function (t) {
+  t.fail('no current tests for removing a peer')
+})
+
+tape('test update of a peer', function (t) {
+  t.fail('no current tests for updating a peer')
+})
+
+
 tape('cleanup', function (t) {
   sbot.close()
   t.end()
 })
+
 
 
 

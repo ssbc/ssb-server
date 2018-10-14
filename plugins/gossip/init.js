@@ -20,12 +20,15 @@ module.exports = function (gossip, config, server) {
       pull.drain(function (msg) {
         if(msg.sync) return
         if(!msg.content.address) return
-        if(ref.isAddress(msg.content.address))
-          gossip.add(msg.content.address, 'pub')
+        var addr = msg.content.address
+        if(ref.isLegacyAddress(addr))
+          gossip.add(ref.toMultiServerAddress(addr), 'pub')
       }, function () {
         //this can happen if the database closes
       })
     )
 
 }
+
+
 

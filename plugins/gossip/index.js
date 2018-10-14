@@ -40,6 +40,8 @@ function coearseAddress (address) {
   if(isObject(address)) {
     if(ref.isAddress(address.address))
       return address.address
+
+    throw new Error('should not happen')
     var protocol = 'net'
     if (address.host && address.host.endsWith(".onion"))
         protocol = 'onion'
@@ -163,27 +165,29 @@ module.exports = {
         return peers
       },
       get: function (addr) {
-        //addr = ref.parseAddress(addr)
+        if(ref.isLegacyAddress(addr)) {
+          console.error('gossip.get({host,port,key}) is deprecated')
+          addr = addr.key
+        }
         if(ref.isFeed(addr)) return getPeer(addr)
         else if(ref.isFeed(addr.key)) return getPeer(addr.key)
         else throw new Error('must provide id:'+JSON.stringify(addr))
-//        return u.find(peers, function (a) {
-//          return (
-//            addr.port === a.port
-//            && addr.host === a.host
-//            && addr.key === a.key
-//          )
-//        })
       },
       connect: valid.async(function (addr, cb) {
+        if(ref.isLegacyAddress(addr)) {
+          console.error('gossip.connect({host,port,key}) is deprecated')
+          //addr = addr.key
+          addr = ref.toMultiServerAddress(addr)
+        }
         if(ref.isFeed(addr)) {
-          var id = addr
           addr = gossip.get(addr)
           if(!addr) return cb(new Error('do not know address for feed:'+id))
         }
         server.emit('log:info', ['SBOT', stringify(addr), 'CONNECTING'])
-        if(!ref.isAddress(addr.address))
+        if(!ref.isAddress(addr.address)) {
+          throw new Error('should not happen')
           addr = ref.parseAddress(addr)
+        }
         if (!addr || typeof addr != 'object')
           return cb(new Error('first param must be an address'))
 
@@ -235,10 +239,11 @@ module.exports = {
       },
       //add an address to the peer table.
       add: valid.sync(function (addr, source) {
-        if(Object.keys(addr).length == 1 && addr.key)
-          throw new Error('cannot add a peer if we only know their key')
-        if(Object.keys(addr).length == 2 && addr.key && !addr.address)
-          throw new Error('cannot add a peer if we only know their key')
+        if(ref.isLegacyAddress(addr)) {
+          console.error('gossip.connect({host,port,key}) is deprecated')
+          //addr = addr.key
+          addr = ref.toMultiServerAddress(addr)
+        }
 
         if(isObject(addr)) {
           addr.address = coearseAddress(addr)
@@ -249,17 +254,19 @@ module.exports = {
         if(!_addr) throw new Error('not a valid address (1):'+addr)
           _addr.address = addr
           addr = _addr
+         console.log('parsed:', addr)
         }
         else
           throw new Error('not a valid address (3):'+addr)
+
         if(!ref.isAddress(addr.address) /*&& !ref.isAddress(addr)*/)
           throw new Error('not a valid address (2):' + JSON.stringify(addr))
         // check that this is a valid address, and not pointing at self.
 
         if(addr.key === server.id) return
 
-        var f = gossip.get(addr)
-
+        var f = gossip.get(addr.key)
+        
         if(!f) {
           // new peer
           addr.source = source
@@ -273,8 +280,9 @@ module.exports = {
           f.source = source
         }
         //don't count local over and over
-        else if(f.source != 'local')
+        else if(f.source != 'local') {
           f.announcers ++
+        }
 
         return f
       }, 'string|object', 'string?'),
@@ -411,7 +419,4 @@ module.exports = {
     return gossip
   }
 }
-
-
-
 
