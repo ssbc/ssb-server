@@ -114,6 +114,7 @@ var SSB = {
       get                      : valid.async(ssb.get, 'msgLink|number|object'),
 
       post                     : ssb.post,
+      addMap                   : ssb.addMap,
 
       since                    : since,
 
