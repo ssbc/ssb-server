@@ -171,11 +171,22 @@ function createSbot() {
     appKey: require('./lib/ssb-cap')
   })
     .use(SSB)
+    .use(api => {
+      api.addMap((msg, cb) => {
+        if (!msg.value.meta) {
+          msg.value.meta = {}
+        }
+
+        msg.value.meta.random = 42
+        msg.value.meta.foo = 'bar'
+
+        cb(null, msg)
+      })
+    })
 }
+
 module.exports = createSbot()
 module.exports.createSbot = createSbot
-
-
 
 
 
