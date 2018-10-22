@@ -108,7 +108,7 @@ tape('test invite.accept doesnt follow if already followed', function (t) {
           console.log(ary)
           t.deepEqual({
             type: 'pub',
-            address: ref.parseAddress(alice.address().split(';').shift()),
+            address: ref.toLegacyAddress(alice.getAddress())
           }, ary[0].value.content)
 
           all(bob.messagesByType('contact'), function (err, ary) {
@@ -307,5 +307,7 @@ tape('test invite with note', function (t) {
     })
   })
 })
+
+
 
 

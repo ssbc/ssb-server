@@ -19,7 +19,7 @@ exports.block = function unfollow(id) {
 exports.pub = function (address) {
   return {
     type: 'pub',
-    address: ref.parseAddress(address)
+    address: ref.toLegacyAddress(address)
   }
 }
 

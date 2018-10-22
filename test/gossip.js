@@ -51,8 +51,7 @@ tape('gossip: add and get peers', function (t) {
 
   t.deepEqual(
     sbot.gossip.peers().map(function (e) {
-      console.log(e, ref.parseAddress(e.address))
-      return ref.parseAddress(e.address)
+      return ref.toLegacyAddress(e.address)
     }),
     peers
   )
@@ -146,6 +145,7 @@ tape('cleanup', function (t) {
   sbot.close()
   t.end()
 })
+
 
 
 
