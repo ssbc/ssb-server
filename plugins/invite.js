@@ -191,6 +191,7 @@ module.exports = {
             modern = true
         }
 
+        //note: opts is only used here to post the pub message.
         opts = ref.parseAddress(ref.parseInvite(invite).remote)
 
         function connect (cb) {

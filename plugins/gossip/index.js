@@ -186,7 +186,6 @@ module.exports = {
         server.emit('log:info', ['SBOT', stringify(addr), 'CONNECTING'])
         if(!ref.isAddress(addr.address)) {
           throw new Error('should not happen')
-          addr = ref.parseAddress(addr)
         }
         if (!addr || typeof addr != 'object')
           return cb(new Error('first param must be an address'))
@@ -248,18 +247,12 @@ module.exports = {
         if(isObject(addr)) {
           addr.address = coearseAddress(addr)
         }
-        else if(ref.isAddress(addr)) {
-         console.log('parse:', addr)
-         var _addr = ref.parseAddress(addr)
-        if(!_addr) throw new Error('not a valid address (1):'+addr)
-          _addr.address = addr
-          addr = _addr
-         console.log('parsed:', addr)
-        }
+        else if(ref.isAddress(addr))
+          addr = {key: ref.getKeyFromAddress(addr), address: ref.toMultiServerAddress(addr)}
         else
           throw new Error('not a valid address (3):'+addr)
 
-        if(!ref.isAddress(addr.address) /*&& !ref.isAddress(addr)*/)
+        if(!ref.isAddress(addr.address))
           throw new Error('not a valid address (2):' + JSON.stringify(addr))
         // check that this is a valid address, and not pointing at self.
 
@@ -401,6 +394,7 @@ module.exports = {
     })
 
     var int = setInterval(function () {
+      //XXX wow, what is this ugly hack!?
       var copy = JSON.parse(JSON.stringify(peers))
       copy.filter(function (e) {
         return e.source !== 'local'
@@ -419,4 +413,5 @@ module.exports = {
     return gossip
   }
 }
+
 
