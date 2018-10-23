@@ -3,7 +3,6 @@ var pull      = require('pull-stream')
 var paramap   = require('pull-paramap')
 var ssbKeys   = require('ssb-keys')
 var u         = require('./util')
-var ssbClient = require('ssb-client')
 
 var tape      = require('tape')
 
@@ -308,6 +307,7 @@ tape('shutdown', function (t) {
   animalNetwork.close(true)
   t.end()
 })
+
 
 
 

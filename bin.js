@@ -39,6 +39,9 @@ if (argv[0] == 'server') {
   // import sbot and start the server
 
   var createSbot = require('./')
+    .use(require('./plugins/onion'))
+    .use(require('./plugins/unix-socket'))
+    .use(require('./plugins/no-auth'))
     .use(require('./plugins/plugins'))
     .use(require('./plugins/master'))
     .use(require('./plugins/gossip'))
@@ -107,12 +110,12 @@ if (argv[0] == 'server') {
     }
 
     // add some extra commands
-    manifest.version = 'async'
+//    manifest.version = 'async'
     manifest.config = 'sync'
-    rpc.version = function (cb) {
-      console.log(require('./package.json').version)
-      cb()
-    }
+//    rpc.version = function (cb) {
+//      console.log(packageJson.version)
+//      cb()
+//    }
     rpc.config = function (cb) {
       console.log(JSON.stringify(config, null, 2))
       cb()
@@ -151,7 +154,4 @@ if (argv[0] == 'server') {
     muxrpcli(argv, manifest, rpc, config.verbose)
   })
 }
-
-
-
 

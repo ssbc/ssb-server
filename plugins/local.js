@@ -56,6 +56,8 @@ module.exports = {
       if (peer && peer.key !== sbot.id) {
         addrs[peer.key] = peer
         lastSeen[peer.key] = Date.now()
+        //note: add the raw data, not the parsed data.
+        //so we still have the whole address, including protocol (eg, websockets)
         sbot.gossip.add(data, 'local')
       }
     })
@@ -79,8 +81,9 @@ module.exports = {
       // (which means they can update their peer table)
       // Oh if this includes your local address,
       // then it becomes unforgeable.
-      local.write(sbot.getAddress())
+      local.write(sbot.getAddress('private'))
     }, 1000)
   }
 }
+
 

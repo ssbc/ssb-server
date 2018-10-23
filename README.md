@@ -16,6 +16,20 @@ This means Scuttlebots comprise a [global gossip-protocol mesh](https://en.wikip
 
 [![build status](https://secure.travis-ci.org/ssbc/scuttlebot.png)](http://travis-ci.org/ssbc/scuttlebot)
 
+## install
+
+to get a known working shrinkwrapped version, install `scuttlebot-release`.
+It is recommended to only use this repo for development.
+
+```
+npm install -g scuttlebot-release
+```
+
+`scuttlebot-release` uses an `npm-shrinkwrap.json` file,
+so that it's possible to install it globally with known dependencies.
+You can also use this to install old versions, with dependencies
+that worked at that time.
+
 ## Applications
 
 There are already several applications built on scuttlebot,
@@ -45,7 +59,7 @@ sbot feed
 sbot log
 
 # stream all messages by one feed, ordered by sequence number
-sbot hist $FEED_ID
+sbot hist --id $FEED_ID
 ```
 ```js
 // In javascript:
@@ -86,7 +100,7 @@ ssbClient(function (err, sbot) {
 
   // stream all messages by one feed, ordered by sequence number
   pull(
-    sbot.createHistoryStream(feedId),
+    sbot.createHistoryStream({ id: < feedId > }),
     pull.collect(function (err, msgs) {
       // msgs[0].key == hash(msgs[0].value)
       // msgs[0].value...
@@ -133,4 +147,6 @@ Therefore, by itself, it would probably make a poor choice for implementing a cr
 - [Using Trust in Open Networks](https://ssbc.github.io/docs/articles/using-trust-in-open-networks.html)
 
 
+# License
 
+MIT
