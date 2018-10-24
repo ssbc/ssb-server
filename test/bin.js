@@ -59,21 +59,32 @@ function try_often(times, opts, work, done) {
   const delay = 2000
   setTimeout(function() { // delay first try
     work(function(err, result) {
-      if (err) {
-        if (opts.ignore && err.message && !err.message.match(err.ignore)) {
-          console.error('Fatal error:', err)
-          return done(err)
-        }
-        if (times) return setTimeout(function () {
-          console.warn('retry run', times)
-          console.error('work(err):', err)
-          try_often(times-1, work, done)
-        }, delay)
+      if (!err) return done(null, result)
+      if (opts.ignore && err.message && !err.message.match(opts.ignore)) {
+        console.error('Fatal error:', err)
         return done(err)
       }
-      return done(null, result)
+      if (!times) return done(err)
+      console.warn('retry run', times)
+      console.error('work(err):', err)
+      try_often(times-1, work, done)
     })
   }, delay)
+}
+
+function connect(port, host, cb) {
+  var done = false
+  var socket = net.connect(port, host)
+  socket.on('error', function(err) {
+    if (done) return
+    done = true
+    cb(err)
+  })
+  socket.on('connect', function() {
+    if (done) return
+    done = true
+    cb(null)
+  })
 }
 
 test('run bin.js server with command line option --host and --port (IPv4)', function(t) {
@@ -86,9 +97,7 @@ test('run bin.js server with command line option --host and --port (IPv4)', func
   ])
 
   try_often(10, function work(cb) {
-    var socket = net.connect(9001, '127.0.0.1')
-    socket.on('error', cb)
-    socket.on('connect', cb)
+    connect(9001, '127.0.0.1', cb)
   }, function done(err) {
     t.error(err, 'Successfully connect eventually')
     end()
@@ -105,9 +114,7 @@ test('run bin.js server with command line option --host and --port (IPv6)', func
     '--path=/tmp/sbot_binjstest_' + Date.now()
   ])
   try_often(10, function work(cb) {
-    var socket = net.connect(9001, '::1')
-    socket.on('error', cb)
-    socket.on('connect', cb)
+    connect(9001, '::1', cb)
   }, function done(err) {
     t.error(err, 'Successfully connect eventually')
     end()
@@ -131,12 +138,10 @@ test('run bin.js server with local config file (port, host) (IPv4)', function(t)
     cwd: dir
   })
 
-  try_often(3, {
+  try_often(10, {
     ignore: /ECONNREFUSED/
   }, function work(cb) {
-    var socket = net.connect(9001, '127.0.0.1')
-    socket.on('error', cb)
-    socket.on('connect', cb)
+    connect(9001, '127.0.0.1', cb)
   }, function done(err) {
     t.error(err, 'Successfully connect eventually')
     end()
@@ -162,9 +167,7 @@ test('run bin.js server with local config file (port, host) (IPv6)', function(t)
   })
 
   try_often(10, function work(cb) {
-    var socket = net.connect(9001, '::1')
-    socket.on('error', cb)
-    socket.on('connect', cb)
+    connect(9001, '::1', cb)
   }, function done(err) {
     t.error(err, 'Successfully connect eventually')
     end()
