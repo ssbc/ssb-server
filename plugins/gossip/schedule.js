@@ -236,7 +236,9 @@ function (gossip, config, server) {
       pull.drain(function (ev) {
         if(ev.type == 'disconnect')
           connections()
-      }, function () {})
+      }, function () {
+        console.warn('[gossip/dc] warning: this can happen if the database closes', arguments)
+      })
     )
 
     var int = setInterval(connections, 2e3)
