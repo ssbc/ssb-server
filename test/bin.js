@@ -131,7 +131,7 @@ test('run bin.js server with local config file (port, host) (IPv4)', function(t)
     cwd: dir
   })
 
-  try_often(3, {
+  try_often(10, {
     ignore: /ECONNREFUSED/
   }, function work(cb) {
     var socket = net.connect(9001, '127.0.0.1')
