@@ -9,6 +9,7 @@ var mdm        = require('mdmanifest')
 var cmdAliases = require('./lib/cli-cmd-aliases')
 var valid      = require('./lib/validators')
 var apidocs    = require('./lib/apidocs.js')
+var pkg        = require('./package.json')
 
 function isString(s) { return 'string' === typeof s }
 function isObject(o) { return 'object' === typeof o }
@@ -18,6 +19,8 @@ var manifest = mdm.manifest(apidocs._)
 manifest.seq = 'async'
 manifest.usage = 'sync'
 manifest.clock = 'async'
+manifest.version = 'sync'
+
 var SSB = {
   manifest: manifest,
   permissions: {
@@ -39,7 +42,7 @@ var SSB = {
     mkdirp.sync(dbPath)
 
     if(!opts.keys)
-      opts.keys = ssbKeys.generate('ed25519', opts.seed && new Buffer(opts.seed, 'base64'))
+      opts.keys = ssbKeys.generate('ed25519', opts.seed && Buffer.from(opts.seed, 'base64'))
 
     if(!opts.path)
       throw new Error('opts.path *must* be provided, or use opts.temp=name to create a test instance')
@@ -91,6 +94,10 @@ var SSB = {
         return {progress: self.progress(), db: ssb.status, sync: since() }
       },
 
+      version                  : function () {
+        return pkg.version
+      },
+
       //temporary!
       _flumeUse                :
         function (name, flumeview) {
@@ -104,9 +111,10 @@ var SSB = {
       publish                  : valid.async(feed.add, 'string|msgContent'),
       add                      : valid.async(ssb.add, 'msg'),
       queue                      : valid.async(ssb.queue, 'msg'),
-      get                      : valid.async(ssb.get, 'msgId|number|object'),
+      get                      : valid.async(ssb.get, 'msgLink|number|object'),
 
       post                     : ssb.post,
+      addMap                   : ssb.addMap,
 
       since                    : since,
 
@@ -116,7 +124,6 @@ var SSB = {
       latestSequence           : valid.async(ssb.latestSequence, 'feedId'),
       createFeed               : ssb.createFeed,
       whoami                   : function () { return { id: feed.id } },
-      relatedMessages          : valid.async(ssb.relatedMessages, 'relatedMessagesOpts'),
       query                    : ssb.query,
       createFeedStream         : valid.source(ssb.createFeedStream, 'readStreamOpts?'),
       createHistoryStream      : valid.source(ssb.createHistoryStream, ['createHistoryStreamOpts'], ['feedId', 'number?', 'boolean?']),
@@ -128,6 +135,7 @@ var SSB = {
       createWriteStream        : ssb.createWriteStream,
       getVectorClock           : ssb.getVectorClock,
       getAtSequence            : ssb.getAtSequence,
+      addUnboxer               : ssb.addUnboxer,
     }
   }
 }
@@ -166,5 +174,8 @@ function createSbot() {
 }
 module.exports = createSbot()
 module.exports.createSbot = createSbot
+
+
+
 
 

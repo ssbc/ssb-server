@@ -16,6 +16,20 @@ This means Scuttlebots comprise a [global gossip-protocol mesh](https://en.wikip
 
 [![build status](https://secure.travis-ci.org/ssbc/scuttlebot.png)](http://travis-ci.org/ssbc/scuttlebot)
 
+## install
+
+to get a known working shrinkwrapped version, install `scuttlebot-release`.
+It is recommended to only use this repo for development.
+
+```
+npm install -g scuttlebot-release
+```
+
+`scuttlebot-release` uses an `npm-shrinkwrap.json` file,
+so that it's possible to install it globally with known dependencies.
+You can also use this to install old versions, with dependencies
+that worked at that time.
+
 ## Applications
 
 There are already several applications built on scuttlebot,

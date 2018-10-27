@@ -303,7 +303,7 @@ module.exports = function (sbot, notify, config) {
     function fallback () {
       //if we are not configured to use EBT, then fallback to createHistoryStream
       if(replicate_self) return
-      replicated_self = true
+      replicate_self = true
       replicate({id: sbot.id, sequence: toSend[sbot.id] || 0})
     }
 

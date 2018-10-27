@@ -236,6 +236,8 @@ function (gossip, config, server) {
       pull.drain(function (ev) {
         if(ev.type == 'disconnect')
           connections()
+      }, function () {
+        console.warn('[gossip/dc] warning: this can happen if the database closes', arguments)
       })
     )
 
@@ -258,4 +260,6 @@ exports.isLocal = isLocal
 exports.isFriend = isFriend
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
+
+
 

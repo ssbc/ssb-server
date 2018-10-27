@@ -28,7 +28,7 @@ function isObject (o) {
 }
 
 function toBase64 (s) {
-  if(isString(s)) return s
+  if(isString(s)) return s.substring(1, s.indexOf('.'))
   else s.toString('base64') //assume a buffer
 }
 
@@ -38,8 +38,10 @@ function isString (s) {
 
 function coearseAddress (address) {
   if(isObject(address)) {
+    if(ref.isAddress(address.address))
+      return address.address
     var protocol = 'net'
-    if (address.host.endsWith(".onion"))
+    if (address.host && address.host.endsWith(".onion"))
         protocol = 'onion'
     return [protocol, address.host, address.port].join(':') +'~'+['shs', toBase64(address.key)].join(':')
   }
@@ -48,11 +50,21 @@ function coearseAddress (address) {
 
 /*
 Peers : [{
+  //modern:
+  address: <multiserver address>,
+
+
+  //legacy
   key: id,
   host: ip,
   port: int,
+
   //to be backwards compatible with patchwork...
   announcers: {length: int}
+  //TODO: availability
+  //availability: 0-1, //online probability estimate
+
+  //where this peer was added from. TODO: remove "pub" peers.
   source: 'pub'|'manual'|'local'
 }]
 */
@@ -90,7 +102,7 @@ module.exports = {
 
     function simplify (peer) {
       return {
-        address: coearseAddress(peer),
+        address: peer.address || coearseAddress(peer),
         source: peer.source,
         state: peer.state, stateChange: peer.stateChange,
         failure: peer.failure,
@@ -151,22 +163,29 @@ module.exports = {
         return peers
       },
       get: function (addr) {
-        addr = ref.parseAddress(addr)
-        return u.find(peers, function (a) {
-          return (
-            addr.port === a.port
-            && addr.host === a.host
-            && addr.key === a.key
-          )
-        })
+        //addr = ref.parseAddress(addr)
+        if(ref.isFeed(addr)) return getPeer(addr)
+        else if(ref.isFeed(addr.key)) return getPeer(addr.key)
+        else throw new Error('must provide id:'+JSON.stringify(addr))
+//        return u.find(peers, function (a) {
+//          return (
+//            addr.port === a.port
+//            && addr.host === a.host
+//            && addr.key === a.key
+//          )
+//        })
       },
       connect: valid.async(function (addr, cb) {
+        if(ref.isFeed(addr))
+          addr = gossip.get(addr)
         server.emit('log:info', ['SBOT', stringify(addr), 'CONNECTING'])
-        addr = ref.parseAddress(addr)
+        if(!ref.isAddress(addr.address))
+          addr = ref.parseAddress(addr)
         if (!addr || typeof addr != 'object')
           return cb(new Error('first param must be an address'))
 
-        if(!addr.key) return cb(new Error('address must have ed25519 key'))
+        if(!addr.address)
+          if(!addr.key) return cb(new Error('address must have ed25519 key'))
         // add peer to the table, incase it isn't already.
         gossip.add(addr, 'manual')
         var p = gossip.get(addr)
@@ -174,7 +193,7 @@ module.exports = {
 
         p.stateChange = Date.now()
         p.state = 'connecting'
-        server.connect(coearseAddress(p), function (err, rpc) {
+        server.connect(p.address, function (err, rpc) {
           if (err) {
             p.error = err.stack
             p.state = undefined
@@ -196,7 +215,7 @@ module.exports = {
       }, 'string|object'),
 
       disconnect: valid.async(function (addr, cb) {
-        var peer = this.get(addr)
+        var peer = gossip.get(addr)
 
         peer.state = 'disconnecting'
         peer.stateChange = Date.now()
@@ -214,8 +233,16 @@ module.exports = {
       //add an address to the peer table.
       add: valid.sync(function (addr, source) {
 
-        addr = ref.parseAddress(addr)
-        if(!ref.isAddress(addr))
+        if(isObject(addr)) {
+          addr.address = coearseAddress(addr)
+        }
+        else {
+         var _addr = ref.parseAddress(addr)
+          if(!_addr) throw new Error('not a valid address:'+addr)
+          _addr.address = addr
+          addr = _addr
+        }
+        if(!ref.isAddress(addr.address) /*&& !ref.isAddress(addr)*/)
           throw new Error('not a valid address:' + JSON.stringify(addr))
         // check that this is a valid address, and not pointing at self.
 
@@ -374,9 +401,4 @@ module.exports = {
     return gossip
   }
 }
-
-
-
-
-
 
