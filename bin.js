@@ -95,8 +95,8 @@ if (argv[0] == 'server') {
     if(err) {
       if (/could not connect/.test(err.message)) {
         var serverAddr = (config.host || 'localhost') + ":" + config.port;
-        console.log('Error: Could not connect to the scuttlebot server ' + serverAddr)
-        console.log('Use the "server" command to start it.')
+        console.error('Error: Could not connect to the scuttlebot server ' + serverAddr)
+        console.error('Use the "server" command to start it.')
         if(config.verbose) throw err
         process.exit(1)
       }
