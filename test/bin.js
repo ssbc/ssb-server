@@ -130,17 +130,17 @@ function testSbot(t, opts, asConfig, port, cb) {
 ;['::1', '::', '127.0.0.1', 'localhost'].forEach(function (host) {
   if(!has_ipv6 && /:/.test(host)) return
 
-  ;[9002, 9001].forEach(function (port) {
+  ;[9002, 9001].forEach(function (sbotPort) {
     ;[true, false].forEach(function (asConfig) {
       var opts = {
         host: host,
-        port: 9001,
-        ws: { port: 9002 }
+        port: sbotPort,
+        ws: { port: 9033 }
       }
 
       test('run bin.js server with ' + 
         (asConfig ? 'a config file' : 'command line options') +
-        ':'+JSON.stringify(opts)+' then connect to port:'+port
+        ':'+JSON.stringify(opts)+' then connect to port:'+sbotPort
       , function(t) {
         testSbot(t, opts, true, function (err) {
           t.error(err, 'Successfully connect eventually')
