@@ -76,6 +76,9 @@ module.exports = {
 
         var addr = server.getAddress().split(';').shift()
         var host = ref.parseAddress(addr).host
+        if(typeof host !== 'string') {
+          return cb(new Error('Could not parse host portion from server address:' + addr))
+        }
 
         if (opts.external)
           host = opts.external
