@@ -48,9 +48,8 @@ function sbot(t, argv, opts) {
   children.push(sh)
 
   return function end () {
-    sh.kill(9)
+    while(children.length) children.shift().kill(9)
   }
-
 }
 
 function try_often(times, opts, work, done) {
