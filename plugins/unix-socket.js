@@ -6,7 +6,7 @@ exports.init = function (ssk, config) {
   ssk.multiserver.transport({
     name: 'unix',
     create: function (conf) {
-      return Unix(config)
+      return Unix(Object.assign(Object.assign({}, conf), config))
     }
   })
 }
