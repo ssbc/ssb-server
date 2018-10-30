@@ -190,6 +190,7 @@ test('sbot should have websockets and http server by default', function(t) {
     exec([
       join(__dirname, '../bin.js'),
       'getAddress',
+      'device',
       '--',
       '--host=127.0.0.1',
       '--port=9001',
