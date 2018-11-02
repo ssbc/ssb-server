@@ -24,8 +24,9 @@ process.on('SIGINT', function () {
   process.exit(1)
 })
 
-
+var exited = false
 function sbot(t, argv, opts) {
+  exited = false
   opts = opts || {}
 
   var sh = spawn(
@@ -38,6 +39,7 @@ function sbot(t, argv, opts) {
   )
 
   sh.once('exit', function (code, name) {
+    exited = true
     t.equal(name,'SIGKILL')
     t.end()
   })
@@ -68,6 +70,7 @@ function try_often(times, opts, work, done) {
         return done(err)
       }
       if (!times) return done(err)
+      if(exited) return done(new Error('already exited'))
       console.warn('retry run', times)
       console.error('work(err):', err)
       try_often(times-1, work, done)
@@ -127,6 +130,7 @@ function testSbot(t, opts, asConfig, port, cb) {
   })
 }
 
+var c = 0
 ;['::1', '::', '127.0.0.1', 'localhost'].forEach(function (host) {
   if(!has_ipv6 && /:/.test(host)) return
 
@@ -137,7 +141,7 @@ function testSbot(t, opts, asConfig, port, cb) {
         port: 9001,
         ws: { port: 9002 }
       }
-
+      if(c++) return
       test('run bin.js server with ' + 
         (asConfig ? 'a config file' : 'command line options') +
         ':'+JSON.stringify(opts)+' then connect to port:'+port
@@ -215,4 +219,7 @@ test('sbot should have websockets and http server by default', function(t) {
     })
   })
 })
+
+
+
 
