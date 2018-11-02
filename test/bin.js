@@ -225,10 +225,17 @@ test('sbot should have websockets and http server by default', function(t) {
 
 test('sbot client should work without options', function(t) {
   var path = '/tmp/sbot_binjstest_' + Date.now()
+  mkdirp.sync(path)
+  fs.writeFileSync(path+'/config', 
+    JSON.stringify({
+      port: 43293, ws: { port: 43294 }
+    })
+  )
   var caps = crypto.randomBytes(32).toString('base64')
   var end = sbot(t, [
     'server',
     '--path', path,
+    '--config', path+'/config',
     '--caps.shs', caps
   ])
 
@@ -238,6 +245,7 @@ test('sbot client should work without options', function(t) {
       'getAddress',
       'device',
       '--path', path,
+      '--config', path+'/config',
       '--caps.shs', caps
     ].join(' '), {
       env: Object.assign({}, process.env, {ssb_appname: 'test'})
@@ -253,4 +261,5 @@ test('sbot client should work without options', function(t) {
     end()
   })
 })
+
 
