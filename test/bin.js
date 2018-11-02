@@ -25,7 +25,9 @@ process.on('SIGINT', function () {
 })
 
 var exited = false
+var count = 0
 function sbot(t, argv, opts) {
+  count ++
   exited = false
   opts = opts || {}
 
@@ -41,6 +43,7 @@ function sbot(t, argv, opts) {
   sh.once('exit', function (code, name) {
     exited = true
     t.equal(name,'SIGKILL')
+    if(--count) return
     t.end()
   })
 
@@ -141,7 +144,7 @@ var c = 0
         port: 9001,
         ws: { port: 9002 }
       }
-      if(c++) return
+//      if(c++) return
       test('run bin.js server with ' + 
         (asConfig ? 'a config file' : 'command line options') +
         ':'+JSON.stringify(opts)+' then connect to port:'+port
@@ -220,6 +223,34 @@ test('sbot should have websockets and http server by default', function(t) {
   })
 })
 
+test('sbot client should work without options', function(t) {
+  var path = '/tmp/sbot_binjstest_' + Date.now()
+  var caps = crypto.randomBytes(32).toString('base64')
+  var end = sbot(t, [
+    'server',
+    '--path', path,
+    '--caps.shs', caps
+  ])
 
+  try_often(10, function work(cb) {
+    exec([
+      join(__dirname, '../bin.js'),
+      'getAddress',
+      'device',
+      '--path', path,
+      '--caps.shs', caps
+    ].join(' '), {
+      env: Object.assign({}, process.env, {ssb_appname: 'test'})
+    }, function(err, stdout, sderr) {
+      if (err) return cb(err)
+      cb(null, JSON.parse(stdout))  // remove quotes
+    })
+  }, function(err, addr) {
+    t.error(err, 'sbot getAdress succeeds eventually')
+    if (err) return end()
 
+    t.comment('result of sbot getAddress: ' + addr)
+    end()
+  })
+})
 
