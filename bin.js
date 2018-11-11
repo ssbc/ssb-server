@@ -52,7 +52,6 @@ if (argv[0] == 'server') {
     .use(require('./plugins/local'))
     .use(require('./plugins/logging'))
     .use(require('ssb-query'))
-    .use(require('ssb-links'))
     .use(require('ssb-ws'))
     .use(require('ssb-ebt'))
   // add third-party plugins
