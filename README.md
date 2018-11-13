@@ -1,38 +1,38 @@
-# Scuttlebot
+# ssb-server
 
-Scuttlebot is an open source **peer-to-peer log store** used as a database, identity provider, and messaging system.
+ssb-server is an open source **peer-to-peer log store** used as a database, identity provider, and messaging system.
 It has:
 
  - Global replication
  - File-synchronization
  - End-to-end encryption
 
-Scuttlebot behaves just like a [Kappa Architecture DB](http://www.kappa-architecture.com/).
+ssb-server behaves just like a [Kappa Architecture DB](http://www.kappa-architecture.com/).
 In the background, it syncs with known peers.
 Peers do not have to be trusted, and can share logs and files on behalf of other peers, as each log is an unforgeable append-only message feed.
-This means Scuttlebots comprise a [global gossip-protocol mesh](https://en.wikipedia.org/wiki/Gossip_protocol) without any host dependencies.
+This means ssb-servers comprise a [global gossip-protocol mesh](https://en.wikipedia.org/wiki/Gossip_protocol) without any host dependencies.
 
 **Join us in #scuttlebutt on freenode.**
 
-[![build status](https://secure.travis-ci.org/ssbc/scuttlebot.png)](http://travis-ci.org/ssbc/scuttlebot)
+[![build status](https://secure.travis-ci.org/ssbc/ssb-server.png)](http://travis-ci.org/ssbc/ssb-server)
 
 ## install
 
-to get a known working shrinkwrapped version, install `scuttlebot-release`.
+to get a known working shrinkwrapped version, install `ssb-server-release`.
 It is recommended to only use this repo for development.
 
 ```
-npm install -g scuttlebot-release
+npm install -g ssb-server-release
 ```
 
-`scuttlebot-release` uses an `npm-shrinkwrap.json` file,
+`ssb-server-release` uses an `npm-shrinkwrap.json` file,
 so that it's possible to install it globally with known dependencies.
 You can also use this to install old versions, with dependencies
 that worked at that time.
 
 ## Applications
 
-There are already several applications built on scuttlebot,
+There are already several applications built on ssb-server,
 one of the best ways to learn about secure-scuttlebutt is to poke around in these applications.
 
 * [patchwork](http://github.com/ssbc/patchwork) is a discussion platform that we use to anything and everything concerning ssb and decentralization.
@@ -47,19 +47,19 @@ it is recommended to get started with patchwork, and then look into git-ssb and 
 
 # Start the server with extra log detail
 # Leave this running in its own terminal/window
-sbot server --logging.level=info
+ssb-server server --logging.level=info
 
 # publish a message
-sbot publish --type post --text "My First Post!"
+ssb-server publish --type post --text "My First Post!"
 
 # stream all messages in all feeds, ordered by publish time
-sbot feed
+ssb-server feed
 
 # stream all messages in all feeds, ordered by receive time
-sbot log
+ssb-server log
 
 # stream all messages by one feed, ordered by sequence number
-sbot hist --id $FEED_ID
+ssb-server hist --id $FEED_ID
 ```
 ```js
 // In javascript:
@@ -67,13 +67,13 @@ sbot hist --id $FEED_ID
 var pull = require('pull-stream')
 var ssbClient = require('ssb-client')
 
-// create a scuttlebot client using default settings
+// create a ssb-server client using default settings
 // (server at localhost:8080, using key found at ~/.ssb/secret)
-ssbClient(function (err, sbot) {
+ssbClient(function (err, ssb-server) {
   if (err) throw err
 
   // publish a message
-  sbot.publish({ type: 'post', text: 'My First Post!' }, function (err, msg) {
+  ssb-server.publish({ type: 'post', text: 'My First Post!' }, function (err, msg) {
     // msg.key           == hash(msg.value)
     // msg.value.author  == your id
     // msg.value.content == { type: 'post', text: 'My First Post!' }
@@ -82,7 +82,7 @@ ssbClient(function (err, sbot) {
 
   // stream all messages in all feeds, ordered by publish time
   pull(
-    sbot.createFeedStream(),
+    ssb-server.createFeedStream(),
     pull.collect(function (err, msgs) {
       // msgs[0].key == hash(msgs[0].value)
       // msgs[0].value...
@@ -91,7 +91,7 @@ ssbClient(function (err, sbot) {
 
   // stream all messages in all feeds, ordered by receive time
   pull(
-    sbot.createLogStream(),
+    ssb-server.createLogStream(),
     pull.collect(function (err, msgs) {
       // msgs[0].key == hash(msgs[0].value)
       // msgs[0].value...
@@ -100,7 +100,7 @@ ssbClient(function (err, sbot) {
 
   // stream all messages by one feed, ordered by sequence number
   pull(
-    sbot.createHistoryStream({ id: < feedId > }),
+    ssb-server.createHistoryStream({ id: < feedId > }),
     pull.collect(function (err, msgs) {
       // msgs[0].key == hash(msgs[0].value)
       // msgs[0].value...
@@ -111,16 +111,16 @@ ssbClient(function (err, sbot) {
 
 ## Use-cases
 
-Scuttlebot's message-based data structure makes it ideal for mail and forum applications (see [Patchwork](https://ssbc.github.io/patchwork/)).
+ssb-server's message-based data structure makes it ideal for mail and forum applications (see [Patchwork](https://ssbc.github.io/patchwork/)).
 However, it is sufficiently general to be used to build:
 
  - Office tools (calendars, document-sharing, tasklists)
  - Wikis
  - Package managers
 
-Because Scuttlebot doesn't depend on hosts, its users can synchronize over WiFi or any other connective medium, making it great for [Sneakernets](https://en.wikipedia.org/wiki/Sneakernet).
+Because ssb-server doesn't depend on hosts, its users can synchronize over WiFi or any other connective medium, making it great for [Sneakernets](https://en.wikipedia.org/wiki/Sneakernet).
 
-Scuttlebot is [eventually-consistent with peers](https://en.wikipedia.org/wiki/Eventual_consistency), and requires exterior coordination to create strictly-ordered transactions.
+ssb-server is [eventually-consistent with peers](https://en.wikipedia.org/wiki/Eventual_consistency), and requires exterior coordination to create strictly-ordered transactions.
 Therefore, by itself, it would probably make a poor choice for implementing a crypto-currency.
 (We get asked that a lot.)
 
@@ -128,16 +128,16 @@ Therefore, by itself, it would probably make a poor choice for implementing a cr
 
 ### Getting Started
 
-- [Install](https://ssbc.github.io/docs/scuttlebot/install.html) - Setup instructions
-- [Tutorial](https://ssbc.github.io/docs/scuttlebot/tutorial.html) - Primer on developing with Scuttlebot
-- [API / CLI Reference](https://scuttlebot.io/apis/scuttlebot/ssb.html)
+- [Install](https://ssbc.github.io/docs/ssb-server/install.html) - Setup instructions
+- [Tutorial](https://ssbc.github.io/docs/ssb-server/tutorial.html) - Primer on developing with ssb-server
+- [API / CLI Reference](https://ssb-server.io/apis/ssb-server/ssb.html)
 
 ### Key Concepts
 
-- [Secure Scuttlebutt](https://ssbc.github.io/secure-scuttlebutt/), Scuttlebot's global database protocol
+- [Secure Scuttlebutt](https://ssbc.github.io/secure-scuttlebutt/), ssb-server's global database protocol
 - [Content Hash Linking](https://ssbc.github.io/docs/ssb/linking.html)
-- [Secret Handshake](https://ssbc.github.io/docs/ssb/secret-handshake.html), Scuttlebot's transport-layer security protocol
-- [Private Box](https://ssbc.github.io/docs/ssb/end-to-end-encryption.html), Scuttlebot's end-to-end security protocol
+- [Secret Handshake](https://ssbc.github.io/docs/ssb/secret-handshake.html), ssb-server's transport-layer security protocol
+- [Private Box](https://ssbc.github.io/docs/ssb/end-to-end-encryption.html), ssb-server's end-to-end security protocol
 - [Frequently Asked Questions](https://ssbc.github.io/docs/ssb/faq.html)
 
 ### Further Reading

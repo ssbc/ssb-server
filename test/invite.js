@@ -6,7 +6,7 @@ var pull = require('pull-stream')
 var ssbClient = require('ssb-client')
 var ref = require('ssb-ref')
 
-var createSbot = require('../')
+var createSsbServer = require('../')
   .use(require('../plugins/master'))
   .use(require('../plugins/invite'))
   .use(require('../plugins/replicate'))
@@ -31,18 +31,18 @@ var wsConnections = {
 
 tape('test invite.accept api', function (t) {
 
-  var alice = createSbot({
+  var alice = createSsbServer({
     temp: 'test-invite-alice2', timeout: 100,
     allowPrivate: true,
     keys: ssbKeys.generate()
   })
 
-  var bob = createSbot({
+  var bob = createSsbServer({
     temp: 'test-invite-bob2', timeout: 100,
     keys: ssbKeys.generate()
   })
 
-  var carol = createSbot({
+  var carol = createSsbServer({
     temp: 'test-invite-carol2', timeout: 100,
     keys: ssbKeys.generate()
   })
@@ -78,14 +78,14 @@ tape('test invite.accept api', function (t) {
 
 tape('test invite.accept doesnt follow if already followed', function (t) {
 
-  var alice = createSbot({
+  var alice = createSsbServer({
     temp: 'test-invite-alice3',
     timeout: 100,
     allowPrivate: true,
     keys: ssbKeys.generate()
   })
 
-  var bob = createSbot({
+  var bob = createSsbServer({
     temp: 'test-invite-bob3',
     timeout: 100,
     keys: ssbKeys.generate()
@@ -149,13 +149,13 @@ if (process.env.TRAVIS === 'true') {
 
 tape('test invite.accept api with ipv6', { skip: skipIPv6 }, function (t) {
 
-  var alice = createSbot({
+  var alice = createSsbServer({
     temp: 'test-invite-alice4', timeout: 100,
     allowPrivate: true,
     keys: ssbKeys.generate()
   })
 
-  var bob = createSbot({
+  var bob = createSsbServer({
     temp: 'test-invite-bob4', timeout: 100,
     keys: ssbKeys.generate()
   })
@@ -187,19 +187,19 @@ tape('test invite.accept api with ipv6', { skip: skipIPv6 }, function (t) {
 })
 
 tape('test invite.create with modern', function (t) {
-  var alice = createSbot({
+  var alice = createSsbServer({
     temp: 'test-invite-alice5', timeout: 100,
     allowPrivate: true,
     keys: ssbKeys.generate(),
     connections: wsConnections
   })
 
-  var bob = createSbot({
+  var bob = createSsbServer({
     temp: 'test-invite-bob5', timeout: 100,
     keys: ssbKeys.generate()
   })
 
-  var carol = createSbot({
+  var carol = createSsbServer({
     temp: 'test-invite-carol5', timeout: 100,
     keys: ssbKeys.generate()
   })
@@ -242,7 +242,7 @@ tape('test invite.create with modern', function (t) {
 
 tape('test invite.accept doesnt follow if already followed', function (t) {
 
-  var alice = createSbot({
+  var alice = createSsbServer({
     temp: 'test-invite-alice6',
     timeout: 100,
     allowPrivate: true,
@@ -273,13 +273,13 @@ tape('test invite.accept doesnt follow if already followed', function (t) {
 
 tape('test invite with note', function (t) {
 
-  var alice = createSbot({
+  var alice = createSsbServer({
     temp: 'test-invite-alice7', timeout: 100,
     allowPrivate: true,
     keys: ssbKeys.generate()
   })
 
-  var bob = createSbot({
+  var bob = createSsbServer({
     temp: 'test-invite-bob7', timeout: 100,
     keys: ssbKeys.generate()
   })

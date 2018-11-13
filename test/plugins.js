@@ -5,12 +5,12 @@ var pull    = require('pull-stream')
 var osenv   = require('osenv')
 var path    = require('path')
 var fs      = require('fs')
-var createSbot = require('../')
+var createSsbServer = require('../')
 
-var initialPlugins = createSbot.plugins.slice()
-function resetSbot () {
-  createSbot.plugins = initialPlugins.slice()
-  createSbot.use(require('../plugins/plugins'))
+var initialPlugins = createSsbServer.plugins.slice()
+function resetSsbServer () {
+  createSsbServer.plugins = initialPlugins.slice()
+  createSsbServer.use(require('../plugins/plugins'))
 }
 
 tape('install and load plugins', function (t) {
@@ -20,8 +20,8 @@ tape('install and load plugins', function (t) {
 
   t.test('install plugin', function (t) {
 
-    resetSbot()
-    var sbot = createSbot({
+    resetSsbServer()
+    var ssbServer = createSsbServer({
       path: datadirPath,
       port: 45451, host: 'localhost',
       keys: aliceKeys
@@ -29,14 +29,14 @@ tape('install and load plugins', function (t) {
 
     console.log('installing plugin...')
     pull(
-      sbot.plugins.install('test-plugin', { from: __dirname + '/test-plugin' }),
+      ssbServer.plugins.install('test-plugin', { from: __dirname + '/test-plugin' }),
       pull.collect(function (err, out) {
         if (err) throw err
         console.log(out.map(function (b) { return b.toString('utf-8') }).join(''))
 
         t.ok(fs.statSync(path.join(datadirPath, 'node_modules/test-plugin')))
 
-        sbot.close(function () {
+        ssbServer.close(function () {
           t.end()
         })
       })
@@ -53,18 +53,18 @@ tape('install and load plugins', function (t) {
         'test-plugin': 'test'
       }
     }
-    resetSbot()
-    require('../plugins/plugins').loadUserPlugins(createSbot, config)
-    var sbot = createSbot(config)
+    resetSsbServer()
+    require('../plugins/plugins').loadUserPlugins(createSsbServer, config)
+    var ssbServer = createSsbServer(config)
 
-    t.ok(sbot.test)
-    t.ok(sbot.test.ping)
+    t.ok(ssbServer.test)
+    t.ok(ssbServer.test.ping)
 
-    sbot.test.ping('ping', function (err, res) {
+    ssbServer.test.ping('ping', function (err, res) {
       if (err) throw err
       t.equal(res, 'ping pong')
 
-      sbot.close(function () {
+      ssbServer.close(function () {
         t.end()
       })
     })
@@ -80,21 +80,21 @@ tape('install and load plugins', function (t) {
         'test-plugin': false
       }
     }
-    resetSbot()
-    require('../plugins/plugins').loadUserPlugins(createSbot, config)
-    var sbot = createSbot(config)
+    resetSsbServer()
+    require('../plugins/plugins').loadUserPlugins(createSsbServer, config)
+    var ssbServer = createSsbServer(config)
 
-    t.equal(sbot.test, undefined)
+    t.equal(ssbServer.test, undefined)
 
-    sbot.close(function () {
+    ssbServer.close(function () {
       t.end()
     })
   })
 
   t.test('uninstall plugin', function (t) {
 
-    resetSbot()
-    var sbot = createSbot({
+    resetSsbServer()
+    var ssbServer = createSsbServer({
       path: datadirPath,
       port: 45451, host: 'localhost',
       keys: aliceKeys
@@ -102,14 +102,14 @@ tape('install and load plugins', function (t) {
 
     console.log('uninstalling plugin...')
     pull(
-      sbot.plugins.uninstall('test-plugin'),
+      ssbServer.plugins.uninstall('test-plugin'),
       pull.collect(function (err, out) {
         if (err) throw err
         console.log(out.map(function (b) { return b.toString('utf-8') }).join(''))
 
         t.throws(function () { fs.statSync(path.join(datadirPath, 'node_modules/test-plugin')) })
 
-        sbot.close(function () {
+        ssbServer.close(function () {
           t.end()
         })
       })
@@ -118,8 +118,8 @@ tape('install and load plugins', function (t) {
 
   t.test('install plugin under custom name', function (t) {
 
-    resetSbot()
-    var sbot = createSbot({
+    resetSsbServer()
+    var ssbServer = createSsbServer({
       path: datadirPath,
       port: 45451, host: 'localhost',
       keys: aliceKeys
@@ -127,14 +127,14 @@ tape('install and load plugins', function (t) {
 
     console.log('installing plugin...')
     pull(
-      sbot.plugins.install('my-test-plugin', { from: __dirname + '/test-plugin' }),
+      ssbServer.plugins.install('my-test-plugin', { from: __dirname + '/test-plugin' }),
       pull.collect(function (err, out) {
         if (err) throw err
         console.log(out.map(function (b) { return b.toString('utf-8') }).join(''))
 
         t.ok(fs.statSync(path.join(datadirPath, 'node_modules/my-test-plugin')))
 
-        sbot.close(function () {
+        ssbServer.close(function () {
           t.end()
         })
       })
@@ -151,18 +151,18 @@ tape('install and load plugins', function (t) {
         'my-test-plugin': 'test'
       }
     }
-    resetSbot()
-    require('../plugins/plugins').loadUserPlugins(createSbot, config)
-    var sbot = createSbot(config)
+    resetSsbServer()
+    require('../plugins/plugins').loadUserPlugins(createSsbServer, config)
+    var ssbServer = createSsbServer(config)
 
-    t.ok(sbot.test)
-    t.ok(sbot.test.ping)
+    t.ok(ssbServer.test)
+    t.ok(ssbServer.test.ping)
 
-    sbot.test.ping('ping', function (err, res) {
+    ssbServer.test.ping('ping', function (err, res) {
       if (err) throw err
       t.equal(res, 'ping pong')
 
-      sbot.close(function () {
+      ssbServer.close(function () {
         t.end()
       })
     })
@@ -170,8 +170,8 @@ tape('install and load plugins', function (t) {
 
   t.test('uninstall plugin under custom name', function (t) {
 
-    resetSbot()
-    var sbot = createSbot({
+    resetSsbServer()
+    var ssbServer = createSsbServer({
       path: datadirPath,
       port: 45451, host: 'localhost',
       keys: aliceKeys
@@ -179,14 +179,14 @@ tape('install and load plugins', function (t) {
 
     console.log('uninstalling plugin...')
     pull(
-      sbot.plugins.uninstall('my-test-plugin'),
+      ssbServer.plugins.uninstall('my-test-plugin'),
       pull.collect(function (err, out) {
         if (err) throw err
         console.log(out.map(function (b) { return b.toString('utf-8') }).join(''))
 
         t.throws(function () { fs.statSync(path.join(datadirPath, 'node_modules/my-test-plugin')) })
 
-        sbot.close(function () {
+        ssbServer.close(function () {
           t.end()
         })
       })

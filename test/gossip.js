@@ -8,13 +8,13 @@ var ref       = require('ssb-ref')
 var u = require('./util')
 var isArray = Array.isArray
 
-var createSbot = require('../')
+var createSsbServer = require('../')
 //  .use(require('ssb-friends'))
   .use(require('../plugins/gossip'))
 //  .use(require('../plugins/logging'))
 
 
-var sbot = createSbot({
+var ssbServer = createSsbServer({
   temp: 'gossip',
   keys: alice = ssbKeys.generate(),
   timeout: 1000
@@ -41,24 +41,24 @@ var peers2 = peers.map(function (e) {
 
 tape('gossip: add and get peers', function (t) {
 
-  t.ok(isArray(sbot.gossip.peers()))
+  t.ok(isArray(ssbServer.gossip.peers()))
 
 
   //clone input, because gossip mutates it.
-  sbot.gossip.add(localhost)
-  sbot.gossip.add(ip)
-  sbot.gossip.add(example)
+  ssbServer.gossip.add(localhost)
+  ssbServer.gossip.add(ip)
+  ssbServer.gossip.add(example)
 
   t.deepEqual(
-    sbot.gossip.peers().map(function (e) {
+    ssbServer.gossip.peers().map(function (e) {
       console.log(e, ref.parseAddress(e.address))
       return ref.parseAddress(e.address)
     }),
     peers
   )
 
-  sbot.gossip.peers().forEach(function (e) {
-    t.equal(sbot.gossip.get(e.key).key, e.key)
+  ssbServer.gossip.peers().forEach(function (e) {
+    t.equal(ssbServer.gossip.get(e.key).key, e.key)
   })
 
   t.end()
@@ -67,11 +67,11 @@ tape('gossip: add and get peers', function (t) {
 
 tape('gossip: add string address', function (t) {
   peers2.forEach(function (e) {
-    sbot.gossip.add(e, 'manual')
+    ssbServer.gossip.add(e, 'manual')
   })
-  console.log(sbot.gossip.peers())
+  console.log(ssbServer.gossip.peers())
   t.deepEqual(
-    sbot.gossip.peers().map(function (e) {
+    ssbServer.gossip.peers().map(function (e) {
       return e.address
     }).slice(3),
     peers2
@@ -85,15 +85,15 @@ tape('gossip: errors on invalid peers', function (t) {
   console.log(pk)
 
   t.throws(function () {
-    sbot.gossip.add({host: 5, port: 1234, key: pk})
+    ssbServer.gossip.add({host: 5, port: 1234, key: pk})
   })
 
   t.throws(function () {
-    sbot.gossip.add({host: '10.0.0.2', port: 'not a port', key: pk})
+    ssbServer.gossip.add({host: '10.0.0.2', port: 'not a port', key: pk})
   })
 
   t.throws(function () {
-    sbot.gossip.add({host: '10.0.0.2', port: 1234, key: 'not a key'})
+    ssbServer.gossip.add({host: '10.0.0.2', port: 1234, key: 'not a key'})
   })
 
   t.end()
@@ -103,7 +103,7 @@ tape('gossip: errors on invalid peers', function (t) {
 tape('ignore invalid pub messages', function (t) {
 
   //missing address
-  sbot.publish({type: 'pub'}, function (err) {
+  ssbServer.publish({type: 'pub'}, function (err) {
     if(err) throw err
     t.end()
   })
@@ -111,7 +111,7 @@ tape('ignore invalid pub messages', function (t) {
 })
 
 tape('cleanup', function (t) {
-  sbot.close()
+  ssbServer.close()
   t.end()
 })
 

@@ -1,4 +1,4 @@
-# scuttlebot replicate plugin
+# ssb-server replicate plugin
 
 Sync feeds between peers.
 

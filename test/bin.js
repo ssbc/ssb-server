@@ -11,21 +11,21 @@ var ma = require('multiserver-address')
 // travis currently does not support ipv6, becaue GCE does not.
 var has_ipv6 = process.env.TRAVIS === undefined
 
-function sbot(t, argv, opts) {
+function ssbServer(t, argv, opts) {
   opts = opts || {}
   // we spawn a shell with job control enabled
-  // that starts sbot on the background and then
+  // that starts ssbServer on the background and then
   // reads from stdin, which is a pipe to our node process
   // When that pipe closes (because we do so when the tests ends, or
-  // it happens because our process dies), sbot will be killed
+  // it happens because our process dies), ssbServer will be killed
   // by the shell automatically.
   // Because the last command in the shell is 'wait %1', the shells' exit code
-  // will be sbot's exit code (which is >128 if it was killed)
+  // will be ssbServer's exit code (which is >128 if it was killed)
   var sh = spawn('bash', [
     '-c', 
     'set -o monitor; echo pwd: $(pwd); node ' + join(__dirname, '../bin.js') + ' ' +
     argv.join(' ') +
-    ' & read dummy; echo killing sbot; kill %1; wait %1' 
+    ' & read dummy; echo killing ssbServer; kill %1; wait %1' 
   ], Object.assign({
     env: Object.assign({}, process.env, {ssb_appname: 'test'}),
     stdio: ['pipe', 'inherit', 'inherit']
@@ -36,15 +36,15 @@ function sbot(t, argv, opts) {
   
     sh.on('exit', function(code) {
       if (code>128) {
-        t.comment('sbot was killed as expected')
+        t.comment('ssbServer was killed as expected')
       } else {
-        t.fail('sbot exited with code ' + code)
+        t.fail('ssbServer exited with code ' + code)
       }
       t.end()
     })
-    // closing shell's stdin will make it kill sbot
+    // closing shell's stdin will make it kill ssbServer
     // if it is still running at this point.
-    // Either way, we'll get sbot's original exit code
+    // Either way, we'll get ssbServer's original exit code
     // in the exit event above.
     sh.stdin.end()
   }
@@ -88,12 +88,12 @@ function connect(port, host, cb) {
 }
 
 test('run bin.js server with command line option --host and --port (IPv4)', function(t) {
-  var end = sbot(t, [
+  var end = ssbServer(t, [
     'server',
     '--host=127.0.0.1',
     '--port=9001',
     '--ws.port=9002',
-    '--path=/tmp/sbot_binjstest_' + Date.now()
+    '--path=/tmp/ssbServer_binjstest_' + Date.now()
   ])
 
   try_often(10, function work(cb) {
@@ -106,12 +106,12 @@ test('run bin.js server with command line option --host and --port (IPv4)', func
 
 if (has_ipv6)
 test('run bin.js server with command line option --host and --port (IPv6)', function(t) {
-  var end = sbot(t, [
+  var end = ssbServer(t, [
     'server',
     '--host=::1',
     '--port=9001',
     '--ws.port=9002',
-    '--path=/tmp/sbot_binjstest_' + Date.now()
+    '--path=/tmp/ssbServer_binjstest_' + Date.now()
   ])
   try_often(10, function work(cb) {
     connect(9001, '::1', cb)
@@ -122,7 +122,7 @@ test('run bin.js server with command line option --host and --port (IPv6)', func
 })
 
 test('run bin.js server with local config file (port, host) (IPv4)', function(t) {
-  var dir = '/tmp/sbot_binjstest_' + Date.now()
+  var dir = '/tmp/ssbServer_binjstest_' + Date.now()
   mkdirp.sync(dir)
   fs.writeFileSync(join(dir, '.testrc'), JSON.stringify({
     host: '127.0.0.1',
@@ -131,7 +131,7 @@ test('run bin.js server with local config file (port, host) (IPv4)', function(t)
       port: 9002
     }
   }))
-  var end = sbot(t, [
+  var end = ssbServer(t, [
     'server',
     '--path', dir
   ], {
@@ -150,7 +150,7 @@ test('run bin.js server with local config file (port, host) (IPv4)', function(t)
 
 if (has_ipv6)
 test('run bin.js server with local config file (port, host) (IPv6)', function(t) {
-  var dir = '/tmp/sbot_binjstest_' + Date.now()
+  var dir = '/tmp/ssbServer_binjstest_' + Date.now()
   mkdirp.sync(dir)
   fs.writeFileSync(join(dir, '.testrc'), JSON.stringify({
     host: '::',
@@ -159,7 +159,7 @@ test('run bin.js server with local config file (port, host) (IPv6)', function(t)
       port: 9002
     }
   }))
-  var end = sbot(t, [
+  var end = ssbServer(t, [
     'server',
     '--path', dir
   ], {
@@ -174,10 +174,10 @@ test('run bin.js server with local config file (port, host) (IPv6)', function(t)
   })
 })
 
-test('sbot should have websockets and http server by default', function(t) {
-  var path = '/tmp/sbot_binjstest_' + Date.now()
+test('ssbServer should have websockets and http server by default', function(t) {
+  var path = '/tmp/ssbServer_binjstest_' + Date.now()
   var caps = crypto.randomBytes(32).toString('base64')
-  var end = sbot(t, [
+  var end = ssbServer(t, [
     'server',
     '--host=127.0.0.1',
     '--port=9001',
@@ -202,10 +202,10 @@ test('sbot should have websockets and http server by default', function(t) {
       cb(null, JSON.parse(stdout))  // remove quotes
     })
   }, function(err, addr) {
-    t.error(err, 'sbot getAdress succeeds eventually')
+    t.error(err, 'ssbServer getAdress succeeds eventually')
     if (err) return end()
 
-    t.comment('result of sbot getAddress: ' + addr)
+    t.comment('result of ssbServer getAddress: ' + addr)
 
     var ws_remotes = ma.decode(addr).filter(function(a) {
       return a.find(function(component) {

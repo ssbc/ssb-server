@@ -1,4 +1,4 @@
-# scuttlebot
+# ssb-server
 
 Secure-scuttlebutt API server
 
@@ -169,7 +169,7 @@ The range queries (gt, gte, lt, lte) filter against the sequence number.
 
 write a number of messages to the local store.
 will error if messages are not valid, but will accept
-messages that the sbot doesn't replicate.
+messages that the ssb-server doesn't replicate.
 
 
 ## links: source
@@ -224,7 +224,7 @@ add({ author:, sequence:, previous: timestamp:, hash: 'sha256', signature:, cont
 
 ## publish: async
 
-Construct a message using sbot's current user, and add it to the DB.
+Construct a message using ssb-server's current user, and add it to the DB.
 
 ```bash
 cat ./message-content.json | publish
@@ -302,7 +302,7 @@ latest({feedId})
 
 ## whoami: sync
 
-Get information about the current sbot user.
+Get information about the current ssb-server user.
 
 ```bash
 whoami

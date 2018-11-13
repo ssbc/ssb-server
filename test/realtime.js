@@ -6,21 +6,21 @@ var u         = require('./util')
 
 var ssbKeys = require('ssb-keys')
 
-var createSbot = require('../')
+var createSsbServer = require('../')
   .use(require('../plugins/replicate'))
   .use(require('ssb-ebt'))
   .use(require('ssb-friends'))
 
 tape('replicate between 3 peers', function (t) {
 
-  var bob = createSbot({
+  var bob = createSsbServer({
       temp: 'test-bob',
 //      port: 45452, host: 'localhost',
       replicate: {legacy: false},
       keys: ssbKeys.generate()
     })
 
-  var alice = createSbot({
+  var alice = createSsbServer({
       temp: 'test-alice',
   //    port: 45453, host: 'localhost',
       seeds: [bob.getAddress()],

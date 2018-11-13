@@ -1,11 +1,11 @@
 {
-  "name": "scuttlebot",
+  "name": "ssb-server",
   "description": "network protocol layer for secure-scuttlebutt",
   "version": "13.0.3",
-  "homepage": "https://github.com/ssbc/scuttlebot",
+  "homepage": "https://github.com/ssbc/ssb-db",
   "repository": {
     "type": "git",
-    "url": "git://github.com/ssbc/scuttlebot.git"
+    "url": "git://github.com/ssbc/ssb-db.git"
   },
   "dependencies": {
     "atomic-file": "^1.1.5",
@@ -64,8 +64,7 @@
     "tape": "^4.9.1"
   },
   "bin": {
-    "sbot": "./bin.js",
-    "scuttlebot": "./bin.js"
+    "ssb-server": "./bin.js"
   },
   "scripts": {
     "start": "node bin server",

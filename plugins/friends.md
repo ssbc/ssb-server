@@ -1,4 +1,4 @@
-# scuttlebot friends plugin
+# ssb-server friends plugin
 
 Query the follow and flag graphs.
 

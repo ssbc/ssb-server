@@ -36,9 +36,9 @@ if (argv[0] == 'server') {
   console.log('my key ID:', keys.public)
 
   // special server command:
-  // import sbot and start the server
+  // import ssbServer and start the server
 
-  var createSbot = require('./')
+  var createSsbServer = require('./')
     .use(require('./plugins/onion'))
     .use(require('./plugins/unix-socket'))
     .use(require('./plugins/no-auth'))
@@ -56,12 +56,12 @@ if (argv[0] == 'server') {
     .use(require('ssb-ws'))
     .use(require('ssb-ebt'))
   // add third-party plugins
-  require('./plugins/plugins').loadUserPlugins(createSbot, config)
+  require('./plugins/plugins').loadUserPlugins(createSsbServer, config)
 
   // start server
 
   config.keys = keys
-  var server = createSbot(config)
+  var server = createSsbServer(config)
 
   // write RPC manifest to ~/.ssb/manifest.json
   fs.writeFileSync(manifestFile, JSON.stringify(server.getManifest(), null, 2))
@@ -95,7 +95,7 @@ if (argv[0] == 'server') {
     if(err) {
       if (/could not connect/.test(err.message)) {
         var serverAddr = (config.host || 'localhost') + ":" + config.port;
-        console.error('Error: Could not connect to the scuttlebot server ' + serverAddr)
+        console.error('Error: Could not connect to ssb-server ' + serverAddr)
         console.error('Use the "server" command to start it.')
         if(config.verbose) throw err
         process.exit(1)

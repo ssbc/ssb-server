@@ -30,7 +30,7 @@ var streamErrors = {
   'stream is closed': true, // rpc method called after stream ended
 }
 
-module.exports = function (sbot, notify, config) {
+module.exports = function (ssbServer, notify, config) {
   var debounce = Debounce(200)
   var listeners = {}
   var newPeers = Notify()
@@ -58,12 +58,12 @@ module.exports = function (sbot, notify, config) {
     }
   }
 
-  sbot.getVectorClock(function (err, clock) {
+  ssbServer.getVectorClock(function (err, clock) {
     if(err) throw err
     toSend = clock
   })
 
-  sbot.post(function (msg) {
+  ssbServer.post(function (msg) {
     //this should be part of ssb.getVectorClock
     toSend[msg.value.author] = msg.value.sequence
     debounce.set()
@@ -109,8 +109,8 @@ module.exports = function (sbot, notify, config) {
     }
 
     var progress = {
-      id: sbot.id,
-      rate, // rate of messages written to sbot
+      id: ssbServer.id,
+      rate, // rate of messages written to ssbServer
       feeds, // total number of feeds we want to replicate
       pendingPeers, // number of pending feeds per peer
       incompleteFeeds: pendingFeeds.size, // number of feeds with pending messages to download
@@ -127,7 +127,7 @@ module.exports = function (sbot, notify, config) {
   })
 
   pull(
-    sbot.createLogStream({old: false, live: true, sync: false, keys: false}),
+    ssbServer.createLogStream({old: false, live: true, sync: false, keys: false}),
     pull.drain(function (e) {
       //track writes per second, mainly used for developing initial sync.
       if(!start) start = Date.now()
@@ -149,15 +149,15 @@ module.exports = function (sbot, notify, config) {
     })
   )
 
-  var chs = sbot.createHistoryStream
+  var chs = ssbServer.createHistoryStream
 
-  sbot.createHistoryStream.hook(function (fn, args) {
+  ssbServer.createHistoryStream.hook(function (fn, args) {
     var upto = args[0] || {}
     var seq = upto.sequence || upto.seq
     if(this._emit) this._emit('call:createHistoryStream', args[0])
 
     //if we are calling this locally, skip cleverness
-    if(this===sbot) return fn.call(this, upto)
+    if(this===ssbServer) return fn.call(this, upto)
 
     // keep track of each requested value, per feed / per peer.
     peerHas[this.id] = peerHas[this.id] || {}
@@ -192,15 +192,15 @@ module.exports = function (sbot, notify, config) {
   //XXX policy about replicating specific peers should be outside
   //of this plugin.
   function localPeers () {
-    if(!sbot.gossip) return
-    sbot.gossip.peers().forEach(function (e) {
+    if(!ssbServer.gossip) return
+    ssbServer.gossip.peers().forEach(function (e) {
       if (e.source === 'local')
         request(e.key)
     })
   }
 
   //also request local peers.
-  if (sbot.gossip) {
+  if (ssbServer.gossip) {
     // if we have the gossip plugin active, then include new local peers
     // so that you can put a name to someone on your local network.
     var int = setInterval(localPeers, 1000)
@@ -224,10 +224,10 @@ module.exports = function (sbot, notify, config) {
     return pull.values(ary)
   }
 
-  sbot.on('rpc:connect', function(rpc) {
+  ssbServer.on('rpc:connect', function(rpc) {
     // this is the cli client, just ignore.
-    if(rpc.id === sbot.id) return
-    if (!sbot.ready()) return
+    if(rpc.id === ssbServer.id) return
+    if (!ssbServer.ready()) return
 
     var errorsSeen = {}
     //check for local peers, or manual connections.
@@ -260,7 +260,7 @@ module.exports = function (sbot, notify, config) {
           }
         })),
 
-        sbot.createWriteStream(function (err) {
+        ssbServer.createWriteStream(function (err) {
           if(err && !(err.message in errorsSeen)) {
             errorsSeen[err.message] = true
             if(err.message in streamErrors) {
@@ -304,7 +304,7 @@ module.exports = function (sbot, notify, config) {
       //if we are not configured to use EBT, then fallback to createHistoryStream
       if(replicate_self) return
       replicate_self = true
-      replicate({id: sbot.id, sequence: toSend[sbot.id] || 0})
+      replicate({id: ssbServer.id, sequence: toSend[ssbServer.id] || 0})
     }
 
     //trigger this if ebt.replicate fails...
@@ -314,10 +314,10 @@ module.exports = function (sbot, notify, config) {
     function next () {
       if(started) return
       started = true
-      sbot.emit('replicate:start', rpc)
+      ssbServer.emit('replicate:start', rpc)
 
       rpc.on('closed', function () {
-        sbot.emit('replicate:finish', toSend)
+        ssbServer.emit('replicate:finish', toSend)
 
         // if we disconnect from a peer, remove it from sync progress
         delete pendingFeedsForPeer[rpc.id]
@@ -332,13 +332,13 @@ module.exports = function (sbot, notify, config) {
           if(!isFeed(upto.id)) throw new Error('expected feed!')
           if(!Number.isInteger(upto.sequence)) throw new Error('expected sequence!')
 
-          if(upto.id == sbot.id && replicate_self) return replicate_self = true
+          if(upto.id == ssbServer.id && replicate_self) return replicate_self = true
           replicate(upto, function (err) {
             drain.abort()
           })
         }, function (err) {
           if(err && err !== true)
-            sbot.emit('log:error', ['replication', rpc.id, 'error', err])
+            ssbServer.emit('log:error', ['replication', rpc.id, 'error', err])
         })
       )
 

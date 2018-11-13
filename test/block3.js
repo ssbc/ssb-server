@@ -17,22 +17,22 @@ var toAddress = require('../lib/util').toAddress
 // 2. alice never tries to connect to bob. (removed from peers)
 // 3. carol will not give bob any, she will not give him any data from alice.
 
-var createSbot = require('../')
+var createSsbServer = require('../')
     .use(require('../plugins/replicate'))
     .use(require('ssb-friends'))
     .use(require('ssb-ebt'))
 
-var alice = createSbot({
+var alice = createSsbServer({
     temp: 'test-block-alice', timeout: 1000,
     keys: ssbKeys.generate()
   })
 
-var bob = createSbot({
+var bob = createSsbServer({
     temp: 'test-block-bob', timeout: 1000,
     keys: ssbKeys.generate()
   })
 
-var carol = createSbot({
+var carol = createSsbServer({
     temp: 'test-block-carol', timeout: 1000,
     keys: ssbKeys.generate()
   })

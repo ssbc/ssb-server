@@ -4,17 +4,17 @@ var pull = require('pull-stream')
 var ssbKeys = require('ssb-keys')
 var u = require('./util')
 
-var createSbot = require('../')
+var createSsbServer = require('../')
     .use(require('../plugins/replicate'))
     .use(require('ssb-friends'))
     .use(require('ssb-ebt'))
 
-var alice = createSbot({
+var alice = createSsbServer({
     temp: 'test-block-alice', //timeout: 1400,
     keys: ssbKeys.generate()
   })
 
-var bob = createSbot({
+var bob = createSsbServer({
     temp: 'test-block-bob', //timeout: 600,
     keys: ssbKeys.generate()
   })

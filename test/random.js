@@ -34,17 +34,17 @@ function once (fn) {
   }
 }
 
-var createSbot = require('../')
+var createSsbServer = require('../')
   .use(require('../plugins/replicate'))
   .use(require('ssb-friends'))
   .use(require('ssb-ebt'))
   .use(require('../plugins/gossip'))
 
-function generateAnimals (sbot, feed, f, n, cb) {
+function generateAnimals (ssbServer, feed, f, n, cb) {
   var a = [feed]
 
   while(f --> 0)
-    a.push(sbot.createFeed())
+    a.push(ssbServer.createFeed())
 
   console.log('generate NAMES')
 
@@ -103,8 +103,8 @@ function generateAnimals (sbot, feed, f, n, cb) {
 
 }
 
-function latest (sbot, cb) {
-  sbot.friends.hops({hops: 3}, once(function (err, keys) {
+function latest (ssbServer, cb) {
+  ssbServer.friends.hops({hops: 3}, once(function (err, keys) {
     if(err) return cb(err)
     var n = Object.keys(keys).length, map = {}
     console.log('Generated network:')
@@ -112,7 +112,7 @@ function latest (sbot, cb) {
     if(n !== F+1) throw new Error('not enough feeds:'+n+', expected:'+(F+1))
     
     for(var k in keys) (function (key) {
-      sbot.latestSequence(key, once(function (err, value) {
+      ssbServer.latestSequence(key, once(function (err, value) {
         if(err) {
           console.log(key, err, value)
           throw err
@@ -128,7 +128,7 @@ function latest (sbot, cb) {
   var alice = ssbKeys.generate()
   var bob   = ssbKeys.generate()
 
-var animalNetwork = createSbot({
+var animalNetwork = createSsbServer({
   temp: 'test-random-animals',
   port: 45451, host: 'localhost', timeout: 20001,
   replication: {hops: 3, legacy: false}, keys: alice
@@ -177,7 +177,7 @@ tape('read all history streams', function (t) {
     manifest: animalNetwork.manifest()
   }
 
-  var dump = createSbot({
+  var dump = createSsbServer({
     temp: 'test-random-animals_dump',
 //    port: 45453, host: 'localhost', timeout: 20001,
     keys: bob
@@ -232,7 +232,7 @@ tape('replicate social network for animals', function (t) {
     throw new Error('missing frineds plugin')
 
   var start = Date.now()
-  var animalFriends = createSbot({
+  var animalFriends = createSsbServer({
     temp: 'test-random-animals2',
     port: 45452, host: 'localhost', timeout: 20001,
     replicate: {hops: 3, legacy: false},

@@ -1,4 +1,4 @@
-# scuttlebot plugins plugin
+# ssb-server plugins plugin
 
 Install and manage third-party plugins.
 
@@ -6,7 +6,7 @@ Install and manage third-party plugins.
 
 ## install: source
 
-Install a plugin to Scuttlebot.
+Install a plugin to ssb-server.
 
 ```bash
 install {nodeModule} [--from path]
@@ -24,7 +24,7 @@ Calls out to npm to install a package into `~/.ssb/node_modules`.
 
 ## uninstall: source
 
-Uninstall a plugin from Scuttlebot.
+Uninstall a plugin from ssb-server.
 
 ```bash
 uninstall {nodeModule}
