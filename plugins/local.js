@@ -56,6 +56,8 @@ module.exports = {
       if (peer && peer.key !== sbot.id) {
         addrs[peer.key] = peer
         lastSeen[peer.key] = Date.now()
+        //note: add the raw data, not the parsed data.
+        //so we still have the whole address, including protocol (eg, websockets)
         sbot.gossip.add(data, 'local')
       }
     })
@@ -70,17 +72,21 @@ module.exports = {
       return _status
     })
 
-    // broadcast self
-    setInterval(function () {
-      if(config.gossip && config.gossip.local === false)
-        return
-      // TODO: sign beacons, so that receipient can be confidant
-      // that is really your id.
-      // (which means they can update their peer table)
-      // Oh if this includes your local address,
-      // then it becomes unforgeable.
-      local.write(sbot.getAddress())
-    }, 1000)
+    setImmediate(function () {
+      // broadcast self
+      var int = setInterval(function () {
+        if(config.gossip && config.gossip.local === false)
+          return
+        // TODO: sign beacons, so that receipient can be confidant
+        // that is really your id.
+        // (which means they can update their peer table)
+        // Oh if this includes your local address,
+        // then it becomes unforgeable.
+        var addr = sbot.getAddress('private') || sbot.getAddress('local')
+        if(addr) local.write(addr)
+      }, 1000)
+      if(int.unref) int.unref()
+    })
   }
 }
 

@@ -4,7 +4,7 @@ var deepEqual = require('deep-equal')
 var tape      = require('tape')
 var pull      = require('pull-stream')
 var ssbKeys   = require('ssb-keys')
-
+var ref       = require('ssb-ref')
 var u = require('./util')
 var isArray = Array.isArray
 
@@ -20,31 +20,63 @@ var sbot = createSbot({
   timeout: 1000
 })
 
+var localhost = {
+  host: 'localhost', port: 8888,
+  key: ssbKeys.generate().id
+}
+var ip = {
+  host: '182.23.49.132', port: 8881,
+  key: ssbKeys.generate().id
+}
+var example = {
+  host: 'example.com', port: 8889,
+  key: ssbKeys.generate().id
+}
+
+var peers = JSON.parse(JSON.stringify([localhost, ip, example]))
+var peers2 = peers.map(function (e) {
+  var k = ssbKeys.generate().id
+  return 'net:'+e.host+':'+(e.port+1)+'~shs:'+k.substring(1, k.indexOf('.')) 
+})
+
 tape('gossip: add and get peers', function (t) {
 
   t.ok(isArray(sbot.gossip.peers()))
 
-  var localhost = {
-    host: 'localhost', port: 8888,
-    key: ssbKeys.generate().id
-  }
-  var ip = {
-    host: '182.23.49.132', port: 8881,
-    key: ssbKeys.generate().id
-  }
-  var example = {
-    host: 'example.com', port: 8889,
-    key: ssbKeys.generate().id
-  }
 
+  //clone input, because gossip mutates it.
   sbot.gossip.add(localhost)
   sbot.gossip.add(ip)
   sbot.gossip.add(example)
 
-  t.deepEqual(sbot.gossip.peers(), [localhost, ip, example])
+  t.deepEqual(
+    sbot.gossip.peers().map(function (e) {
+      console.log(e, ref.parseAddress(e.address))
+      return ref.parseAddress(e.address)
+    }),
+    peers
+  )
+
+  sbot.gossip.peers().forEach(function (e) {
+    t.equal(sbot.gossip.get(e.key).key, e.key)
+  })
 
   t.end()
 
+})
+
+tape('gossip: add string address', function (t) {
+  peers2.forEach(function (e) {
+    sbot.gossip.add(e, 'manual')
+  })
+  console.log(sbot.gossip.peers())
+  t.deepEqual(
+    sbot.gossip.peers().map(function (e) {
+      return e.address
+    }).slice(3),
+    peers2
+  )
+  t.end()
 })
 
 tape('gossip: errors on invalid peers', function (t) {
@@ -79,10 +111,7 @@ tape('ignore invalid pub messages', function (t) {
 })
 
 tape('cleanup', function (t) {
-  sbot.close(true, function () {})
+  sbot.close()
   t.end()
-  //I don't know why this is necessary
-  //because the other tests exit fine.
-  process.exit(0)
 })
 

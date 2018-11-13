@@ -42,7 +42,7 @@ var SSB = {
     mkdirp.sync(dbPath)
 
     if(!opts.keys)
-      opts.keys = ssbKeys.generate('ed25519', opts.seed && new Buffer(opts.seed, 'base64'))
+      opts.keys = ssbKeys.generate('ed25519', opts.seed && Buffer.from(opts.seed, 'base64'))
 
     if(!opts.path)
       throw new Error('opts.path *must* be provided, or use opts.temp=name to create a test instance')
@@ -111,9 +111,10 @@ var SSB = {
       publish                  : valid.async(feed.add, 'string|msgContent'),
       add                      : valid.async(ssb.add, 'msg'),
       queue                      : valid.async(ssb.queue, 'msg'),
-      get                      : valid.async(ssb.get, 'msgId|number|object'),
+      get                      : valid.async(ssb.get, 'msgLink|number|object'),
 
       post                     : ssb.post,
+      addMap                   : ssb.addMap,
 
       since                    : since,
 
@@ -134,6 +135,7 @@ var SSB = {
       createWriteStream        : ssb.createWriteStream,
       getVectorClock           : ssb.getVectorClock,
       getAtSequence            : ssb.getAtSequence,
+      addUnboxer               : ssb.addUnboxer,
     }
   }
 }
@@ -172,5 +174,8 @@ function createSbot() {
 }
 module.exports = createSbot()
 module.exports.createSbot = createSbot
+
+
+
 
 

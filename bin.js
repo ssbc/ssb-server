@@ -39,6 +39,9 @@ if (argv[0] == 'server') {
   // import sbot and start the server
 
   var createSbot = require('./')
+    .use(require('./plugins/onion'))
+    .use(require('./plugins/unix-socket'))
+    .use(require('./plugins/no-auth'))
     .use(require('./plugins/plugins'))
     .use(require('./plugins/master'))
     .use(require('./plugins/gossip'))
@@ -91,8 +94,9 @@ if (argv[0] == 'server') {
   }, function (err, rpc) {
     if(err) {
       if (/could not connect/.test(err.message)) {
-        console.log('Error: Could not connect to the scuttlebot server.')
-        console.log('Use the "server" command to start it.')
+        var serverAddr = (config.host || 'localhost') + ":" + config.port;
+        console.error('Error: Could not connect to the scuttlebot server ' + serverAddr)
+        console.error('Use the "server" command to start it.')
         if(config.verbose) throw err
         process.exit(1)
       }
@@ -150,7 +154,4 @@ if (argv[0] == 'server') {
     muxrpcli(argv, manifest, rpc, config.verbose)
   })
 }
-
-
-
 
