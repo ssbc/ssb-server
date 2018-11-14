@@ -20,7 +20,9 @@
     "ssb-ref": "^2.13.3",
     "statistics": "^3.0.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "scuttlebot": "^13.0.3"
+  },
   "author": "SSBC",
   "license": "MIT"
 }

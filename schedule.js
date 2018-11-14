@@ -2,7 +2,7 @@
 var ip = require('ip')
 var onWakeup = require('on-wakeup')
 var onNetwork = require('on-change-network')
-var hasNetwork = require('../../lib/has-network-debounced')
+var hasNetwork = require('scuttlebot/lib/has-network-debounced')
 
 var pull = require('pull-stream')
 
