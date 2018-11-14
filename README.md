@@ -69,11 +69,11 @@ var ssbClient = require('ssb-client')
 
 // create a ssb-server client using default settings
 // (server at localhost:8080, using key found at ~/.ssb/secret)
-ssbClient(function (err, ssb-server) {
+ssbClient(function (err, ssbServer) {
   if (err) throw err
 
   // publish a message
-  ssb-server.publish({ type: 'post', text: 'My First Post!' }, function (err, msg) {
+  ssbServer.publish({ type: 'post', text: 'My First Post!' }, function (err, msg) {
     // msg.key           == hash(msg.value)
     // msg.value.author  == your id
     // msg.value.content == { type: 'post', text: 'My First Post!' }
@@ -82,7 +82,7 @@ ssbClient(function (err, ssb-server) {
 
   // stream all messages in all feeds, ordered by publish time
   pull(
-    ssb-server.createFeedStream(),
+    ssbServer.createFeedStream(),
     pull.collect(function (err, msgs) {
       // msgs[0].key == hash(msgs[0].value)
       // msgs[0].value...
@@ -91,7 +91,7 @@ ssbClient(function (err, ssb-server) {
 
   // stream all messages in all feeds, ordered by receive time
   pull(
-    ssb-server.createLogStream(),
+    ssbServer.createLogStream(),
     pull.collect(function (err, msgs) {
       // msgs[0].key == hash(msgs[0].value)
       // msgs[0].value...
@@ -100,7 +100,7 @@ ssbClient(function (err, ssb-server) {
 
   // stream all messages by one feed, ordered by sequence number
   pull(
-    ssb-server.createHistoryStream({ id: < feedId > }),
+    ssbServer.createHistoryStream({ id: < feedId > }),
     pull.collect(function (err, msgs) {
       // msgs[0].key == hash(msgs[0].value)
       // msgs[0].value...
