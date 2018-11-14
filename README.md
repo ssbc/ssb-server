@@ -128,9 +128,9 @@ Therefore, by itself, it would probably make a poor choice for implementing a cr
 
 ### Getting Started
 
-- [Install](https://ssbc.github.io/docs/ssb-server/install.html) - Setup instructions
-- [Tutorial](https://ssbc.github.io/docs/ssb-server/tutorial.html) - Primer on developing with ssb-server
-- [API / CLI Reference](https://ssb-server.io/apis/ssb-server/ssb.html)
+- [Install](https://ssbc.github.io/docs/scuttlebot/install.html) - Setup instructions
+- [Tutorial](https://ssbc.github.io/docs/scuttlebot/tutorial.html) - Primer on developing with ssb-server
+- [API / CLI Reference](https://scuttlebot.io/apis/scuttlebot/ssb.html)
 
 ### Key Concepts
 
