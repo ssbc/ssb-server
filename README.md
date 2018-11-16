@@ -18,15 +18,12 @@ This means ssb-servers comprise a [global gossip-protocol mesh](https://en.wikip
 
 ## install
 
-to get a known working shrinkwrapped version, install `ssb-server-release`.
-It is recommended to only use this repo for development.
-
 ```
-npm install -g ssb-server-release
+npm install -g ssb-server
 ```
 
-`ssb-server-release` uses an `npm-shrinkwrap.json` file,
-so that it's possible to install it globally with known dependencies.
+This module uses [`npm-shrinkwrap.json`](https://docs.npmjs.com/files/shrinkwrap.json),
+which makes it possible install it globally with known dependencies.
 You can also use this to install old versions, with dependencies
 that worked at that time.
 
