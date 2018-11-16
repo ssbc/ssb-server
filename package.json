@@ -1,7 +1,7 @@
 {
   "name": "scuttlebot",
   "description": "network protocol layer for secure-scuttlebutt",
-  "version": "13.0.3",
+  "version": "13.1.0",
   "homepage": "https://github.com/ssbc/scuttlebot",
   "repository": {
     "type": "git",
@@ -75,4 +75,3 @@
   "author": "Paul Frazee <pfrazee@gmail.com>",
   "license": "MIT"
 }
-
