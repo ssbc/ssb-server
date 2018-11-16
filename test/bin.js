@@ -188,7 +188,7 @@ test('sbot should have websockets and http server by default', function(t) {
   }, function(err, addr) {
     t.error(err, 'sbot getAdress succeeds eventually')
     if (err) return end()
-
+    t.ok(addr, 'address is not null')
     t.comment('result of sbot getAddress: ' + addr)
 
     var remotes = ma.decode(addr)
@@ -254,8 +254,9 @@ test('sbot client should work without options', function(t) {
       cb(null, JSON.parse(stdout))  // remove quotes
     })
   }, function(err, addr) {
-    t.error(err, 'sbot getAdress succeeds eventually')
+    t.error(err, 'sbot getAddress succeeds eventually')
     if (err) return end()
+    t.ok(addr)
 
     t.comment('result of sbot getAddress: ' + addr)
     end()
