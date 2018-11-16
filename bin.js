@@ -57,6 +57,13 @@ if (argv[0] == 'server') {
   // add third-party plugins
   require('./plugins/plugins').loadUserPlugins(createSbot, config)
 
+  if (argv[1] != '--disable-ssb-links') {
+    if (!createSbot.plugins.find(p => p.name == 'links2')) {
+      console.log("WARNING-DEPRECATION: ssb-links not installed as a plugin. If you are using git-ssb, ssb-npm or patchfoo please consider installing it")
+      createSbot.use(require('ssb-links'))
+    }
+  }
+
   // start server
 
   config.keys = keys
