@@ -1,5 +1,5 @@
 var SecretStack = require('secret-stack')
-var create     = require('secure-scuttlebutt/create')
+var create     = require('ssb-db/create')
 var ssbKeys    = require('ssb-keys')
 var path       = require('path')
 var osenv      = require('osenv')

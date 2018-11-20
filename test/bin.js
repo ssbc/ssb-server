@@ -10,43 +10,50 @@ var ma = require('multiserver-address')
 
 // travis currently does not support ipv6, becaue GCE does not.
 var has_ipv6 = process.env.TRAVIS === undefined
+var children = []
 
+process.on('exit', function () {
+  children.forEach(function (e) {
+    e.kill(9)
+  })
+})
+process.on('SIGINT', function () {
+  children.forEach(function (e) {
+    e.kill(9)
+  })
+  process.exit(1)
+})
+
+var exited = false
+var count = 0
 function ssbServer(t, argv, opts) {
+  count ++
+  exited = false
   opts = opts || {}
-  // we spawn a shell with job control enabled
-  // that starts ssbServer on the background and then
-  // reads from stdin, which is a pipe to our node process
-  // When that pipe closes (because we do so when the tests ends, or
-  // it happens because our process dies), ssbServer will be killed
-  // by the shell automatically.
-  // Because the last command in the shell is 'wait %1', the shells' exit code
-  // will be ssbServer's exit code (which is >128 if it was killed)
-  var sh = spawn('bash', [
-    '-c', 
-    'set -o monitor; echo pwd: $(pwd); node ' + join(__dirname, '../bin.js') + ' ' +
-    argv.join(' ') +
-    ' & read dummy; echo killing ssbServer; kill %1; wait %1' 
-  ], Object.assign({
-    env: Object.assign({}, process.env, {ssb_appname: 'test'}),
-    stdio: ['pipe', 'inherit', 'inherit']
-  }, opts))
 
-  return function end() {
-    console.log('ending ...')
-  
-    sh.on('exit', function(code) {
-      if (code>128) {
-        t.comment('ssbServer was killed as expected')
-      } else {
-        t.fail('ssbServer exited with code ' + code)
-      }
-      t.end()
-    })
-    // closing shell's stdin will make it kill ssbServer
-    // if it is still running at this point.
-    // Either way, we'll get ssbServer's original exit code
-    // in the exit event above.
-    sh.stdin.end()
+  var sh = spawn(
+    process.execPath,
+    [join(__dirname, '../bin.js')]
+    .concat(argv),
+    Object.assign({
+      env: Object.assign({}, process.env, {ssb_appname: 'test'}),
+    }, opts)
+  )
+
+  sh.once('exit', function (code, name) {
+    exited = true
+    t.equal(name,'SIGKILL')
+    if(--count) return
+    t.end()
+  })
+
+  sh.stdout.pipe(process.stdout)
+  sh.stderr.pipe(process.stderr)
+
+  children.push(sh)
+
+  return function end () {
+    while(children.length) children.shift().kill(9)
   }
 }
 
@@ -58,6 +65,7 @@ function try_often(times, opts, work, done) {
   }
   const delay = 2000
   setTimeout(function() { // delay first try
+    console.log('try more:', times)
     work(function(err, result) {
       if (!err) return done(null, result)
       if (opts.ignore && err.message && !err.message.match(opts.ignore)) {
@@ -65,6 +73,7 @@ function try_often(times, opts, work, done) {
         return done(err)
       }
       if (!times) return done(err)
+      if(exited) return done(new Error('already exited'))
       console.warn('retry run', times)
       console.error('work(err):', err)
       try_often(times-1, work, done)
@@ -87,90 +96,64 @@ function connect(port, host, cb) {
   })
 }
 
-test('run bin.js server with command line option --host and --port (IPv4)', function(t) {
-  var end = ssbServer(t, [
-    'server',
-    '--host=127.0.0.1',
-    '--port=9001',
-    '--ws.port=9002',
-    '--path=/tmp/ssbServer_binjstest_' + Date.now()
-  ])
-
-  try_often(10, function work(cb) {
-    connect(9001, '127.0.0.1', cb)
-  }, function done(err) {
-    t.error(err, 'Successfully connect eventually')
-    end()
-  })
-})
-
-if (has_ipv6)
-test('run bin.js server with command line option --host and --port (IPv6)', function(t) {
-  var end = ssbServer(t, [
-    'server',
-    '--host=::1',
-    '--port=9001',
-    '--ws.port=9002',
-    '--path=/tmp/ssbServer_binjstest_' + Date.now()
-  ])
-  try_often(10, function work(cb) {
-    connect(9001, '::1', cb)
-  }, function done(err) {
-    t.error(err, 'Successfully connect eventually')
-    end()
-  })
-})
-
-test('run bin.js server with local config file (port, host) (IPv4)', function(t) {
-  var dir = '/tmp/ssbServer_binjstest_' + Date.now()
+function testSsbServer(t, opts, asConfig, port, cb) {
+  var dir = '/tmp/ssb-server_binjstest_' + Date.now()
+  if('function' === typeof port)
+    cb = port, port = opts.port
   mkdirp.sync(dir)
-  fs.writeFileSync(join(dir, '.testrc'), JSON.stringify({
-    host: '127.0.0.1',
-    port: 9001,
-    ws: {
-      port: 9002
-    }
-  }))
-  var end = ssbServer(t, [
+  var args = [
     'server',
-    '--path', dir
-  ], {
+    '--path '+dir
+  ]
+
+  if(asConfig) {
+    fs.writeFileSync(join(dir, '.testrc'), JSON.stringify(opts))
+  } else {
+    ;(function toArgs (prefix, opts) {
+      for(var k in opts) {
+        if(opts[k] && 'object' == typeof opts[k])
+          toArgs(prefix+k+'.', opts[k])
+        else
+          args.push(prefix+k+'='+opts[k])
+      }
+    })('--', opts)
+  }
+
+  var end = ssbServer(t, args, {
     cwd: dir
   })
 
   try_often(10, {
     ignore: /ECONNREFUSED/
   }, function work(cb) {
-    connect(9001, '127.0.0.1', cb)
-  }, function done(err) {
-    t.error(err, 'Successfully connect eventually')
+    connect(port, opts.host, cb)
+  }, function (err) {
+    cb(err)
     end()
   })
-})
+}
 
-if (has_ipv6)
-test('run bin.js server with local config file (port, host) (IPv6)', function(t) {
-  var dir = '/tmp/ssbServer_binjstest_' + Date.now()
-  mkdirp.sync(dir)
-  fs.writeFileSync(join(dir, '.testrc'), JSON.stringify({
-    host: '::',
-    port: 9001,
-    ws: {
-      port: 9002
-    }
-  }))
-  var end = ssbServer(t, [
-    'server',
-    '--path', dir
-  ], {
-    cwd: dir
-  })
+var c = 0
+;['::1', '::', '127.0.0.1', 'localhost'].forEach(function (host) {
+  if(!has_ipv6 && /:/.test(host)) return
 
-  try_often(10, function work(cb) {
-    connect(9001, '::1', cb)
-  }, function done(err) {
-    t.error(err, 'Successfully connect eventually')
-    end()
+  ;[9002, 9001].forEach(function (port) {
+    ;[true, false].forEach(function (asConfig) {
+      var opts = {
+        host: host,
+        port: 9001,
+        ws: { port: 9002 }
+      }
+//      if(c++) return
+      test('run bin.js server with ' + 
+        (asConfig ? 'a config file' : 'command line options') +
+        ':'+JSON.stringify(opts)+' then connect to port:'+port
+      , function(t) {
+        testSsbServer(t, opts, true, function (err) {
+          t.error(err, 'Successfully connect eventually')
+        })
+      })
+    })
   })
 })
 
@@ -190,6 +173,7 @@ test('ssbServer should have websockets and http server by default', function(t) 
     exec([
       join(__dirname, '../bin.js'),
       'getAddress',
+      'device',
       '--',
       '--host=127.0.0.1',
       '--port=9001',
@@ -204,10 +188,12 @@ test('ssbServer should have websockets and http server by default', function(t) 
   }, function(err, addr) {
     t.error(err, 'ssbServer getAdress succeeds eventually')
     if (err) return end()
+    t.ok(addr, 'address is not null')
+    t.comment('result of ssb-server getAddress: ' + addr)
 
-    t.comment('result of ssbServer getAddress: ' + addr)
-
-    var ws_remotes = ma.decode(addr).filter(function(a) {
+    var remotes = ma.decode(addr)
+    console.log('remotes', remotes, addr)
+    ws_remotes = remotes.filter(function(a) {
       return a.find(function(component) {
         return component.name == 'ws'
       })
@@ -236,3 +222,45 @@ test('ssbServer should have websockets and http server by default', function(t) 
     })
   })
 })
+
+test('ssb-server client should work without options', function(t) {
+  var path = '/tmp/ssb-server_binjstest_' + Date.now()
+  mkdirp.sync(path)
+  fs.writeFileSync(path+'/config', 
+    JSON.stringify({
+      port: 43293, ws: { port: 43294 }
+    })
+  )
+  var caps = crypto.randomBytes(32).toString('base64')
+  var end = ssbServer(t, [
+    'server',
+    '--path', path,
+    '--config', path+'/config',
+    '--caps.shs', caps
+  ])
+
+  try_often(10, function work(cb) {
+    exec([
+      join(__dirname, '../bin.js'),
+      'getAddress',
+      'device',
+      '--path', path,
+      '--config', path+'/config',
+      '--caps.shs', caps
+    ].join(' '), {
+      env: Object.assign({}, process.env, {ssb_appname: 'test'})
+    }, function(err, stdout, sderr) {
+      if (err) return cb(err)
+      cb(null, JSON.parse(stdout))  // remove quotes
+    })
+  }, function(err, addr) {
+    t.error(err, 'ssb-server getAddress succeeds eventually')
+    if (err) return end()
+    t.ok(addr)
+
+    t.comment('result of ssb-server getAddress: ' + addr)
+    end()
+  })
+})
+
+

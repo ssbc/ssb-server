@@ -3,6 +3,4 @@
 node_modules
 .ssbrc
 *.log
-
-
-
+coverage
