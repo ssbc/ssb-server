@@ -52,11 +52,17 @@ if (argv[0] == 'server') {
     .use(require('./plugins/local'))
     .use(require('./plugins/logging'))
     .use(require('ssb-query'))
-    .use(require('ssb-links'))
     .use(require('ssb-ws'))
     .use(require('ssb-ebt'))
   // add third-party plugins
   require('./plugins/plugins').loadUserPlugins(createSbot, config)
+
+  if (argv[1] != '--disable-ssb-links') {
+    if (!createSbot.plugins.find(p => p.name == 'links2')) {
+      console.log("WARNING-DEPRECATION: ssb-links not installed as a plugin. If you are using git-ssb, ssb-npm or patchfoo please consider installing it")
+      createSbot.use(require('ssb-links'))
+    }
+  }
 
   // start server
 
