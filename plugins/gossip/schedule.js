@@ -2,8 +2,10 @@
 var ip = require('ip')
 var onWakeup = require('on-wakeup')
 var onNetwork = require('on-change-network')
-const debug = require('debug')('ssb-db')
 var hasNetwork = require('../../lib/has-network-debounced')
+
+const debug = require('debug')('ssb-server')
+debug.enabled = true
 
 var pull = require('pull-stream')
 
