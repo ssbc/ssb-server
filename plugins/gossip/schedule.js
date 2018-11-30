@@ -2,6 +2,7 @@
 var ip = require('ip')
 var onWakeup = require('on-wakeup')
 var onNetwork = require('on-change-network')
+const debug = require('debug')('ssb-db')
 var hasNetwork = require('../../lib/has-network-debounced')
 
 var pull = require('pull-stream')
@@ -108,8 +109,14 @@ function (gossip, config, server) {
   var min = 60e3, hour = 60*60e3, closed = false
 
   //trigger hard reconnect after suspend or local network changes
-  onWakeup(gossip.reconnect)
-  onNetwork(gossip.reconnect)
+  onWakeup(() => {
+    debug('onWakeup: starting gossip')
+    return gossip.reconnect()
+  })
+  onNetwork(() => {
+    debug('onNetwork: starting gossip')
+    return gossip.reconnect()
+  })
 
   function conf(name, def) {
     if(config.gossip == null) return def
@@ -118,6 +125,7 @@ function (gossip, config, server) {
   }
 
   function connect (peers, ts, name, filter, opts) {
+    debug('connecting: %s', name)
     opts.group = name
     var connected = peers.filter(isConnect).filter(filter)
 
