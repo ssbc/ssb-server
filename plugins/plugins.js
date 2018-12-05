@@ -61,14 +61,28 @@ module.exports = {
     function writePluginConfig (pluginName, value) {
       var cfgPath = path.join(config.path, 'config')
       // load ~/.ssb/config
-      var existingConfig = JSON.parse(fs.readFileSync(cfgPath, 'utf-8'))
+      let existingConfig
+      fs.readFile(cfgPath, 'utf-8', (err, data) => {
+        if (err) {
+          if (err.code === 'ENOENT') {
+            // only catch "file not found"
+            existingConfig = {}
+          } else {
+            throw err
+          }
+        } else {
+          existingConfig = JSON.parse(data)
+        }
 
-      // update the plugins config
-      existingConfig.plugins = existingConfig.plugins || {}
-      existingConfig.plugins[pluginName] = value
 
-      // write to disc
-      fs.writeFileSync(cfgPath, JSON.stringify(existingConfig, null, 2), 'utf-8')
+        // update the plugins config
+        existingConfig.plugins = existingConfig.plugins || {}
+        existingConfig.plugins[pluginName] = value
+
+        // write to disc
+        fs.writeFileSync(cfgPath, JSON.stringify(existingConfig, null, 2), 'utf-8')
+      })
+
     }
 
     return {
