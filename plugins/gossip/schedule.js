@@ -127,7 +127,6 @@ function (gossip, config, server) {
   }
 
   function connect (peers, ts, name, filter, opts) {
-    debug('attempting %s', name)
     opts.group = name
     var connected = peers.filter(isConnect).filter(filter)
 
@@ -135,7 +134,7 @@ function (gossip, config, server) {
     if(connected.length > opts.quota) {
       return earliest(connected, connected.length - opts.quota)
         .forEach(function (peer) {
-          debug('%s disconnecting from %s', name, peer)
+          debug('%s disconnecting from %o', name, peer)
           gossip.disconnect(peer)
         })
     }
@@ -144,7 +143,7 @@ function (gossip, config, server) {
     var selected = select(peers, ts, and(filter, isOnline), opts)
     selected
       .forEach(function (peer) {
-        debug('%s connecting to %s', name, peer)
+        debug('%s connecting to %o', name, peer)
         gossip.connect(peer)
       })
   }
