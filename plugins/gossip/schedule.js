@@ -127,7 +127,7 @@ function (gossip, config, server) {
   }
 
   function connect (peers, ts, name, filter, opts) {
-    debug('connecting: %s', name)
+    debug('attempting %s', name)
     opts.group = name
     var connected = peers.filter(isConnect).filter(filter)
 
@@ -143,6 +143,7 @@ function (gossip, config, server) {
     var selected = select(peers, ts, and(filter, isOnline), opts)
     selected
       .forEach(function (peer) {
+        debug('%s gossip with %s', name, peer)
         gossip.connect(peer)
       })
   }
