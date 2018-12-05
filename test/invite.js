@@ -20,8 +20,8 @@ function all(stream, cb) {
 
 var wsConnections = {
   incoming: {
-    net: [{ scope: "public", "transform": "shs" }],
-    ws: [{ scope: "public", "transform": "shs" }]
+    net: [{ scope: ["local", "device"], "transform": "shs", host: "::" }],
+    ws: [{ scope: ["local", "device"], "transform": "shs", host: "::" }]
   },
   outgoing: {
     net: [{ transform: "shs" }],
@@ -30,29 +30,32 @@ var wsConnections = {
 }
 
 tape('test invite.accept api', function (t) {
-
   var alice = createSbot({
     temp: 'test-invite-alice2', timeout: 100,
     allowPrivate: true,
-    keys: ssbKeys.generate()
+    keys: ssbKeys.generate(),
   })
 
   var bob = createSbot({
     temp: 'test-invite-bob2', timeout: 100,
-    keys: ssbKeys.generate()
+    keys: ssbKeys.generate(),
   })
 
   var carol = createSbot({
     temp: 'test-invite-carol2', timeout: 100,
-    keys: ssbKeys.generate()
+    keys: ssbKeys.generate(),
   })
+
+  if(!alice.getAddress('device'))
+    throw new Error('alice must have device address')
+  if(!alice.getAddress('local'))
+    throw new Error('alice must have local address')
 
   //request a secret that with particular permissions.
 
   alice.invite.create(1, function (err, invite) {
     if(err) throw err
     //test that invite is accepted with quotes around it.
-    console.log('INVITE', invite)
     bob.invite.accept(JSON.stringify(invite), function (err) {
       if(err) throw err
       alice.friends.hops({
@@ -105,10 +108,9 @@ tape('test invite.accept doesnt follow if already followed', function (t) {
           if(err) throw err
           t.equal(ary.length, 1)
 
-          console.log(ary)
           t.deepEqual({
             type: 'pub',
-            address: ref.parseAddress(alice.address().split(';').shift()),
+            address: ref.parseAddress(alice.address('local').split(';').shift()),
           }, ary[0].value.content)
 
           all(bob.messagesByType('contact'), function (err, ary) {

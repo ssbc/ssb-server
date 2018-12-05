@@ -4,6 +4,4 @@ node_modules
 sbot.js
 .ssbrc
 *.log
-
-
-
+coverage

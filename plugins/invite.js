@@ -62,6 +62,13 @@ module.exports = {
       })
     })
 
+    function getInviteAddress () {
+      return (config.allowPrivate
+        ? server.getAddress('public') || server.getAddress('local') || server.getAddress('private')
+        : server.getAddress('public')
+        )
+    }
+
     return {
       create: valid.async(function (opts, cb) {
         opts = opts || {}
@@ -74,7 +81,7 @@ module.exports = {
         else if(isFunction(opts))
           cb = opts, opts = {}
 
-        var addr = server.getAddress().split(';').shift()
+        var addr = getInviteAddress().split(';').shift()
         var host = ref.parseAddress(addr).host
         if(typeof host !== 'string') {
           return cb(new Error('Could not parse host portion from server address:' + addr))
@@ -109,9 +116,11 @@ module.exports = {
           // emit the invite code: our server address, plus the key-seed
           if(err) cb(err)
           else if(opts.modern) {
-            var ws_addr = server.getAddress().split(';').sort(function (a, b) {
+            var ws_addr = getInviteAddress().split(';').sort(function (a, b) {
                return +/^ws/.test(b) - +/^ws/.test(a)
             }).shift()
+
+
             if(!/^ws/.test(ws_addr)) throw new Error('not a ws address:'+ws_addr)
             cb(null, ws_addr+':'+seed.toString('base64'))
           }
@@ -195,7 +204,6 @@ module.exports = {
         }
 
         opts = ref.parseAddress(ref.parseInvite(invite).remote)
-
         function connect (cb) {
           ssbClient(null, {
             caps: config.caps,
@@ -249,13 +257,11 @@ module.exports = {
             ])
             (function (err, results) {
               if(err) return cb(err)
-              rpc.getAddress(function (err, addr) {
+              rpc.close()
                 rpc.close()
                 //ignore err if this is new style invite
-                if(modern && err) return cb(err, addr)
-                if(server.gossip) server.gossip.add(addr, 'seed')
+                if(server.gossip) server.gossip.add(ref.parseInvite(invite).remote, 'seed')
                 cb(null, results)
-              })
             })
           })
         })
