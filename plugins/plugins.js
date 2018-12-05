@@ -60,11 +60,8 @@ module.exports = {
     // write the plugin config to ~/.ssb/config
     function writePluginConfig (pluginName, value) {
       var cfgPath = path.join(config.path, 'config')
-      var existingConfig = {}
-      
       // load ~/.ssb/config
-      try { existingConfig = JSON.parse(fs.readFileSync(cfgPath, 'utf-8')) }
-      catch (e) {}
+      var existingConfig = JSON.parse(fs.readFileSync(cfgPath, 'utf-8'))
 
       // update the plugins config
       existingConfig.plugins = existingConfig.plugins || {}
