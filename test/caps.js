@@ -1,9 +1,9 @@
 
-var cont      = require('cont')
+var cont = require('cont')
 var deepEqual = require('deep-equal')
-var tape      = require('tape')
-var pull      = require('pull-stream')
-var ssbKeys   = require('ssb-keys')
+var tape = require('tape')
+var pull = require('pull-stream')
+var ssbKeys = require('ssb-keys')
 
 var u = require('./util')
 
@@ -29,7 +29,8 @@ var shs_cap1 = hash('test-shs-cap1')
 var alice, bob, carol
 var dbA = createSbot({
   temp: 'server-alice',
-  port: 45451, timeout: 1400,
+  port: 45451,
+  timeout: 1400,
   keys: alice = ssbKeys.generate(),
   caps: {
     shs: shs_cap1,
@@ -38,19 +39,21 @@ var dbA = createSbot({
   level: 'info'
 })
 
-//uses default caps, incompatible with above
+// uses default caps, incompatible with above
 var dbB = createSbot({
   temp: 'server-bob',
-  port: 45452, timeout: 1400,
+  port: 45452,
+  timeout: 1400,
   keys: bob = ssbKeys.generate(),
   seeds: [dbA.getAddress()],
   level: 'info'
 })
 
-//can connect to A
+// can connect to A
 var dbC = createSbot({
   temp: 'server-carol',
-  port: 45453, timeout: 1400,
+  port: 45453,
+  timeout: 1400,
   keys: alice = ssbKeys.generate(),
   caps: {
     shs: shs_cap1,
@@ -59,19 +62,15 @@ var dbC = createSbot({
   level: 'info'
 })
 
-
 tape('signatures not accepted if made from different caps', function (t) {
-
-
-  dbA.publish({type: 'test', foo: true}, function (err, msg) {
-    if(err) throw err
+  dbA.publish({ type: 'test', foo: true }, function (err, msg) {
+    if (err) throw err
     console.log(msg)
     dbB.add(msg.value, function (err) {
-      t.ok(err) //should not be valid in this universe
+      t.ok(err) // should not be valid in this universe
       t.ok(/invalid/.test(err.message))
       console.log(err.stack)
       t.end()
-
     })
   })
 })
@@ -82,9 +81,7 @@ tape('cannot connect if different shs caps, custom -> default', function (t) {
     console.log(err.stack)
 
     t.end()
-
   })
-
 })
 
 tape('cannot connect if different shs caps, default -> custom', function (t) {
@@ -98,11 +95,10 @@ tape('cannot connect if different shs caps, default -> custom', function (t) {
 
 tape('cannot connect if different shs caps, default -> custom', function (t) {
   dbC.connect(dbA.getAddress(), function (err) {
-    if(err) throw err
+    if (err) throw err
     t.end()
   })
 })
-
 
 tape('cleanup', function (t) {
   dbA.close()
@@ -110,5 +106,3 @@ tape('cleanup', function (t) {
   dbC.close()
   t.end()
 })
-
-

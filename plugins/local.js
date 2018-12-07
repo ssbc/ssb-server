@@ -5,12 +5,11 @@ var ref = require('ssb-ref')
 // on the LAN, using multicast UDP
 
 function isFunction (f) {
-  return 'function' === typeof f
+  return typeof f === 'function'
 }
 
 function isEmpty (o) {
-  for(var k in o)
-    return false
+  for (var k in o) { return false }
   return true
 }
 
@@ -26,13 +25,14 @@ module.exports = {
   name: 'local',
   version: '2.0.0',
   init: function init (sbot, config) {
-    if(config.gossip && config.gossip.local === false)
+    if (config.gossip && config.gossip.local === false) {
       return {
         init: function () {
           delete this.init
           init(sbot, config)
         }
       }
+    }
 
     var local = broadcast(config.port)
     var addrs = {}
@@ -56,18 +56,17 @@ module.exports = {
       if (peer && peer.key !== sbot.id) {
         addrs[peer.key] = peer
         lastSeen[peer.key] = Date.now()
-        //note: add the raw data, not the parsed data.
-        //so we still have the whole address, including protocol (eg, websockets)
+        // note: add the raw data, not the parsed data.
+        // so we still have the whole address, including protocol (eg, websockets)
         sbot.gossip.add(data, 'local')
       }
     })
 
     sbot.status.hook(function (fn) {
       var _status = fn()
-      if(!isEmpty(addrs)) {
+      if (!isEmpty(addrs)) {
         _status.local = {}
-        for(var k in addrs)
-          _status.local[k] = {address: addrs[k], seen: lastSeen[k]}
+        for (var k in addrs) { _status.local[k] = { address: addrs[k], seen: lastSeen[k] } }
       }
       return _status
     })
@@ -75,18 +74,16 @@ module.exports = {
     setImmediate(function () {
       // broadcast self
       var int = setInterval(function () {
-        if(config.gossip && config.gossip.local === false)
-          return
+        if (config.gossip && config.gossip.local === false) { return }
         // TODO: sign beacons, so that receipient can be confidant
         // that is really your id.
         // (which means they can update their peer table)
         // Oh if this includes your local address,
         // then it becomes unforgeable.
         var addr = sbot.getAddress('private') || sbot.getAddress('local')
-        if(addr) local.write(addr)
+        if (addr) local.write(addr)
       }, 1000)
-      if(int.unref) int.unref()
+      if (int.unref) int.unref()
     })
   }
 }
-

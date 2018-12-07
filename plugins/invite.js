@@ -17,19 +17,19 @@ var ssbClient = require('ssb-client')
 // which peers can use to command your server to follow them.
 
 function isFunction (f) {
-  return 'function' === typeof f
+  return typeof f === 'function'
 }
 
 function isString (s) {
-  return 'string' === typeof s
+  return typeof s === 'string'
 }
 
-function isObject(o) {
-  return o && 'object' === typeof o
+function isObject (o) {
+  return o && typeof o === 'object'
 }
 
-function isNumber(n) {
-  return 'number' === typeof n && !isNaN(n)
+function isNumber (n) {
+  return typeof n === 'number' && !isNaN(n)
 }
 
 module.exports = {
@@ -37,26 +37,26 @@ module.exports = {
   version: '1.0.0',
   manifest: mdm.manifest(apidoc),
   permissions: {
-    master: {allow: ['create']},
-    //temp: {allow: ['use']}
+    master: { allow: ['create'] }
+    // temp: {allow: ['use']}
   },
   init: function (server, config) {
     var codes = {}
     var codesDB = server.sublevel('codes')
 
-    //add an auth hook.
+    // add an auth hook.
     server.auth.hook(function (fn, args) {
-      var pubkey = args[0], cb = args[1]
+      var pubkey = args[0]; var cb = args[1]
 
       // run normal authentication
       fn(pubkey, function (err, auth) {
-        if(err || auth) return cb(err, auth)
+        if (err || auth) return cb(err, auth)
 
         // if no rights were already defined for this pubkey
         // check if the pubkey is one of our invite codes
         codesDB.get(pubkey, function (_, code) {
-          //disallow if this invite has already been used.
-          if(code && (code.used >= code.total)) cb()
+          // disallow if this invite has already been used.
+          if (code && (code.used >= code.total)) cb()
           else cb(null, code && code.permissions)
         })
       })
@@ -66,39 +66,34 @@ module.exports = {
       return (config.allowPrivate
         ? server.getAddress('public') || server.getAddress('local') || server.getAddress('private')
         : server.getAddress('public')
-        )
+      )
     }
 
     return {
       create: valid.async(function (opts, cb) {
         opts = opts || {}
-        if(isNumber(opts))
-          opts = {uses: opts}
-        else if(isObject(opts)) {
-          if(opts.modern)
-            opts.uses = 1
-        }
-        else if(isFunction(opts))
-          cb = opts, opts = {}
+        if (isNumber(opts)) { opts = { uses: opts } } else if (isObject(opts)) {
+          if (opts.modern) { opts.uses = 1 }
+        } else if (isFunction(opts)) { cb = opts, opts = {} }
 
         var addr = getInviteAddress().split(';').shift()
         var host = ref.parseAddress(addr).host
-        if(typeof host !== 'string') {
+        if (typeof host !== 'string') {
           return cb(new Error('Could not parse host portion from server address:' + addr))
         }
 
-        if (opts.external)
-          host = opts.external
+        if (opts.external) { host = opts.external }
 
-        if(!config.allowPrivate && (ip.isPrivate(host) || 'localhost' === host || host === ''))
-          return cb(new Error('Server has no public ip address, '
-                            + 'cannot create useable invitation'))
+        if (!config.allowPrivate && (ip.isPrivate(host) || host === 'localhost' || host === '')) {
+          return cb(new Error('Server has no public ip address, ' +
+                            'cannot create useable invitation'))
+        }
 
-        //this stuff is SECURITY CRITICAL
-        //so it should be moved into the main app.
-        //there should be something that restricts what
-        //permissions the plugin can create also:
-        //it should be able to diminish it's own permissions.
+        // this stuff is SECURITY CRITICAL
+        // so it should be moved into the main app.
+        // there should be something that restricts what
+        // permissions the plugin can create also:
+        // it should be able to diminish it's own permissions.
 
         // generate a key-seed and its key
         var seed = crypto.randomBytes(32)
@@ -106,25 +101,23 @@ module.exports = {
 
         // store metadata under the generated pubkey
         var owner = server.id
-        codesDB.put(keyCap.id,  {
+        codesDB.put(keyCap.id, {
           id: keyCap.id,
           total: +opts.uses || 1,
           note: opts.note,
           used: 0,
-          permissions: {allow: ['invite.use', 'getAddress'], deny: null}
+          permissions: { allow: ['invite.use', 'getAddress'], deny: null }
         }, function (err) {
           // emit the invite code: our server address, plus the key-seed
-          if(err) cb(err)
-          else if(opts.modern) {
+          if (err) cb(err)
+          else if (opts.modern) {
             var ws_addr = getInviteAddress().split(';').sort(function (a, b) {
-               return +/^ws/.test(b) - +/^ws/.test(a)
+              return +/^ws/.test(b) - +/^ws/.test(a)
             }).shift()
 
-
-            if(!/^ws/.test(ws_addr)) throw new Error('not a ws address:'+ws_addr)
-            cb(null, ws_addr+':'+seed.toString('base64'))
-          }
-          else {
+            if (!/^ws/.test(ws_addr)) throw new Error('not a ws address:' + ws_addr)
+            cb(null, ws_addr + ':' + seed.toString('base64'))
+          } else {
             addr = ref.parseAddress(addr)
             cb(null, [opts.external ? opts.external : addr.host, addr.port, addr.key].join(':') + '~' + seed.toString('base64'))
           }
@@ -134,36 +127,33 @@ module.exports = {
         var rpc = this
 
         // fetch the code
-        codesDB.get(rpc.id, function(err, invite) {
-          if(err) return cb(err)
+        codesDB.get(rpc.id, function (err, invite) {
+          if (err) return cb(err)
 
           // check if we're already following them
           server.friends.get(function (err, follows) {
-//          server.friends.all('follow', function(err, follows) {
-//            if(hops[req.feed] == 1)
-            if (follows && follows[server.id] && follows[server.id][req.feed])
-              return cb(new Error('already following'))
+            //          server.friends.all('follow', function(err, follows) {
+            //            if(hops[req.feed] == 1)
+            if (follows && follows[server.id] && follows[server.id][req.feed]) { return cb(new Error('already following')) }
 
             // although we already know the current feed
             // it's included so that request cannot be replayed.
-            if(!req.feed)
-              return cb(new Error('feed to follow is missing'))
+            if (!req.feed) { return cb(new Error('feed to follow is missing')) }
 
-            if(invite.used >= invite.total)
-              return cb(new Error('invite has expired'))
+            if (invite.used >= invite.total) { return cb(new Error('invite has expired')) }
 
-            invite.used ++
+            invite.used++
 
-            //never allow this to be used again
-            if(invite.used >= invite.total) {
-              invite.permissions = {allow: [], deny: null}
+            // never allow this to be used again
+            if (invite.used >= invite.total) {
+              invite.permissions = { allow: [], deny: null }
             }
-            //TODO
-            //okay so there is a small race condition here
-            //if people use a code massively in parallel
-            //then it may not be counted correctly...
-            //this is not a big enough deal to fix though.
-            //-dominic
+            // TODO
+            // okay so there is a small race condition here
+            // if people use a code massively in parallel
+            // then it may not be counted correctly...
+            // this is not a big enough deal to fix though.
+            // -dominic
 
             // update code metadata
             codesDB.put(rpc.id, invite, function (err) {
@@ -183,24 +173,20 @@ module.exports = {
       }, 'object'),
       accept: valid.async(function (invite, cb) {
         // remove surrounding quotes, if found
-        if (invite.charAt(0) === '"' && invite.charAt(invite.length - 1) === '"')
-          invite = invite.slice(1, -1)
+        if (invite.charAt(0) === '"' && invite.charAt(invite.length - 1) === '"') { invite = invite.slice(1, -1) }
         var opts
         // connect to the address in the invite code
         // using a keypair generated from the key-seed in the invite code
         var modern = false
-        if(ref.isInvite(invite)) { //legacy ivite
-          if(ref.isLegacyInvite(invite)) {
+        if (ref.isInvite(invite)) { // legacy ivite
+          if (ref.isLegacyInvite(invite)) {
             var parts = invite.split('~')
-            opts = ref.parseAddress(parts[0])//.split(':')
-            //convert legacy code to multiserver invite code.
+            opts = ref.parseAddress(parts[0])// .split(':')
+            // convert legacy code to multiserver invite code.
             var protocol = 'net:'
-            if (opts.host.endsWith(".onion"))
-              protocol = 'onion:'
-            invite = protocol+opts.host+':'+opts.port+'~shs:'+opts.key.slice(1, -8)+':'+parts[1]
-          }
-          else
-            modern = true
+            if (opts.host.endsWith('.onion')) { protocol = 'onion:' }
+            invite = protocol + opts.host + ':' + opts.port + '~shs:' + opts.key.slice(1, -8) + ':' + parts[1]
+          } else { modern = true }
         }
 
         opts = ref.parseAddress(ref.parseInvite(invite).remote)
@@ -208,7 +194,7 @@ module.exports = {
           ssbClient(null, {
             caps: config.caps,
             remote: invite,
-            manifest: {invite: {use: 'async'}, getAddress: 'async'}
+            manifest: { invite: { use: 'async' }, getAddress: 'async' }
           }, cb)
         }
 
@@ -223,20 +209,19 @@ module.exports = {
             var start = Date.now()
             fn(function (err, value) {
               n++
-              if(n >= 3) cb(err, value)
-              else if(err) setTimeout(next, 500 + (Date.now()-start)*n)
+              if (n >= 3) cb(err, value)
+              else if (err) setTimeout(next, 500 + (Date.now() - start) * n)
               else cb(null, value)
             })
           })()
         }
 
         retry(connect, function (err, rpc) {
-
-          if(err) return cb(explain(err, 'could not connect to server'))
+          if (err) return cb(explain(err, 'could not connect to server'))
 
           // command the peer to follow me
           rpc.invite.use({ feed: server.id }, function (err, msg) {
-            if(err) return cb(explain(err, 'invite not accepted'))
+            if (err) return cb(explain(err, 'invite not accepted'))
 
             // follow and announce the pub
             cont.para([
@@ -248,20 +233,20 @@ module.exports = {
               }),
               (
                 opts.host
-                ? server.publish({
+                  ? server.publish({
                     type: 'pub',
                     address: opts
                   })
-                : function (cb) { cb() }
+                  : function (cb) { cb() }
               )
             ])
             (function (err, results) {
-              if(err) return cb(err)
+              if (err) return cb(err)
               rpc.close()
-                rpc.close()
-                //ignore err if this is new style invite
-                if(server.gossip) server.gossip.add(ref.parseInvite(invite).remote, 'seed')
-                cb(null, results)
+              rpc.close()
+              // ignore err if this is new style invite
+              if (server.gossip) server.gossip.add(ref.parseInvite(invite).remote, 'seed')
+              cb(null, results)
             })
           })
         })
@@ -269,4 +254,3 @@ module.exports = {
     }
   }
 }
-

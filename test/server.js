@@ -1,9 +1,9 @@
 
-var cont      = require('cont')
+var cont = require('cont')
 var deepEqual = require('deep-equal')
-var tape      = require('tape')
-var pull      = require('pull-stream')
-var ssbKeys   = require('ssb-keys')
+var tape = require('tape')
+var pull = require('pull-stream')
+var ssbKeys = require('ssb-keys')
 
 var u = require('./util')
 
@@ -19,29 +19,31 @@ var createSbot = require('../')
   .use(require('../plugins/logging'))
 
 tape('replicate between 3 peers', function (t) {
-
   var alice, bob, carol
   var dbA = createSbot({
     temp: 'server-alice',
-    port: 45451, timeout: 1400,
+    port: 45451,
+    timeout: 1400,
     keys: alice = ssbKeys.generate(),
-    //replicate: {legacy: false},
+    // replicate: {legacy: false},
     level: 'info'
   })
   var dbB = createSbot({
     temp: 'server-bob',
-    port: 45452, timeout: 1400,
+    port: 45452,
+    timeout: 1400,
     keys: bob = ssbKeys.generate(),
     seeds: [dbA.getAddress()],
-    //replicate: {legacy: false},
+    // replicate: {legacy: false},
     level: 'info'
   })
   var dbC = createSbot({
     temp: 'server-carol',
-    port: 45453, timeout: 1400,
+    port: 45453,
+    timeout: 1400,
     keys: carol = ssbKeys.generate(),
     seeds: [dbA.getAddress()],
-    //replicate: {legacy: false},
+    // replicate: {legacy: false},
     level: 'info'
   })
 
@@ -62,17 +64,17 @@ tape('replicate between 3 peers', function (t) {
 
     cpub(u.follow(alice.id)),
     cpub(u.follow(bob.id))
-  ]) (function (err, ary) {
-    if(err) throw err
+  ])(function (err, ary) {
+    if (err) throw err
 
     var expected = {}
     expected[alice.id] = expected[bob.id] = expected[carol.id] = 3
 
-    function check(server, name) {
+    function check (server, name) {
       var closed = false
       return server.on('replicate:finish', function (actual) {
         console.log(actual)
-        if(deepEqual(expected, actual) && !closed) {
+        if (deepEqual(expected, actual) && !closed) {
           closed = true
           done()
         }
@@ -86,11 +88,10 @@ tape('replicate between 3 peers', function (t) {
     var n = 2
 
     function done () {
-      if(--n) return
+      if (--n) return
       dbA.close(true); dbB.close(true); dbC.close(true)
       t.ok(true)
       t.end()
     }
   })
 })
-

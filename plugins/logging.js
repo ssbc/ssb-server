@@ -18,11 +18,11 @@ function indent (o) {
   }).join('\n')
 }
 
-function isString(s) {
-  return 'string' === s
+function isString (s) {
+  return s === 'string'
 }
 
-function formatter(id, level) {
+function formatter (id, level) {
   var b = id.substring(0, 4)
   return function (ary) {
     var plug = ary[0].substring(0, 4).toUpperCase()
@@ -36,15 +36,9 @@ function formatter(id, level) {
     var lines = isString(data) && data.split('\n').length > 1
 
     var c = process.stdout.columns
-    if((process.stdout.columns > length) && !lines)
-      console.log([level, b, pre, _data].join(' '))
-    else {
+    if ((process.stdout.columns > length) && !lines) { console.log([level, b, pre, _data].join(' ')) } else {
       console.log([level, b, pre].join(' '))
-      if(lines)
-        console.log(indent(data))
-      else if(data && data.stack)
-        console.log(indent(data.stack))
-      else if(data) {
+      if (lines) { console.log(indent(data)) } else if (data && data.stack) { console.log(indent(data.stack)) } else if (data) {
         console.log(indent(JSON.stringify(data, null, 2)))
       }
     }
@@ -65,14 +59,10 @@ module.exports = function logging (server, conf) {
   }
 
   var id = server.id
-  if (level >= LOG_LEVELS.indexOf('info'))
-    server.on('log:info',    formatter(id, color.green('info')))
-  if (level >= LOG_LEVELS.indexOf('notice'))
-    server.on('log:notice',  formatter(id, color.blue('note')))
-  if (level >= LOG_LEVELS.indexOf('warning'))
-    server.on('log:warning', formatter(id, color.yellow('warn')))
-  if (level >= LOG_LEVELS.indexOf('error'))
-    server.on('log:error',   formatter(id, color.red('err!')))
+  if (level >= LOG_LEVELS.indexOf('info')) { server.on('log:info', formatter(id, color.green('info'))) }
+  if (level >= LOG_LEVELS.indexOf('notice')) { server.on('log:notice', formatter(id, color.blue('note'))) }
+  if (level >= LOG_LEVELS.indexOf('warning')) { server.on('log:warning', formatter(id, color.yellow('warn'))) }
+  if (level >= LOG_LEVELS.indexOf('error')) { server.on('log:error', formatter(id, color.red('err!'))) }
 }
 
 module.exports.init = module.exports

@@ -5,7 +5,7 @@ module.exports = {
     ping: 'async'
   },
   permissions: {
-    master: {allow: ['ping']}
+    master: { allow: ['ping'] }
   },
   init: function (server, config) {
     return {

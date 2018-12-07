@@ -1,38 +1,39 @@
 #! /usr/bin/env node
 
-var fs           = require('fs')
-var path         = require('path')
-var pull         = require('pull-stream')
-var toPull       = require('stream-to-pull-stream')
-var File         = require('pull-file')
-var explain      = require('explain-error')
-var ssbKeys      = require('ssb-keys')
-var stringify    = require('pull-stringify')
-var createHash   = require('multiblob/util').createHash
-var minimist     = require('minimist')
-var muxrpcli     = require('muxrpcli')
-var cmdAliases   = require('./lib/cli-cmd-aliases')
-var ProgressBar  = require('./lib/progress')
-var packageJson  = require('./package.json')
+var fs = require('fs')
+var path = require('path')
+var pull = require('pull-stream')
+var toPull = require('stream-to-pull-stream')
+var File = require('pull-file')
+var explain = require('explain-error')
+var ssbKeys = require('ssb-keys')
+var stringify = require('pull-stringify')
+var createHash = require('multiblob/util').createHash
+var minimist = require('minimist')
+var muxrpcli = require('muxrpcli')
+var cmdAliases = require('./lib/cli-cmd-aliases')
+var ProgressBar = require('./lib/progress')
+var packageJson = require('./package.json')
 
-//get config as cli options after --, options before that are
-//options to the command.
+// get config as cli options after --, options before that are
+// options to the command.
 var argv = process.argv.slice(2)
 var i = argv.indexOf('--')
-var conf = argv.slice(i+1)
+var conf = argv.slice(i + 1)
 argv = ~i ? argv.slice(0, i) : argv
 
 var config = require('ssb-config/inject')(process.env.ssb_appname, minimist(conf))
 
 var keys = ssbKeys.loadOrCreateSync(path.join(config.path, 'secret'))
-if(keys.curve === 'k256')
-  throw new Error('k256 curves are no longer supported,'+
+if (keys.curve === 'k256') {
+  throw new Error('k256 curves are no longer supported,' +
                   'please delete' + path.join(config.path, 'secret'))
+}
 
 var manifestFile = path.join(config.path, 'manifest.json')
 
 if (argv[0] == 'server') {
-  console.log(packageJson.name, packageJson.version, config.path, 'logging.level:'+config.logging.level)
+  console.log(packageJson.name, packageJson.version, config.path, 'logging.level:' + config.logging.level)
   console.log('my key ID:', keys.public)
 
   // special server command:
@@ -59,7 +60,7 @@ if (argv[0] == 'server') {
 
   if (argv[1] != '--disable-ssb-links') {
     if (!createSbot.plugins.find(p => p.name == 'links2')) {
-      console.log("WARNING-DEPRECATION: ssb-links not installed as a plugin. If you are using git-ssb, ssb-npm or patchfoo please consider installing it")
+      console.log('WARNING-DEPRECATION: ssb-links not installed as a plugin. If you are using git-ssb, ssb-npm or patchfoo please consider installing it')
       createSbot.use(require('ssb-links'))
     }
   }
@@ -72,10 +73,8 @@ if (argv[0] == 'server') {
   // write RPC manifest to ~/.ssb/manifest.json
   fs.writeFileSync(manifestFile, JSON.stringify(server.getManifest(), null, 2))
 
-  if(process.stdout.isTTY && (config.logging.level != 'info'))
-    ProgressBar(server.progress)
+  if (process.stdout.isTTY && (config.logging.level != 'info')) { ProgressBar(server.progress) }
 } else {
-
   // normal command:
   // create a client connection to the server
 
@@ -85,8 +84,8 @@ if (argv[0] == 'server') {
     manifest = JSON.parse(fs.readFileSync(manifestFile))
   } catch (err) {
     throw explain(err,
-      'no manifest file'
-      + '- should be generated first time server is run'
+      'no manifest file' +
+      '- should be generated first time server is run'
     )
   }
 
@@ -94,16 +93,16 @@ if (argv[0] == 'server') {
   require('ssb-client')(keys, {
     manifest: manifest,
     port: config.port,
-    host: config.host||'localhost',
+    host: config.host || 'localhost',
     caps: config.caps,
     key: config.key || keys.id
   }, function (err, rpc) {
-    if(err) {
+    if (err) {
       if (/could not connect/.test(err.message)) {
-        var serverAddr = (config.host || 'localhost') + ":" + config.port;
+        var serverAddr = (config.host || 'localhost') + ':' + config.port
         console.error('Error: Could not connect to the scuttlebot server ' + serverAddr)
         console.error('Use the "server" command to start it.')
-        if(config.verbose) throw err
+        if (config.verbose) throw err
         process.exit(1)
       }
       throw err
@@ -116,12 +115,12 @@ if (argv[0] == 'server') {
     }
 
     // add some extra commands
-//    manifest.version = 'async'
+    //    manifest.version = 'async'
     manifest.config = 'sync'
-//    rpc.version = function (cb) {
-//      console.log(packageJson.version)
-//      cb()
-//    }
+    //    rpc.version = function (cb) {
+    //      console.log(packageJson.version)
+    //      cb()
+    //    }
     rpc.config = function (cb) {
       console.log(JSON.stringify(config, null, 2))
       cb()
@@ -135,21 +134,20 @@ if (argv[0] == 'server') {
       var filename = process.argv[3]
       var source =
         filename ? File(process.argv[3])
-      : !process.stdin.isTTY ? toPull.source(process.stdin)
-      : (function () {
-        console.error('USAGE:')
-        console.error('  blobs.add <filename> # add a file')
-        console.error('  source | blobs.add   # read from stdin')
-        process.exit(1)
-      })()
+          : !process.stdin.isTTY ? toPull.source(process.stdin)
+            : (function () {
+              console.error('USAGE:')
+              console.error('  blobs.add <filename> # add a file')
+              console.error('  source | blobs.add   # read from stdin')
+              process.exit(1)
+            })()
       var hasher = createHash('sha256')
       pull(
         source,
         hasher,
         rpc.blobs.add(function (err) {
-          if (err)
-            throw err
-          console.log('&'+hasher.digest)
+          if (err) { throw err }
+          console.log('&' + hasher.digest)
           process.exit()
         })
       )
@@ -160,4 +158,3 @@ if (argv[0] == 'server') {
     muxrpcli(argv, manifest, rpc, config.verbose)
   })
 }
-

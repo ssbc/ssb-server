@@ -11,4 +11,3 @@ tape('createSbot method allows creating multiple servers with the same plugins',
   t.pass()
   t.end()
 })
-

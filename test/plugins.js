@@ -1,10 +1,10 @@
 var ssbKeys = require('ssb-keys')
-var tape    = require('tape')
-var u       = require('./util')
-var pull    = require('pull-stream')
-var osenv   = require('osenv')
-var path    = require('path')
-var fs      = require('fs')
+var tape = require('tape')
+var u = require('./util')
+var pull = require('pull-stream')
+var osenv = require('osenv')
+var path = require('path')
+var fs = require('fs')
 var createSbot = require('../')
 
 var initialPlugins = createSbot.plugins.slice()
@@ -14,16 +14,15 @@ function resetSbot () {
 }
 
 tape('install and load plugins', function (t) {
-
   var aliceKeys = ssbKeys.generate()
   var datadirPath = path.join(osenv.tmpdir(), 'test-plugins1')
 
   t.test('install plugin', function (t) {
-
     resetSbot()
     var sbot = createSbot({
       path: datadirPath,
-      port: 45451, host: 'localhost',
+      port: 45451,
+      host: 'localhost',
       keys: aliceKeys
     })
 
@@ -44,10 +43,10 @@ tape('install and load plugins', function (t) {
   })
 
   t.test('installed and enabled plugin is loaded', function (t) {
-
     var config = {
       path: datadirPath,
-      port: 45451, host: 'localhost',
+      port: 45451,
+      host: 'localhost',
       keys: aliceKeys,
       plugins: {
         'test-plugin': 'test'
@@ -71,10 +70,10 @@ tape('install and load plugins', function (t) {
   })
 
   t.test('installed and disabled plugin is not loaded', function (t) {
-
     var config = {
       path: datadirPath,
-      port: 45451, host: 'localhost',
+      port: 45451,
+      host: 'localhost',
       keys: aliceKeys,
       plugins: {
         'test-plugin': false
@@ -92,11 +91,11 @@ tape('install and load plugins', function (t) {
   })
 
   t.test('uninstall plugin', function (t) {
-
     resetSbot()
     var sbot = createSbot({
       path: datadirPath,
-      port: 45451, host: 'localhost',
+      port: 45451,
+      host: 'localhost',
       keys: aliceKeys
     })
 
@@ -117,11 +116,11 @@ tape('install and load plugins', function (t) {
   })
 
   t.test('install plugin under custom name', function (t) {
-
     resetSbot()
     var sbot = createSbot({
       path: datadirPath,
-      port: 45451, host: 'localhost',
+      port: 45451,
+      host: 'localhost',
       keys: aliceKeys
     })
 
@@ -142,10 +141,10 @@ tape('install and load plugins', function (t) {
   })
 
   t.test('installed and enabled plugin is loaded, under custom name', function (t) {
-
     var config = {
       path: datadirPath,
-      port: 45451, host: 'localhost',
+      port: 45451,
+      host: 'localhost',
       keys: aliceKeys,
       plugins: {
         'my-test-plugin': 'test'
@@ -169,11 +168,11 @@ tape('install and load plugins', function (t) {
   })
 
   t.test('uninstall plugin under custom name', function (t) {
-
     resetSbot()
     var sbot = createSbot({
       path: datadirPath,
-      port: 45451, host: 'localhost',
+      port: 45451,
+      host: 'localhost',
       keys: aliceKeys
     })
 
