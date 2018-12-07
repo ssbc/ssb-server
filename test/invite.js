@@ -65,9 +65,11 @@ tape('test invite.accept api', function (t) {
         if (err) throw err
         t.equal(hops[bob.id], 1, 'alice follows bob')
         carol.invite.accept(invite, function (err) {
+          if (err) throw err
           alice.friends.hops({
             source: alice.id, dest: bob.id
           }, function (err, hops) {
+            if (err) throw err
             t.equal(hops[carol.id], undefined)
             alice.close(true)
             bob.close(true)
@@ -129,6 +131,7 @@ tape('test invite.accept doesnt follow if already followed', function (t) {
             bob.invite.accept(invite, function (err) {
               t.ok(err)
               alice.friends.hops(alice.id, function (err, hops) {
+                if (err) throw err
                 console.log(hops)
                 t.equal(hops[bob.id], 1)
                 alice.close(true)
@@ -256,6 +259,7 @@ tape('test invite.accept doesnt follow if already followed', function (t) {
     if (err) throw err
     console.log(msg)
     alice.invite.create({ modern: true }, function (err, invite) {
+      if (err) throw err
       ssbClient(null, {
         remote: invite,
         manifest: { get: 'async', add: 'async' }
@@ -292,6 +296,7 @@ tape('test invite with note', function (t) {
       if (err) throw err
 
       all(alice.messagesByType('contact'), function (err, ary) {
+        if (err) throw err
         t.equal(ary.length, 1)
 
         t.deepEqual({

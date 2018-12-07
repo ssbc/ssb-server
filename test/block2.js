@@ -1,6 +1,5 @@
 var cont = require('cont')
 var tape = require('tape')
-var pull = require('pull-stream')
 var ssbKeys = require('ssb-keys')
 var u = require('./util')
 
@@ -27,8 +26,6 @@ tape('alice blocks bob while he is connected, she should disconnect him', functi
   ])(function (err) {
     if (err) throw err
 
-    var n = 3; var rpc
-
     bob.connect(alice.getAddress(), function (err, rpc) {
       if (err) throw err
       // replication will begin immediately.
@@ -43,15 +40,16 @@ tape('alice blocks bob while he is connected, she should disconnect him', functi
     })
 
     var once = false
-    var bobCancel = bob.post(function (op) {
+    bob.post(function (op) {
       console.log('BOB RECV', op)
       if (once) throw new Error('should only be called once')
       once = true
       // should be the alice's follow(bob) message.
 
       t.equal(op.value.content.contact, bob.id)
-      alice.publish(u.block(bob.id))
-      (function (err) { if (err) throw err })
+      alice.publish(u.block(bob.id))(function (err) {
+        if (err) throw err
+      })
     }, false)
   })
 })

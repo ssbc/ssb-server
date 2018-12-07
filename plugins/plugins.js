@@ -108,7 +108,7 @@ module.exports = {
         // exec npm
         var child = spawn('npm', args, { cwd: tmpInstallPath })
           .on('close', function (code) {
-            if (code == 0 && !dryRun) {
+            if (code === 0 && !dryRun) {
               var tmpInstallNMPath = path.join(tmpInstallPath, 'node_modules')
               var finalInstallNMPath = path.join(installPath, 'node_modules')
 
@@ -168,14 +168,14 @@ module.exports.loadUserPlugins = function (createSbot, config) {
   var nodeModulesPath = path.join(config.path, 'node_modules')
   // instead of testing all plugins, only load things explicitly
   // enabled in the config
-  for (var module_name in config.plugins) {
-    if (config.plugins[module_name]) {
-      var name = config.plugins[module_name]
-      if (name === true) { name = /^ssb-/.test(module_name) ? module_name.substring(4) : module_name }
+  for (var moduleName in config.plugins) {
+    if (config.plugins[moduleName]) {
+      var name = config.plugins[moduleName]
+      if (name === true) { name = /^ssb-/.test(moduleName) ? moduleName.substring(4) : moduleName }
 
       if (createSbot.plugins.some(plug => plug.name === name)) { throw new Error('already loaded plugin named:' + name) }
-      var plugin = require(path.join(nodeModulesPath, module_name))
-      if (!plugin || plugin.name !== name) { throw new Error('plugin at:' + module_name + ' expected name:' + name + ' but had:' + (plugin || {}).name) }
+      var plugin = require(path.join(nodeModulesPath, moduleName))
+      if (!plugin || plugin.name !== name) { throw new Error('plugin at:' + moduleName + ' expected name:' + name + ' but had:' + (plugin || {}).name) }
       assertSbotPlugin(plugin)
       createSbot.use(plugin)
     }

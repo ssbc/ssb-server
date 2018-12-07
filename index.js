@@ -74,8 +74,7 @@ var SSB = {
         sync: sync
       }
     }
-    var self
-    return self = {
+    var self = {
       id: feed.id,
       keys: opts.keys,
 
@@ -134,6 +133,8 @@ var SSB = {
       getAtSequence: ssb.getAtSequence,
       addUnboxer: ssb.addUnboxer
     }
+
+    return self
   }
 }
 
@@ -148,7 +149,7 @@ function usage (cmd) {
   if (!cmd) {
     // return usage for all docs
     return Object.keys(apidocs).map(function (name) {
-      if (name == '_') { return mdm.usage(apidocs[name], null, { nameWidth: 20 }) }
+      if (name === '_') { return mdm.usage(apidocs[name], null, { nameWidth: 20 }) }
 
       var text = mdm.usage(apidocs[name], null, { prefix: name, nameWidth: 20 })
       return text.slice(text.indexOf('Commands:') + 10) // skip past the toplevel summary, straight to the cmd list

@@ -1,21 +1,11 @@
 var pull = require('pull-stream')
-var pullNext = require('pull-next')
-var para = require('pull-paramap')
 var Notify = require('pull-notify')
 var Cat = require('pull-cat')
 var Debounce = require('observ-debounce')
 var deepEqual = require('deep-equal')
-var Obv = require('obv')
 var isFeed = require('ssb-ref').isFeed
 var Pushable = require('pull-pushable')
 var detectSync = require('../../lib/detect-sync')
-
-// compatibility function for old implementations of `latestSequence`
-function toSeq (s) {
-  return typeof s === 'number' ? s : s.sequence
-}
-
-function last (a) { return a[a.length - 1] }
 
 // if one of these shows up in a replication stream, the stream is dead
 var streamErrors = {
@@ -91,12 +81,12 @@ module.exports = function (sbot, notify, config) {
       }
     })
 
-    for (var k in toSend) {
+    for (let k in toSend) {
       legacyProgress += toSend[k]
     }
 
     for (var id in peerHas) {
-      for (var k in peerHas[id]) {
+      for (let k in peerHas[id]) {
         legacyToRecv[k] = Math.max(peerHas[id][k], legacyToRecv[k] || 0)
       }
     }
@@ -138,7 +128,7 @@ module.exports = function (sbot, notify, config) {
       }
       var pushable = listeners[e.author]
 
-      if (pushable && pushable.sequence == e.sequence) {
+      if (pushable && pushable.sequence === e.sequence) {
         pushable.sequence++
         pushable.forEach(function (p) {
           p.push(e)
@@ -147,8 +137,6 @@ module.exports = function (sbot, notify, config) {
       count++
     })
   )
-
-  var chs = sbot.createHistoryStream
 
   sbot.createHistoryStream.hook(function (fn, args) {
     var upto = args[0] || {}
@@ -240,8 +228,6 @@ module.exports = function (sbot, notify, config) {
 
       debounce.set()
 
-      var sync = false
-
       pull(
         rpc.createHistoryStream({
           id: upto.id,
@@ -251,7 +237,6 @@ module.exports = function (sbot, notify, config) {
         }),
 
         pull.through(detectSync(rpc.id, upto, toSend, peerHas, function () {
-          sync = true
           if (pendingFeedsForPeer[rpc.id]) {
             // this peer has finished syncing, remove from progress
             pendingFeedsForPeer[rpc.id].delete(upto.id)
@@ -290,7 +275,7 @@ module.exports = function (sbot, notify, config) {
       )
     }
 
-    var replicate_self = false
+    var replicateSelf = false
     // if replicate.fallback is enabled
     // then wait for the fallback event before
     // starting to replicate by this strategy.
@@ -298,8 +283,8 @@ module.exports = function (sbot, notify, config) {
 
     function fallback () {
       // if we are not configured to use EBT, then fallback to createHistoryStream
-      if (replicate_self) return
-      replicate_self = true
+      if (replicateSelf) return
+      replicateSelf = true
       replicate({ id: sbot.id, sequence: toSend[sbot.id] || 0 })
     }
 
@@ -328,8 +313,12 @@ module.exports = function (sbot, notify, config) {
           if (!isFeed(upto.id)) throw new Error('expected feed!')
           if (!Number.isInteger(upto.sequence)) throw new Error('expected sequence!')
 
-          if (upto.id == sbot.id && replicate_self) return replicate_self = true
+          if (upto.id === sbot.id && replicateSelf) {
+            replicateSelf = true
+            return replicateSelf
+          }
           replicate(upto, function (err) {
+            if (err) throw err
             drain.abort()
           })
         }, function (err) {

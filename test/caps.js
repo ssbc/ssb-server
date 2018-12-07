@@ -1,11 +1,5 @@
-
-var cont = require('cont')
-var deepEqual = require('deep-equal')
 var tape = require('tape')
-var pull = require('pull-stream')
 var ssbKeys = require('ssb-keys')
-
-var u = require('./util')
 
 // create 3 servers
 // give them all pub servers (on localhost)
@@ -23,18 +17,17 @@ function hash (data) {
   return createHash('sha256').update(data, 'utf8').digest()
 }
 
-var sign_cap1 = hash('test-sign-cap1')
-var shs_cap1 = hash('test-shs-cap1')
+var signCap1 = hash('test-sign-cap1')
+var shsCap1 = hash('test-shs-cap1')
 
-var alice, bob, carol
 var dbA = createSbot({
   temp: 'server-alice',
   port: 45451,
   timeout: 1400,
-  keys: alice = ssbKeys.generate(),
+  keys: ssbKeys.generate(),
   caps: {
-    shs: shs_cap1,
-    sign: sign_cap1
+    shs: shsCap1,
+    sign: signCap1
   },
   level: 'info'
 })
@@ -44,7 +37,7 @@ var dbB = createSbot({
   temp: 'server-bob',
   port: 45452,
   timeout: 1400,
-  keys: bob = ssbKeys.generate(),
+  keys: ssbKeys.generate(),
   seeds: [dbA.getAddress()],
   level: 'info'
 })
@@ -54,10 +47,10 @@ var dbC = createSbot({
   temp: 'server-carol',
   port: 45453,
   timeout: 1400,
-  keys: alice = ssbKeys.generate(),
+  keys: ssbKeys.generate(),
   caps: {
-    shs: shs_cap1,
-    sign: sign_cap1
+    shs: shsCap1,
+    sign: signCap1
   },
   level: 'info'
 })

@@ -1,6 +1,5 @@
 var ssbKeys = require('ssb-keys')
 var tape = require('tape')
-var u = require('./util')
 var pull = require('pull-stream')
 var osenv = require('osenv')
 var path = require('path')
@@ -28,7 +27,7 @@ tape('install and load plugins', function (t) {
 
     console.log('installing plugin...')
     pull(
-      sbot.plugins.install('test-plugin', { from: __dirname + '/test-plugin' }),
+      sbot.plugins.install('test-plugin', { from: path.join(__dirname, 'test-plugin') }),
       pull.collect(function (err, out) {
         if (err) throw err
         console.log(out.map(function (b) { return b.toString('utf-8') }).join(''))
@@ -126,7 +125,7 @@ tape('install and load plugins', function (t) {
 
     console.log('installing plugin...')
     pull(
-      sbot.plugins.install('my-test-plugin', { from: __dirname + '/test-plugin' }),
+      sbot.plugins.install('my-test-plugin', { from: path.join(__dirname, 'test-plugin') }),
       pull.collect(function (err, out) {
         if (err) throw err
         console.log(out.map(function (b) { return b.toString('utf-8') }).join(''))

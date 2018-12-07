@@ -9,7 +9,7 @@ var join = require('path').join
 var ma = require('multiserver-address')
 
 // travis currently does not support ipv6, becaue GCE does not.
-var has_ipv6 = process.env.TRAVIS === undefined
+var hasIpv6 = process.env.TRAVIS === undefined
 var children = []
 
 process.on('exit', function () {
@@ -57,7 +57,7 @@ function sbot (t, argv, opts) {
   }
 }
 
-function try_often (times, opts, work, done) {
+function tryOften (times, opts, work, done) {
   if (typeof opts === 'function') {
     done = work
     work = opts
@@ -76,7 +76,7 @@ function try_often (times, opts, work, done) {
       if (exited) return done(new Error('already exited'))
       console.warn('retry run', times)
       console.error('work(err):', err)
-      try_often(times - 1, work, done)
+      tryOften(times - 1, work, done)
     })
   }, delay)
 }
@@ -98,7 +98,10 @@ function connect (port, host, cb) {
 
 function testSbot (t, opts, asConfig, port, cb) {
   var dir = '/tmp/sbot_binjstest_' + Date.now()
-  if (typeof port === 'function') { cb = port, port = opts.port }
+  if (typeof port === 'function') {
+    cb = port
+    port = opts.port
+  }
   mkdirp.sync(dir)
   var args = [
     'server',
@@ -119,7 +122,7 @@ function testSbot (t, opts, asConfig, port, cb) {
     cwd: dir
   })
 
-  try_often(10, {
+  tryOften(10, {
     ignore: /ECONNREFUSED/
   }, function work (cb) {
     connect(port, opts.host, cb)
@@ -129,9 +132,8 @@ function testSbot (t, opts, asConfig, port, cb) {
   })
 }
 
-var c = 0
 ;['::1', '::', '127.0.0.1', 'localhost'].forEach(function (host) {
-  if (!has_ipv6 && /:/.test(host)) return
+  if (!hasIpv6 && /:/.test(host)) return
 
   ;[9002, 9001].forEach(function (port) {
     ;[true, false].forEach(function (asConfig) {
@@ -165,7 +167,7 @@ test('sbot should have websockets and http server by default', function (t) {
     '--caps.shs', caps
   ])
 
-  try_often(10, function work (cb) {
+  tryOften(10, function work (cb) {
     exec([
       join(__dirname, '../bin.js'),
       'getAddress',
@@ -189,13 +191,13 @@ test('sbot should have websockets and http server by default', function (t) {
 
     var remotes = ma.decode(addr)
     console.log('remotes', remotes, addr)
-    ws_remotes = remotes.filter(function (a) {
+    const wsRemotes = remotes.filter(function (a) {
       return a.find(function (component) {
-        return component.name == 'ws'
+        return component.name === 'ws'
       })
     })
-    t.equal(ws_remotes.length, 1, 'has one ws remote')
-    var remote = ma.encode([ws_remotes[0]])
+    t.equal(wsRemotes.length, 1, 'has one ws remote')
+    var remote = ma.encode([wsRemotes[0]])
     // this breaks if multiserver address encoding changes
     t.ok(remote.indexOf('9002') > 0, 'ws address contains expected port')
 
@@ -235,7 +237,7 @@ test('sbot client should work without options', function (t) {
     '--caps.shs', caps
   ])
 
-  try_often(10, function work (cb) {
+  tryOften(10, function work (cb) {
     exec([
       join(__dirname, '../bin.js'),
       'getAddress',

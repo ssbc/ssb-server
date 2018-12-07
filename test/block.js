@@ -9,8 +9,6 @@ var createSbot = require('../')
   .use(require('ssb-friends'))
   .use(require('ssb-ebt'))
 
-var toAddress = require('../lib/util').toAddress
-
 function once (fn) {
   var called = 0
   return function () {
@@ -96,8 +94,7 @@ tape('alice blocks bob, and bob cannot connect to alice', function (t) {
 
       rpc.close(true, function () {
         aliceCancel(); bobCancel()
-        alice.publish(u.block(bob.id))
-        (function (err) {
+        alice.publish(u.block(bob.id))(function (err) {
           if (err) throw err
 
           alice.friends.get(null, function (err, g) {
@@ -117,7 +114,7 @@ tape('alice blocks bob, and bob cannot connect to alice', function (t) {
               pull.collect(function (err, ary) {
                 if (err) throw err
                 console.log(ary)
-                t.ok(flagged = ary.pop().value.content.flagged, 'alice did block bob')
+                t.ok(ary.pop().value.content.flagged, 'alice did block bob')
 
                 // since bob is blocked, he should not be able to connect
                 bob.connect(alice.getAddress(), function (err, rpc) {
@@ -125,7 +122,7 @@ tape('alice blocks bob, and bob cannot connect to alice', function (t) {
 
                   var carolCancel = carol.post(function (msg) {
                     if (msg.author === alice.id) {
-                      if (msg.sequence == 2) { t.end() }
+                      if (msg.sequence === 2) { t.end() }
                     }
                   })
 
@@ -185,6 +182,7 @@ tape('alice does not replicate messages from bob, but carol does', function (t) 
     cont(bob.publish)({ type: 'post', text: 'hello' }),
     cont(carol.publish)(u.follow(bob.id))
   ])(function (err, r) {
+    if (err) throw err
     var recv = { alice: 0, carol: 0 }
     carol.post(function (msg) {
       recv.carol++
@@ -198,6 +196,7 @@ tape('alice does not replicate messages from bob, but carol does', function (t) 
     }, false)
 
     carol.friends.get(function (err, g) {
+      if (err) throw err
       t.ok(g[carol.id][bob.id])
     })
 
@@ -216,6 +215,7 @@ tape('alice does not replicate messages from bob, but carol does', function (t) 
         pull.collect(function (err, ary) {
           if (err) throw err
           carol.getVectorClock(function (err, vclock) {
+            if (err) throw err
             t.equals(vclock[alice.id], 3)
             t.equals(vclock[bob.id], 2)
             t.equals(vclock[carol.id], 2)

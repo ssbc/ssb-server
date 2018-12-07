@@ -1,8 +1,6 @@
-
 var cont = require('cont')
 var deepEqual = require('deep-equal')
 var tape = require('tape')
-var pull = require('pull-stream')
 var ssbKeys = require('ssb-keys')
 
 var u = require('./util')
@@ -81,9 +79,9 @@ tape('replicate between 3 peers', function (t) {
       })
     }
 
-    var serverA = check(dbA, 'ALICE')
-    var serverB = check(dbB, 'BOB')
-    var serverC = check(dbC, 'CAROL')
+    check(dbA, 'ALICE')
+    check(dbB, 'BOB')
+    check(dbC, 'CAROL')
 
     var n = 2
 

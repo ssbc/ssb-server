@@ -1,21 +1,14 @@
-
-var cont = require('cont')
-var deepEqual = require('deep-equal')
 var tape = require('tape')
-var pull = require('pull-stream')
 var ssbKeys = require('ssb-keys')
 var ref = require('ssb-ref')
-var u = require('./util')
 var isArray = Array.isArray
 
 var createSbot = require('../')
-//  .use(require('ssb-friends'))
   .use(require('../plugins/gossip'))
-//  .use(require('../plugins/logging'))
 
 var sbot = createSbot({
   temp: 'gossip',
-  keys: alice = ssbKeys.generate(),
+  keys: ssbKeys.generate(),
   timeout: 1000
 })
 

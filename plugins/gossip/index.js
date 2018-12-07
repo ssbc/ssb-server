@@ -75,12 +75,13 @@ module.exports = {
   },
   init: function (server, config) {
     var notify = Notify()
-    var closed = false; var closeScheduler
-    var conf = config.gossip || {}
+    var closeScheduler
 
     var gossipJsonPath = path.join(config.path, 'gossip.json')
     var stateFile = AtomicFile(gossipJsonPath)
     stateFile.get(function (err, ary) {
+      // XXX: breaking test/bin.js
+      // if (err) throw err
       var peers = ary || []
       server.emit('log:info', ['SBOT', '' + peers.length + ' peers loaded from', gossipJsonPath])
     })
@@ -122,7 +123,6 @@ module.exports = {
     })
 
     server.close.hook(function (fn, args) {
-      closed = true
       closeScheduler()
       for (var id in server.peers) {
         server.peers[id].forEach(function (peer) {
@@ -132,7 +132,7 @@ module.exports = {
       return fn.apply(this, args)
     })
 
-    var timer_ping = 5 * 6e4
+    var timerPing = 5 * 6e4
 
     function setConfig (name, value) {
       config.gossip = config.gossip || {}
@@ -211,6 +211,7 @@ module.exports = {
         if (!peer || !peer.disconnect) cb && cb()
         else {
           peer.disconnect(true, function (err) {
+            if (err) throw err
             peer.stateChange = Date.now()
             cb && cb()
           })
@@ -248,9 +249,10 @@ module.exports = {
         } else if (source === 'friends' || source === 'local') {
           // this peer is a friend or local, override old source to prioritize gossip
           f.source = source
-        }
+        } else if (f.source !== 'local') {
         // don't count local over and over
-        else if (f.source != 'local') { f.announcers++ }
+          f.announcers++
+        }
 
         return f
       }, 'string|object', 'string?'),
@@ -263,21 +265,30 @@ module.exports = {
         }
       },
       ping: function (opts) {
-        var timeout = config.timers && config.timers.ping || 5 * 60e3
+        var timeout
+        const configTimerPing = config.timers && config.timers.ping
+
+        if (configTimerPing) {
+          timeout = configTimerPing
+        } else {
+          timeout = 5 * 60e3
+        }
+
         // between 10 seconds and 30 minutes, default 5 min
         timeout = Math.max(10e3, Math.min(timeout, 30 * 60e3))
         return ping({ timeout: timeout })
       },
       reconnect: function () {
         for (var id in server.peers) {
-          if (id !== server.id) // don't disconnect local client
-          {
+          if (id !== server.id) {
+            // don't disconnect local client
             server.peers[id].forEach(function (peer) {
               peer.close(true)
             })
           }
         }
-        return gossip.wakeup = Date.now()
+        gossip.wakeup = Date.now()
+        return gossip.wakeup
       },
       enable: valid.sync(function (type) {
         type = type || 'global'
@@ -321,17 +332,20 @@ module.exports = {
       peer.state = 'connected'
       peer.stateChange = Date.now()
       peer.disconnect = function (err, cb) {
-        if (isFunction(err)) cb = err, err = null
+        if (isFunction(err)) {
+          cb = err
+          err = null
+        }
         rpc.close(err, cb)
       }
 
       if (isClient) {
         // default ping is 5 minutes...
-        var pp = ping({ serve: true, timeout: timer_ping }, function (_) {})
+        var pp = ping({ serve: true, timeout: timerPing }, function (_) {})
         peer.ping = { rtt: pp.rtt, skew: pp.skew }
         pull(
           pp,
-          rpc.gossip.ping({ timeout: timer_ping }, function (err) {
+          rpc.gossip.ping({ timeout: timerPing }, function (err) {
             if (err.name === 'TypeError') peer.ping.fail = true
           }),
           pp
@@ -358,6 +372,8 @@ module.exports = {
 
     var last
     stateFile.get(function (err, ary) {
+      // XXX: breaking test/bin.js
+      // if (err) throw err
       last = ary || []
       if (Array.isArray(ary)) {
         ary.forEach(function (v) {

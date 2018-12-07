@@ -20,25 +20,6 @@ function sort (ary) {
   })
 }
 
-function toAliases (aliasMap) {
-  return function (g) {
-    var g_ = {}
-    for (var k in g) {
-      var k_ = aliasMap[k]
-      if (typeof g[k] === 'object') {
-        g_[k_] = {}
-        for (var l in g[k]) {
-          var l_ = aliasMap[l]
-          g_[k_][l_] = g[k][l]
-        }
-      } else {
-        g_[k_] = g[k]
-      }
-    }
-    return g_
-  }
-}
-
 function liveFriends (sbot) {
   var live = {}
   pull(
@@ -177,8 +158,8 @@ tape('construct and analyze graph', function (t) {
 })
 
 tape('correctly delete edges', function (t) {
-  // XXX
   return t.end()
+  /* XXX
   var aliceKeys = ssbKeys.generate()
 
   var sbot = createSbot({
@@ -283,6 +264,7 @@ tape('correctly delete edges', function (t) {
     sbot.close()
     t.end()
   })
+  */
 })
 
 tape('indirect friends', function (t) {

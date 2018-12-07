@@ -1,4 +1,3 @@
-
 var pull = require('pull-stream')
 var paramap = require('pull-paramap')
 var ssbKeys = require('ssb-keys')
@@ -10,15 +9,6 @@ var cats = require('cat-names')
 var dogs = require('dog-names')
 
 var generated = {}; var F = 100; var N = 10000
-
-// build a random network, with n members.
-function bar (prog) {
-  var r = prog.progress / prog.total
-  var s = '\r'; var M = 50
-  for (var i = 0; i < M; i++) { s += i < M * r ? '*' : '.' }
-
-  return s + ' ' + prog.progress + '/' + prog.total + '  '// +':'+prog.feeds
-}
 
 function isNumber (n) {
   return typeof n === 'number'
@@ -50,7 +40,7 @@ function generateAnimals (sbot, feed, f, n, cb) {
     pull.values(a),
     paramap(function (feed, cb) {
       var animal = Math.random() > 0.5 ? 'cat' : 'dog'
-      var name = animal == 'cat' ? cats.random() : dogs.allRandom()
+      var name = animal === 'cat' ? cats.random() : dogs.allRandom()
 
       feed.name = name
       feed.add(u.follow(feed.id), cb)
@@ -75,6 +65,7 @@ function generateAnimals (sbot, feed, f, n, cb) {
               type: 'post',
               text: me.animal === 'dog' ? 'woof' : 'meow'
             }, function (err, msg) {
+              if (err) throw err
               posts.push(msg.key)
               if (posts.length > 100) { posts.shift() }
               cb(null, msg)
@@ -86,6 +77,7 @@ function generateAnimals (sbot, feed, f, n, cb) {
               repliesTo: post,
               text: me.animal === 'dog' ? 'woof woof' : 'purr'
             }, function (err, msg) {
+              if (err) throw err
               cb(null, msg)
             })
           }
@@ -145,7 +137,6 @@ tape('generate random network', function (t) {
   generateAnimals(animalNetwork, { add: animalNetwork.publish, id: animalNetwork.id }, F, N, function (err) {
     if (err) throw err
     console.log('replicate GRAPH')
-    var c = 0
     latest(animalNetwork, function (err, _generated) {
       if (err) throw err
 
@@ -167,21 +158,12 @@ tape('generate random network', function (t) {
 })
 
 tape('read all history streams', function (t) {
-  var opts = {
-    host: 'localhost',
-    port: 45451,
-    key: alice.id,
-    manifest: animalNetwork.manifest()
-  }
-
   var dump = createSbot({
     temp: 'test-random-animals_dump',
     //    port: 45453, host: 'localhost', timeout: 20001,
     keys: bob
   })
   var live = 0; var listeners = 0
-  var since = {}
-
   var h = 0
 
   pull(
@@ -191,7 +173,8 @@ tape('read all history streams', function (t) {
     })
   )
 
-  var wants = {}; var n = 0; var c = 0; var start = Date.now()
+  var c = 0
+  var start = Date.now()
 
   // test just dumping everything!
   // not through network connection, because createLogStream is not on public api
@@ -236,7 +219,7 @@ tape('replicate social network for animals', function (t) {
     seeds: [animalNetwork.getAddress()],
     keys: bob
   })
-  animalFriends.logging
+
   var connections = 0
 
   animalFriends.on('rpc:connect', function (rpc) {
@@ -247,26 +230,6 @@ tape('replicate social network for animals', function (t) {
       console.log('DISCONNECT', --connections)
     })
   })
-
-  var drain
-
-  //  pull(
-  //    animalFriends.replicate.changes(),
-  //    drain = pull.drain(function (prog) {
-  //      prog.id = 'animal friends'
-  //      var target = F+N+3
-  //      process.stdout.write(bar(prog))
-  //      if(prog.progress === target) {
-  //        console.log("DONE!!!!")
-  //        var time = (Date.now() - start) / 1000
-  //        console.log('replicated', target, 'messages in', time, 'at rate',target/time)
-  //        t.equal(c, 1, 'everything replicated within a single connection')
-  //        animalFriends.close(true)
-  //        drain.abort()
-  //        t.end()
-  //      }
-  //    })
-  //  )
 
   require('../lib/progress')(animalFriends.progress)
 

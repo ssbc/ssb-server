@@ -13,7 +13,7 @@ function not (fn) {
 function and () {
   var args = [].slice.call(arguments)
   return function (value) {
-    return args.every(function (fn) { return fn.call(null, value) })
+    return args.every(function (fn) { return fn(value) })
   }
 }
 
@@ -35,7 +35,7 @@ function peerNext (peer, opts) {
 // (i.e. if there is only localhost)
 
 function isOffline (e) {
-  if (ip.isLoopback(e.host) || e.host == 'localhost') return false
+  if (ip.isLoopback(e.host) || e.host === 'localhost') return false
   return !hasNetwork()
 }
 
@@ -63,7 +63,7 @@ function isUnattempted (e) {
 // select peers which have never been successfully connected to yet,
 // but have been tried.
 function isInactive (e) {
-  return e.stateChange && (!e.duration || e.duration.mean == 0)
+  return e.stateChange && (!e.duration || e.duration.mean === 0)
 }
 
 function isLongterm (e) {
@@ -102,7 +102,7 @@ function select (peers, ts, filter, opts) {
   }), count)
 }
 
-var schedule = exports = module.exports =
+exports = module.exports =
 function (gossip, config, server) {
   var min = 60e3; var hour = 60 * 60e3; var closed = false
 
@@ -138,7 +138,7 @@ function (gossip, config, server) {
 
   var lastMessageAt
   server.post(function (data) {
-    if (data.value.author != server.id) lastMessageAt = Date.now()
+    if (data.value.author !== server.id) lastMessageAt = Date.now()
   })
 
   function isCurrentlyDownloading () {
@@ -244,7 +244,9 @@ function (gossip, config, server) {
   pull(
     gossip.changes(),
     pull.drain(function (ev) {
-      if (ev.type == 'disconnect') { connections() }
+      if (ev.type === 'disconnect') {
+        connections()
+      }
     }, function () {
       console.warn('[gossip/dc] warning: this can happen if the database closes', arguments)
     })

@@ -4,7 +4,6 @@ var Legacy = require('./legacy')
 var mdm = require('mdmanifest')
 var apidoc = require('../../lib/apidocs').replicate
 var Notify = require('pull-notify')
-var pull = require('pull-stream')
 
 module.exports = {
   name: 'replicate',
@@ -12,7 +11,8 @@ module.exports = {
   manifest: mdm.manifest(apidoc),
   // replicate: replicate,
   init: function (sbot, config) {
-    var notify = Notify(); var upto
+    var notify = Notify()
+
     if (!config.replicate || config.replicate.legacy !== false) {
       var replicate = Legacy.call(this, sbot, notify, config)
 
@@ -26,7 +26,11 @@ module.exports = {
     } else {
       return {
         request: function () {},
-        changes: function () { return function (abort, cb) { cb(true) } }
+        changes: function () {
+          return function (abort, fn) {
+            fn(true)
+          }
+        }
       }
     }
   }

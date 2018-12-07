@@ -35,10 +35,15 @@ function formatter (id, level) {
     var length = (5 + pre.length + 1 + _data.length)
     var lines = isString(data) && data.split('\n').length > 1
 
-    var c = process.stdout.columns
-    if ((process.stdout.columns > length) && !lines) { console.log([level, b, pre, _data].join(' ')) } else {
+    if ((process.stdout.columns > length) && !lines) {
+      console.log([level, b, pre, _data].join(' '))
+    } else {
       console.log([level, b, pre].join(' '))
-      if (lines) { console.log(indent(data)) } else if (data && data.stack) { console.log(indent(data.stack)) } else if (data) {
+      if (lines) {
+        console.log(indent(data))
+      } else if (data && data.stack) {
+        console.log(indent(data.stack))
+      } else if (data) {
         console.log(indent(JSON.stringify(data, null, 2)))
       }
     }
@@ -46,6 +51,8 @@ function formatter (id, level) {
 }
 
 module.exports = function logging (server, conf) {
+  let level
+
   if (conf.logging && conf.logging.level) {
     level = LOG_LEVELS.indexOf(conf.logging.level)
   } else {

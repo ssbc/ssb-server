@@ -4,10 +4,6 @@ var ref = require('ssb-ref')
 // broadcasts the address:port:pubkey triple of the sbot server
 // on the LAN, using multicast UDP
 
-function isFunction (f) {
-  return typeof f === 'function'
-}
-
 function isEmpty (o) {
   for (var k in o) { return false }
   return true

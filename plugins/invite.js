@@ -1,7 +1,6 @@
 'use strict'
 var crypto = require('crypto')
 var ssbKeys = require('ssb-keys')
-var toAddress = require('../lib/util').toAddress
 var cont = require('cont')
 var explain = require('explain-error')
 var ip = require('ip')
@@ -18,10 +17,6 @@ var ssbClient = require('ssb-client')
 
 function isFunction (f) {
   return typeof f === 'function'
-}
-
-function isString (s) {
-  return typeof s === 'string'
 }
 
 function isObject (o) {
@@ -41,7 +36,6 @@ module.exports = {
     // temp: {allow: ['use']}
   },
   init: function (server, config) {
-    var codes = {}
     var codesDB = server.sublevel('codes')
 
     // add an auth hook.
@@ -74,7 +68,10 @@ module.exports = {
         opts = opts || {}
         if (isNumber(opts)) { opts = { uses: opts } } else if (isObject(opts)) {
           if (opts.modern) { opts.uses = 1 }
-        } else if (isFunction(opts)) { cb = opts, opts = {} }
+        } else if (isFunction(opts)) {
+          cb = opts
+          opts = {}
+        }
 
         var addr = getInviteAddress().split(';').shift()
         var host = ref.parseAddress(addr).host
@@ -100,7 +97,6 @@ module.exports = {
         var keyCap = ssbKeys.generate('ed25519', seed)
 
         // store metadata under the generated pubkey
-        var owner = server.id
         codesDB.put(keyCap.id, {
           id: keyCap.id,
           total: +opts.uses || 1,
@@ -111,12 +107,12 @@ module.exports = {
           // emit the invite code: our server address, plus the key-seed
           if (err) cb(err)
           else if (opts.modern) {
-            var ws_addr = getInviteAddress().split(';').sort(function (a, b) {
+            var wsAddr = getInviteAddress().split(';').sort(function (a, b) {
               return +/^ws/.test(b) - +/^ws/.test(a)
             }).shift()
 
-            if (!/^ws/.test(ws_addr)) throw new Error('not a ws address:' + ws_addr)
-            cb(null, ws_addr + ':' + seed.toString('base64'))
+            if (!/^ws/.test(wsAddr)) throw new Error('not a ws address:' + wsAddr)
+            cb(null, wsAddr + ':' + seed.toString('base64'))
           } else {
             addr = ref.parseAddress(addr)
             cb(null, [opts.external ? opts.external : addr.host, addr.port, addr.key].join(':') + '~' + seed.toString('base64'))
@@ -132,6 +128,7 @@ module.exports = {
 
           // check if we're already following them
           server.friends.get(function (err, follows) {
+            if (err) throw err
             //          server.friends.all('follow', function(err, follows) {
             //            if(hops[req.feed] == 1)
             if (follows && follows[server.id] && follows[server.id][req.feed]) { return cb(new Error('already following')) }
@@ -157,6 +154,7 @@ module.exports = {
 
             // update code metadata
             codesDB.put(rpc.id, invite, function (err) {
+              if (err) throw err
               server.emit('log:info', ['invite', rpc.id, 'use', req])
 
               // follow the user
@@ -177,7 +175,6 @@ module.exports = {
         var opts
         // connect to the address in the invite code
         // using a keypair generated from the key-seed in the invite code
-        var modern = false
         if (ref.isInvite(invite)) { // legacy ivite
           if (ref.isLegacyInvite(invite)) {
             var parts = invite.split('~')
@@ -186,7 +183,7 @@ module.exports = {
             var protocol = 'net:'
             if (opts.host.endsWith('.onion')) { protocol = 'onion:' }
             invite = protocol + opts.host + ':' + opts.port + '~shs:' + opts.key.slice(1, -8) + ':' + parts[1]
-          } else { modern = true }
+          }
         }
 
         opts = ref.parseAddress(ref.parseInvite(invite).remote)
@@ -239,8 +236,7 @@ module.exports = {
                   })
                   : function (cb) { cb() }
               )
-            ])
-            (function (err, results) {
+            ])(function (err, results) {
               if (err) return cb(err)
               rpc.close()
               rpc.close()

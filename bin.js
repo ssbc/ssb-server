@@ -7,7 +7,6 @@ var toPull = require('stream-to-pull-stream')
 var File = require('pull-file')
 var explain = require('explain-error')
 var ssbKeys = require('ssb-keys')
-var stringify = require('pull-stringify')
 var createHash = require('multiblob/util').createHash
 var minimist = require('minimist')
 var muxrpcli = require('muxrpcli')
@@ -32,7 +31,7 @@ if (keys.curve === 'k256') {
 
 var manifestFile = path.join(config.path, 'manifest.json')
 
-if (argv[0] == 'server') {
+if (argv[0] === 'server') {
   console.log(packageJson.name, packageJson.version, config.path, 'logging.level:' + config.logging.level)
   console.log('my key ID:', keys.public)
 
@@ -58,8 +57,8 @@ if (argv[0] == 'server') {
   // add third-party plugins
   require('./plugins/plugins').loadUserPlugins(createSbot, config)
 
-  if (argv[1] != '--disable-ssb-links') {
-    if (!createSbot.plugins.find(p => p.name == 'links2')) {
+  if (argv[1] !== '--disable-ssb-links') {
+    if (!createSbot.plugins.find(p => p.name === 'links2')) {
       console.log('WARNING-DEPRECATION: ssb-links not installed as a plugin. If you are using git-ssb, ssb-npm or patchfoo please consider installing it')
       createSbot.use(require('ssb-links'))
     }
@@ -73,7 +72,7 @@ if (argv[0] == 'server') {
   // write RPC manifest to ~/.ssb/manifest.json
   fs.writeFileSync(manifestFile, JSON.stringify(server.getManifest(), null, 2))
 
-  if (process.stdout.isTTY && (config.logging.level != 'info')) { ProgressBar(server.progress) }
+  if (process.stdout.isTTY && (config.logging.level !== 'info')) { ProgressBar(server.progress) }
 } else {
   // normal command:
   // create a client connection to the server
