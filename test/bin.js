@@ -14,12 +14,12 @@ var children = []
 
 process.on('exit', function () {
   children.forEach(function (e) {
-    e.kill(9)
+    e.kill('SIGKILL')
   })
 })
 process.on('SIGINT', function () {
   children.forEach(function (e) {
-    e.kill(9)
+    e.kill('SIGKILL')
   })
   process.exit(1)
 })
@@ -53,7 +53,7 @@ function ssbServer(t, argv, opts) {
   children.push(sh)
 
   return function end () {
-    while(children.length) children.shift().kill(9)
+    while(children.length) children.shift().kill('SIGKILL')
   }
 }
 

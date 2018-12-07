@@ -131,7 +131,7 @@ Therefore, by itself, it would probably make a poor choice for implementing a cr
 
 ### Key Concepts
 
-- [Secure Scuttlebutt](https://ssbc.github.io/secure-scuttlebutt/), ssb-server's global database protocol
+- [Secure Scuttlebutt](https://ssbc.github.io/scuttlebutt-protocol-guide/), ssb-server's global database protocol
 - [Content Hash Linking](https://ssbc.github.io/docs/ssb/linking.html)
 - [Secret Handshake](https://ssbc.github.io/docs/ssb/secret-handshake.html), ssb-server's transport-layer security protocol
 - [Private Box](https://ssbc.github.io/docs/ssb/end-to-end-encryption.html), ssb-server's end-to-end security protocol
