@@ -84,10 +84,6 @@ module.exports = {
 
     var gossipJsonPath = path.join(config.path, 'gossip.json')
     var stateFile = AtomicFile(gossipJsonPath)
-    stateFile.get(function (err, ary) {
-      var peers = ary || []
-      server.emit('log:info', ['SBOT', ''+peers.length+' peers loaded from', gossipJsonPath])
-    })
 
     var status = {}
 
@@ -376,6 +372,8 @@ module.exports = {
         ary.forEach(function (v) {
           delete v.state
           // don't add local peers (wait to rediscover)
+          // adding peers back this way means old format gossip.json
+          // will be updated to having proper address values.
           if(v.source !== 'local') {
             gossip.add(v, 'stored')
           }
@@ -401,4 +399,5 @@ module.exports = {
     return gossip
   }
 }
+
 
