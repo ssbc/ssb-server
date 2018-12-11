@@ -52,7 +52,7 @@
     "ssb-keys": "^7.1.1",
     "ssb-links": "^3.0.2",
     "ssb-query": "^2.1.0",
-    "ssb-ref": "^2.13.3",
+    "ssb-ref": "^2.13.9",
     "ssb-ws": "^5.1.1",
     "statistics": "^3.0.0",
     "stream-to-pull-stream": "^1.6.10",
