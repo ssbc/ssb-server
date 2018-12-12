@@ -128,10 +128,12 @@ module.exports = {
 
           // check if we're already following them
           server.friends.get(function (err, follows) {
-            if (err) throw err
+            if (err) return cb(err)
             //          server.friends.all('follow', function(err, follows) {
             //            if(hops[req.feed] == 1)
-            if (follows && follows[server.id] && follows[server.id][req.feed]) { return cb(new Error('already following')) }
+            if (follows && follows[server.id] && follows[server.id][req.feed]) {
+              return cb(new Error('already following'))
+            }
 
             // although we already know the current feed
             // it's included so that request cannot be replayed.
@@ -154,7 +156,7 @@ module.exports = {
 
             // update code metadata
             codesDB.put(rpc.id, invite, function (err) {
-              if (err) throw err
+              if (err) return cb(err)
               server.emit('log:info', ['invite', rpc.id, 'use', req])
 
               // follow the user

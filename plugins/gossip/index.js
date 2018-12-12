@@ -80,8 +80,11 @@ module.exports = {
     var gossipJsonPath = path.join(config.path, 'gossip.json')
     var stateFile = AtomicFile(gossipJsonPath)
     stateFile.get(function (err, ary) {
-      // XXX: breaking test/bin.js
-      // if (err) throw err
+      if (err) {
+        // UNHANDLED
+        // the state file will not exist the first time, that's okay
+        // that's why peers defaults to empty array
+      }
       var peers = ary || []
       server.emit('log:info', ['SBOT', '' + peers.length + ' peers loaded from', gossipJsonPath])
     })
@@ -211,7 +214,11 @@ module.exports = {
         if (!peer || !peer.disconnect) cb && cb()
         else {
           peer.disconnect(true, function (err) {
-            if (err) throw err
+            if (err) {
+              // UNHANDLED
+              // doesn't matter, as long as we are disconnected
+            }
+
             peer.stateChange = Date.now()
             cb && cb()
           })
@@ -372,8 +379,12 @@ module.exports = {
 
     var last
     stateFile.get(function (err, ary) {
-      // XXX: breaking test/bin.js
-      // if (err) throw err
+      if (err) {
+        // UNHANDLED
+        // the state file will not exist the first time, that's okay
+        // that's why peers defaults to empty array
+      }
+
       last = ary || []
       if (Array.isArray(ary)) {
         ary.forEach(function (v) {

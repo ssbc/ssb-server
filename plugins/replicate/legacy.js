@@ -318,6 +318,13 @@ module.exports = function (sbot, notify, config) {
             return replicateSelf
           }
           replicate(upto, function (err) {
+            if (err) {
+              // UNHANDLED
+              // we just want to abort the upto() stream when replication has ended
+              // most errors will be network errors: connection dropped, or servers not there, or permission denied
+              // none of these should make you want to crash the server.
+            }
+
             if (err) throw err
             drain.abort()
           })
