@@ -210,10 +210,9 @@ module.exports = {
         peer.stateChange = Date.now()
         if (!peer || !peer.disconnect) cb && cb()
         else {
-          peer.disconnect(true, function (err) {
-            if (err) {
-              // UNHANDLED
-              // doesn't matter, as long as we are disconnected
+          peer.disconnect(true, function (ignoredErr) {
+            if (ignoredErr) {
+              // doesn't matter as long as we are disconnected
             }
 
             peer.stateChange = Date.now()
