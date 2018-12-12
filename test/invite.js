@@ -65,7 +65,9 @@ tape('test invite.accept api', function (t) {
         if (err) throw err
         t.equal(hops[bob.id], 1, 'alice follows bob')
         carol.invite.accept(invite, function (err) {
-          if (err) throw err
+          if (err) {
+            t.ok(err, 'invite should be rejected because it was already used')
+          }
           alice.friends.hops({
             source: alice.id, dest: bob.id
           }, function (err, hops) {

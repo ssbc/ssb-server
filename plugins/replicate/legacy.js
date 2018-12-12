@@ -325,7 +325,6 @@ module.exports = function (sbot, notify, config) {
               // none of these should make you want to crash the server.
             }
 
-            if (err) throw err
             drain.abort()
           })
         }, function (err) {

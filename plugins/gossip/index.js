@@ -80,11 +80,8 @@ module.exports = {
     var gossipJsonPath = path.join(config.path, 'gossip.json')
     var stateFile = AtomicFile(gossipJsonPath)
     stateFile.get(function (err, ary) {
-      if (err) {
-        // UNHANDLED
-        // the state file will not exist the first time, that's okay
-        // that's why peers defaults to empty array
-      }
+      if (err && err.code !== 'ENOENT') throw err
+
       var peers = ary || []
       server.emit('log:info', ['SBOT', '' + peers.length + ' peers loaded from', gossipJsonPath])
     })
@@ -379,11 +376,7 @@ module.exports = {
 
     var last
     stateFile.get(function (err, ary) {
-      if (err) {
-        // UNHANDLED
-        // the state file will not exist the first time, that's okay
-        // that's why peers defaults to empty array
-      }
+      if (err && err.code !== 'ENOENT') throw err
 
       last = ary || []
       if (Array.isArray(ary)) {
