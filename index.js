@@ -79,7 +79,7 @@ var SSB = {
     }
     var self
 
-    name = opts.db_prefix + name
+    
 
     return self = {
       id                       : feed.id,
@@ -104,6 +104,7 @@ var SSB = {
       //temporary!
       _flumeUse                :
         function (name, flumeview) {
+          name = opts.db_prefix + name
           ssb.use(name, flumeview)
           return ssb[name]
         },
