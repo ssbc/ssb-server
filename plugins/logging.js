@@ -52,7 +52,12 @@ function formatter(id, level) {
 }
 
 module.exports = function logging (server, conf) {
-  var level = conf.logging && conf.logging.level && LOG_LEVELS.indexOf(conf.logging.level) || DEFAULT_LEVEL
+  if (conf.logging && conf.logging.level) {
+    level = LOG_LEVELS.indexOf(conf.logging.level)
+  } else {
+    level = DEFAULT_LEVEL
+  }
+
   if (level === -1) {
     console.log('Warning, logging.level configured to an invalid value:', conf.logging.level)
     console.log('Should be one of:', LOG_LEVELS.join(', '))
