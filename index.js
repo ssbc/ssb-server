@@ -104,7 +104,7 @@ var SSB = {
       //temporary!
       _flumeUse                :
         function (name, flumeview) {
-          name = opts.db_prefix + name
+          name = opts.dbPrefix + name
           ssb.use(name, flumeview)
           return ssb[name]
         },
