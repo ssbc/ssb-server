@@ -34,7 +34,7 @@ module.exports = {
         }
       }
 
-    var local = broadcast(config.port)
+    var local = broadcast(config.port, config.loopback, config.family)
     var addrs = {}
     var lastSeen = {}
 
@@ -54,6 +54,7 @@ module.exports = {
       var data = buf.toString()
       var peer = ref.parseAddress(data)
       if (peer && peer.key !== sbot.id) {
+        if (config.family === 'IPv6') peer.host = buf.address
         addrs[peer.key] = peer
         lastSeen[peer.key] = Date.now()
         //note: add the raw data, not the parsed data.

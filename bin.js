@@ -22,7 +22,12 @@ var i = argv.indexOf('--')
 var conf = argv.slice(i+1)
 argv = ~i ? argv.slice(0, i) : argv
 
-var config = require('ssb-config/inject')(process.env.ssb_appname, minimist(conf))
+var config = require('ssb-config/inject')(
+  process.env.ssb_appname,
+  Object.assign(
+    minimist(conf),
+    { host: process.env.ssb_host }
+  ))
 
 var keys = ssbKeys.loadOrCreateSync(path.join(config.path, 'secret'))
 if(keys.curve === 'k256')
