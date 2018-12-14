@@ -31,6 +31,11 @@ if(keys.curve === 'k256')
 
 var manifestFile = path.join(config.path, 'manifest.json')
 
+if (argv[0] == 'server') {
+  console.log('WARNING-DEPRECATION: `sbot server` has been renamed to `ssb-server start`')
+  argv[0] = 'start'
+}
+
 if (argv[0] == 'start') {
   console.log(packageJson.name, packageJson.version, config.path, 'logging.level:'+config.logging.level)
   console.log('my key ID:', keys.public)
