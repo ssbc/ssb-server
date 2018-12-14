@@ -102,7 +102,7 @@ function testSsbServer(t, opts, asConfig, port, cb) {
     cb = port, port = opts.port
   mkdirp.sync(dir)
   var args = [
-    'server',
+    'start',
     '--path '+dir
   ]
 
@@ -161,7 +161,7 @@ test('ssbServer should have websockets and http server by default', function(t) 
   var path = '/tmp/ssbServer_binjstest_' + Date.now()
   var caps = crypto.randomBytes(32).toString('base64')
   var end = ssbServer(t, [
-    'server',
+    'start',
     '--host=127.0.0.1',
     '--port=9001',
     '--ws.port=9002',
@@ -233,7 +233,7 @@ test('ssb-server client should work without options', function(t) {
   )
   var caps = crypto.randomBytes(32).toString('base64')
   var end = ssbServer(t, [
-    'server',
+    'start',
     '--path', path,
     '--config', path+'/config',
     '--caps.shs', caps
