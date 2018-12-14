@@ -1,7 +1,7 @@
 var broadcast = require('broadcast-stream')
 var ref = require('ssb-ref')
 // local plugin
-// broadcasts the address:port:pubkey triple of the ssbServer server
+// broadcasts the address:port:pubkey triple of the ssb server
 // on the LAN, using multicast UDP
 
 function isFunction (f) {
