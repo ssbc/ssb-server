@@ -47,7 +47,7 @@ it is recommended to get started with patchwork, and then look into git-ssb and 
 
 # Start the server with extra log detail
 # Leave this running in its own terminal/window
-ssb-server server --logging.level=info
+ssb-server start --logging.level=info
 
 # publish a message
 ssb-server publish --type post --text "My First Post!"

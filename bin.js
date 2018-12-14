@@ -31,11 +31,11 @@ if(keys.curve === 'k256')
 
 var manifestFile = path.join(config.path, 'manifest.json')
 
-if (argv[0] == 'server') {
+if (argv[0] == 'start') {
   console.log(packageJson.name, packageJson.version, config.path, 'logging.level:'+config.logging.level)
   console.log('my key ID:', keys.public)
 
-  // special server command:
+  // special start command:
   // import ssbServer and start the server
 
   var createSsbServer = require('./')
@@ -102,7 +102,7 @@ if (argv[0] == 'server') {
       if (/could not connect/.test(err.message)) {
         var serverAddr = (config.host || 'localhost') + ":" + config.port;
         console.error('Error: Could not connect to ssb-server ' + serverAddr)
-        console.error('Use the "server" command to start it.')
+        console.error('Use the "start" command to start it.')
         if(config.verbose) throw err
         process.exit(1)
       }

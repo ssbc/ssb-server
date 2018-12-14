@@ -144,7 +144,7 @@ module.exports = {
                   var name = path.basename(pluginName)
                   config.plugins[name] = true
                   writePluginConfig(name, true)
-                  p.push(Buffer.from('"'+pluginName+'" has been installed. Restart ssb-server server to enable the plugin.\n', 'utf-8'))
+                  p.push(Buffer.from('"'+pluginName+'" has been installed. Restart ssb-server to enable the plugin.\n', 'utf-8'))
                   p.end()
                 }
               )

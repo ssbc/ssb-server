@@ -15,12 +15,12 @@ create {n} [{note}, {external}]
 create(n[, note, external], cb)
 ```
 
-This produces an invite-code which encodes the ssb-server servers public address, and a keypair seed.
-The keypair seed is used to generate a keypair, which is then used to authenticate a connection with the ssb-server server.
-The ssb-server server will then grant access to the `use` call.
+This produces an invite-code which encodes the ssb-server instance's public address, and a keypair seed.
+The keypair seed is used to generate a keypair, which is then used to authenticate a connection with the ssb-server instance.
+The ssb-server instance will then grant access to the `use` call.
 
 - `n` (number): How many times the invite can be used before it expires.
-- `note` (string): A note to associate with the invite code. The ssb-server server will
+- `note` (string): A note to associate with the invite code. The ssb-server instance will
     include this note in the follow message that it creates when `use` is
     called.
 - `external` (string): An external hostname to use
@@ -58,8 +58,8 @@ use({ feed: }, cb)
 
 This commands the receiving server to follow the given feed.
 
-An invite-code encodes the ssb-server server's address, and a keypair seed.
-The keypair seed must be used to generate a keypair, then authenticate a connection with the ssb-server server, in order to use this function.
+An invite-code encodes the ssb-server instance's address, and a keypair seed.
+The keypair seed must be used to generate a keypair, then authenticate a connection with the ssb-server instance, in order to use this function.
 
  - `feed` (feedid): The feed the server should follow.
 
