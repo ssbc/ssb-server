@@ -1,4 +1,3 @@
-
 var cont      = require('cont')
 var deepEqual = require('deep-equal')
 var tape      = require('tape')
@@ -7,6 +6,7 @@ var ssbKeys   = require('ssb-keys')
 var ref       = require('ssb-ref')
 var u = require('./util')
 var isArray = Array.isArray
+var ma = require('multiserver-address')
 
 var createSbot = require('../')
 //  .use(require('ssb-friends'))
@@ -51,8 +51,8 @@ tape('gossip: add and get peers', function (t) {
 
   t.deepEqual(
     sbot.gossip.peers().map(function (e) {
-      console.log(e, ref.parseAddress(e.address))
-      return ref.parseAddress(e.address)
+      console.log(e, ma.decode(e.address))
+      return ma.decode(e.address)
     }),
     peers
   )

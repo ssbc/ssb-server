@@ -14,6 +14,7 @@ var AtomicFile = require('atomic-file')
 var fs = require('fs')
 var path = require('path')
 var deepEqual = require('deep-equal')
+var ma = require('multiserver-address')
 
 function isFunction (f) {
   return 'function' === typeof f
@@ -159,7 +160,6 @@ module.exports = {
         return peers
       },
       get: function (addr) {
-        //addr = ref.parseAddress(addr)
         if(ref.isFeed(addr)) return getPeer(addr)
         else if(ref.isFeed(addr.key)) return getPeer(addr.key)
         else throw new Error('must provide id:'+JSON.stringify(addr))
@@ -176,7 +176,7 @@ module.exports = {
           addr = gossip.get(addr)
         server.emit('log:info', ['SBOT', stringify(addr), 'CONNECTING'])
         if(!ref.isAddress(addr.address))
-          addr = ref.parseAddress(addr)
+          addr = ma.decode(addr)
         if (!addr || typeof addr != 'object')
           return cb(new Error('first param must be an address'))
 
@@ -233,7 +233,7 @@ module.exports = {
           addr.address = coearseAddress(addr)
         }
         else {
-         var _addr = ref.parseAddress(addr)
+         var _addr = ma.decode(addr)
           if(!_addr) throw new Error('not a valid address:'+addr)
           _addr.address = addr
           addr = _addr
@@ -393,7 +393,7 @@ module.exports = {
         //so that the output file is understood by previous versions
         //of scuttlebutt.
         if(!o.host || !o.port) {
-          var _addr = ref.parseAddress(e.address)
+          var _addr = ma.decode(e.address)
           o.host = _addr.host
           o.port = _addr.port
         }

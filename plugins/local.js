@@ -1,5 +1,6 @@
 var broadcast = require('broadcast-stream')
 var ref = require('ssb-ref')
+var ma = require('multiserver-address')
 // local plugin
 // broadcasts the address:port:pubkey triple of the sbot server
 // on the LAN, using multicast UDP
@@ -52,7 +53,7 @@ module.exports = {
     local.on('data', function (buf) {
       if (buf.loopback) return
       var data = buf.toString()
-      var peer = ref.parseAddress(data)
+      var peer = ma.decode(data)
       if (peer && peer.key !== sbot.id) {
         addrs[peer.key] = peer
         lastSeen[peer.key] = Date.now()

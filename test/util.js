@@ -1,4 +1,5 @@
 var ref = require('ssb-ref')
+var ma = require('multiserver-address')
 
 exports.follow = function (id) {
   return {
@@ -19,7 +20,7 @@ exports.block = function unfollow(id) {
 exports.pub = function (address) {
   return {
     type: 'pub',
-    address: ref.parseAddress(address)
+    address: ma.decode(address)
   }
 }
 

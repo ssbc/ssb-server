@@ -5,6 +5,7 @@ var tape = require('tape')
 var pull = require('pull-stream')
 var ssbClient = require('ssb-client')
 var ref = require('ssb-ref')
+var ma = require('multiserver-address')
 
 var createSbot = require('../')
   .use(require('../plugins/master'))
@@ -110,7 +111,7 @@ tape('test invite.accept doesnt follow if already followed', function (t) {
 
           t.deepEqual({
             type: 'pub',
-            address: ref.parseAddress(alice.address('local').split(';').shift()),
+            address: ma.decode(alice.address('local').split(';').shift()),
           }, ary[0].value.content)
 
           all(bob.messagesByType('contact'), function (err, ary) {

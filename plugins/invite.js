@@ -9,6 +9,7 @@ var mdm = require('mdmanifest')
 var valid = require('../lib/validators')
 var apidoc = require('../lib/apidocs').invite
 var ref = require('ssb-ref')
+var ma = require('multiserver-address')
 
 var ssbClient = require('ssb-client')
 
@@ -82,7 +83,7 @@ module.exports = {
           cb = opts, opts = {}
 
         var addr = getInviteAddress().split(';').shift()
-        var host = ref.parseAddress(addr).host
+        var host = ma.decode(addr).host
         if(typeof host !== 'string') {
           return cb(new Error('Could not parse host portion from server address:' + addr))
         }
@@ -125,7 +126,7 @@ module.exports = {
             cb(null, ws_addr+':'+seed.toString('base64'))
           }
           else {
-            addr = ref.parseAddress(addr)
+            addr = ma.decode(addr)
             cb(null, [opts.external ? opts.external : addr.host, addr.port, addr.key].join(':') + '~' + seed.toString('base64'))
           }
         })
@@ -192,7 +193,7 @@ module.exports = {
         if(ref.isInvite(invite)) { //legacy ivite
           if(ref.isLegacyInvite(invite)) {
             var parts = invite.split('~')
-            opts = ref.parseAddress(parts[0])//.split(':')
+            opts = ma.decode(parts[0])//.split(':')
             //convert legacy code to multiserver invite code.
             var protocol = 'net:'
             if (opts.host.endsWith(".onion"))
@@ -203,7 +204,7 @@ module.exports = {
             modern = true
         }
 
-        opts = ref.parseAddress(ref.parseInvite(invite).remote)
+        opts = ma.decode(ref.parseInvite(invite).remote)
         function connect (cb) {
           ssbClient(null, {
             caps: config.caps,
