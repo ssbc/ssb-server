@@ -15,6 +15,7 @@ This means Scuttlebots comprise a [global gossip-protocol mesh](https://en.wikip
 **Join us in #scuttlebutt on freenode.**
 
 [![build status](https://secure.travis-ci.org/ssbc/scuttlebot.png)](http://travis-ci.org/ssbc/scuttlebot)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fssbc%2Fscuttlebot.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fssbc%2Fscuttlebot?ref=badge_shield)
 
 ## install
 
@@ -150,3 +151,6 @@ Therefore, by itself, it would probably make a poor choice for implementing a cr
 # License
 
 MIT
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fssbc%2Fscuttlebot.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fssbc%2Fscuttlebot?ref=badge_large)
