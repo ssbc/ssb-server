@@ -26,7 +26,7 @@ process.on('SIGINT', function () {
 
 var exited = false
 var count = 0
-function sbot(t, argv, opts) {
+function ssbServer(t, argv, opts) {
   count ++
   exited = false
   opts = opts || {}
@@ -96,13 +96,13 @@ function connect(port, host, cb) {
   })
 }
 
-function testSbot(t, opts, asConfig, port, cb) {
-  var dir = '/tmp/sbot_binjstest_' + Date.now()
+function testSsbServer(t, opts, asConfig, port, cb) {
+  var dir = '/tmp/ssb-server_binjstest_' + Date.now()
   if('function' === typeof port)
     cb = port, port = opts.port
   mkdirp.sync(dir)
   var args = [
-    'server',
+    'start',
     '--path '+dir
   ]
 
@@ -119,7 +119,7 @@ function testSbot(t, opts, asConfig, port, cb) {
     })('--', opts)
   }
 
-  var end = sbot(t, args, {
+  var end = ssbServer(t, args, {
     cwd: dir
   })
 
@@ -149,7 +149,7 @@ var c = 0
         (asConfig ? 'a config file' : 'command line options') +
         ':'+JSON.stringify(opts)+' then connect to port:'+port
       , function(t) {
-        testSbot(t, opts, true, function (err) {
+        testSsbServer(t, opts, true, function (err) {
           t.error(err, 'Successfully connect eventually')
         })
       })
@@ -157,11 +157,11 @@ var c = 0
   })
 })
 
-test('sbot should have websockets and http server by default', function(t) {
-  var path = '/tmp/sbot_binjstest_' + Date.now()
+test('ssbServer should have websockets and http server by default', function(t) {
+  var path = '/tmp/ssbServer_binjstest_' + Date.now()
   var caps = crypto.randomBytes(32).toString('base64')
-  var end = sbot(t, [
-    'server',
+  var end = ssbServer(t, [
+    'start',
     '--host=127.0.0.1',
     '--port=9001',
     '--ws.port=9002',
@@ -186,10 +186,10 @@ test('sbot should have websockets and http server by default', function(t) {
       cb(null, JSON.parse(stdout))  // remove quotes
     })
   }, function(err, addr) {
-    t.error(err, 'sbot getAdress succeeds eventually')
+    t.error(err, 'ssbServer getAdress succeeds eventually')
     if (err) return end()
     t.ok(addr, 'address is not null')
-    t.comment('result of sbot getAddress: ' + addr)
+    t.comment('result of ssb-server getAddress: ' + addr)
 
     var remotes = ma.decode(addr)
     console.log('remotes', remotes, addr)
@@ -223,8 +223,8 @@ test('sbot should have websockets and http server by default', function(t) {
   })
 })
 
-test('sbot client should work without options', function(t) {
-  var path = '/tmp/sbot_binjstest_' + Date.now()
+test('ssb-server client should work without options', function(t) {
+  var path = '/tmp/ssb-server_binjstest_' + Date.now()
   mkdirp.sync(path)
   fs.writeFileSync(path+'/config', 
     JSON.stringify({
@@ -232,8 +232,8 @@ test('sbot client should work without options', function(t) {
     })
   )
   var caps = crypto.randomBytes(32).toString('base64')
-  var end = sbot(t, [
-    'server',
+  var end = ssbServer(t, [
+    'start',
     '--path', path,
     '--config', path+'/config',
     '--caps.shs', caps
@@ -254,11 +254,11 @@ test('sbot client should work without options', function(t) {
       cb(null, JSON.parse(stdout))  // remove quotes
     })
   }, function(err, addr) {
-    t.error(err, 'sbot getAddress succeeds eventually')
+    t.error(err, 'ssb-server getAddress succeeds eventually')
     if (err) return end()
     t.ok(addr)
 
-    t.comment('result of sbot getAddress: ' + addr)
+    t.comment('result of ssb-server getAddress: ' + addr)
     end()
   })
 })

@@ -4,7 +4,7 @@ var pull = require('pull-stream')
 var ssbKeys = require('ssb-keys')
 var u = require('./util')
 
-var createSbot = require('../')
+var createSsbServer = require('../')
   .use(require('../plugins/replicate'))
   .use(require('ssb-friends'))
   .use(require('ssb-ebt'))
@@ -32,19 +32,19 @@ function seed (name) {
   return crypto.createHash('sha256').update(name).digest()
 }
 
-var alice = createSbot({
+var alice = createSsbServer({
   temp:'test-block-alice', timeout: 1400,
   keys:ssbKeys.generate(null, seed('alice')),
   replicate: { legacy: false }
 })
 
-var bob = createSbot({
+var bob = createSsbServer({
   temp: 'test-block-bob', timeout: 600,
   keys:ssbKeys.generate(null, seed('bob')),
   replicate: { legacy: false }
 })
 
-var carol = createSbot({
+var carol = createSsbServer({
   temp: 'test-block-carol', timeout: 600,
   keys:ssbKeys.generate(null, seed('carol')),
   replicate: { legacy: false }

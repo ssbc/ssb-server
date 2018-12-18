@@ -1,4 +1,4 @@
-# scuttlebot gossip plugin
+# ssb-server gossip plugin
 
 Schedule connections randomly with a peerlist constructed from config, multicast UDP announcements, feed announcements, and API-calls.
 
@@ -98,7 +98,7 @@ Events come in the following forms:
 
 ## reconnect: sync
 
-Tell sbot to reinitiate gossip connections now.
+Tell ssb-server to reinitiate gossip connections now.
 
 
 ## enable: sync

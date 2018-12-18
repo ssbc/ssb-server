@@ -174,7 +174,7 @@ module.exports = {
       connect: valid.async(function (addr, cb) {
         if(ref.isFeed(addr))
           addr = gossip.get(addr)
-        server.emit('log:info', ['SBOT', stringify(addr), 'CONNECTING'])
+        server.emit('log:info', ['ssb-server', stringify(addr), 'CONNECTING'])
         if(!ref.isAddress(addr.address))
           addr = ref.parseAddress(addr)
         if (!addr || typeof addr != 'object')
@@ -196,7 +196,7 @@ module.exports = {
             p.failure = (p.failure || 0) + 1
             p.stateChange = Date.now()
             notify({ type: 'connect-failure', peer: p })
-            server.emit('log:info', ['SBOT', stringify(p), 'ERR', (err.message || err)])
+            server.emit('log:info', ['ssb-server', stringify(p), 'ERR', (err.message || err)])
             p.duration = stats(p.duration, 0)
             return (cb && cb(err))
           }
@@ -314,9 +314,9 @@ module.exports = {
       //maybe we should though?
       if(!peer) {
         if(rpc.id !== server.id) {
-          server.emit('log:info', ['SBOT', rpc.id, 'Connected'])
+          server.emit('log:info', ['ssb-server', rpc.id, 'Connected'])
           rpc.on('closed', function () {
-            server.emit('log:info', ['SBOT', rpc.id, 'Disconnected'])
+            server.emit('log:info', ['ssb-server', rpc.id, 'Disconnected'])
           })
         }
         return
@@ -324,7 +324,7 @@ module.exports = {
 
       status[rpc.id] = simplify(peer)
 
-      server.emit('log:info', ['SBOT', stringify(peer), 'PEER JOINED'])
+      server.emit('log:info', ['ssb-server', stringify(peer), 'PEER JOINED'])
       //means that we have created this connection, not received it.
       peer.client = !!isClient
       peer.state = 'connected'
@@ -349,7 +349,7 @@ module.exports = {
 
       rpc.on('closed', function () {
         delete status[rpc.id]
-        server.emit('log:info', ['SBOT', stringify(peer),
+        server.emit('log:info', ['ssb-server', stringify(peer),
                          ['DISCONNECTED. state was', peer.state, 'for',
                          (new Date() - peer.stateChange)/1000, 'seconds'].join(' ')])
         //track whether we have successfully connected.

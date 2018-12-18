@@ -10,7 +10,7 @@ var pull    = require('pull-stream')
 // add some of friend edges (follow, flag)
 // make sure the friends plugin analyzes correctly
 
-var createSbot = require('../')
+var createSsbServer = require('../')
   .use(require('../plugins/replicate'))
   .use(require('ssb-friends'))
 
@@ -40,10 +40,10 @@ function toAliases(aliasMap) {
   }
 }
 
-function liveFriends(sbot) {
+function liveFriends(ssbServer) {
   var live = {}
   pull(
-    sbot.friends.createFriendStream({live: true, meta: true}),
+    ssbServer.friends.createFriendStream({live: true, meta: true}),
     pull.drain(function (friend) {
       if(friend.sync) return
       live[friend.id] = friend.hops
@@ -56,18 +56,18 @@ tape('construct and analyze graph', function (t) {
 
   var aliceKeys = ssbKeys.generate()
 
-  var sbot = createSbot({
+  var ssbServer = createSsbServer({
       temp:'test-friends1',
       port: 45451, host: 'localhost', timeout: 1000,
       keys: aliceKeys
     })
 
-  var alice = sbot.createFeed(aliceKeys)
-  var bob = sbot.createFeed()
-  var carol = sbot.createFeed()
+  var alice = ssbServer.createFeed(aliceKeys)
+  var bob = ssbServer.createFeed()
+  var carol = ssbServer.createFeed()
 
   t.test('add friends, and retrive all friends for a peer', function (t) {
-    var live = liveFriends(sbot)
+    var live = liveFriends(ssbServer)
 
     cont.para([
       alice.add({
@@ -86,26 +86,26 @@ tape('construct and analyze graph', function (t) {
       if(err) throw err
 
       console.log(live)
-      sbot.friends.hops(function (err, hops) {
+      ssbServer.friends.hops(function (err, hops) {
         if(err) throw err
         t.deepEqual(live, hops)
         t.end()
       })
 
 //      cont.para([
-//        cont(sbot.friends.all)(),
-//        cont(sbot.friends.all)('follow'),
-//        cont(sbot.friends.all)('flag'),
+//        cont(ssbServer.friends.all)(),
+//        cont(ssbServer.friends.all)('follow'),
+//        cont(ssbServer.friends.all)('flag'),
 //
-//        cont(sbot.friends.hops)(alice.id),
-//        cont(sbot.friends.hops)(alice.id, 'follow'),
-//        cont(sbot.friends.hops)(alice.id, 'flag'),
+//        cont(ssbServer.friends.hops)(alice.id),
+//        cont(ssbServer.friends.hops)(alice.id, 'follow'),
+//        cont(ssbServer.friends.hops)(alice.id, 'flag'),
 //
-//        cont(sbot.friends.hops)(bob.id, 'follow'),
-//        cont(sbot.friends.hops)(bob.id, 'flag'),
+//        cont(ssbServer.friends.hops)(bob.id, 'follow'),
+//        cont(ssbServer.friends.hops)(bob.id, 'flag'),
 //
-//        cont(sbot.friends.hops)(carol.id, 'follow'),
-//        cont(sbot.friends.hops)(carol.id, 'flag')
+//        cont(ssbServer.friends.hops)(carol.id, 'follow'),
+//        cont(ssbServer.friends.hops)(carol.id, 'flag')
 //      ], function (err, results) {
 //        if(err) throw err
 //
@@ -140,7 +140,7 @@ tape('construct and analyze graph', function (t) {
 
   t.test('creatFriendStream', function () {
     pull(
-      sbot.friends.createFriendStream(),
+      ssbServer.friends.createFriendStream(),
       pull.collect(function (err, ary) {
         t.notOk(err)
         t.equal(ary.length, 3)
@@ -152,7 +152,7 @@ tape('construct and analyze graph', function (t) {
 
   t.test('creatFriendStream - meta', function (t) {
     pull(
-      sbot.friends.createFriendStream({meta: true}),
+      ssbServer.friends.createFriendStream({meta: true}),
       pull.collect(function (err, ary) {
         t.notOk(err)
         t.equal(ary.length, 3)
@@ -168,7 +168,7 @@ tape('construct and analyze graph', function (t) {
   })
 
   t.test('cleanup', function (t) {
-    sbot.close()
+    ssbServer.close()
     t.end()
   })
 
@@ -179,17 +179,17 @@ tape('correctly delete edges', function (t) {
   return t.end()
   var aliceKeys = ssbKeys.generate()
 
-  var sbot = createSbot({
+  var ssbServer = createSsbServer({
       temp:'test-friends2',
       port: 45452, host: 'localhost', timeout: 1000,
       keys: aliceKeys
     })
 
-  var alice = sbot.createFeed(aliceKeys)
-  var bob   = sbot.createFeed()
-  var carol = sbot.createFeed()
+  var alice = ssbServer.createFeed(aliceKeys)
+  var bob   = ssbServer.createFeed()
+  var carol = ssbServer.createFeed()
 
-  var live = liveFriends(sbot)
+  var live = liveFriends(ssbServer)
 
   t.test('add and delete', function (t) {
 
@@ -217,17 +217,17 @@ tape('correctly delete edges', function (t) {
     ]) (function () {
 
 //      cont.para([
-//        cont(sbot.friends.all)('follow'),
-//        cont(sbot.friends.all)('flag'),
+//        cont(ssbServer.friends.all)('follow'),
+//        cont(ssbServer.friends.all)('flag'),
 //
-//        cont(sbot.friends.hops)(alice.id, 'follow'),
-//        cont(sbot.friends.hops)(alice.id, 'flag'),
+//        cont(ssbServer.friends.hops)(alice.id, 'follow'),
+//        cont(ssbServer.friends.hops)(alice.id, 'flag'),
 //
-//        cont(sbot.friends.hops)(bob.id, 'follow'),
-//        cont(sbot.friends.hops)(bob.id, 'flag'),
+//        cont(ssbServer.friends.hops)(bob.id, 'follow'),
+//        cont(ssbServer.friends.hops)(bob.id, 'flag'),
 //
-//        cont(sbot.friends.hops)(carol.id, 'follow'),
-//        cont(sbot.friends.hops)(carol.id, 'flag')
+//        cont(ssbServer.friends.hops)(carol.id, 'follow'),
+//        cont(ssbServer.friends.hops)(carol.id, 'flag')
 //      ], function (err, results) {
 //
 //        var aliasMap = {}
@@ -258,7 +258,7 @@ tape('correctly delete edges', function (t) {
 
   t.test('createFriendStream after delete', function (t) {
     pull(
-      sbot.friends.createFriendStream(),
+      ssbServer.friends.createFriendStream(),
       pull.collect(function (err, ary) {
         t.notOk(err)
         t.equal(ary.length, 2)
@@ -269,7 +269,7 @@ tape('correctly delete edges', function (t) {
   })
 
   t.test('cleanup', function (t) {
-    sbot.close()
+    ssbServer.close()
     t.end()
   })
 
@@ -279,18 +279,18 @@ tape('indirect friends', function (t) {
 
   var aliceKeys = ssbKeys.generate()
 
-  var sbot = createSbot({
+  var ssbServer = createSsbServer({
       temp:'test-friends3',
       port: 45453, host: 'localhost', timeout: 1000,
       keys: aliceKeys
     })
 
-  var alice = sbot.createFeed(aliceKeys)
-  var bob   = sbot.createFeed()
-  var carol = sbot.createFeed()
-  var dan   = sbot.createFeed()
+  var alice = ssbServer.createFeed(aliceKeys)
+  var bob   = ssbServer.createFeed()
+  var carol = ssbServer.createFeed()
+  var dan   = ssbServer.createFeed()
 
-  var live = liveFriends(sbot)
+  var live = liveFriends(ssbServer)
 
   t.test('chain of friends', function (t) {
     cont.para([
@@ -300,7 +300,7 @@ tape('indirect friends', function (t) {
     ]) (function (err, results) {
       if(err) throw err
 
-      sbot.friends.hops({hops: 3}, function (err, all) {
+      ssbServer.friends.hops({hops: 3}, function (err, all) {
         if(err) throw err
         var o = {}
 
@@ -328,7 +328,7 @@ tape('indirect friends', function (t) {
   t.test('createFriendStream on long chain', function (t) {
 
     pull(
-      sbot.friends.createFriendStream(),
+      ssbServer.friends.createFriendStream(),
       pull.collect(function (err, ary) {
         if(err) throw err
         t.deepEqual(ary, expected.map(function (e) { return e.id }))
@@ -341,7 +341,7 @@ tape('indirect friends', function (t) {
   t.test('creatFriendStream - meta', function (t) {
 
     pull(
-      sbot.friends.createFriendStream({meta: true}),
+      ssbServer.friends.createFriendStream({meta: true}),
       pull.collect(function (err, ary) {
         t.notOk(err)
 
@@ -356,7 +356,7 @@ tape('indirect friends', function (t) {
 
 
   t.test('cleanup', function (t) {
-    sbot.close()
+    ssbServer.close()
     t.end()
   })
 

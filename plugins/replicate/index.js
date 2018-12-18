@@ -11,15 +11,15 @@ module.exports = {
   version: '2.0.0',
   manifest: mdm.manifest(apidoc),
   //replicate: replicate,
-  init: function (sbot, config) {
+  init: function (ssbServer, config) {
     var notify = Notify(), upto
     if(!config.replicate || config.replicate.legacy !== false) {
-      var replicate = Legacy.call(this, sbot, notify, config)
+      var replicate = Legacy.call(this, ssbServer, notify, config)
 
       // replication policy is set by calling
-      // sbot.replicate.request(id)
+      // ssbServer.replicate.request(id)
       // or by cancelling replication
-      // sbot.replicate.request(id, false)
+      // ssbServer.replicate.request(id, false)
       // this is currently performed from the ssb-friends plugin
 
       return replicate

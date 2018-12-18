@@ -7,13 +7,13 @@ var aliceKeys = ssbKeys.generate()
 var bobKeys   = ssbKeys.generate()
 var carolKeys = ssbKeys.generate()
 
-var createSbot = require('../')
+var createSsbServer = require('../')
   .use(require('../plugins/master'))
 var caps = {
   shs: require('crypto').randomBytes(32).toString('base64')
 }
 
-var alice = createSbot({
+var alice = createSsbServer({
   port: 45451, timeout: 2001,
   temp: 'master',
   host: 'localhost',

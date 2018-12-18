@@ -1,11 +1,11 @@
 var tape = require('tape')
 
-tape('createSbot method allows creating multiple servers with the same plugins', function (t) {
-  var createSbot = require('../').createSbot
+tape('createSsbServer method allows creating multiple servers with the same plugins', function (t) {
+  var createSsbServer = require('../').createSsbServer
 
-  var sbot1 = createSbot()
+  var ssbServer1 = createSsbServer()
     .use(require('../plugins/replicate'))
-  var sbot2 = createSbot()
+  var ssbServer2 = createSsbServer()
     .use(require('../plugins/replicate'))
     .use(require('../plugins/gossip'))
   t.pass()

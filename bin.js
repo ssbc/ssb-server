@@ -32,13 +32,18 @@ if(keys.curve === 'k256')
 var manifestFile = path.join(config.path, 'manifest.json')
 
 if (argv[0] == 'server') {
+  console.log('WARNING-DEPRECATION: `sbot server` has been renamed to `ssb-server start`')
+  argv[0] = 'start'
+}
+
+if (argv[0] == 'start') {
   console.log(packageJson.name, packageJson.version, config.path, 'logging.level:'+config.logging.level)
   console.log('my key ID:', keys.public)
 
-  // special server command:
-  // import sbot and start the server
+  // special start command:
+  // import ssbServer and start the server
 
-  var createSbot = require('./')
+  var createSsbServer = require('./')
     .use(require('./plugins/onion'))
     .use(require('./plugins/unix-socket'))
     .use(require('./plugins/no-auth'))
@@ -55,19 +60,19 @@ if (argv[0] == 'server') {
     .use(require('ssb-ws'))
     .use(require('ssb-ebt'))
   // add third-party plugins
-  require('./plugins/plugins').loadUserPlugins(createSbot, config)
+  require('./plugins/plugins').loadUserPlugins(createSsbServer, config)
 
   if (argv[1] != '--disable-ssb-links') {
-    if (!createSbot.plugins.find(p => p.name == 'links2')) {
+    if (!createSsbServer.plugins.find(p => p.name == 'links2')) {
       console.log("WARNING-DEPRECATION: ssb-links not installed as a plugin. If you are using git-ssb, ssb-npm or patchfoo please consider installing it")
-      createSbot.use(require('ssb-links'))
+      createSsbServer.use(require('ssb-links'))
     }
   }
 
   // start server
 
   config.keys = keys
-  var server = createSbot(config)
+  var server = createSsbServer(config)
 
   // write RPC manifest to ~/.ssb/manifest.json
   fs.writeFileSync(manifestFile, JSON.stringify(server.getManifest(), null, 2))
@@ -101,8 +106,8 @@ if (argv[0] == 'server') {
     if(err) {
       if (/could not connect/.test(err.message)) {
         var serverAddr = (config.host || 'localhost') + ":" + config.port;
-        console.error('Error: Could not connect to the scuttlebot server ' + serverAddr)
-        console.error('Use the "server" command to start it.')
+        console.error('Error: Could not connect to ssb-server ' + serverAddr)
+        console.error('Use the "start" command to start it.')
         if(config.verbose) throw err
         process.exit(1)
       }

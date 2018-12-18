@@ -37,9 +37,9 @@ module.exports = {
           config.plugins[pluginName] = b 
           writePluginConfig(pluginName, b)
           if (b)
-            cb(null, '\''+pluginName+'\' has been enabled. Restart Scuttlebot server to use the plugin.')
+            cb(null, '\''+pluginName+'\' has been enabled. Restart ssb-server to use the plugin.')
           else
-            cb(null, '\''+pluginName+'\' has been disabled. Restart Scuttlebot server to stop using the plugin.')
+            cb(null, '\''+pluginName+'\' has been disabled. Restart ssb-server to stop using the plugin.')
         })
       }
     }
@@ -144,7 +144,7 @@ module.exports = {
                   var name = path.basename(pluginName)
                   config.plugins[name] = true
                   writePluginConfig(name, true)
-                  p.push(Buffer.from('"'+pluginName+'" has been installed. Restart Scuttlebot server to enable the plugin.\n', 'utf-8'))
+                  p.push(Buffer.from('"'+pluginName+'" has been installed. Restart ssb-server to enable the plugin.\n', 'utf-8'))
                   p.end()
                 }
               )
@@ -167,7 +167,7 @@ module.exports = {
         rimraf(modulePath, function (err) {
           if (!err) {
             writePluginConfig(pluginName, false)
-            p.push(Buffer.from('"'+pluginName+'" has been uninstalled. Restart Scuttlebot server to disable the plugin.\n', 'utf-8'))
+            p.push(Buffer.from('"'+pluginName+'" has been uninstalled. Restart ssb-server to disable the plugin.\n', 'utf-8'))
             p.end()
           } else
             p.end(err)
@@ -180,7 +180,7 @@ module.exports = {
   }
 }
 
-module.exports.loadUserPlugins = function (createSbot, config) {
+module.exports.loadUserPlugins = function (createSsbServer, config) {
   // iterate all modules
   var nodeModulesPath = path.join(config.path, 'node_modules')
   //instead of testing all plugins, only load things explicitly
@@ -191,19 +191,19 @@ module.exports.loadUserPlugins = function (createSbot, config) {
     if(name === true)
       name = /^ssb-/.test(module_name) ? module_name.substring(4) : module_name
 
-    if (createSbot.plugins.some(plug => plug.name === name))
+    if (createSsbServer.plugins.some(plug => plug.name === name))
       throw new Error('already loaded plugin named:'+name)
       var plugin = require(path.join(nodeModulesPath, module_name))
       if(!plugin || plugin.name !== name)
         throw new Error('plugin at:'+module_name+' expected name:'+name+' but had:'+(plugin||{}).name)
-      assertSbotPlugin(plugin)
-      createSbot.use(plugin)
+      assertSsbServerPlugin(plugin)
+      createSsbServer.use(plugin)
     }
   }
 }
 
-// predictate to check if an object appears to be a sbot plugin
-function assertSbotPlugin (obj) {
+// predictate to check if an object appears to be a ssbServer plugin
+function assertSsbServerPlugin (obj) {
   // function signature:
   if (typeof obj == 'function')
     return

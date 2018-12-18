@@ -11,7 +11,7 @@ var u = require('./util')
 // give them all pub servers (on localhost)
 // and get them to follow each other...
 
-var createSbot = require('../')
+var createSsbServer = require('../')
   .use(require('../plugins/replicate'))
 //  .use(require('ssb-ebt'))
   .use(require('ssb-friends'))
@@ -21,14 +21,14 @@ var createSbot = require('../')
 tape('replicate between 3 peers', function (t) {
 
   var alice, bob, carol
-  var dbA = createSbot({
+  var dbA = createSsbServer({
     temp: 'server-alice',
     port: 45451, timeout: 1400,
     keys: alice = ssbKeys.generate(),
     //replicate: {legacy: false},
     level: 'info'
   })
-  var dbB = createSbot({
+  var dbB = createSsbServer({
     temp: 'server-bob',
     port: 45452, timeout: 1400,
     keys: bob = ssbKeys.generate(),
@@ -36,7 +36,7 @@ tape('replicate between 3 peers', function (t) {
     //replicate: {legacy: false},
     level: 'info'
   })
-  var dbC = createSbot({
+  var dbC = createSsbServer({
     temp: 'server-carol',
     port: 45453, timeout: 1400,
     keys: carol = ssbKeys.generate(),
