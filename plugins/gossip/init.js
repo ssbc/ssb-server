@@ -11,8 +11,8 @@ module.exports = function (gossip, config, server) {
   ;(isArray(seeds)  ? seeds : [seeds]).filter(Boolean)
   .forEach(function (addr) { gossip.add(addr, 'seed') })
 
-  // populate peertable with pub announcements on the feed
-  if(!config.gossip || config.gossip.pub !== false)
+  // populate peertable with pub announcements on the feed (allow this to be disabled via config)
+  if(!config.gossip || (config.gossip.autoPopulate !== false && config.gossip.pub !== false))
     pull(
       server.messagesByType({
         type: 'pub', live: true, keys: false
