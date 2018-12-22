@@ -69,7 +69,7 @@
     "ssb-server": "./bin.js"
   },
   "scripts": {
-    "start": "node bin server",
+    "start": "node bin start",
     "prepublishOnly": "npm ls && npm test",
     "test": "set -e; for t in test/*.js; do node $t; done"
   },
