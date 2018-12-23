@@ -166,6 +166,11 @@ function (gossip, config, server) {
 
       var connectedFriends = peers.filter(and(isConnect, isFriend)).length
 
+      if(conf('friends', true))
+        connect(peers, ts, 'friends', isFriend, {
+          quota: 3, factor: 2e3, max: 10*min, groupMin: 1e3,
+        })
+
       if(conf('seed', true))
         connect(peers, ts, 'seeds', isSeed, {
           quota: 3, factor: 2e3, max: 10*min, groupMin: 1e3,
@@ -231,20 +236,20 @@ function (gossip, config, server) {
     if(timer.unref) timer.unref()
   }
 
-    pull(
-      gossip.changes(),
-      pull.drain(function (ev) {
-        if(ev.type == 'disconnect')
-          connections()
-      }, function () {
-        console.warn('[gossip/dc] warning: this can happen if the database closes', arguments)
-      })
-    )
+  pull(
+    gossip.changes(),
+    pull.drain(function (ev) {
+      if(ev.type == 'disconnect')
+        connections()
+    }, function () {
+      console.warn('[gossip/dc] warning: this can happen if the database closes', arguments)
+    })
+  )
 
-    var int = setInterval(connections, 2e3)
-    if(int.unref) int.unref()
+  var int = setInterval(connections, 2e3)
+  if(int.unref) int.unref()
 
-    connections()
+  connections()
 
   return function onClose () {
     closed = true
@@ -260,6 +265,3 @@ exports.isLocal = isLocal
 exports.isFriend = isFriend
 exports.isConnectedOrConnecting = isConnect
 exports.select = select
-
-
-
