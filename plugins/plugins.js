@@ -186,16 +186,25 @@ module.exports.loadUserPlugins = function (createSsbServer, config) {
   //instead of testing all plugins, only load things explicitly
   //enabled in the config
   for(var module_name in config.plugins) {
-    if(config.plugins[module_name]) {
-    var name = config.plugins[module_name]
-    if(name === true)
-      name = /^ssb-/.test(module_name) ? module_name.substring(4) : module_name
+    const configv = config.plugins[module_name]
+    if(configv) {
+      const name = /^ssb-/.test(module_name) ? module_name.substring(4) : module_name
 
-    if (createSsbServer.plugins.some(plug => plug.name === name))
-      throw new Error('already loaded plugin named:'+name)
-      var plugin = require(path.join(nodeModulesPath, module_name))
-      if(!plugin || plugin.name !== name)
-        throw new Error('plugin at:'+module_name+' expected name:'+name+' but had:'+(plugin||{}).name)
+      if (createSsbServer.plugins.some(plug => plug.name === name))
+        throw new Error('already loaded plugin named:'+name)
+
+      let plugin = null
+      if (typeof configv === 'object') {
+        plugin = require('ssb-plugins2/load')(configv.location)
+        plugin.name = name
+      } else if (typeof configv === 'boolean') {
+        plugin = require(path.join(nodeModulesPath, module_name))
+        if(!plugin || plugin.name !== name)
+          throw new Error('plugin at:'+module_name+' expected name:'+name+' but had:'+(plugin||{}).name)
+      } else {
+          throw new Error('plugin at:'+module_name+' unhandled config type:' + (typeof configv))
+      }
+
       assertSsbServerPlugin(plugin)
       createSsbServer.use(plugin)
     }
