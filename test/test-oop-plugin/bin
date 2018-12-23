@@ -1,0 +1,25 @@
+#! /usr/bin/env node
+
+var { close, remoteCall } = require('ssb-plugins2/wrapper')({
+  hello: (name, cb) => {
+    console.error('HELLLLOOO', name)
+    cb(null, 'hello ' + name)
+  },
+  goodbye: (cb) => {
+    cb(null, "done")
+    process.nextTick(() => {
+      close()
+    })
+  },
+  callwhoami: (cb) => {
+    remoteCall('async', 'whoami', [], (err, who) => {
+      if (err) throw err
+      cb(err, who)
+    })
+  },
+},
+  // our manifest is needed, because the
+  // calls have a type that must match what we actually
+  // understand.
+  require('./manifest'))
+

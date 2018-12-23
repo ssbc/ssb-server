@@ -196,6 +196,7 @@ module.exports.loadUserPlugins = function (createSsbServer, config) {
       let plugin = null
       if (typeof configv === 'object') { // out-of-process plugin
         plugin = require('ssb-plugins2/load')(configv.location)
+        if (!plugin.name) plugin.name = name
       } else if (typeof configv === 'boolean') {
         plugin = require(path.join(nodeModulesPath, module_name))
       } else if (typeof configv === 'string') { // overwrite name

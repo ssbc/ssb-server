@@ -1,0 +1,5 @@
+{
+  "hello": "async",
+  "callwhoami": "async",
+  "goodbye": "async"
+}
