@@ -188,7 +188,7 @@ module.exports.loadUserPlugins = function (createSsbServer, config) {
   for (var module_name in config.plugins) {
     const configv = config.plugins[module_name]
     if (configv) {
-      const name = /^ssb-/.test(module_name) ? module_name.substring(4) : module_name
+      let name = /^ssb-/.test(module_name) ? module_name.substring(4) : module_name
 
       if (createSsbServer.plugins.some(plug => plug.name === name))
         throw new Error('already loaded plugin named:'+name)
@@ -198,6 +198,10 @@ module.exports.loadUserPlugins = function (createSsbServer, config) {
         plugin = require('ssb-plugins2/load')(configv.location)
       } else if (typeof configv === 'boolean') {
         plugin = require(path.join(nodeModulesPath, module_name))
+      } else if (typeof configv === 'string') { // overwrite name
+        plugin = require(path.join(nodeModulesPath, module_name))
+        name = configv
+        plugin.name = name
       } else {
           throw new Error(`plugin at:${module_name} unhandled config type: ${typeof configv}`)
       }
