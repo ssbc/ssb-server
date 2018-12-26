@@ -92,27 +92,28 @@ tape('install and load plugins', function (t) {
   })
 
   t.test('out-of-process plugin', function (t) {
-    const plugName = 'test-oop-plugin'
 
     const config = {
       path: datadirPath,
       port: 45451, host: 'localhost',
       keys: aliceKeys,
       plugins: {
-        'test-oop-plugin': { location: path.join(__dirname, plugName) }
+        'test-oop-plugin': { location: path.join(__dirname, 'test-oop-plugin') }
       }
     }
     resetSsbServer()
     require('../plugins/plugins').loadUserPlugins(createSsbServer, config)
     var ssbServer = createSsbServer(config)
 
+    const plugName = 'testOopPlugin'
     t.ok(ssbServer[plugName])
 
     ssbServer[plugName].hello('ping', function (err, res) {
       if (err) throw err
-      t.equal(res, 'ping pong')
+      t.equal(res, 'hello ping')
       ssbServer[plugName].goodbye( function(err, done) {
         if (err) throw err
+        t.equal(done, 'done')
         ssbServer.close(function () {
           t.end()
         })
