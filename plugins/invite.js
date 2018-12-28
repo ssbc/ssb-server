@@ -81,7 +81,13 @@ module.exports = {
         else if(isFunction(opts))
           cb = opts, opts = {}
 
-        var addr = getInviteAddress().split(';').shift()
+        var addr = getInviteAddress()
+        if(!addr) return cb(new Error(
+          'no address available for creating an invite,'+
+          'configuration needed for server.\n'+
+          'see: https://github.com/ssbc/ssb-config/#connections'
+        ))
+        addr = addr.split(';').shift()
         var host = ref.parseAddress(addr).host
         if(typeof host !== 'string') {
           return cb(new Error('Could not parse host portion from server address:' + addr))
