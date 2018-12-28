@@ -73,7 +73,7 @@ tape('construct and analyze graph', function (t) {
       alice.add({
         type: 'contact', contact: bob.id,
         following: true,
-        flagged: { reason: 'foo' }
+//        flagged: { reason: 'foo' }
       }),
       alice.add(u.follow(carol.id)),
       bob.add(u.follow(alice.id)),
@@ -84,57 +84,11 @@ tape('construct and analyze graph', function (t) {
       carol.add(u.follow(alice.id))
     ]) (function (err, results) {
       if(err) throw err
-
-      console.log(live)
       ssbServer.friends.hops(function (err, hops) {
         if(err) throw err
         t.deepEqual(live, hops)
         t.end()
       })
-
-//      cont.para([
-//        cont(ssbServer.friends.all)(),
-//        cont(ssbServer.friends.all)('follow'),
-//        cont(ssbServer.friends.all)('flag'),
-//
-//        cont(ssbServer.friends.hops)(alice.id),
-//        cont(ssbServer.friends.hops)(alice.id, 'follow'),
-//        cont(ssbServer.friends.hops)(alice.id, 'flag'),
-//
-//        cont(ssbServer.friends.hops)(bob.id, 'follow'),
-//        cont(ssbServer.friends.hops)(bob.id, 'flag'),
-//
-//        cont(ssbServer.friends.hops)(carol.id, 'follow'),
-//        cont(ssbServer.friends.hops)(carol.id, 'flag')
-//      ], function (err, results) {
-//        if(err) throw err
-//
-//        var aliasMap = {}
-//        aliasMap[alice.id] = 'alice'
-//        aliasMap[bob.id]   = 'bob'
-//        aliasMap[carol.id] = 'carol'
-//
-//        a = toAliases(aliasMap)
-//
-//        results = results.map(a)
-//        var i = 0
-//
-//        t.deepEqual(results[i++], { alice: { bob: true, carol: true }, bob: { alice: true }, carol: { alice: true } })
-//        t.deepEqual(results[i++], { alice: { bob: true, carol: true }, bob: { alice: true }, carol: { alice: true } })
-//        t.deepEqual(results[i++], { alice: { bob: { reason: 'foo' } }, bob: { carol: true }, carol: {} })
-//
-//        t.deepEqual(results[i++], { alice: 0, bob: 1, carol: 1 })
-//        t.deepEqual(results[i++], { alice: 0, bob: 1, carol: 1 })
-//        t.deepEqual(results[i++], { alice: 0, bob: 1, carol: 2 })
-//
-//        t.deepEqual(results[i++], { bob: 0, alice: 1, carol: 2 })
-//        t.deepEqual(results[i++], { bob: 0, carol: 1 })
-//
-//        t.deepEqual(results[i++], { carol: 0, alice: 1, bob: 2 })
-//        t.deepEqual(results[i++], { carol: 0 })
-//
-//        t.end()
-//      })
     })
   })
 
@@ -176,7 +130,7 @@ tape('construct and analyze graph', function (t) {
 
 tape('correctly delete edges', function (t) {
   //XXX
-  return t.end()
+  //return t.end()
   var aliceKeys = ssbKeys.generate()
 
   var ssbServer = createSsbServer({
@@ -215,44 +169,11 @@ tape('correctly delete edges', function (t) {
       }),
       bob.add(u.unfollow(carol.id))
     ]) (function () {
-
-//      cont.para([
-//        cont(ssbServer.friends.all)('follow'),
-//        cont(ssbServer.friends.all)('flag'),
-//
-//        cont(ssbServer.friends.hops)(alice.id, 'follow'),
-//        cont(ssbServer.friends.hops)(alice.id, 'flag'),
-//
-//        cont(ssbServer.friends.hops)(bob.id, 'follow'),
-//        cont(ssbServer.friends.hops)(bob.id, 'flag'),
-//
-//        cont(ssbServer.friends.hops)(carol.id, 'follow'),
-//        cont(ssbServer.friends.hops)(carol.id, 'flag')
-//      ], function (err, results) {
-//
-//        var aliasMap = {}
-//        aliasMap[alice.id] = 'alice'
-//        aliasMap[bob.id]   = 'bob'
-//        aliasMap[carol.id] = 'carol'
-//        a = toAliases(aliasMap)
-//
-//        results = results.map(a)
-//        var i = 0
-//
-//        t.deepEqual(results[i++], { alice: { bob: true }, bob: { alice: true }, carol: { alice: true } })
-//        t.deepEqual(results[i++],  { alice: { carol: true }, bob: { carol: { reason: 'foo' }}, carol: {} })
-//
-//        t.deepEqual(results[i++], { alice: 0, bob: 1 })
-//        t.deepEqual(results[i++], { alice: 0, carol: 1 })
-//
-//        t.deepEqual(results[i++], { bob: 0, alice: 1 })
-//        t.deepEqual(results[i++], { bob: 0, carol: 1 })
-//
-//        t.deepEqual(results[i++], { carol: 0, alice: 1, bob: 2 })
-//        t.deepEqual(results[i++], { carol: 0 })
-//
-//        t.end()
-//      })
+      ssbServer.friends.hops(function (err, hops) {
+        if(err) throw err
+        t.deepEqual(live, hops)
+        t.end()
+      })
     })
   })
 
@@ -270,6 +191,7 @@ tape('correctly delete edges', function (t) {
 
   t.test('cleanup', function (t) {
     ssbServer.close()
+
     t.end()
   })
 
@@ -361,5 +283,10 @@ tape('indirect friends', function (t) {
   })
 
 })
+
+
+
+
+
 
 
