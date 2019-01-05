@@ -12,9 +12,9 @@ var u = require('./util')
 // and get them to follow each other...
 
 var createSsbServer = require('../')
-  .use(require('../plugins/replicate'))
+  .use(require('ssb-replicate'))
   .use(require('ssb-friends'))
-  .use(require('../plugins/gossip'))
+  .use(require('ssb-gossip'))
   .use(require('../plugins/logging'))
 
 var createHash = require('crypto').createHash
