@@ -1,5 +1,10 @@
 #! /usr/bin/env bash
 
+#symlink to self, so that modules load the right thing
+cd node_modules
+ln -s ../ ssb-server
+cd ..
+
 set -e
 test () {
   echo "## TESTING DEPENDENCY: $1"
