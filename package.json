@@ -78,7 +78,7 @@
   "scripts": {
     "start": "node bin server",
     "prepublishOnly": "npm ls && npm test",
-    "test": "set -e; for t in test/*.{js,sh}; do node $t; done"
+    "test": "set -e; for t in test/*.js; do echo TEST $t; node $t; done && ./test/deps.sh"
   },
   "author": "Paul Frazee <pfrazee@gmail.com>",
   "license": "MIT"
