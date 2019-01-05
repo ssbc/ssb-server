@@ -163,13 +163,13 @@ function usage (cmd) {
   return mdm.usage(apidocs._, cmd)
 }
 
-function createSsbServer() {
+function createSsbServer(startedCb) {
   return SecretStack({
     //this is just the default app key.
     //it can be overridden by passing a appKey as option
     //when creating a SsbServer instance.
     appKey: require('./lib/ssb-cap')
-  })
+  }, startedCb)
     .use(SSB)
 }
 module.exports = createSsbServer()
