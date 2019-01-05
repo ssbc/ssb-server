@@ -8,14 +8,16 @@ var rimraf     = require('rimraf')
 var mdm        = require('mdmanifest')
 var cmdAliases = require('./lib/cli-cmd-aliases')
 var valid      = require('./lib/validators')
-var apidocs    = require('./lib/apidocs.js')
 var pkg        = require('./package.json')
+var path       = require('path')
+var fs         = require('fs')
 
 function isString(s) { return 'string' === typeof s }
 function isObject(o) { return 'object' === typeof o }
 function isFunction (f) { return 'function' === typeof f }
 // create SecretStack definition
-var manifest = mdm.manifest(apidocs._)
+
+var manifest = mdm.manifest(fs.readFileSync(path.join(__dirname, 'api.md'), 'utf8'))
 manifest.seq = 'async'
 manifest.usage = 'sync'
 manifest.clock = 'async'
@@ -174,8 +176,5 @@ function createSsbServer() {
 }
 module.exports = createSsbServer()
 module.exports.createSsbServer = createSsbServer
-
-
-
 
 
