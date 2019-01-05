@@ -14,12 +14,11 @@ var mv = require('mv')
 var mdm = require('mdmanifest')
 var explain = require('explain-error')
 var valid = require('../lib/validators')
-var apidoc = require('../lib/apidocs').plugins
 
 module.exports = {
   name: 'plugins',
   version: '1.0.0',
-  manifest: mdm.manifest(apidoc),
+  manifest: mdm.manifest(fs.readFileSync(path.join(__dirname, 'plugins.md'), 'utf8')),
   permissions: {
     master: {allow: ['install', 'uninstall', 'enable', 'disable']}
   },
@@ -225,5 +224,6 @@ function validatePluginName (name) {
     return false
   return true
 }
+
 
 
