@@ -49,7 +49,7 @@
     "ssb-db": "^18.6.2",
     "ssb-ebt": "^5.3.5",
     "ssb-friends": "^3.1.12",
-    "ssb-gossip": "^1.0.1",
+    "ssb-gossip": "^1.0.3",
     "ssb-invite": "^2.0.0",
     "ssb-keys": "^7.1.1",
     "ssb-links": "^3.0.2",
