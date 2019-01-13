@@ -9,7 +9,7 @@ var carolKeys = ssbKeys.generate()
 
 var createSsbServer = 
   require('secret-stack')(require('./defaults'))
-    .use(require('ssb-db/plugin'))
+    .use(require('ssb-db'))
   .use(require('../plugins/master'))
 var caps = {
   shs: require('crypto').randomBytes(32).toString('base64')

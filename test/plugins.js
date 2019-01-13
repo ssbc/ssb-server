@@ -7,7 +7,7 @@ var path    = require('path')
 var fs      = require('fs')
 var createSsbServer = 
   require('secret-stack')(require('./defaults'))
-    .use(require('ssb-db/plugin'))
+    .use(require('ssb-db'))
 
 var initialPlugins = createSsbServer.plugins.slice()
 function resetSsbServer () {

@@ -13,7 +13,7 @@ var u = require('./util')
 
 var createSsbServer =
   require('secret-stack')(require('./defaults'))
-    .use(require('ssb-db/plugin'))
+    .use(require('ssb-db'))
     .use(require('ssb-replicate'))
     .use(require('ssb-friends'))
     .use(require('ssb-gossip'))
