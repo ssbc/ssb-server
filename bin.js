@@ -109,6 +109,7 @@ if (argv[0] == 'start') {
         var serverAddr = (config.host || 'localhost') + ":" + config.port;
         console.error('Error: Could not connect to ssb-server ' + serverAddr)
         console.error('Use the "start" command to start it.')
+        console.error('Use --verbose option to see full error')
         if(config.verbose) throw err
         process.exit(1)
       }
@@ -166,4 +167,6 @@ if (argv[0] == 'start') {
     muxrpcli(argv, manifest, rpc, config.verbose)
   })
 }
+
+
 
