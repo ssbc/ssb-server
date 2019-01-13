@@ -72,7 +72,7 @@
     "tape": "^4.9.1"
   },
   "bin": {
-    "sbot": "./sbot.js",
+    "sbot": "./bin.js",
     "ssb-server": "./bin.js"
   },
   "scripts": {
