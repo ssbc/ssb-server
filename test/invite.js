@@ -109,9 +109,13 @@ tape('test invite.accept doesnt follow if already followed', function (t) {
           if(err) throw err
           t.equal(ary.length, 1)
 
+          //it's rare, but some times, someone's home computer has a public address.
+          //this makes the tests fail unless we get the address the same way as invite code.
+          var expected = alice.address('public') || alice.address('local') || alice.address('device')
+
           t.deepEqual({
             type: 'pub',
-            address: ref.parseAddress(alice.address('local').split(';').shift()),
+            address: ref.parseAddress(expected.split(';').shift()),
           }, ary[0].value.content)
 
           all(bob.messagesByType('contact'), function (err, ary) {
@@ -169,9 +173,18 @@ tape('test invite.accept api with ipv6', { skip: skipIPv6 }, function (t) {
     // use a local ipv6 address in the invite
 
     var inviteV6
-        
      = invite.replace(/localhost|([0-9.]*)/, '::1')
-    console.log(inviteV6, invite)
+
+//    var parts = invite.split(':')
+//    parts[0].split(':').pop()
+//    console.log(inviteV6, invite)
+    var parts = invite.split('~')
+
+    var addr = ref.parseAddress(parts[0])
+
+    addr.host = '::1'
+
+    var inviteV6 = addr.host + ':'+ addr.port + ':' + addr.key + '~' + parts[1]
 
     bob.invite.accept(inviteV6, function (err, msg) {
       if(err) throw err
@@ -310,5 +323,6 @@ tape('test invite with note', function (t) {
     })
   })
 })
+
 
 
