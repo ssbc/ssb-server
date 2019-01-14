@@ -36,15 +36,13 @@ There are already several applications built on ssb-server,
 one of the best ways to learn about secure-scuttlebutt is to poke around in these applications.
 
 * [patchwork](http://github.com/ssbc/patchwork) is a discussion platform that we use to anything and everything concerning ssb and decentralization.
-* [patchbay](http://github.com/dominictarr/patchbay) is another take on patchwork - it's compatible, less polished, but more modular. The main goal of patchbay is to be very easy to add features to.
+* [patchbay](http://github.com/ssbc/patchbay) is another take on patchwork - it's compatible, less polished, but more modular. The main goal of patchbay is to be very easy to add features to.
 * [git-ssb](https://github.com/clehner/git-ssb) is git (& github!) on top of secure-scuttlebutt. Although we still keep our repos on github, primary development is via git-ssb.
 
 it is recommended to get started with patchwork, and then look into git-ssb and patchbay.
 
-## Example Usage
+## Example Usage (bash)
 ```bash
-# In bash:
-
 # Start the server with extra log detail
 # Leave this running in its own terminal/window
 ssb-server start --logging.level=info
@@ -61,19 +59,45 @@ ssb-server log
 # stream all messages by one feed, ordered by sequence number
 ssb-server hist --id $FEED_ID
 ```
-```js
-// In javascript:
+## Example Usage (js)
 
+```js
+var Server = require('ssb-server')
+var config = require('ssb-config')
+var fs = require('fs')
+var path = require('path')
+
+// add plugins
+Server
+  .use(require('ssb-server/plugins/master'))
+  .use(require('ssb-server/plugins/gossip'))
+  .use(require('ssb-server/plugins/replicate'))
+  .use(require('ssb-backlinks'))
+
+var server = Server(config)
+
+// save an updated list of methods this server has made public
+// in a location that ssb-client will know to check
+var manifest = server.getManifest()
+fs.writeFileSync(
+  path.join(config.path, 'manifest.json'), // ~/.ssb/manifest.json
+  JSON.stringify(manifest)
+)
+```
+see: [github.com/ssbc/**ssb-config**](https://github.com/ssbc/ssb-config) for custom configuration.
+
+elsewhere: 
+```js
 var pull = require('pull-stream')
-var ssbClient = require('ssb-client')
+var Client = require('ssb-client')
 
 // create a ssb-server client using default settings
-// (server at localhost:8080, using key found at ~/.ssb/secret)
-ssbClient(function (err, ssbServer) {
+// (server at localhost:8080, using key found at ~/.ssb/secret, and manifest we wrote to `~/.ssb/manifest.json` above)
+Client(function (err, server) {
   if (err) throw err
 
   // publish a message
-  ssbServer.publish({ type: 'post', text: 'My First Post!' }, function (err, msg) {
+  server.publish({ type: 'post', text: 'My First Post!' }, function (err, msg) {
     // msg.key           == hash(msg.value)
     // msg.value.author  == your id
     // msg.value.content == { type: 'post', text: 'My First Post!' }
@@ -82,7 +106,7 @@ ssbClient(function (err, ssbServer) {
 
   // stream all messages in all feeds, ordered by publish time
   pull(
-    ssbServer.createFeedStream(),
+    server.createFeedStream(),
     pull.collect(function (err, msgs) {
       // msgs[0].key == hash(msgs[0].value)
       // msgs[0].value...
@@ -91,7 +115,7 @@ ssbClient(function (err, ssbServer) {
 
   // stream all messages in all feeds, ordered by receive time
   pull(
-    ssbServer.createLogStream(),
+    server.createLogStream(),
     pull.collect(function (err, msgs) {
       // msgs[0].key == hash(msgs[0].value)
       // msgs[0].value...
@@ -100,7 +124,7 @@ ssbClient(function (err, ssbServer) {
 
   // stream all messages by one feed, ordered by sequence number
   pull(
-    ssbServer.createHistoryStream({ id: < feedId > }),
+    server.createHistoryStream({ id: < feedId > }),
     pull.collect(function (err, msgs) {
       // msgs[0].key == hash(msgs[0].value)
       // msgs[0].value...
@@ -130,7 +154,10 @@ Therefore, by itself, it would probably make a poor choice for implementing a cr
 
 - [Install](https://ssbc.github.io/docs/scuttlebot/install.html) - Setup instructions
 - [Tutorial](https://ssbc.github.io/docs/scuttlebot/tutorial.html) - Primer on developing with ssb-server
-- [API / CLI Reference](https://scuttlebot.io/apis/scuttlebot/ssb.html)
+- [API / CLI Reference](https://scuttlebot.io/apis/scuttlebot/ssb.html) (out of date, but still the best reference)
+- [ssb-config](https://github.com/ssbc/ssb-config) - a module which helps build config to start ssb-server with
+- [ssb-client](https://github.com/ssbc/ssb-client) - make a remote connection to the server
+- [Modules docs](https://modules.scuttlebutt.nz) - see an overview of all the modules
 
 ### Key Concepts
 
