@@ -246,7 +246,8 @@ test('ssb-server client should work without options', function(t) {
       'device',
       '--path', path,
       '--config', path+'/config',
-      '--caps.shs', caps
+      '--caps.shs', caps,
+      '--verbose'
     ].join(' '), {
       env: Object.assign({}, process.env, {ssb_appname: 'test'})
     }, function(err, stdout, sderr) {
