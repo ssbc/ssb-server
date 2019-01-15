@@ -45,7 +45,7 @@
     "secret-stack": "^5.1.0",
     "ssb-blobs": "^1.1.4",
     "ssb-client": "^4.5.7",
-    "ssb-config": "^2.3.9",
+    "ssb-config": "^3.0.0",
     "ssb-db": "^18.6.2",
     "ssb-ebt": "^5.1.4",
     "ssb-friends": "^3.1.3",
