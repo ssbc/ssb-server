@@ -6,7 +6,6 @@ var pull         = require('pull-stream')
 var toPull       = require('stream-to-pull-stream')
 var File         = require('pull-file')
 var explain      = require('explain-error')
-var ssbKeys      = require('ssb-keys')
 var Config       = require('ssb-config/inject')
 var Client       = require('ssb-client')
 var createHash   = require('multiblob/util').createHash
@@ -25,17 +24,11 @@ argv = ~i ? argv.slice(0, i) : argv
 
 var config = Config(process.env.ssb_appname, minimist(conf))
 
-// TODO when ssb-config includes keys by default, rm this
-if (!config.keys) {
-  config.keys = ssbKeys.loadOrCreateSync(path.join(config.path, 'secret'))
-}
 if (config.keys.curve === 'k256')
   throw new Error('k256 curves are no longer supported,'+
                   'please delete' + path.join(config.path, 'secret'))
 
 var manifestFile = path.join(config.path, 'manifest.json')
-
-console.log('>>>>', JSON.stringify(config, null, 2))
 
 if (argv[0] == 'server') {
   console.log('WARNING-DEPRECATION: `sbot server` has been renamed to `ssb-server start`')
@@ -101,12 +94,11 @@ if (argv[0] == 'start') {
 
   var opts = {
     manifest: manifest,
-    port: getPort(config),
-    host: getHost(config),
+    port: config.port,
+    host: config.host || 'localhost',
     caps: config.caps,
     key: config.key || config.keys.id
   }
-  console.log('OOOOOpts', opts)
 
   // connect
   Client(config.keys, opts, function (err, rpc) {
@@ -170,31 +162,4 @@ if (argv[0] == 'start') {
     // run commandline flow
     muxrpcli(argv, manifest, rpc, config.verbose)
   })
-}
-
-function getConnection (config) {
-  return config.connections &&
-    config.connections.incoming &&
-    config.connections.incoming.net &&
-    config.connections.incoming.net.find(function (transport) {
-      return transport.scope === 'public' &&
-        transport.port
-    })
-}
-
-function getPort (config) {
-  return config.port // TEMP
-  var connection = getConnection(config)
-
-  if (connection && connection.port) return connection.port
-  return config.port
-}
-
-function getHost (config) {
-  return config.host || 'localhost' // TEMP
-  var connection = getConnection(config)
-
-  if (connection && connection.host) return connection.host
-  if (config.host) return config.host
-  return 'localhost'
 }
