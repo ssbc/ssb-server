@@ -48,11 +48,11 @@ if (argv[0] == 'start') {
     .use(require('./plugins/no-auth'))
     .use(require('./plugins/plugins'))
     .use(require('./plugins/master'))
-    .use(require('./plugins/gossip'))
-    .use(require('./plugins/replicate'))
+    .use(require('ssb-gossip'))
+    .use(require('ssb-replicate'))
     .use(require('ssb-friends'))
     .use(require('ssb-blobs'))
-    .use(require('./plugins/invite'))
+    .use(require('ssb-invite'))
     .use(require('./plugins/local'))
     .use(require('./plugins/logging'))
     .use(require('ssb-query'))
@@ -106,6 +106,7 @@ if (argv[0] == 'start') {
       if (/could not connect/.test(err.message)) {
         console.error('Error: Could not connect to ssb-server ' + opts.host + ':' + opts.port)
         console.error('Use the "start" command to start it.')
+        console.error('Use --verbose option to see full error')
         if(config.verbose) throw err
         process.exit(1)
       }
@@ -163,3 +164,4 @@ if (argv[0] == 'start') {
     muxrpcli(argv, manifest, rpc, config.verbose)
   })
 }
+
