@@ -4,10 +4,12 @@ tape('createSsbServer method allows creating multiple servers with the same plug
   var createSsbServer = require('../').createSsbServer
 
   var ssbServer1 = createSsbServer()
-    .use(require('../plugins/replicate'))
+    .use(require('ssb-replicate'))
+
   var ssbServer2 = createSsbServer()
-    .use(require('../plugins/replicate'))
-    .use(require('../plugins/gossip'))
+    .use(require('ssb-replicate'))
+    .use(require('ssb-gossip'))
+
   t.pass()
   t.end()
 })
