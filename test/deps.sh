@@ -13,19 +13,11 @@ test () {
   popd
 }
 
-#test ssb-friends
+
+
+test ssb-friends
 test ssb-blobs
 test ssb-invite
 test ssb-replicate
 test ssb-ebt
-
-
-
-
-
-
-
-
-
-
 
