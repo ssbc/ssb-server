@@ -9,6 +9,7 @@ set -e
 test () {
   echo "## TESTING DEPENDENCY: $1"
   pushd node_modules/$1
+  npm install --only=dev
   npm test
   popd
 }
