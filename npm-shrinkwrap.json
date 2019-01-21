@@ -4902,9 +4902,9 @@
       }
     },
     "ssb-ebt": {
-      "version": "5.3.7",
-      "resolved": "https://registry.npmjs.org/ssb-ebt/-/ssb-ebt-5.3.7.tgz",
-      "integrity": "sha512-oaiCry/pgt5lQb6J5zdsnqiZcO5RgYAt9dcyP+mzhyxQxX1je2kA5FQ8HTXK8D7YuP1T5L8+z8cXmrhuEyr0WA==",
+      "version": "5.3.8",
+      "resolved": "https://registry.npmjs.org/ssb-ebt/-/ssb-ebt-5.3.8.tgz",
+      "integrity": "sha512-RF9HNJi5k2fiZKK9E2pP464UvH+Vi14VMaflfSIst8GD7LHiTEEN0eX1nqtR85/P0pUvLAkKkyCtfuqpnyzhqw==",
       "requires": {
         "base64-url": "^2.2.0",
         "epidemic-broadcast-trees": "^6.3.5",
