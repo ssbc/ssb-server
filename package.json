@@ -46,7 +46,7 @@
     "ssb-client": "^4.5.7",
     "ssb-config": "^3.0.0",
     "ssb-db": "^19.0.0",
-    "ssb-ebt": "^5.3.7",
+    "ssb-ebt": "^5.3.8",
     "ssb-friends": "^3.1.12",
     "ssb-gossip": "^1.0.3",
     "ssb-invite": "^2.0.3",
