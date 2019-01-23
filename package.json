@@ -8,7 +8,6 @@
     "url": "git://github.com/ssbc/ssb-server.git"
   },
   "dependencies": {
-    "atomic-file": "^1.1.5",
     "bash-color": "~0.0.3",
     "broadcast-stream": "^0.2.1",
     "cont": "~1.0.3",
@@ -26,18 +25,10 @@
     "muxrpc-validation": "^2.0.0",
     "muxrpcli": "^1.0.0",
     "mv": "^2.1.1",
-    "observ-debounce": "^1.1.1",
-    "obv": "0.0.1",
-    "on-change-network": "0.0.2",
-    "on-wakeup": "^1.0.0",
     "osenv": "^0.1.5",
     "pull-cat": "~1.1.5",
     "pull-file": "^1.0.0",
     "pull-many": "~1.0.6",
-    "pull-next": "^1.0.0",
-    "pull-notify": "0.1.1",
-    "pull-paramap": "~1.2.1",
-    "pull-ping": "^2.0.2",
     "pull-pushable": "^2.2.0",
     "pull-stream": "^3.6.2",
     "rimraf": "^2.4.2",
@@ -46,7 +37,7 @@
     "ssb-client": "^4.5.7",
     "ssb-config": "^3.0.0",
     "ssb-db": "^19.0.0",
-    "ssb-ebt": "^5.3.7",
+    "ssb-ebt": "^5.3.8",
     "ssb-friends": "^3.1.12",
     "ssb-gossip": "^1.0.3",
     "ssb-invite": "^2.0.3",
@@ -57,7 +48,6 @@
     "ssb-ref": "^2.13.9",
     "ssb-replicate": "^1.0.4",
     "ssb-ws": "^5.1.1",
-    "statistics": "^3.0.0",
     "stream-to-pull-stream": "^1.6.10",
     "zerr": "^1.0.0"
   },
@@ -77,7 +67,8 @@
   "scripts": {
     "start": "node bin server",
     "prepublishOnly": "npm ls && npm test",
-    "test": "set -e; for t in test/*.js; do echo TEST $t; node $t; done && ./test/deps.sh"
+    "test": "set -e; npm ls --package-lock && for t in test/*.js; do echo TEST $t; node $t; done && ./test/deps.sh",
+    "reinstall": "rm -rf node_modules && npm install --package-lock && npm shrinkwrap"
   },
   "author": "Paul Frazee <pfrazee@gmail.com>",
   "license": "MIT"
