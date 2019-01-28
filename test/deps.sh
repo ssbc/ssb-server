@@ -6,15 +6,21 @@ ln -s ../ ssb-server
 cd ..
 
 set -e
+
+name () {
+  while read r
+  do
+    echo "$1": $r
+  done
+}
+
 test () {
   echo "## TESTING DEPENDENCY: $1"
   pushd node_modules/$1
   npm install --only=dev
-  npm test
+  npm test | name $1
   popd
 }
-
-
 
 test ssb-friends
 test ssb-blobs
