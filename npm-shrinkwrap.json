@@ -4943,12 +4943,13 @@
       }
     },
     "ssb-gossip": {
-      "version": "1.0.3",
-      "resolved": "https://registry.npmjs.org/ssb-gossip/-/ssb-gossip-1.0.3.tgz",
-      "integrity": "sha512-PpvMB2ZrFTnvB7BzVc6ulljukdw83HRMN/6yUXL2zwMYUEWbfH1Z18mZSWLbk8rkxlpOdH4i5cslxuq/eIek/A==",
+      "version": "1.0.4",
+      "resolved": "https://registry.npmjs.org/ssb-gossip/-/ssb-gossip-1.0.4.tgz",
+      "integrity": "sha512-h7Vf+bZGC+3WRVMDwFysV30cHGVekZKPPXCkIfG6fseqisSDpp/nz1hj713ZrCS8agOzTtaJoM1x2iHWQg+/PQ==",
       "requires": {
         "atomic-file": "^1.1.5",
         "deep-equal": "^1.0.1",
+        "has-network": "0.0.1",
         "ip": "^1.1.5",
         "mdmanifest": "^1.0.8",
         "muxrpc-validation": "^3.0.0",
