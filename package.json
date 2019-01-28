@@ -7,6 +7,16 @@
     "type": "git",
     "url": "git://github.com/ssbc/ssb-server.git"
   },
+  "bin": {
+    "sbot": "./bin.js",
+    "ssb-server": "./bin.js"
+  },
+  "scripts": {
+    "start": "node bin server",
+    "prepublishOnly": "npm ls && npm test",
+    "test": "set -e; npm ls --package-lock && for t in test/*.js; do echo TEST $t; node $t; done && ./test/deps.sh",
+    "reinstall": "rm -rf node_modules && npm install --package-lock && npm shrinkwrap"
+  },
   "dependencies": {
     "bash-color": "~0.0.3",
     "broadcast-stream": "^0.2.1",
@@ -59,16 +69,6 @@
     "run-series": "^1.1.8",
     "ssb-generate": "^1.0.1",
     "tape": "^4.9.1"
-  },
-  "bin": {
-    "sbot": "./bin.js",
-    "ssb-server": "./bin.js"
-  },
-  "scripts": {
-    "start": "node bin server",
-    "prepublishOnly": "npm ls && npm test",
-    "test": "set -e; npm ls --package-lock && for t in test/*.js; do echo TEST $t; node $t; done && ./test/deps.sh",
-    "reinstall": "rm -rf node_modules && npm install --package-lock && npm shrinkwrap"
   },
   "author": "Paul Frazee <pfrazee@gmail.com>",
   "license": "MIT"
