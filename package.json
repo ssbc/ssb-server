@@ -59,6 +59,8 @@
     "zerr": "^1.0.0"
   },
   "devDependencies": {
+    "multiserver-address": "^1.0.1",
+    "ssb-keys": "^7.1.4",
     "tape": "^4.9.1"
   },
   "author": "Paul Frazee <pfrazee@gmail.com>",

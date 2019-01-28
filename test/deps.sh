@@ -7,6 +7,8 @@ cd ..
 
 set -e
 
+installed=$(for m in $(npm ls --only=prod --parseable --depth=0); do basename $m; done)
+
 name () {
   while read r
   do
@@ -17,6 +19,11 @@ name () {
 test () {
   echo "## TESTING DEPENDENCY: $1"
   pushd node_modules/$1
+  npm install --only=dev
+  pushd node_modules
+  # remove duplicates of upstream deps
+  rm -rf $installed
+  popd
   npm test | name $1
   popd
 }
