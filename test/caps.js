@@ -11,11 +11,13 @@ var u = require('./util')
 // give them all pub servers (on localhost)
 // and get them to follow each other...
 
-var createSsbServer = require('../')
-  .use(require('../plugins/replicate'))
-  .use(require('ssb-friends'))
-  .use(require('../plugins/gossip'))
-  .use(require('../plugins/logging'))
+var createSsbServer =
+  require('secret-stack')(require('./defaults'))
+    .use(require('ssb-db'))
+    .use(require('ssb-replicate'))
+    .use(require('ssb-friends'))
+    .use(require('ssb-gossip'))
+    .use(require('../plugins/logging'))
 
 var createHash = require('crypto').createHash
 
@@ -110,5 +112,6 @@ tape('cleanup', function (t) {
   dbC.close()
   t.end()
 })
+
 
 
