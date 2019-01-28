@@ -12,7 +12,7 @@
     "ssb-server": "./bin.js"
   },
   "scripts": {
-    "start": "node bin server",
+    "start": "node bin start",
     "prepublishOnly": "npm ls && npm test",
     "test": "set -e; npm ls --package-lock && for t in test/*.js; do echo TEST $t; node $t; done && ./test/deps.sh",
     "reinstall": "rm -rf node_modules && npm install --package-lock && npm shrinkwrap"
