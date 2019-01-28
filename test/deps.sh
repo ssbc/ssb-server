@@ -23,6 +23,10 @@ test () {
   pushd node_modules
   # remove duplicates of upstream deps
   rm -rf $installed
+  if [ $1 = 'ssb-blobs' ]; then
+    # workaround for https://github.com/ssbc/ssb-server/issues/624
+    npm install interleavings@github:fraction/interleavings#debug-console-log
+  fi
   popd
   npm test | name $1
   popd
