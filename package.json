@@ -12,7 +12,7 @@
     "ssb-server": "./bin.js"
   },
   "scripts": {
-    "start": "node bin server",
+    "start": "node bin start",
     "prepublishOnly": "npm ls && npm test",
     "test": "set -e; npm ls --package-lock && for t in test/*.js; do echo TEST $t; node $t; done && ./test/deps.sh",
     "reinstall": "rm -rf node_modules && npm install --package-lock && npm shrinkwrap"
@@ -41,7 +41,7 @@
     "pull-stream": "^3.6.2",
     "rimraf": "^2.4.2",
     "secret-stack": "^6.0.1",
-    "ssb-blobs": "^1.1.9",
+    "ssb-blobs": "^1.1.11",
     "ssb-client": "^4.6.1",
     "ssb-config": "^3.2.3",
     "ssb-db": "^19.0.3",

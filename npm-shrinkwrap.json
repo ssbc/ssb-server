@@ -4222,17 +4222,33 @@
       }
     },
     "ssb-blobs": {
-      "version": "1.1.9",
-      "resolved": "https://registry.npmjs.org/ssb-blobs/-/ssb-blobs-1.1.9.tgz",
-      "integrity": "sha512-CkI12tt5looI54X2dhsMNwoVqVcff471ZgEhew69g2EPByfejryuoOnAZUuQhgYDBLISQj5oID2R+7wCH6yOyQ==",
+      "version": "1.1.11",
+      "resolved": "https://registry.npmjs.org/ssb-blobs/-/ssb-blobs-1.1.11.tgz",
+      "integrity": "sha512-jlFMVrO8QoZU5Gnq/JimVBN2h022LGcPMTTPs3YOgN6r2xtTW94RTjcfaAvasKuhQuFycEUmC7GofEtE3D012Q==",
       "requires": {
         "cont": "^1.0.3",
+        "debug": "^4.1.1",
         "level": "^4.0.0",
         "multiblob": "^1.12.0",
         "pull-level": "^2.0.4",
         "pull-notify": "^0.1.0",
         "pull-stream": "^3.3.0",
         "ssb-ref": "^2.3.0"
+      },
+      "dependencies": {
+        "debug": {
+          "version": "4.1.1",
+          "resolved": "https://registry.npmjs.org/debug/-/debug-4.1.1.tgz",
+          "integrity": "sha512-pYAIzeRo8J6KPEaJ0VWOh5Pzkbw/RetuzehGM7QRRX5he4fPHx2rdKMB256ehJCkX+XRQm16eZLqLNS8RSZXZw==",
+          "requires": {
+            "ms": "^2.1.1"
+          }
+        },
+        "ms": {
+          "version": "2.1.1",
+          "resolved": "https://registry.npmjs.org/ms/-/ms-2.1.1.tgz",
+          "integrity": "sha512-tgp+dl5cGk28utYktBsrFqA7HKgrhgPsg6Z/EfhWI4gl1Hwq8B/GmY/0oXZ6nF8hDVesS/FpnYaD/kOWhYQvyg=="
+        }
       }
     },
     "ssb-client": {
