@@ -5,8 +5,9 @@ const semver = require('semver')
 const debug = require('debug')('ssb-server')
 var install = require('npm-install-package')
 
-if (process.env.NODE_ENV != 'production') {
+debug.enabled = true
 
+if (process.env.NODE_ENV != 'production') {
   const plugins = [
     'ssb-gossip',
     'ssb-blobs',
@@ -67,12 +68,18 @@ if (process.env.NODE_ENV != 'production') {
     debug('installing: %O', devDeps)
     var opts = { saveDev: true, cache: true }
 
+    debug.enabled = true
+    debug('installing new plugin devDependencies')
     install(devDeps, opts, function (err) {
       if (err) throw err
-      debug('done!')
+      // avoid tests passing via Travis CI if dependencies are out-of-date
+      debug('done! please re-run tests with these new dependencies')
+      process.exit(1)
     })
+
+
   } else {
-    debug('plugin devDeps are already up-to-date!')
+    debug('plugin devDeps look great!')
   }
 }
 
