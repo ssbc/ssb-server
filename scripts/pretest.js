@@ -2,7 +2,7 @@
 const fs = require('fs')
 const path = require('path')
 const semver = require('semver')
-const debug = require('debug')('ssb-server')
+const debug = require('debug')('ssb-server:pretest')
 var install = require('npm-install-package')
 
 debug.enabled = true
