@@ -15,7 +15,8 @@
     "start": "node bin start",
     "prepublishOnly": "npm test",
     "test": "rm node_modules/ssb-server; set -e; npm ls --package-lock && for t in test/*.js; do echo TEST $t; node $t; done && ./test/deps.sh",
-    "reinstall": "rm -rf node_modules && npm install --package-lock && npm shrinkwrap"
+    "reinstall": "rm -rf node_modules && npm install --package-lock && npm shrinkwrap",
+    "pretest": "./scripts/pretest.js"
   },
   "dependencies": {
     "bash-color": "~0.0.3",
@@ -65,9 +66,12 @@
     "cat-names": "^2.0.0",
     "dog-names": "~1.0.2",
     "interleavings": "^0.3.1",
+    "npm-install-package": "^2.1.0",
     "pull-bitflipper": "^0.1.0",
+    "rng": "^0.2.2",
     "run-series": "^1.1.8",
     "ssb-generate": "^1.0.1",
+    "ssb-validate": "0.0.0",
     "tape": "^4.9.1"
   },
   "author": "Paul Frazee <pfrazee@gmail.com>",

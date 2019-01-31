@@ -20,9 +20,7 @@ test () {
   pushd node_modules/$1
   set -o pipefail
   npm test | name $1
-#  exit_status=${PIPESTATUS[0]}
   popd
- # exit $exit_status
 }
 
 test ssb-friends
@@ -30,8 +28,4 @@ test ssb-blobs
 test ssb-invite
 test ssb-replicate
 test ssb-ebt
-
-
-
-
 
