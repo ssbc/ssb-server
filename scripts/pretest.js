@@ -5,6 +5,19 @@ const semver = require('semver')
 const debug = require('debug')('ssb-server:pretest')
 var install = require('npm-install-package')
 
+// polyfill!
+if (!Object.entries) {
+  Object.entries = function( obj ){
+    var ownProps = Object.keys( obj ),
+        i = ownProps.length,
+        resArray = new Array(i); // preallocate the Array
+    while (i--)
+      resArray[i] = [ownProps[i], obj[ownProps[i]]];
+    
+    return resArray;
+  };
+}
+
 debug.enabled = true
 
 if (process.env.NODE_ENV != 'production') {
