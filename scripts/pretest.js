@@ -52,7 +52,7 @@ if (process.env.NODE_ENV != 'production') {
     Object.entries(pluginDeps).forEach(e => {
       const [ k, v ] = e
 
-      if (Object.keys(parent).includes(k) === false) {
+      if (Object.keys(parent).includes(k) === false || semver.intersects(parent[k], v) === false) {
         if (k !== 'ssb-server' ) {
           if (needDeps[k] == null) {
             debug('new dependency from %s: %o', plugin, { name: k, range: v })
@@ -60,7 +60,7 @@ if (process.env.NODE_ENV != 'production') {
           } else {
             const pairs = [
               [needDeps[k], v],
-              [parent[k], [v]]
+              [parent[k], v]
             ]
 
             pairs.forEach(pair => {
@@ -74,7 +74,6 @@ if (process.env.NODE_ENV != 'production') {
     })
   })
 
-  // 
   const devDeps = Object.entries(needDeps).map(e => [e[0], e[1]].join('@'))
 
   if (devDeps.length > 0) {
