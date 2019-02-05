@@ -66,7 +66,7 @@
   "devDependencies": {
     "cat-names": "^2.0.0",
     "dog-names": "~1.0.2",
-    "interleavings": "^0.3.1",
+    "interleavings": "^1.0.0",
     "npm-install-package": "^2.1.0",
     "pull-bitflipper": "^0.1.0",
     "rng": "^0.2.2",
