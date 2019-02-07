@@ -26,7 +26,9 @@ if (process.env.NODE_ENV != 'production') {
     'ssb-blobs',
     'ssb-invite',
     'ssb-replicate',
-    'ssb-ebt'
+    'ssb-ebt',
+    'ssb-db',
+    'ssb-ooo'
   ]
 
 
