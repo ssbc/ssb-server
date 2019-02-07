@@ -1,5 +1,5 @@
 var tape = require('tape')
-var util = require('../lib/util')
+//var util = require('../lib/util')
 var ssbKeys = require('ssb-keys')
 var ssbClient = require('ssb-client')
 
