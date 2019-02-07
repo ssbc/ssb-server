@@ -14,9 +14,10 @@
   "scripts": {
     "start": "node bin start",
     "prepublishOnly": "npm test",
-    "test": "rm node_modules/ssb-server; set -e; npm ls --package-lock && for t in test/*.js; do echo TEST $t; node $t; done && ./test/deps.sh",
+    "test": "rm node_modules/ssb-server; set -e; npm ls --package-lock && for t in test/*.js; do echo TEST $t; node $t; done && ./test/deps.sh all",
     "reinstall": "rm -rf node_modules && npm install --package-lock && npm shrinkwrap",
-    "pretest": "./scripts/pretest.js"
+    "pretest": "./scripts/pretest.js",
+    "coverage": "nyc --reporter=lcov npm test"
   },
   "dependencies": {
     "bash-color": "~0.0.3",
@@ -34,7 +35,7 @@
     "multiblob": "^1.13.0",
     "multiserver": "^3.1.2",
     "multiserver-address": "^1.0.1",
-    "muxrpc-validation": "^2.0.0",
+    "muxrpc-validation": "^3",
     "muxrpcli": "^1.0.0",
     "mv": "^2.1.1",
     "osenv": "^0.1.5",
@@ -45,17 +46,17 @@
     "pull-stream": "^3.6.2",
     "rimraf": "^2.4.2",
     "secret-stack": "^6.0.1",
-    "ssb-blobs": "^1.1.11",
-    "ssb-client": "^4.6.1",
+    "ssb-blobs": "^1.1.12",
+    "ssb-client": "^4.6.2",
     "ssb-config": "^3.2.3",
     "ssb-db": "^19.0.3",
-    "ssb-ebt": "^5.3.10",
+    "ssb-ebt": "^5.3.11",
     "ssb-friends": "^3.1.12",
     "ssb-gossip": "^1.0.4",
     "ssb-invite": "^2.0.3",
     "ssb-keys": "^7.1.1",
     "ssb-links": "^3.0.2",
-    "ssb-ooo": "^1.1.0",
+    "ssb-ooo": "^1.1.1",
     "ssb-query": "^2.1.0",
     "ssb-ref": "^2.13.9",
     "ssb-replicate": "^1.0.4",
@@ -66,15 +67,33 @@
   "devDependencies": {
     "cat-names": "^2.0.0",
     "dog-names": "~1.0.2",
+    "hexpp": "^2.0.0",
     "interleavings": "^1.0.0",
     "npm-install-package": "^2.1.0",
+    "nyc": "^13.2.0",
+    "pull-abortable": "^4.1.1",
     "pull-bitflipper": "^0.1.0",
     "rng": "^0.2.2",
     "run-series": "^1.1.8",
     "semver": "^5.6.0",
+    "ssb-feed": "^2.3.0",
     "ssb-generate": "^1.0.1",
-    "ssb-validate": "0.0.0",
-    "tape": "^4.9.1"
+    "ssb-validate": "^4",
+    "tape": "^4.9.1",
+    "typewiselite": "^1.0.0"
+  },
+  "nyc": {
+    "exclude": [
+      "!**/node_modules/",
+      "**/node_modules/**/{test,node_modules}/"
+    ],
+    "include": [
+      "*.js",
+      "lib/*.js",
+      "plugins/*.js",
+      "node_modules/{ssb-*,flume*,secret-stack,muxrpc,multiserver}/*.js",
+      "node_modules/{ssb-*,flume*,secret-stack,muxrpc,multiserver}/{util,lib,frame,indexes}/*.js"
+    ]
   },
   "author": "Paul Frazee <pfrazee@gmail.com>",
   "license": "MIT"
