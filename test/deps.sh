@@ -23,9 +23,15 @@ test () {
   popd
 }
 
-test ssb-friends
-test ssb-blobs
-test ssb-invite
-test ssb-replicate
-test ssb-ebt
+all () {
 
+  test ssb-friends
+  test ssb-blobs
+  test ssb-invite
+  test ssb-replicate
+  test ssb-ebt
+  test ssb-ooo
+  test ssb-db
+}
+
+"$@"
