@@ -67,7 +67,7 @@ if (process.env.NODE_ENV != 'production') {
 
             pairs.forEach(pair => {
               if (semver.intersects(pair[0], pair[1]) === false) {
-                throw new Error('plugins have incompatible devDependencies')
+                throw new Error('plugins have incompatible devDependencies, for:'+k+' '+pair.join(' '))
               }
             })
           }
