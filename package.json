@@ -56,7 +56,7 @@
     "ssb-invite": "^2.0.3",
     "ssb-keys": "^7.1.1",
     "ssb-links": "^3.0.2",
-    "ssb-ooo": "^1.2.0",
+    "ssb-ooo": "^1.2.1",
     "ssb-query": "^2.1.0",
     "ssb-ref": "^2.13.9",
     "ssb-replicate": "^1.1.0",

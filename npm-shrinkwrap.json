@@ -6158,9 +6158,9 @@
       }
     },
     "ssb-ooo": {
-      "version": "1.2.0",
-      "resolved": "https://registry.npmjs.org/ssb-ooo/-/ssb-ooo-1.2.0.tgz",
-      "integrity": "sha512-t3US8XEXsmFgiE1K3D70LaLoLcfkEyo+kAkc6jBvO8mr20MaQVQFdfYXGNyJh9DHytCn1cRe94sierffKiAhcw==",
+      "version": "1.2.1",
+      "resolved": "https://registry.npmjs.org/ssb-ooo/-/ssb-ooo-1.2.1.tgz",
+      "integrity": "sha512-quc1TP7d3DussXc/AOvQcZpkIWuMogRCmw3r36ckJFfmuKLKdJk4YknCKOO8PLwUPOoSlM/+ombRgz9zyO7gUg==",
       "requires": {
         "flumecodec": "0.0.1",
         "flumedb": "^1.0.0",
