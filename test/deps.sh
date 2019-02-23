@@ -25,6 +25,7 @@ test () {
 
 all () {
 
+  test ssb-client
   test ssb-friends
   test ssb-blobs
   test ssb-invite
