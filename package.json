@@ -47,7 +47,7 @@
     "rimraf": "^2.4.2",
     "secret-stack": "^6.0.1",
     "ssb-blobs": "^1.1.12",
-    "ssb-client": "^4.6.5",
+    "ssb-client": "^4.7.1",
     "ssb-config": "^3.2.3",
     "ssb-db": "^19.0.3",
     "ssb-ebt": "^5.4.1",
