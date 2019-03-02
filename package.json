@@ -1,7 +1,7 @@
 {
   "name": "ssb-server",
   "description": "network protocol layer for secure-scuttlebutt",
-  "version": "14.1.4",
+  "version": "14.1.5",
   "homepage": "https://github.com/ssbc/ssb-server",
   "repository": {
     "type": "git",
