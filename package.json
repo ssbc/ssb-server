@@ -15,7 +15,7 @@
     "start": "node bin start",
     "prepublishOnly": "npm test",
     "test": "rm node_modules/ssb-server; set -e; npm ls && for t in test/*.js; do echo TEST $t; node $t; done && ./test/deps.sh all",
-    "reinstall": "rm -rf node_modules ; npm install --package-lock && npm shrinkwrap",
+    "reinstall": "rm -rf node_modules package-lock.json; npm install --package-lock && npm shrinkwrap",
     "pretest": "./scripts/pretest.js",
     "coverage": "nyc --reporter=lcov npm test"
   },
