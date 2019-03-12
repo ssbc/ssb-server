@@ -42,7 +42,7 @@
     "pull-stream": "^3.6.2",
     "pull-stringify": "^2.0.0",
     "rimraf": "^2.4.2",
-    "secret-stack": "^5.1.0",
+    "secret-stack": "^6.0.2",
     "ssb-blobs": "^1.1.4",
     "ssb-client": "^4.5.7",
     "ssb-config": "^3.0.0",
