@@ -73,7 +73,7 @@ tape('construct and analyze graph', function (t) {
       alice.add({
         type: 'contact', contact: bob.id,
         following: true,
-//        flagged: { reason: 'foo' }
+        flagged: { reason: 'foo' }
       }),
       alice.add(u.follow(carol.id)),
       bob.add(u.follow(alice.id)),
@@ -97,8 +97,8 @@ tape('construct and analyze graph', function (t) {
       ssbServer.friends.createFriendStream(),
       pull.collect(function (err, ary) {
         t.notOk(err)
-        t.equal(ary.length, 3)
-        t.deepEqual(ary.sort(), [alice.id, bob.id, carol.id].sort())
+        t.equal(ary.length, 2)
+        t.deepEqual(ary.sort(), [alice.id, carol.id].sort())
         t.end()
       })
     )
@@ -109,10 +109,9 @@ tape('construct and analyze graph', function (t) {
       ssbServer.friends.createFriendStream({meta: true}),
       pull.collect(function (err, ary) {
         t.notOk(err)
-        t.equal(ary.length, 3)
+        t.equal(ary.length, 2)
         t.deepEqual(sort(ary), sort([
           {id: alice.id, hops: 0},
-          {id: bob.id, hops: 1},
           {id: carol.id, hops: 1}
         ]))
 
@@ -283,10 +282,5 @@ tape('indirect friends', function (t) {
   })
 
 })
-
-
-
-
-
 
 
