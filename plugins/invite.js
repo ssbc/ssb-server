@@ -62,6 +62,14 @@ module.exports = {
       })
     })
 
+    function getInviteAddress () {
+      return (config.allowPrivate
+        ? server.getAddress('public') || server.getAddress('local') || server.getAddress('device')
+        : server.getAddress('public')
+        )
+    }
+
+
     return {
       create: valid.async(function (opts, cb) {
         opts = opts || {}
@@ -74,7 +82,9 @@ module.exports = {
         else if(isFunction(opts))
           cb = opts, opts = {}
 
-        var addr = server.getAddress().split(';').shift()
+        var scope = 'local'
+
+        var addr = getInviteAddress().split(';').shift()
         var host = ref.parseAddress(addr).host
 
         if (opts.external)
@@ -106,7 +116,7 @@ module.exports = {
           // emit the invite code: our server address, plus the key-seed
           if(err) cb(err)
           else if(opts.modern) {
-            var ws_addr = server.getAddress().split(';').sort(function (a, b) {
+            var ws_addr = getInviteAddress().split(';').sort(function (a, b) {
                return +/^ws/.test(b) - +/^ws/.test(a)
             }).shift()
             if(!/^ws/.test(ws_addr)) throw new Error('not a ws address:'+ws_addr)
