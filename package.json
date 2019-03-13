@@ -49,7 +49,7 @@
     "ssb-blobs": "^1.1.13",
     "ssb-client": "^4.7.1",
     "ssb-config": "^3.2.5",
-    "ssb-db": "^19.1.0",
+    "ssb-db": "github:ssbc/ssb-db#require-original-true",
     "ssb-ebt": "^5.4.1",
     "ssb-friends": "^4.0.0",
     "ssb-gossip": "^1.0.6",
