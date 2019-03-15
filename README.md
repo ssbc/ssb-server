@@ -1,4 +1,41 @@
-# ssb-server
+# minbot
+
+a minimal replicating fork of sbot.
+
+
+## install and example
+
+```
+# clone, and checkout minimal branch
+git clone https://github.com/ssbc/ssb-server minbot
+cd minbot
+git fetch origin
+git checkout minimal
+npm install
+
+# copy your old gossip.json over so we have peers
+
+mkdir -p ~/.minbot
+cp ~/.ssb/gossip.json ~/.minbot/
+
+# run server, will create a ~/.minbot dir
+
+./bin.js server
+
+# and in another terminal
+
+./bin.js replicate.request --id <feed_id> --replicate
+
+# watch the messages roll in
+
+./bin.js createLogStream --live
+
+```
+
+----
+
+# old sbot documentation, ignore
+
 
 ssb-server is an open source **peer-to-peer log store** used as a database, identity provider, and messaging system.
 It has:
@@ -21,7 +58,7 @@ This means ssb-servers comprise a [global gossip-protocol mesh](https://en.wikip
 a known-working [shrinkwrapped](https://docs.npmjs.com/cli/shrinkwrap.html) version will be installed.
 
 ```
-npm install -g ssb-server
+npm install -g minbot
 ```
 
 ## Applications
@@ -171,5 +208,6 @@ Therefore, by itself, it would probably make a poor choice for implementing a cr
 # License
 
 MIT
+
 
 
