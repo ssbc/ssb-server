@@ -22,7 +22,14 @@ var i = argv.indexOf('--')
 var conf = argv.slice(i+1)
 argv = ~i ? argv.slice(0, i) : argv
 
-var config = Config(process.env.ssb_appname, minimist(conf))
+var config = Config(process.env.ssb_appname || 'minbot',
+  //use default config that disables gossip init
+  //and legacy replication
+  Object.assign(minimist(conf), {
+    gossip: {pub: false},
+    replicate: {legacy: false}
+  })
+)
 
 if (config.keys.curve === 'k256')
   throw new Error('k256 curves are no longer supported,'+
@@ -43,31 +50,17 @@ if (argv[0] == 'start') {
   // import ssbServer and start the server
 
   var createSsbServer = require('./')
-    .use(require('./plugins/onion'))
-    .use(require('./plugins/unix-socket'))
-    .use(require('./plugins/no-auth'))
-    .use(require('./plugins/plugins'))
+    //needed so that cli can connect
     .use(require('./plugins/master'))
-    .use(require('ssb-gossip'))
-    .use(require('ssb-replicate'))
-    .use(require('ssb-friends'))
-    .use(require('ssb-blobs'))
-    .use(require('ssb-invite'))
-    .use(require('./plugins/local'))
-    .use(require('./plugins/logging'))
-    .use(require('ssb-query'))
-    .use(require('ssb-ws'))
+    //needed so that ssb-ebt has access to replicate stub
+    .use(require('ssb-replicate')) //need stub, but legacy replication disabled by default config
+    //needed because can connect to other peers
+    .use(require('ssb-gossip')) //loading pub messages disabled by default config
+    //not needed, because just use replicate.request --id <feed> --replicate
+//    .use(require('ssb-friends'))
     .use(require('ssb-ebt'))
+    //not needed, but if we replicate less, ooo is cool.
     .use(require('ssb-ooo'))
-  // add third-party plugins
-  require('./plugins/plugins').loadUserPlugins(createSsbServer, config)
-
-  if (argv[1] != '--disable-ssb-links') {
-    if (!createSsbServer.plugins.find(p => p.name == 'links2')) {
-      console.log("WARNING-DEPRECATION: ssb-links not installed as a plugin. If you are using git-ssb, ssb-npm or patchfoo please consider installing it")
-      createSsbServer.use(require('ssb-links'))
-    }
-  }
 
   // start server
   var server = createSsbServer(config)
@@ -164,4 +157,5 @@ if (argv[0] == 'start') {
     muxrpcli(argv, manifest, rpc, config.verbose)
   })
 }
+
 
