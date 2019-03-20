@@ -214,7 +214,7 @@ function (gossip, config, server) {
 
         var longterm = peers.filter(isConnect).filter(isLongterm).length
 
-        connect(peers, ts, 'legacy', exports.isLegacy, {
+        connect(peers, ts, 'legacy', and(exports.isLegacy, not(exports.isLocal)), {
           quota: 3 - longterm,
           factor: 5*min, max: 3*hour, groupMin: 5*min,
         })
