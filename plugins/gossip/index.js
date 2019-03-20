@@ -237,7 +237,6 @@ module.exports = {
           addr.address = coearseAddress(addr)
         }
         else {
-         console.log('parse:', addr)
          var _addr = ref.parseAddress(addr)
           if(!_addr) throw new Error('not a valid address:'+addr)
           _addr.address = addr
