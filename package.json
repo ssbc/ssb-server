@@ -45,7 +45,7 @@
     "pull-pushable": "^2.2.0",
     "pull-stream": "^3.6.2",
     "rimraf": "^2.4.2",
-    "secret-stack": "^6.0.2",
+    "secret-stack": "happy0/secret-stack#79182d4dae39a8bfe843ae933f48131ad43c73d9",
     "ssb-blobs": "^1.1.13",
     "ssb-client": "^4.7.1",
     "ssb-config": "^3.2.5",
