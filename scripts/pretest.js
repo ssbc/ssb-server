@@ -28,7 +28,8 @@ if (process.env.NODE_ENV != 'production') {
     'ssb-replicate',
     'ssb-ebt',
     'ssb-db',
-    'ssb-ooo'
+    'ssb-ooo',
+    'ssb-plugins'
   ]
 
 
