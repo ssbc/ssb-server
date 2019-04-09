@@ -61,7 +61,7 @@ if (argv[0] == 'start') {
     .use(require('ssb-ebt'))
     .use(require('ssb-ooo'))
   // add third-party plugins
-  require('./plugins/plugins').loadUserPlugins(createSsbServer, config)
+  require('ssb-plugins').loadUserPlugins(createSsbServer, config)
 
   if (argv[1] != '--disable-ssb-links') {
     if (!createSsbServer.plugins.find(p => p.name == 'links2')) {
