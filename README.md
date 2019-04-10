@@ -12,11 +12,13 @@ In the background, it syncs with known peers.
 Peers do not have to be trusted, and can share logs and files on behalf of other peers, as each log is an unforgeable append-only message feed.
 This means ssb-servers comprise a [global gossip-protocol mesh](https://en.wikipedia.org/wiki/Gossip_protocol) without any host dependencies.
 
+If you are looking to use ssb-server to run a pub, consider using [ssb-minimal-pub-server](https://github.com/ssbc/ssb-minimal-pub-server) instead.
+
 **Join us in #scuttlebutt on freenode.**
 
 [![build status](https://secure.travis-ci.org/ssbc/ssb-server.png)](http://travis-ci.org/ssbc/ssb-server)
 
-## install
+## Install
 
 a known-working [shrinkwrapped](https://docs.npmjs.com/cli/shrinkwrap.html) version will be installed.
 
@@ -171,5 +173,3 @@ Therefore, by itself, it would probably make a poor choice for implementing a cr
 # License
 
 MIT
-
-
