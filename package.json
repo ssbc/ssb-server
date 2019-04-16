@@ -73,6 +73,7 @@
     "nyc": "^13.2.0",
     "pull-abortable": "^4.1.1",
     "pull-bitflipper": "^0.1.0",
+    "pull-paramap": "^1.2.2",
     "rng": "^0.2.2",
     "run-series": "^1.1.8",
     "semver": "^5.6.0",
