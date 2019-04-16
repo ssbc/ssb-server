@@ -50,7 +50,7 @@
     "ssb-client": "^4.7.1",
     "ssb-config": "^3.2.5",
     "ssb-db": "^19.1.0",
-    "ssb-ebt": "^5.5.3",
+    "ssb-ebt": "5.6.0",
     "ssb-friends": "^4.0.0",
     "ssb-gossip": "^1.0.6",
     "ssb-invite": "^2.0.3",
