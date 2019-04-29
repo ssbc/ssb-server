@@ -187,7 +187,7 @@ module.exports = {
 
         function connect (cb) {
           ssbClient(ssbKeys.generate(), {
-            caps: config.caps,
+            caps: config.caps || {shs: require('../lib/ssb-cap').toString('base64')},
             remote: invite,
             manifest: {invite: {use: 'async'}, getAddress: 'async'}
           }, cb)
