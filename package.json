@@ -36,7 +36,7 @@
     "multiserver": "^3.3.1",
     "multiserver-address": "^1.0.1",
     "muxrpc-validation": "^3",
-    "muxrpcli": "^1.0.0",
+    "muxrpcli": "^3.0.0",
     "mv": "^2.1.1",
     "osenv": "^0.1.5",
     "pull-cat": "~1.1.5",
@@ -53,7 +53,7 @@
     "ssb-ebt": "^5.6.1",
     "ssb-friends": "^4.0.0",
     "ssb-gossip": "^1.0.6",
-    "ssb-invite": "^2.0.3",
+    "ssb-invite": "^2.0.4",
     "ssb-keys": "^7.1.1",
     "ssb-links": "^3.0.2",
     "ssb-ooo": "^1.2.2",
@@ -61,7 +61,7 @@
     "ssb-ref": "^2.13.9",
     "ssb-replicate": "^1.2.1",
     "ssb-ws": "^5.1.1",
-    "stream-to-pull-stream": "^1.6.10",
+    "stream-to-pull-stream": "^1.7.3",
     "zerr": "^1.0.0"
   },
   "devDependencies": {
@@ -99,3 +99,4 @@
   "author": "Paul Frazee <pfrazee@gmail.com>",
   "license": "MIT"
 }
+
