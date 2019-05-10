@@ -12,7 +12,7 @@ var createSsbServer =
 var initialPlugins = createSsbServer.plugins.slice()
 function resetSsbServer () {
   createSsbServer.plugins = initialPlugins.slice()
-  createSsbServer.use(require('../plugins/plugins'))
+  createSsbServer.use(require('ssb-server-plugins'))
 }
 
 tape('install and load plugins', function (t) {
@@ -56,7 +56,7 @@ tape('install and load plugins', function (t) {
       }
     }
     resetSsbServer()
-    require('../plugins/plugins').loadUserPlugins(createSsbServer, config)
+    require('ssb-server-plugins').loadUserPlugins(createSsbServer, config)
     var ssbServer = createSsbServer(config)
 
     t.ok(ssbServer.test)
@@ -83,7 +83,7 @@ tape('install and load plugins', function (t) {
       }
     }
     resetSsbServer()
-    require('../plugins/plugins').loadUserPlugins(createSsbServer, config)
+    require('ssb-server-plugins').loadUserPlugins(createSsbServer, config)
     var ssbServer = createSsbServer(config)
 
     t.equal(ssbServer.test, undefined)
@@ -154,7 +154,7 @@ tape('install and load plugins', function (t) {
       }
     }
     resetSsbServer()
-    require('../plugins/plugins').loadUserPlugins(createSsbServer, config)
+    require('ssb-server-plugins').loadUserPlugins(createSsbServer, config)
     var ssbServer = createSsbServer(config)
 
     t.ok(ssbServer.test)
