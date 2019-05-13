@@ -46,7 +46,8 @@ if (argv[0] == 'start') {
     .use(require('./plugins/onion'))
     .use(require('./plugins/unix-socket'))
     .use(require('./plugins/no-auth'))
-    .use(require('./plugins/plugins'))
+//    .use(require('./plugins/plugins'))
+    .use(require('ssb-plugins'))
     .use(require('./plugins/master'))
     .use(require('ssb-gossip'))
     .use(require('ssb-replicate'))
@@ -60,7 +61,7 @@ if (argv[0] == 'start') {
     .use(require('ssb-ebt'))
     .use(require('ssb-ooo'))
   // add third-party plugins
-  require('./plugins/plugins').loadUserPlugins(createSsbServer, config)
+  require('ssb-plugins').loadUserPlugins(createSsbServer, config)
 
   if (argv[1] != '--disable-ssb-links') {
     if (!createSsbServer.plugins.find(p => p.name == 'links2')) {
