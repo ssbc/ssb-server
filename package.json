@@ -14,8 +14,7 @@
   "scripts": {
     "start": "node bin start",
     "prepublishOnly": "npm test",
-    "test": "rm node_modules/ssb-server; set -e; npm ls && for t in test/*.js; do echo TEST $t; node $t; done && ./test/deps.sh all",
-    "test2": "rm node_modules/ssb-server; set -e; for t in test/*.js; do echo TEST $t; node $t; done && ./test/deps.sh all",
+    "test": "rm node_modules/ssb-server; set -e; for t in test/*.js; do echo TEST $t; node $t; done && ./test/deps.sh all",
     "reinstall": "rm -rf node_modules package-lock.json npm-shrinkwrap.json; export npm_config_package_lock=true; npm install && npm dedupe && npm shrinkwrap",
     "pretest": "./scripts/pretest.js",
     "coverage": "nyc --reporter=lcov npm test"
@@ -37,7 +36,7 @@
     "multiserver": "^3.3.1",
     "multiserver-address": "^1.0.1",
     "muxrpc-validation": "^3",
-    "muxrpcli": "^1.0.0",
+    "muxrpcli": "3",
     "mv": "^2.1.1",
     "osenv": "^0.1.5",
     "pull-cat": "~1.1.5",
@@ -50,7 +49,7 @@
     "ssb-blobs": "1.2.1",
     "ssb-client": "^4.7.5",
     "ssb-config": "^3.2.5",
-    "ssb-db": "^19.1.0",
+    "ssb-db": "19.2.0",
     "ssb-ebt": "^5.6.1",
     "ssb-friends": "^4.1.0",
     "ssb-gossip": "^1.0.6",
@@ -107,4 +106,3 @@
   "author": "Paul Frazee <pfrazee@gmail.com>",
   "license": "MIT"
 }
-
