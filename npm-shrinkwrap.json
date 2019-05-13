@@ -5570,9 +5570,9 @@
       }
     },
     "sodium-browserify-tweetnacl": {
-      "version": "0.2.5",
-      "resolved": "https://registry.npmjs.org/sodium-browserify-tweetnacl/-/sodium-browserify-tweetnacl-0.2.5.tgz",
-      "integrity": "sha512-Q6YgyMyEB7dFLTt3vB8/YSjmSQrpQ/J4VEZfivOxRXFRs8BLjn39jA2X7sJO1Co4+Ma5kD+DSZm8x7Tum7ajQw==",
+      "version": "0.2.6",
+      "resolved": "https://registry.npmjs.org/sodium-browserify-tweetnacl/-/sodium-browserify-tweetnacl-0.2.6.tgz",
+      "integrity": "sha512-ZnEI26hdluilpYY28Xc4rc1ALfmEp2TWihkJX6Mdtw0z9RfHfpZJU7P8DoKbN1HcBdU9aJmguFZs7igE8nLJPg==",
       "requires": {
         "chloride-test": "^1.1.0",
         "ed2curve": "^0.1.4",
@@ -5681,9 +5681,9 @@
       }
     },
     "ssb-blobs": {
-      "version": "1.1.14",
-      "resolved": "https://registry.npmjs.org/ssb-blobs/-/ssb-blobs-1.1.14.tgz",
-      "integrity": "sha512-xDRcpBcfafylwsLuTeFM+QaYl8mjc19u3UsrpIQckRkHd4c300zXUKS8NyOmZGiGDWVObCMV1WGI+e0AlYrDLw==",
+      "version": "1.1.15",
+      "resolved": "https://registry.npmjs.org/ssb-blobs/-/ssb-blobs-1.1.15.tgz",
+      "integrity": "sha512-6T0jy3Im7sJg2BlX/OKJ4qCvtOMM9Xo3TMd3FrMuAtC+qMob/S6XT5001Its0vWc6/1Thhw4o31F7lT1s7QQKw==",
       "requires": {
         "cont": "^1.0.3",
         "debug": "^4.1.1",
@@ -5768,9 +5768,9 @@
       }
     },
     "ssb-ebt": {
-      "version": "5.6.1",
-      "resolved": "https://registry.npmjs.org/ssb-ebt/-/ssb-ebt-5.6.1.tgz",
-      "integrity": "sha512-dYiVsDH2ywdY3IhQPKkm8r/gbMyVREvLJ/sExW+vrgOOFJgvC5MZe+1xXzhtudjlB2SyF3zxj02mjaT1FWm6ug==",
+      "version": "5.6.2",
+      "resolved": "https://registry.npmjs.org/ssb-ebt/-/ssb-ebt-5.6.2.tgz",
+      "integrity": "sha512-z6fJm0yqA1aKgFG3uvxazCZt70+I6A/6JvHeic6U5GQT5hSFWgnguUQRVBMUSOgM45IXJzVEvPIzoPpLU94HOw==",
       "requires": {
         "base64-url": "^2.2.0",
         "epidemic-broadcast-trees": "^6.3.5",
@@ -5818,9 +5818,9 @@
       }
     },
     "ssb-gossip": {
-      "version": "1.0.9",
-      "resolved": "https://registry.npmjs.org/ssb-gossip/-/ssb-gossip-1.0.9.tgz",
-      "integrity": "sha512-IEvAjr3g37/J6oQtBGB0ivCO6mWrWQZebs73VPXG1wecxccigCwtDSSAIit7A9cpm3d0p59SwtibbfoBFcPJVA==",
+      "version": "1.0.10",
+      "resolved": "https://registry.npmjs.org/ssb-gossip/-/ssb-gossip-1.0.10.tgz",
+      "integrity": "sha512-XH1x+kAWc4VVz3uUEy4lrYxBE1pzFA7ahaerF9Yg4QtmL3Vb1gvWMjwikevyVr6j94N+5jP+Vc+ZccuE+s33RQ==",
       "requires": {
         "atomic-file": "^1.1.5",
         "deep-equal": "^1.0.1",
@@ -5965,9 +5965,9 @@
       }
     },
     "ssb-replicate": {
-      "version": "1.2.3",
-      "resolved": "https://registry.npmjs.org/ssb-replicate/-/ssb-replicate-1.2.3.tgz",
-      "integrity": "sha512-9/z5Jsnm9PegLWSZWOTWDBl3rmNNHk3+7EWtlsORJv7sSVmVCLYyHO2w98il+WO/xFGOd2khf+LO+VjzM8JJJw==",
+      "version": "1.2.4",
+      "resolved": "https://registry.npmjs.org/ssb-replicate/-/ssb-replicate-1.2.4.tgz",
+      "integrity": "sha512-SVmKaOUq06FWmWuNHz6RfDELBlQkyrmZNXHcS1N5FsNzueWyEd8nca10KDlvwQ51i9i3JXLFS7CmlxKbSpazMA==",
       "requires": {
         "deep-equal": "^1.0.1",
         "mdmanifest": "^1.0.8",

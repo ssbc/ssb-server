@@ -46,21 +46,21 @@
     "pull-stream": "^3.6.2",
     "rimraf": "^2.4.2",
     "secret-stack": "^6.0.2",
-    "ssb-blobs": "^1.1.13",
+    "ssb-blobs": "^1.2.0",
     "ssb-client": "^4.7.1",
     "ssb-config": "^3.2.5",
     "ssb-db": "^19.1.0",
     "ssb-ebt": "^5.6.1",
-    "ssb-friends": "^4.0.0",
+    "ssb-friends": "^4.1.0",
     "ssb-gossip": "^1.0.6",
-    "ssb-invite": "^2.0.3",
+    "ssb-invite": "^2.1.0",
     "ssb-keys": "^7.1.1",
-    "ssb-links": "^3.0.2",
-    "ssb-ooo": "^1.2.2",
-    "ssb-plugins": "0.0.0",
-    "ssb-query": "^2.1.0",
+    "ssb-links": "^3.0.4",
+    "ssb-ooo": "^1.3.0",
+    "ssb-query": "^2.4.0",
+    "ssb-plugins": "1.0.0",
     "ssb-ref": "^2.13.9",
-    "ssb-replicate": "^1.2.1",
+    "ssb-replicate": "^1.3.0",
     "ssb-ws": "^5.1.1",
     "stream-to-pull-stream": "^1.6.10",
     "zerr": "^1.0.0"
@@ -100,3 +100,6 @@
   "author": "Paul Frazee <pfrazee@gmail.com>",
   "license": "MIT"
 }
+
+
+
