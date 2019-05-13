@@ -17,7 +17,7 @@ var createSsbServer =
     .use(require('ssb-replicate'))
     .use(require('ssb-friends'))
     .use(require('ssb-gossip'))
-    .use(require('../plugins/logging'))
+    .use(require('ssb-logging'))
 
 var createHash = require('crypto').createHash
 

@@ -4,5 +4,4 @@ node_modules
 .ssbrc
 *.log
 coverage
-package-lock.json
 
