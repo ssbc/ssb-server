@@ -1,0 +1,31 @@
+{
+  "name": "catfood",
+  "version": "1.0.0",
+  "description": "pretest script to dogfood your dependencies",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ssbc/catfood.git"
+  },
+  "author": "Christian Bundy <christianbundy@fraction.io>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ssbc/catfood/issues"
+  },
+  "homepage": "https://github.com/ssbc/catfood",
+  "keywords": [
+    "test",
+    "pretest",
+    "dogfood",
+    "dependencies",
+    "devdependencies"
+  ],
+  "dependencies": {
+    "debug": "^4.1.1",
+    "npm-install-package": "^2.1.0",
+    "semver": "^6.1.0"
+  }
+}

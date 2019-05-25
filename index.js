@@ -2,73 +2,56 @@
 const fs = require('fs')
 const path = require('path')
 const semver = require('semver')
-const debug = require('debug')('ssb-server:pretest')
+const debug = require('debug')('catfood')
 var install = require('npm-install-package')
 
-// polyfill!
-if (!Object.entries) {
-  Object.entries = function( obj ){
-    var ownProps = Object.keys( obj ),
-        i = ownProps.length,
-        resArray = new Array(i); // preallocate the Array
-    while (i--)
-      resArray[i] = [ownProps[i], obj[ownProps[i]]];
-    
-    return resArray;
-  };
-}
-
-debug.enabled = true
-
-if (process.env.NODE_ENV != 'production') {
-  const plugins = [
-    'ssb-gossip',
-    'ssb-blobs',
-    'ssb-invite',
-    'ssb-replicate',
-    'ssb-ebt',
-    'ssb-db',
-    'ssb-ooo',
-    'ssb-plugins'
-  ]
-
-
+if (process.env.NODE_ENV !== 'production') {
   // get dependencies from ssb-server
-  const fullPath = path.join(__dirname, '..', 'package.json')
+  const fullPath = path.join(__dirname, 'package.json')
   debug('getting dependencies from %s', fullPath)
-  const package = JSON.parse(fs.readFileSync(fullPath))
-  const parent = {}
-  Object.entries(package.dependencies).forEach(e => parent[e[0]] = e[1])
-  Object.entries(package.devDependencies).forEach(e => parent[e[0]] = e[1])
+  const pkg = JSON.parse(fs.readFileSync(fullPath))
+  const parent = Object.assign({}, pkg.dependencies, pkg.devDependencies)
+
+  debug('parent dependencies: %O', parent)
 
   // initialize empty array for new deps needed
   const needDeps = []
 
-  // get dependencies from plugin directories
-  plugins.forEach(plugin => {
-    const fullPath = path.join(__dirname, '..', 'node_modules', plugin, 'package.json')
+  // get dependencies from dep directories
+  Object.keys(parent).forEach(moduleName => {
+    const fullPath = path.join(__dirname, 'node_modules', moduleName, 'package.json')
     debug('getting dependencies from %s', fullPath)
-    const package = JSON.parse(fs.readFileSync(fullPath))
-    const pluginDeps = {}
-    Object.entries(package.devDependencies).forEach(e => pluginDeps[e[0]] = e[1])
+    const module = JSON.parse(fs.readFileSync(fullPath))
+    const moduleDeps = module.devDependencies || {}
 
-    Object.entries(pluginDeps).forEach(e => {
-      const [ k, v ] = e
+    debug('module dependencies: %O', moduleDeps)
 
-      if (Object.keys(parent).includes(k) === false || semver.intersects(parent[k], v) === false) {
-        if (k !== 'ssb-server' ) {
-          if (needDeps[k] == null) {
-            debug('new dependency from %s: %o', plugin, { name: k, range: v })
-            needDeps[k] = v
+    Object.entries(moduleDeps).forEach(e => {
+      const [ depName, depRange ] = e
+
+      debug({ depName, depRange })
+      if (Object.keys(parent).includes(depName)) {
+        if (depName !== pkg.name) {
+          if (needDeps[depName] == null) {
+            debug('new dependency from %s: %o', moduleName, {
+              name: depName, range: depRange
+            })
+            needDeps[depName] = depRange
           } else {
+            // We want to ensure that the this range is compatible with both:
+            //
+            // - the parent dependency
+            // - the needed dependency
             const pairs = [
-              [needDeps[k], v],
-              [parent[k], v]
+              [needDeps[depName], depRange],
+              [parent[depName], depRange]
             ]
+
+            debug(depName, pairs)
 
             pairs.forEach(pair => {
               if (semver.intersects(pair[0], pair[1]) === false) {
-                throw new Error('plugins have incompatible devDependencies, for:'+k+' '+pair.join(' '))
+                throw new Error('plugins have incompatible devDependencies, for:' + depName + ' ' + pair.join(' '))
               }
             })
           }
@@ -91,10 +74,7 @@ if (process.env.NODE_ENV != 'production') {
       debug('done! please re-run tests with these new dependencies')
       process.exit(1)
     })
-
-
   } else {
     debug('plugin devDeps look great!')
   }
 }
-
