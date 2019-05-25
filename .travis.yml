@@ -1,6 +1,2 @@
 language: node_js
-sudo: false
-node_js:
-  - 8
-  - 6
-  - 10
+node_js: lts/*

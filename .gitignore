@@ -1,7 +1,2 @@
-.db
-.privatekey
 node_modules
-.ssbrc
-*.log
-coverage
 
