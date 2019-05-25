@@ -10,30 +10,34 @@ if (process.env.NODE_ENV !== 'production') {
   const fullPath = path.join(__dirname, 'package.json')
   debug('getting dependencies from %s', fullPath)
   const pkg = JSON.parse(fs.readFileSync(fullPath))
-  const parent = Object.assign({}, pkg.dependencies, pkg.devDependencies)
+  const parent = Object.assign({}, pkg.dependencies)
 
   debug('parent dependencies: %O', parent)
 
   // initialize empty array for new deps needed
   const needDeps = []
+  const nonCompat = []
 
   // get dependencies from dep directories
   Object.keys(parent).forEach(moduleName => {
+    const debugModule = debug.extend(moduleName)
     const fullPath = path.join(__dirname, 'node_modules', moduleName, 'package.json')
-    debug('getting dependencies from %s', fullPath)
+    debugModule('getting dependencies from %s', fullPath)
     const module = JSON.parse(fs.readFileSync(fullPath))
     const moduleDeps = module.devDependencies || {}
 
-    debug('module dependencies: %O', moduleDeps)
+    debugModule('module dependencies: %O', moduleDeps)
+
 
     Object.entries(moduleDeps).forEach(e => {
       const [ depName, depRange ] = e
+      const debugDep = debugModule.extend(depName)
 
-      debug({ depName, depRange })
+      debugDep({ depName, depRange })
       if (Object.keys(parent).includes(depName)) {
         if (depName !== pkg.name) {
           if (needDeps[depName] == null) {
-            debug('new dependency from %s: %o', moduleName, {
+            debugDep('new dependency: %o', moduleName, {
               name: depName, range: depRange
             })
             needDeps[depName] = depRange
@@ -47,11 +51,11 @@ if (process.env.NODE_ENV !== 'production') {
               [parent[depName], depRange]
             ]
 
-            debug(depName, pairs)
+            debugDep(pairs)
 
             pairs.forEach(pair => {
               if (semver.intersects(pair[0], pair[1]) === false) {
-                throw new Error('plugins have incompatible devDependencies, for:' + depName + ' ' + pair.join(' '))
+                nonCompat.push({ moduleName, depName, have: pair[0], want: pair[1] })
               }
             })
           }
@@ -59,6 +63,11 @@ if (process.env.NODE_ENV !== 'production') {
       }
     })
   })
+
+  if (nonCompat.length > 0) {
+    console.log(nonCompat)
+    throw new Error('incompatible dependencies: ', nonCompat)
+  }
 
   const devDeps = Object.entries(needDeps).map(e => [e[0], e[1]].join('@'))
 
