@@ -65,7 +65,7 @@ var path = require('path')
 
 // add plugins
 Server
-  .use(require('ssb-server/plugins/master'))
+  .use(require('ssb-master'))
   .use(require('ssb-gossip'))
   .use(require('ssb-replicate'))
   .use(require('ssb-backlinks'))
