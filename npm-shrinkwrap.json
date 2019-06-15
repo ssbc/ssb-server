@@ -5991,6 +5991,11 @@
         "ssb-ref": "^2.3.0"
       }
     },
+    "ssb-caps": {
+      "version": "1.0.1",
+      "resolved": "https://registry.npmjs.org/ssb-caps/-/ssb-caps-1.0.1.tgz",
+      "integrity": "sha512-ULJhokqDW4a9l7xXKPHwbhLQgRZmEjwdrrXMsPGoVYnvKb9sJuJ8ki9ilBZIs+NmYuAV+H1ffbB2Z4uioBtFYQ=="
+    },
     "ssb-client": {
       "version": "4.7.5",
       "resolved": "https://registry.npmjs.org/ssb-client/-/ssb-client-4.7.5.tgz",
