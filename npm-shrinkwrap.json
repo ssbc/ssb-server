@@ -5681,9 +5681,9 @@
       }
     },
     "secret-stack": {
-      "version": "6.1.2",
-      "resolved": "https://registry.npmjs.org/secret-stack/-/secret-stack-6.1.2.tgz",
-      "integrity": "sha512-J8JlISJnWsEapR5GOOtnFD1JuJ9QHinWzSSzPMIqoVwhz05bnwCmTQvtMRKD5Hk9WrjCrPTprubJvrrYhqHpeg==",
+      "version": "6.2.1",
+      "resolved": "https://registry.npmjs.org/secret-stack/-/secret-stack-6.2.1.tgz",
+      "integrity": "sha512-7hw13S77Et4yC23uVXOFDRyullxAvFuoN3XW6PvHlAVkYMirLkyeglPOwPTk5JhYwIKPdpIz6vQ7DM0zSlOUHA==",
       "requires": {
         "debug": "^4.1.0",
         "hoox": "0.0.1",
