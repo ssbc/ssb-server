@@ -47,7 +47,7 @@
     "secret-stack": "^6.2.1",
     "ssb-blobs": "1.2.1",
     "ssb-caps": "^1.0.1",
-    "ssb-client": "^4.7.5",
+    "ssb-client": "^4.7.8",
     "ssb-config": "^3.2.5",
     "ssb-db": "19.2.0",
     "ssb-ebt": "^5.6.1",
