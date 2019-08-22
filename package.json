@@ -75,6 +75,7 @@
     "cat-names": "^2.0.0",
     "compatibility": "^1.0.0",
     "dog-names": "~1.0.2",
+    "funding": "^1.0.3",
     "hexpp": "^2.0.0",
     "interleavings": "^1.0.0",
     "npm-install-package": "^2.1.0",
