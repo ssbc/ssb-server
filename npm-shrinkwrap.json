@@ -6009,9 +6009,9 @@
       }
     },
     "ssb-blobs": {
-      "version": "1.2.1",
-      "resolved": "https://registry.npmjs.org/ssb-blobs/-/ssb-blobs-1.2.1.tgz",
-      "integrity": "sha512-3x21LBIo/TDdUVw3IPnMYyh3T31+i6Xw2v0WftiuY0djPkq3dfwQV11+t3AY6LBtKsN1jS1bpxaDZcM/npF9dA==",
+      "version": "1.2.2",
+      "resolved": "https://registry.npmjs.org/ssb-blobs/-/ssb-blobs-1.2.2.tgz",
+      "integrity": "sha512-N+X46lE/KaIH9y1w3LQ9pPnt2tQr5VCSj1dAo/pJGYnSwnHz8GhIiboq7UGzrCZwCWgVUs22/2YiytCXSC9ASg==",
       "requires": {
         "cont": "^1.0.3",
         "debug": "^4.1.1",
