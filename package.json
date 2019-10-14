@@ -45,7 +45,7 @@
     "pull-stream": "^3.6.2",
     "rimraf": "^2.4.2",
     "secret-stack": "^6.2.1",
-    "ssb-blobs": "1.2.1",
+    "ssb-blobs": "1.2.2",
     "ssb-caps": "^1.0.1",
     "ssb-client": "^4.7.5",
     "ssb-config": "^3.2.5",
