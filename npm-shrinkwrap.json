@@ -1,6 +1,6 @@
 {
   "name": "ssb-server",
-  "version": "15.1.1",
+  "version": "15.1.2",
   "lockfileVersion": 1,
   "requires": true,
   "dependencies": {
@@ -3104,15 +3104,15 @@
       }
     },
     "muxrpc": {
-      "version": "6.4.2",
-      "resolved": "https://registry.npmjs.org/muxrpc/-/muxrpc-6.4.2.tgz",
-      "integrity": "sha512-1wRnouHgHO3JYN3xbyzQGTFsd/wo12/zaikmQusP8ma+lmL+ewNvuvuwKSEJasKQTRnbTwbzh/OPdt9N76CA4g==",
+      "version": "6.4.8",
+      "resolved": "https://registry.npmjs.org/muxrpc/-/muxrpc-6.4.8.tgz",
+      "integrity": "sha512-9oLoLbiAWZAhgxQzquApj0eSfiTYPWLq4AV5mvCBjsicJKWOJlxAAxypHdlnmHeUbOxrPRweneHI7l+nzY/+aQ==",
       "requires": {
         "explain-error": "^1.0.1",
         "packet-stream": "~2.0.0",
         "packet-stream-codec": "^1.1.1",
         "pull-goodbye": "0.0.2",
-        "pull-stream": "^3.2.3"
+        "pull-stream": "^3.6.10"
       }
     },
     "muxrpc-usage": {
@@ -5681,16 +5681,16 @@
       }
     },
     "secret-stack": {
-      "version": "6.2.1",
-      "resolved": "https://registry.npmjs.org/secret-stack/-/secret-stack-6.2.1.tgz",
-      "integrity": "sha512-7hw13S77Et4yC23uVXOFDRyullxAvFuoN3XW6PvHlAVkYMirLkyeglPOwPTk5JhYwIKPdpIz6vQ7DM0zSlOUHA==",
+      "version": "6.3.1",
+      "resolved": "https://registry.npmjs.org/secret-stack/-/secret-stack-6.3.1.tgz",
+      "integrity": "sha512-SyYRGgjxq8lbQyqdIbaNfteZ77B3Bd2TH+k5WpI6gHjTCOKZZmD8aiat+bUfhjsiqf0LMQauRH3KD6vIMdDPLg==",
       "requires": {
         "debug": "^4.1.0",
         "hoox": "0.0.1",
         "ip": "^1.1.5",
         "map-merge": "^1.1.0",
         "multiserver": "^3.1.0",
-        "muxrpc": "^6.4.0",
+        "muxrpc": "^6.4.8",
         "non-private-ip": "^1.4.3",
         "pull-inactivity": "~2.1.1",
         "pull-rate": "^1.0.2",
@@ -6029,31 +6029,18 @@
       "integrity": "sha512-ULJhokqDW4a9l7xXKPHwbhLQgRZmEjwdrrXMsPGoVYnvKb9sJuJ8ki9ilBZIs+NmYuAV+H1ffbB2Z4uioBtFYQ=="
     },
     "ssb-client": {
-      "version": "4.7.5",
-      "resolved": "https://registry.npmjs.org/ssb-client/-/ssb-client-4.7.5.tgz",
-      "integrity": "sha512-+GgakuweQ/oiL5EWfqQYes9+/9ooFB+QRKhbDvw1JDjya57fAmtvHhKbWZ2nzurJ1KM9iRTHU+BcZJ4xl4hr7Q==",
+      "version": "4.7.9",
+      "resolved": "https://registry.npmjs.org/ssb-client/-/ssb-client-4.7.9.tgz",
+      "integrity": "sha512-koVuazgGa+Pz7KHnPTsOFvaKSrE0T38wSO7n6P7ZQp+1BpaoBCI4z8Kq2SvMw521Sz9dK9Rwh2bTakEDRgx84A==",
       "requires": {
         "explain-error": "^1.0.1",
         "multicb": "^1.2.1",
         "multiserver": "^3.1.2",
-        "muxrpc": "^6.4.2",
+        "muxrpc": "^6.4.8",
         "pull-hash": "^1.0.0",
         "pull-stream": "^3.6.0",
-        "ssb-config": "^2.3.9",
+        "ssb-config": "^3.2.5",
         "ssb-keys": "^7.0.13"
-      },
-      "dependencies": {
-        "ssb-config": {
-          "version": "2.3.9",
-          "resolved": "https://registry.npmjs.org/ssb-config/-/ssb-config-2.3.9.tgz",
-          "integrity": "sha512-UF+4+khFXILLBqtu9HfrpUwYnDXIdAyJe3u9X4GrApuoakxuSKwaUGakUxLPyo6COyV2brMqufUgf+fDOI8Ftw==",
-          "requires": {
-            "deep-extend": "^0.6.0",
-            "non-private-ip": "^1.2.1",
-            "os-homedir": "^1.0.1",
-            "rc": "^1.1.6"
-          }
-        }
       }
     },
     "ssb-config": {
