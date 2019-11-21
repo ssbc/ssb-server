@@ -7,7 +7,7 @@ It has:
  - File-synchronization
  - End-to-end encryption
 
-`ssb-server` behaves just like a [Kappa Architecture DB](http://www.kappa-architecture.com/).
+`ssb-server` behaves just like a [Kappa Architecture DB](http://milinda.pathirage.org/kappa-architecture.com/).
 In the background, it syncs with known peers.
 Peers do not have to be trusted, and can share logs and files on behalf of other peers, as each log is an unforgeable append-only message feed.
 This means ssb-servers comprise a [global gossip-protocol mesh](https://en.wikipedia.org/wiki/Gossip_protocol) without any host dependencies.
