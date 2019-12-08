@@ -1,11 +1,5 @@
-
-var cont      = require('cont')
-var deepEqual = require('deep-equal')
-var tape      = require('tape')
-var pull      = require('pull-stream')
-var ssbKeys   = require('ssb-keys')
-
-var u = require('./util')
+var tape    = require('tape')
+var ssbKeys = require('ssb-keys')
 
 // create 3 servers
 // give them all pub servers (on localhost)
@@ -28,11 +22,10 @@ function hash (data) {
 var sign_cap1 = hash('test-sign-cap1')
 var shs_cap1 = hash('test-shs-cap1')
 
-var alice, bob, carol
 var dbA = createSsbServer({
   temp: 'server-alice',
   port: 45451, timeout: 1400,
-  keys: alice = ssbKeys.generate(),
+  keys: ssbKeys.generate(),
   caps: {
     shs: shs_cap1,
     sign: sign_cap1
@@ -44,7 +37,7 @@ var dbA = createSsbServer({
 var dbB = createSsbServer({
   temp: 'server-bob',
   port: 45452, timeout: 1400,
-  keys: bob = ssbKeys.generate(),
+  keys: ssbKeys.generate(),
   seeds: [dbA.getAddress()],
   level: 'info'
 })
@@ -53,7 +46,7 @@ var dbB = createSsbServer({
 var dbC = createSsbServer({
   temp: 'server-carol',
   port: 45453, timeout: 1400,
-  keys: alice = ssbKeys.generate(),
+  keys: ssbKeys.generate(),
   caps: {
     shs: shs_cap1,
     sign: sign_cap1
@@ -61,9 +54,7 @@ var dbC = createSsbServer({
   level: 'info'
 })
 
-
 tape('signatures not accepted if made from different caps', function (t) {
-
 
   dbA.publish({type: 'test', foo: true}, function (err, msg) {
     if(err) throw err
@@ -71,9 +62,9 @@ tape('signatures not accepted if made from different caps', function (t) {
     dbB.add(msg.value, function (err) {
       t.ok(err) //should not be valid in this universe
       t.ok(/invalid/.test(err.message))
-      console.log(err.stack)
-      t.end()
+      // console.log(err.stack)
 
+      t.end()
     })
   })
 })
@@ -84,9 +75,7 @@ tape('cannot connect if different shs caps, custom -> default', function (t) {
     console.log(err.stack)
 
     t.end()
-
   })
-
 })
 
 tape('cannot connect if different shs caps, default -> custom', function (t) {
@@ -105,13 +94,9 @@ tape('cannot connect if different shs caps, default -> custom', function (t) {
   })
 })
 
-
 tape('cleanup', function (t) {
   dbA.close()
   dbB.close()
   dbC.close()
   t.end()
 })
-
-
-

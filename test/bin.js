@@ -27,7 +27,7 @@ process.on('SIGINT', function () {
 var exited = false
 var count = 0
 function ssbServer(t, argv, opts) {
-  count ++
+  count++
   exited = false
   opts = opts || {}
 
@@ -133,7 +133,6 @@ function testSsbServer(t, opts, asConfig, port, cb) {
   })
 }
 
-var c = 0
 ;['::1', '::', '127.0.0.1', 'localhost'].forEach(function (host) {
   if(!has_ipv6 && /:/.test(host)) return
 
@@ -193,7 +192,7 @@ test('ssbServer should have websockets and http server by default', function(t) 
 
     var remotes = ma.decode(addr)
     console.log('remotes', remotes, addr)
-    ws_remotes = remotes.filter(function(a) {
+    var ws_remotes = remotes.filter(function(a) {
       return a.find(function(component) {
         return component.name == 'ws'
       })
@@ -262,5 +261,3 @@ test('ssb-server client should work without options', function(t) {
     end()
   })
 })
-
-

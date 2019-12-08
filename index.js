@@ -10,7 +10,3 @@ module.exports = createSsbServer()
 
 //this isn't really needed anymore.
 module.exports.createSsbServer = createSsbServer
-
-
-
-
