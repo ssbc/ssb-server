@@ -16,7 +16,7 @@
       <a class="topnav-item " href="/patchwork" title="Patchwork">
       Patchwork<br><small>Social Messaging App</small>
     </a>
-      <a class="topnav-item selected" href="/ssb-server" title="Scuttlebot">
+      <a class="topnav-item " href="https://handbook.scuttlebutt.nz/guides/ssb-server/install" title="Scuttlebot">
       Scuttlebot<br><small>P2P Log Store</small>
     </a>
       <a class="topnav-item " href="/docs" title="Documentation">
@@ -31,13 +31,13 @@
     </div>
       <div class="leftnav-subitems">
         <div class="leftnav-item ">
-      <a href="/docs/scuttlebot/install.html" title="Install">Install</a>
+      <a href="https://handbook.scuttlebutt.nz/guides/ssb-server/install" title="Install">Install</a>
     </div>
         <div class="leftnav-item ">
-      <a href="/docs/scuttlebot/tutorial.html" title="Tutorial">Tutorial</a>
+      <a href="https://handbook.scuttlebutt.nz/guides/ssb-server/tutorial" title="Tutorial">Tutorial</a>
     </div>
         <div class="leftnav-item ">
-      <a href="/scuttlebot/api.html" title="API / CLI Reference">API / CLI Reference</a>
+      <a href="https://github.com/ssbc/ssb-db/blob/master/api.md" title="API / CLI Reference">API / CLI Reference</a>
     </div>
       </div>
       <div class="leftnav-item">Examples</div>
@@ -55,85 +55,130 @@
       <div class="leftnav-item">Howto Guides</div>
       <div class="leftnav-subitems">
         <div class="leftnav-item ">
-      <a href="/docs/scuttlebot/howto-setup-a-pub.html" title="Setup a Pub">Setup a Pub</a>
+      <a href="https://handbook.scuttlebutt.nz/guides/pubs/setup-a-pub" title="Setup a Pub">Setup a Pub</a>
     </div>
         <div class="leftnav-item ">
-      <a href="/docs/scuttlebot/howto-create-a-js-client.html" title="Create a JS Client">Create a JS Client</a>
+      <a href="https://handbook.scuttlebutt.nz/guides/ssb-server/create-a-js-client" title="Create a JS Client">Create a JS Client</a>
     </div>
         <div class="leftnav-item ">
-      <a href="/docs/scuttlebot/howto-get-your-id.html" title="Get your ID">Get your ID</a>
+      <a href="https://handbook.scuttlebutt.nz/guides/ssb-server/get-your-id" title="Get your ID">Get your ID</a>
     </div>
         <div class="leftnav-item ">
-      <a href="/docs/scuttlebot/howto-get-your-address.html" title="Get your Address">Get your Address</a>
+      <a href="https://handbook.scuttlebutt.nz/guides/ssb-server/get-your-address" title="Get your Address">Get your Address</a>
     </div>
         <div class="leftnav-item ">
-      <a href="/docs/scuttlebot/howto-publish-a-post.html" title="Publish a Post">Publish a Post</a>
+      <a href="https://handbook.scuttlebutt.nz/guides/ssb-server/publish-a-post" title="Publish a Post">Publish a Post</a>
     </div>
         <div class="leftnav-item ">
-      <a href="/docs/scuttlebot/howto-publish-a-file.html" title="Publish a File">Publish a File</a>
+      <a href="https://handbook.scuttlebutt.nz/guides/ssb-server/publish-a-file" title="Publish a File">Publish a File</a>
     </div>
         <div class="leftnav-item ">
-      <a href="/docs/scuttlebot/howto-publish-encrypted-messages.html" title="Publish Encrypted Messages">Publish Encrypted Messages</a>
+      <a href="https://handbook.scuttlebutt.nz/guides/ssb-server/publish-encrypted-messages" title="Publish Encrypted Messages">Publish Encrypted Messages</a>
     </div>
         <div class="leftnav-item ">
-      <a href="/docs/scuttlebot/howto-follow-unfollow.html" title="Follow/Unfollow">Follow/Unfollow</a>
+      <a href="https://handbook.scuttlebutt.nz/guides/ssb-server/follow-unfollow" title="Follow/Unfollow">Follow/Unfollow</a>
     </div>
         <div class="leftnav-item ">
-      <a href="/docs/scuttlebot/howto-announce-a-pub-server.html" title="Announce a Pub Server">Announce a Pub Server</a>
+      <a href="https://handbook.scuttlebutt.nz/guides/pubs/announce-a-pub-server" title="Announce a Pub Server">Announce a Pub Server</a>
     </div>
         <div class="leftnav-item ">
-      <a href="/docs/scuttlebot/howto-create-an-invite.html" title="Create an Invite">Create an Invite</a>
+      <a href="https://handbook.scuttlebutt.nz/guides/pubs/create-an-invite" title="Create an Invite">Create an Invite</a>
     </div>
         <div class="leftnav-item ">
       <a href="/docs/scuttlebot/howto-use-an-invite.html" title="Use an Invite">Use an Invite</a>
     </div>
         <div class="leftnav-item ">
-      <a href="/docs/scuttlebot/howto-update-your-profile.html" title="Update your Profile">Update your Profile</a>
+      <a href="https://handbook.scuttlebutt.nz/guides/ssb-server/update-your-profile" title="Update your Profile">Update your Profile</a>
     </div>
       </div>
     </div>
         <div id="content">
-          <h1 id="scuttlebot">Scuttlebot</h1>
-<p>Scuttlebot is an open source <strong>peer-to-peer log store</strong> used as a database, identity provider, and messaging system.
+          <h1 id="ssb-server">ssb-server</h1>
+<p>ssb-server is an open source <strong>peer-to-peer log store</strong> used as a database, identity provider, and messaging system.
 It has:</p>
 <ul>
 <li>Global replication</li>
-<li>File-syncronization </li>
+<li>File-synchronization</li>
 <li>End-to-end encryption</li>
 </ul>
-<p>Scuttlebot behaves just like a <a href="http://www.kappa-architecture.com/">Kappa Architecture DB</a>.
+<p><code>ssb-server</code> behaves just like a <a href="http://milinda.pathirage.org/kappa-architecture.com/">Kappa Architecture DB</a>.
 In the background, it syncs with known peers.
 Peers do not have to be trusted, and can share logs and files on behalf of other peers, as each log is an unforgeable append-only message feed.
-This means Scuttlebots comprise a <a href="https://en.wikipedia.org/wiki/Gossip_protocol">global gossip-protocol mesh</a> without any host dependencies.</p>
+This means ssb-servers comprise a <a href="https://en.wikipedia.org/wiki/Gossip_protocol">global gossip-protocol mesh</a> without any host dependencies.</p>
+<p>If you are looking to use ssb-server to run a pub, consider using <a href="https://github.com/ssbc/ssb-minimal-pub-server">ssb-minimal-pub-server</a> instead.</p>
 <p><strong>Join us in #scuttlebutt on freenode.</strong></p>
 <p><a href="http://travis-ci.org/ssbc/ssb-server"><img src="https://secure.travis-ci.org/ssbc/ssb-server.png" alt="build status"></a></p>
-<h2 id="example-usage">Example Usage</h2>
-<pre><code class="lang-bash"># In bash:
+<h2 id="install">Install</h2>
+<p>To add <code>ssb-server</code> to your available CLI commands, install it using the <code>-g</code> global flag:</p>
+<pre><code>npm install -g ssb-server
+</code></pre><h2 id="applications">Applications</h2>
+<p>There are already several applications built on <code>ssb-server</code>,
+one of the best ways to learn about secure-scuttlebutt is to poke around in these applications.</p>
+<ul>
+<li><a href="http://github.com/ssbc/patchwork">patchwork</a> is a discussion platform that we use to anything and everything concerning ssb and decentralization.</li>
+<li><a href="http://github.com/ssbc/patchbay">patchbay</a> is another take on patchwork - it&#39;s compatible, less polished, but more modular. The main goal of patchbay is to be very easy to add features to.</li>
+<li><a href="https://github.com/clehner/git-ssb">git-ssb</a> is git (&amp; github!) on top of secure-scuttlebutt. Although we still keep our repos on github, primary development is via git-ssb.</li>
+</ul>
+<p>It is recommended to get started with patchwork, and then look into git-ssb and patchbay.</p>
+<h2 id="starting-an-ssb-server">Starting an <code>ssb-server</code></h2>
+<h3 id="command-line-usage-example">Command Line Usage Example</h3>
+<p>Start the server with extra log detail
+Leave this running in its own terminal/window</p>
+<pre><code class="lang-bash">ssb-server start --logging.level=info
+</code></pre>
+<h3 id="javascript-usage-example">Javascript Usage Example</h3>
+<pre><code class="lang-js">var Server = require(&#39;ssb-server&#39;)
+var config = require(&#39;ssb-config&#39;)
+var fs = require(&#39;fs&#39;)
+var path = require(&#39;path&#39;)
 
-# publish a message
-sbot publish --type post --text &quot;My First Post!&quot;
+// add plugins
+Server
+  .use(require(&#39;ssb-master&#39;))
+  .use(require(&#39;ssb-gossip&#39;))
+  .use(require(&#39;ssb-replicate&#39;))
+  .use(require(&#39;ssb-backlinks&#39;))
+
+var server = Server(config)
+
+// save an updated list of methods this server has made public
+// in a location that ssb-client will know to check
+var manifest = server.getManifest()
+fs.writeFileSync(
+  path.join(config.path, &#39;manifest.json&#39;), // ~/.ssb/manifest.json
+  JSON.stringify(manifest)
+)
+</code></pre>
+<p>see: <a href="https://github.com/ssbc/ssb-config">github.com/ssbc/<strong>ssb-config</strong></a> for custom configuration.</p>
+<h2 id="calling-ssb-server-functions">Calling <code>ssb-server</code> Functions</h2>
+<p>There are a variety of ways to call <code>ssb-server</code> methods, from a command line as well as in a javascript program.</p>
+<h3 id="command-line-usage-example">Command Line Usage Example</h3>
+<p>The command <code>ssb-server</code> can also used to call the running <code>ssb-server</code>.</p>
+<p>Now, in a separate terminal from the one where you ran <code>ssb-server start</code>, you can run commands such as the following:</p>
+<pre><code class="lang-bash"># publish a message
+ssb-server publish --type post --text &quot;My First Post!&quot;
 
 # stream all messages in all feeds, ordered by publish time
-sbot feed
+ssb-server feed
 
 # stream all messages in all feeds, ordered by receive time
-sbot log
+ssb-server log
 
 # stream all messages by one feed, ordered by sequence number
-sbot hist $FEED_ID
+ssb-server hist --id $FEED_ID
 </code></pre>
-<pre><code class="lang-js">// In javascript:
+<h3 id="javascript-usage-example">Javascript Usage Example</h3>
+<p>Note that the following involves using a separate JS package, called <a href="https://github.com/ssbc/ssb-client">ssb-client</a>. It is most suitable for connecting to a running <code>ssb-server</code> and calling its methods. To see further distinctions between <code>ssb-server</code> and <code>ssb-client</code>, check out this <a href="https://handbook.scuttlebutt.nz/guides/ssb-server-context">handbook article</a>.</p>
+<pre><code class="lang-js">var pull = require(&#39;pull-stream&#39;)
+var Client = require(&#39;ssb-client&#39;)
 
-var pull = require(&#39;pull-stream&#39;)
-var ssbClient = require(&#39;ssb-client&#39;)
-
-// create a scuttlebot client using default settings
-// (server at localhost:8080, using key found at ~/.ssb/secret)
-ssbClient(function (err, sbot) {
+// create a ssb-server client using default settings
+// (server at localhost:8080, using key found at ~/.ssb/secret, and manifest we wrote to `~/.ssb/manifest.json` above)
+Client(function (err, server) {
   if (err) throw err
 
   // publish a message
-  sbot.publish({ type: &#39;post&#39;, text: &#39;My First Post!&#39; }, function (err, msg) {
+  server.publish({ type: &#39;post&#39;, text: &#39;My First Post!&#39; }, function (err, msg) {
     // msg.key           == hash(msg.value)
     // msg.value.author  == your id
     // msg.value.content == { type: &#39;post&#39;, text: &#39;My First Post!&#39; }
@@ -142,7 +187,7 @@ ssbClient(function (err, sbot) {
 
   // stream all messages in all feeds, ordered by publish time
   pull(
-    ssb.createFeedStream(),
+    server.createFeedStream(),
     pull.collect(function (err, msgs) {
       // msgs[0].key == hash(msgs[0].value)
       // msgs[0].value...
@@ -151,7 +196,7 @@ ssbClient(function (err, sbot) {
 
   // stream all messages in all feeds, ordered by receive time
   pull(
-    ssb.createLogStream(),
+    server.createLogStream(),
     pull.collect(function (err, msgs) {
       // msgs[0].key == hash(msgs[0].value)
       // msgs[0].value...
@@ -160,7 +205,7 @@ ssbClient(function (err, sbot) {
 
   // stream all messages by one feed, ordered by sequence number
   pull(
-    ssb.createHistoryStream(feedId),
+    server.createHistoryStream({ id: &lt; feedId &gt; }),
     pull.collect(function (err, msgs) {
       // msgs[0].key == hash(msgs[0].value)
       // msgs[0].value...
@@ -168,31 +213,34 @@ ssbClient(function (err, sbot) {
   )
 })
 </code></pre>
-<h2 id="use-cases">Use-cases</h2>
-<p>Scuttlebot&#39;s message-based data structure makes it ideal for mail and forum applications (see <a href="https://ssbc.github.io/patchwork/">Patchwork</a>).
+<h2 id="use-cases">Use Cases</h2>
+<p><code>ssb-server</code>&#39;s message-based data structure makes it ideal for mail and forum applications (see <a href="https://ssbc.github.io/patchwork/">Patchwork</a>).
 However, it is sufficiently general to be used to build:</p>
 <ul>
 <li>Office tools (calendars, document-sharing, tasklists)</li>
 <li>Wikis</li>
 <li>Package managers</li>
 </ul>
-<p>Because Scuttlebot doesn&#39;t depend on hosts, its users can synchronize over WiFi or any other connective medium, making it great for <a href="https://en.wikipedia.org/wiki/Sneakernet">Sneakernets</a>.</p>
-<p>Scuttlebot is <a href="https://en.wikipedia.org/wiki/Eventual_consistency">eventually-consistent with peers</a>, and requires exterior coordination to create strictly-ordered transactions.
+<p>Because <code>ssb-server</code> doesn&#39;t depend on hosts, its users can synchronize over WiFi or any other connective medium, making it great for <a href="https://en.wikipedia.org/wiki/Sneakernet">Sneakernets</a>.</p>
+<p><code>ssb-server</code> is <a href="https://en.wikipedia.org/wiki/Eventual_consistency">eventually-consistent with peers</a>, and requires exterior coordination to create strictly-ordered transactions.
 Therefore, by itself, it would probably make a poor choice for implementing a crypto-currency.
 (We get asked that a lot.)</p>
 <hr>
 <h3 id="getting-started">Getting Started</h3>
 <ul>
-<li><a href="https://ssbc.github.io/docs/scuttlebot/install.html">Install</a> - Setup instructions</li>
-<li><a href="https://ssbc.github.io/docs/scuttlebot/tutorial.html">Tutorial</a> - Primer on developing with Scuttlebot</li>
-<li><a href="https://ssbc.github.io/docs/api/scuttlebot.html">API / CLI Reference</a></li>
+<li><a href="https://handbook.scuttlebutt.nz/guides/ssb-server/install">Install</a> - Setup instructions</li>
+<li><a href="https://handbook.scuttlebutt.nz/guides/ssb-server/tutorial">Tutorial</a> - Primer on developing with ssb-server</li>
+<li><a href="https://scuttlebot.io/apis/scuttlebot/ssb.html">API / CLI Reference</a> (out of date, but still the best reference)</li>
+<li><a href="https://github.com/ssbc/ssb-config">ssb-config</a> - a module which helps build config to start ssb-server with</li>
+<li><a href="https://github.com/ssbc/ssb-client">ssb-client</a> - make a remote connection to the server</li>
+<li><a href="https://modules.scuttlebutt.nz">Modules docs</a> - see an overview of all the modules</li>
 </ul>
 <h3 id="key-concepts">Key Concepts</h3>
 <ul>
-<li><a href="https://ssbc.github.io/secure-scuttlebutt/">Secure Scuttlebutt</a>, Scuttlebot&#39;s global database protocol</li>
+<li><a href="https://ssbc.github.io/scuttlebutt-protocol-guide/">Secure Scuttlebutt</a>, ssb-server&#39;s global database protocol</li>
 <li><a href="https://ssbc.github.io/docs/ssb/linking.html">Content Hash Linking</a></li>
-<li><a href="https://ssbc.github.io/docs/ssb/secret-handshake.html">Secret Handshake</a>, Scuttlebot&#39;s transport-layer security protocol</li>
-<li><a href="https://ssbc.github.io/docs/ssb/end-to-end-encryption.html">Private Box</a>, Scuttlebot&#39;s end-to-end security protocol</li>
+<li><a href="https://ssbc.github.io/docs/ssb/secret-handshake.html">Secret Handshake</a>, ssb-server&#39;s transport-layer security protocol</li>
+<li><a href="https://ssbc.github.io/docs/ssb/end-to-end-encryption.html">Private Box</a>, ssb-server&#39;s end-to-end security protocol</li>
 <li><a href="https://ssbc.github.io/docs/ssb/faq.html">Frequently Asked Questions</a></li>
 </ul>
 <h3 id="further-reading">Further Reading</h3>
@@ -201,6 +249,8 @@ Therefore, by itself, it would probably make a poor choice for implementing a cr
 <li><a href="https://ssbc.github.io/docs/articles/design-challenge-sybil-attack.html">Design Challenge: Sybil Attacks</a></li>
 <li><a href="https://ssbc.github.io/docs/articles/using-trust-in-open-networks.html">Using Trust in Open Networks</a></li>
 </ul>
+<h1 id="license">License</h1>
+<p>MIT</p>
 
         </div>
       </div>
