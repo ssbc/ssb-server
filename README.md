@@ -182,9 +182,9 @@ Therefore, by itself, it would probably make a poor choice for implementing a cr
 
 ### Further Reading
 
-- [Design Challenge: Avoid Centralization and Singletons](https://ssbc.github.io/docs/articles/design-challenge-avoid-centralization-and-singletons.html)
-- [Design Challenge: Sybil Attacks](https://ssbc.github.io/docs/articles/design-challenge-sybil-attack.html)
-- [Using Trust in Open Networks](https://ssbc.github.io/docs/articles/using-trust-in-open-networks.html)
+- [Design Challenge: Avoid Centralization and Singletons](https://handbook.scuttlebutt.nz/stories/design-challenge-avoid-centralization-and-singletons)
+- [Design Challenge: Sybil Attacks](https://handbook.scuttlebutt.nz/stories/design-challenge-sybil-attacks)
+- [Using Trust in Open Networks](https://handbook.scuttlebutt.nz/stories/using-trust-in-open-networks)
 
 
 # License
