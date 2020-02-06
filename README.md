@@ -46,9 +46,11 @@ while true; do
 done
 ```
 
+Be sure to start the pub server from this script, as this script will run the pub server and restart it even if it crashes.      
+
 8. `mkdir ~/.ssb/`
 
-9. `nano ~/.ssb/config` and imput:
+9. `nano ~/.ssb/config` and input:
 
 ```
 {
@@ -78,7 +80,7 @@ Just run `ssb-server invite.create 1` and send those codes to your friends.
 
 Congratulations!  You are now ready to scuttlebutt with your friends! 
 
-P.S. if you get the error that your invite code is not valid try opening port 8008 on your router, its what worked for me.
+P.S. if you get the error that your invite code is not valid, when using the invite code on a client trying to connect to your server, try opening port 8008 on your router, it’s what worked for me.
 
 
 ## Applications
