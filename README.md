@@ -46,7 +46,7 @@ while true; do
 done
 ```
 
-Be sure to start the pub server from this script, as this script will run the pub server and restart it even if it crashes.      
+Be sure to start the pub server from this script (as shown in step 10), as this script will run the pub server and restart it even if it crashes.      
 
 8. `mkdir ~/.ssb/`
 
