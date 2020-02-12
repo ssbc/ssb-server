@@ -80,10 +80,10 @@ Just run `ssb-server invite.create 1` and send those codes to your friends.
 
 Congratulations!  You are now ready to scuttlebutt with your friends! 
 
-> note for those running `ssb-server` from a home computer
-> you will need to make sure that your router will allow connections to port 8008, so set it up so that
-> it forwards the port 8008 to the local IP address of the computer running the server (look up how to do this online)
-> If you haven't done this step, when a client tries to connect to your server using the invite code , they will get an error that your invite code is not valid
+>Note for those running `ssb-server` from a home computer.
+>You will need to make sure that your router will allow connections to port 8008.  Thus, you will need to forward port 8008 to the local IP address of the computer running the server (look up how to do this online).
+>If you haven't done this step, when a client tries to connect to your server using the invite code, they will get an error that your invite code is not valid.
+
 
 
 ## Applications
