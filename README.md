@@ -20,10 +20,71 @@ If you are looking to use ssb-server to run a pub, consider using [ssb-minimal-p
 
 ## Install
 
-To add `ssb-server` to your available CLI commands, install it using the `-g` global flag:
+How to Install `ssb-server` and create a working pub 
+
+1. `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash`
+
+2. `npm install -g node-gyp`
+
+3. `apt-get install autotools-dev automake`
+
+4. `nvm install 10`
+
+5. `nvm alias default 10`
+
+6. Then to add `ssb-server` to your available CLI commands, install it using the `-g` global flag:
 ```
 npm install -g ssb-server
 ```
+7. `nano ~/run-server.sh` and input:
+
+```
+#!/bin/bash
+while true; do
+  ssb-server start
+  sleep 3
+done
+```
+
+Be sure to start the pub server from this script (as shown in step 10), as this script will run the pub server and restart it even if it crashes.      
+
+8. `mkdir ~/.ssb/`
+
+9. `nano ~/.ssb/config` and input:
+
+```
+{
+  "connections": {
+    "incoming": {
+      "net": [
+        { "scope": "public", "host": "0.0.0.0", "external": ["Your Host Name or Public IP"], "transform": "shs", "port": 8008 }
+      ]
+    },
+    "outgoing": {
+      "net": [{ "transform": "shs" }]
+    }
+  }
+}
+```
+
+10. Now run `sh ~/run-server.sh` in a detachable  session (e.g. screens)
+
+11. Detach the session and run `ssb-server whoami` to check to see if the server is working.
+
+12. Now is the time to think of a really cool name for your new pub server.  Once you have it run:
+
+`ssb-server publish --type about --about {pub-id (this is the output from ssb-server whoami)} --name {Your pubs awesome name}`
+
+12. Now it's time to create those invites! 
+Just run `ssb-server invite.create 1` and send those codes to your friends.
+
+Congratulations!  You are now ready to scuttlebutt with your friends! 
+
+>Note for those running `ssb-server` from a home computer.
+>You will need to make sure that your router will allow connections to port 8008.  Thus, you will need to forward port 8008 to the local IP address of the computer running the server (look up how to do this online).
+>If you haven't done this step, when a client tries to connect to your server using the invite code, they will get an error that your invite code is not valid.
+
+
 
 ## Applications
 
