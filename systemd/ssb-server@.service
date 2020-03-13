@@ -1,0 +1,18 @@
+# Usage:
+#
+# $ sudo systemctl link ./ssb-server@.service # add to systemd
+# $ sudo systemctl enable ssb-server@${USER} # set to run as this user, on boot
+# $ sudo systemctl start ssb-server@${USER} # start now, as this user
+
+[Unit]
+Description=Secure Scuttlebutt
+After=network.target
+
+[Service]
+User=%I
+ExecStart=/usr/bin/env bash -c '. /home/%I/.nvm/nvm.sh; ssb-server start'
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target
