@@ -14,7 +14,7 @@
   "scripts": {
     "start": "node bin start",
     "prepublishOnly": "npm test",
-    "test": "set -e; for t in test/*.js; do echo TEST $t; node $t; done && compatibility",
+    "test": "set -e; for t in test/*.js; do echo TEST $t; node $t; done",
     "reinstall": "rm -rf node_modules package-lock.json npm-shrinkwrap.json; export npm_config_package_lock=true; npm install && npm dedupe && npm shrinkwrap",
     "coverage": "nyc --reporter=lcov npm test"
   },
@@ -49,7 +49,6 @@
     "ssb-caps": "^1.0.1",
     "ssb-client": "^4.7.9",
     "ssb-config": "^3.2.5",
-    "ssb-db": "19.2.0",
     "ssb-ebt": "^5.6.1",
     "ssb-friends": "^4.1.0",
     "ssb-gossip": "^1.1.0",
@@ -74,7 +73,6 @@
   },
   "devDependencies": {
     "cat-names": "^2.0.0",
-    "compatibility": "^1.0.0",
     "dog-names": "~1.0.2",
     "hexpp": "^2.0.0",
     "interleavings": "^1.0.0",
@@ -86,9 +84,11 @@
     "rng": "^0.2.2",
     "run-series": "^1.1.8",
     "semver": "^5.6.0",
+    "ssb-db": "^19.4.0",
     "ssb-feed": "^2.3.0",
     "ssb-generate": "^1.0.1",
     "ssb-validate": "^4",
+    "tap-spec": "^5.0.0",
     "tape": "^4.9.1",
     "typewiselite": "^1.0.0"
   },
@@ -105,17 +105,6 @@
       "node_modules/{ssb-*,flume*,secret-stack,muxrpc,multiserver}/{util,lib,frame,indexes}/*.js"
     ]
   },
-  "compatibility": [
-    "ssb-gossip",
-    "ssb-friends",
-    "ssb-blobs",
-    "ssb-invite",
-    "ssb-replicate",
-    "ssb-ebt",
-    "ssb-db",
-    "ssb-ooo",
-    "ssb-plugins"
-  ],
   "author": "Paul Frazee <pfrazee@gmail.com>",
   "license": "MIT"
 }
