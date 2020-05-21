@@ -84,7 +84,7 @@
     "rng": "^0.2.2",
     "run-series": "^1.1.8",
     "semver": "^5.6.0",
-    "ssb-db": "^19.4.0",
+    "ssb-db": "^20.0.0",
     "ssb-feed": "^2.3.0",
     "ssb-generate": "^1.0.1",
     "ssb-validate": "^4",
