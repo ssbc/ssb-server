@@ -6292,6 +6292,27 @@
         "stream-to-pull-stream": "^1.7.2"
       }
     },
+    "ssb-private1": {
+      "version": "1.0.1",
+      "resolved": "https://registry.npmjs.org/ssb-private1/-/ssb-private1-1.0.1.tgz",
+      "integrity": "sha512-x69YHNhjxCrknkK7XbEJyk2P0P3p52t6NF74I8ObHIrBdWnyRrO6iUH8K5b8CkaHawM4giXdZG5cyrOPzPN/Fg==",
+      "requires": {
+        "ssb-keys": "^7.2.2",
+        "ssb-ref": "^2.13.9"
+      },
+      "dependencies": {
+        "ssb-keys": {
+          "version": "7.2.2",
+          "resolved": "https://registry.npmjs.org/ssb-keys/-/ssb-keys-7.2.2.tgz",
+          "integrity": "sha512-FPeyYU/3LpxcagnbmVWE+Q/qzg6keqeOBPbD7sEH9UKixUASeufPKiORDgh8nVX7J9Z+0vUaHt/WG999kGjvVQ==",
+          "requires": {
+            "chloride": "^2.2.8",
+            "mkdirp": "~0.5.0",
+            "private-box": "^0.3.0"
+          }
+        }
+      }
+    },
     "ssb-query": {
       "version": "2.4.1",
       "resolved": "https://registry.npmjs.org/ssb-query/-/ssb-query-2.4.1.tgz",
