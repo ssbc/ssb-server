@@ -181,9 +181,17 @@ test('ssbServer should have websockets and http server by default', function(t) 
       '--path', path,
       '--caps.shs', caps
     ].join(' ')
+    const opts = {
+      env: Object.assign({}, process.env, {ssb_appname: 'test'})
+    }
 
-    exec(command, { env: Object.assign({}, process.env, {ssb_appname: 'test'}) }, function (err, stdout, sderr) {
-      if (err) return cb(err)
+    exec(command, opts, function (err, stdout, stderr) {
+      if (err) {
+        // TODO - note this is telling us getAddress is not a method it knows
+        console.log('Actual error from bin.js')
+        console.error(stdout)
+        return cb(err)
+      }
       cb(null, JSON.parse(stdout))  // remove quotes
     })
   }, function(err, addr) {
@@ -246,11 +254,16 @@ test('ssb-server client should work without options', function(t) {
       join(__dirname, '../bin.js'),
       'getAddress',
       'device',
+      '--',
       '--path', path,
       '--config', path+'/config',
       '--caps.shs', caps
     ].join(' ')
-    exec(command, { env: Object.assign({}, process.env, {ssb_appname: 'test'}) }, function (err, stdout, sderr) {
+    const opts = {
+      env: Object.assign({}, process.env, {ssb_appname: 'test'})
+    }
+
+    exec(command, opts, function (err, stdout, stderr) {
       if (err) return cb(err)
       cb(null, JSON.parse(stdout)) // remove quotes
     })
