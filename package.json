@@ -15,6 +15,7 @@
     "start": "node bin start",
     "prepublishOnly": "npm test",
     "test": "set -e; for t in test/*.js; do echo TEST $t; node $t; done",
+    "test:pretty": "npm run test | tap-spec",
     "reinstall": "rm -rf node_modules package-lock.json npm-shrinkwrap.json; export npm_config_package_lock=true; npm install && npm dedupe && npm shrinkwrap",
     "coverage": "nyc --reporter=lcov npm test"
   },
@@ -54,7 +55,7 @@
     "ssb-gossip": "^1.1.0",
     "ssb-invite": "^2.1.2",
     "ssb-keys": "^7.1.1",
-    "ssb-links": "^3.0.4",
+    "ssb-links": "^3.0.9",
     "ssb-local": "^1.0.0",
     "ssb-logging": "^1.0.0",
     "ssb-master": "^1.0.2",
