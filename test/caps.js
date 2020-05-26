@@ -38,7 +38,7 @@ var dbB = createSsbServer({
   temp: 'server-bob',
   port: 45452, timeout: 1400,
   keys: ssbKeys.generate(),
-  seeds: [dbA.address()],
+  seeds: [dbA.getAddress()],
   level: 'info'
 })
 
@@ -70,7 +70,7 @@ tape('signatures not accepted if made from different caps', function (t) {
 })
 
 tape('cannot connect if different shs caps, custom -> default', function (t) {
-  dbA.connect(dbB.address(), function (err) {
+  dbA.connect(dbB.getAddress(), function (err) {
     t.ok(err)
     console.log(err.stack)
 
@@ -79,7 +79,7 @@ tape('cannot connect if different shs caps, custom -> default', function (t) {
 })
 
 tape('cannot connect if different shs caps, default -> custom', function (t) {
-  dbB.connect(dbA.address(), function (err) {
+  dbB.connect(dbA.getAddress(), function (err) {
     t.ok(err)
 
     console.log(err.stack)
@@ -88,7 +88,7 @@ tape('cannot connect if different shs caps, default -> custom', function (t) {
 })
 
 tape('cannot connect if different shs caps, default -> custom', function (t) {
-  dbC.connect(dbA.address(), function (err) {
+  dbC.connect(dbA.getAddress(), function (err) {
     if(err) throw err
     t.end()
   })
