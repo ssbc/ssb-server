@@ -43,6 +43,7 @@ if (argv[0] == 'start') {
   // import ssbServer and start the server
 
   var createSsbServer = require('./')
+    .use(require('ssb-private1'))
     .use(require('ssb-onion'))
     .use(require('ssb-unix-socket'))
     .use(require('ssb-no-auth'))

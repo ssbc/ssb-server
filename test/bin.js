@@ -171,7 +171,7 @@ test('ssbServer should have websockets and http server by default', function(t) 
   try_often(10, function work(cb) {
     exec([
       join(__dirname, '../bin.js'),
-      'getAddress',
+      'address',
       'device',
       '--',
       '--host=127.0.0.1',
@@ -188,7 +188,7 @@ test('ssbServer should have websockets and http server by default', function(t) 
     t.error(err, 'ssbServer getAdress succeeds eventually')
     if (err) return end()
     t.ok(addr, 'address is not null')
-    t.comment('result of ssb-server getAddress: ' + addr)
+    t.comment('result of ssb-server address: ' + addr)
 
     var remotes = ma.decode(addr)
     console.log('remotes', remotes, addr)
@@ -241,7 +241,7 @@ test('ssb-server client should work without options', function(t) {
   try_often(10, function work(cb) {
     exec([
       join(__dirname, '../bin.js'),
-      'getAddress',
+      'address',
       'device',
       '--path', path,
       '--config', path+'/config',
@@ -253,11 +253,11 @@ test('ssb-server client should work without options', function(t) {
       cb(null, JSON.parse(stdout))  // remove quotes
     })
   }, function(err, addr) {
-    t.error(err, 'ssb-server getAddress succeeds eventually')
+    t.error(err, 'ssb-server address succeeds eventually')
     if (err) return end()
     t.ok(addr)
 
-    t.comment('result of ssb-server getAddress: ' + addr)
+    t.comment('result of ssb-server address: ' + addr)
     end()
   })
 })
