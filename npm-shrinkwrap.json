@@ -1438,9 +1438,9 @@
       }
     },
     "flumedb": {
-      "version": "2.1.2",
-      "resolved": "https://registry.npmjs.org/flumedb/-/flumedb-2.1.2.tgz",
-      "integrity": "sha512-DTW6XETxpXpAY5Aiz8lLyx2E624sqCUOo9pvGo3S/Kukkq0SOS9l8Judt3s8M8KmUzyVYdtHNwJkxiQrpQlkHw==",
+      "version": "2.1.4",
+      "resolved": "https://registry.npmjs.org/flumedb/-/flumedb-2.1.4.tgz",
+      "integrity": "sha512-jqbUXWsIPxHFmDOTN5/I5khgHzGtEl8cSL3kC13CC/FudT57tfzg+jvCWeXtSty15X1w6QD86lw8RW7cERuqsg==",
       "requires": {
         "cont": "^1.0.3",
         "explain-error": "^1.0.3",
@@ -5918,9 +5918,9 @@
       }
     },
     "ssb-db": {
-      "version": "20.0.0",
-      "resolved": "https://registry.npmjs.org/ssb-db/-/ssb-db-20.0.0.tgz",
-      "integrity": "sha512-Rca2tsJ3W0fBGCss5O98sdpa/ebszk3F5sOFCWarWnpn65EvaC9UdZ865AhCKq4lXg3YXtclV7j+GKAjvUZ2GQ==",
+      "version": "20.0.1",
+      "resolved": "https://registry.npmjs.org/ssb-db/-/ssb-db-20.0.1.tgz",
+      "integrity": "sha512-KA1JVxWMeZr3mXwN8PFba53vtBI+P3Y/cpy25IupU2vWi1l+Z3UOuV690cpavRoy9NW4BUc8Lpy38r21Ul3eIA==",
       "requires": {
         "async-write": "^2.1.0",
         "flumedb": "^2.1.1",
