@@ -57,7 +57,7 @@ Be sure to start the pub server from this script (as shown in step 10), as this 
   "connections": {
     "incoming": {
       "net": [
-        { "scope": "public", "host": "0.0.0.0", "external": ["Your Host Name or Public IP"], "transform": "shs", "port": 8008 }
+        { "scope": "public", "host": "0.0.0.0", "external": "Your Host Name or Public IP", "transform": "shs", "port": 8008 }
       ]
     },
     "outgoing": {
