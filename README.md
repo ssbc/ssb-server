@@ -1,11 +1,123 @@
+![solarpunk scuttlebutt](https://one.camp.scuttlebutt.nz/images/cypherpunk.jpeg)
+
 # ssb-server
 
-ssb-server is an open source **peer-to-peer log store** used as a database, identity provider, and messaging system.
-It has:
-
+Secure Scuttlebutt is **peer-to-peer database** which allows offline-first messaging and coordination between peers.
+Within this ecosystem, `ssb-server` is the core module which coordinates: 
  - Global replication
  - File-synchronization
  - End-to-end encryption
+
+This module is the Node.js implementation, see also : Golang / Rust / C
+
+## Table of contents
+
+- [Example Usage](#example-usage)
+- API
+  - [Javascript API](#javascript-api)
+  - [Commandline API](#commandline-api) // TODO - perhaps put this in another file
+- Resources
+  - [Getting Started](#getting-started)
+  - [Key Concepts](#key-concepts)
+  - [Inspiration](#inspiration)
+ 
+## Example Usage
+
+Start your peer and see what's methods are available:
+```js
+var Server = require('ssb-server')
+var config = require('ssb-config')
+
+// add plugins
+Server
+  .use(require('ssb-replicate'))
+  .use(require('ssb-friends'))
+  .use(require('ssb-gossip'))
+  .use(require('ssb-local'))
+
+// start the server with a default config
+var server = Server(config)
+
+console.log(server.getManifest())
+// => a manifest of all available methods
+```
+
+Publish a new message:
+```js 
+const newMsg = { 
+  type: 'post',
+  text: 'potluck at my place this friday!'
+}
+
+server.publish(newMsg, (err, msg) => {
+  console.log(msg)
+  // => {
+  //   key: '%SABuw7mOMKT5E8g6vp7ZZl8cqJfsIPPF44QpFE6p6sA=.sha256',
+  //   value: {
+  //     author: '@BIbVppzlrNiRJogxDYz3glUS7G4s4D4NiXiPEAEzxdE=.ed25519',
+  //     ...,
+  //     content: {
+  //       type: 'post',
+  //       text: 'potluck at my place this friday!'
+  //     },
+  //     signature: 'Mtfb13pmnAdyjO.....ed25519',
+  //   }
+  // }
+})
+```
+
+Read all messages that have been published (and keep the results streaming in live as new messages arrive from friends!) :
+```js 
+var pull = require('pull-stream')
+
+pull(
+  server.createLogStream({ live: true }),
+  pull.drain(msg => {
+    console.log(msg)
+  })
+)
+```
+
+Close the server: 
+
+```js
+server.close()
+```
+
+## API
+
+## More details!
+
+// TODO - some expanding READ MORE sections
+
+<details>
+  <summary>What's the database?</summary>
+  <p>
+  </p>
+</details>
+
+<details>
+  <summary>More info about where `ssb-server` is in the stack</summary>
+  <p>
+  </p>
+</details>
+
+<details>
+  <summary>How replication happens</summary>
+  <p>
+  </p>
+</details>
+
+<details>
+  <summary>Example applications</summary>
+  <p>
+  </p>
+</details>
+
+
+
+
+
 
 `ssb-server` behaves just like a [Kappa Architecture DB](http://milinda.pathirage.org/kappa-architecture.com/).
 In the background, it syncs with known peers.
@@ -14,7 +126,6 @@ This means ssb-servers comprise a [global gossip-protocol mesh](https://en.wikip
 
 If you are looking to use ssb-server to run a pub, consider using [ssb-minimal-pub-server](https://github.com/ssbc/ssb-minimal-pub-server) instead.
 
-**Join us in #scuttlebutt on freenode.**
 
 [![build status](https://secure.travis-ci.org/ssbc/ssb-server.png)](http://travis-ci.org/ssbc/ssb-server)
 
@@ -107,36 +218,6 @@ Leave this running in its own terminal/window
 ssb-server start --logging.level=info
 ```
 
-### Javascript Usage Example
-
-```js
-var Server = require('ssb-server')
-var config = require('ssb-config')
-var fs = require('fs')
-var path = require('path')
-
-// add plugins
-Server
-  .use(require('ssb-master'))
-  .use(require('ssb-gossip'))
-  .use(require('ssb-replicate'))
-  .use(require('ssb-backlinks'))
-
-var server = Server(config)
-
-// save an updated list of methods this server has made public
-// in a location that ssb-client will know to check
-var manifest = server.getManifest()
-fs.writeFileSync(
-  path.join(config.path, 'manifest.json'), // ~/.ssb/manifest.json
-  JSON.stringify(manifest)
-)
-```
-see: [github.com/ssbc/**ssb-config**](https://github.com/ssbc/ssb-config) for custom configuration.
-
-## Calling `ssb-server` Functions
-
-There are a variety of ways to call `ssb-server` methods, from a command line as well as in a javascript program.
 
 ### Command Line Usage Example
 
