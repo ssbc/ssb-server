@@ -6070,9 +6070,9 @@
       }
     },
     "ssb-links": {
-      "version": "3.0.9",
-      "resolved": "https://registry.npmjs.org/ssb-links/-/ssb-links-3.0.9.tgz",
-      "integrity": "sha512-jb1wqknz+AMqD9CxpjfDhII5Vz5JRVY9MakTrgKCrBFqLIPhqHq9bScei0zY0IBWjpSflI0juqOhpki38pWBHA==",
+      "version": "3.0.10",
+      "resolved": "https://registry.npmjs.org/ssb-links/-/ssb-links-3.0.10.tgz",
+      "integrity": "sha512-p6rH5dcwebRnwGRBfBpkOV49ZLLApGX+hppHwJtBsWKTXIKZFu4+9pGuRHmC1UNa+B5A2wELjo4Ru1AMQdYGwA==",
       "requires": {
         "flumeview-links": "^1.0.1",
         "map-filter-reduce": "^2.0.0",

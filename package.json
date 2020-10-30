@@ -56,7 +56,7 @@
     "ssb-gossip": "^1.1.0",
     "ssb-invite": "^2.1.2",
     "ssb-keys": "^7.1.1",
-    "ssb-links": "^3.0.9",
+    "ssb-links": "^3.0.10",
     "ssb-local": "^1.0.0",
     "ssb-logging": "^1.0.0",
     "ssb-master": "^1.0.2",
