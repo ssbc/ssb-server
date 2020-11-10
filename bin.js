@@ -8,7 +8,6 @@ var File         = require('pull-file')
 var explain      = require('explain-error')
 var Config       = require('ssb-config/inject')
 var Client       = require('ssb-client')
-var createHash   = require('multiblob/util').createHash
 var minimist     = require('minimist')
 var muxrpcli     = require('muxrpcli')
 var cmdAliases   = require('./lib/cli-cmd-aliases')
@@ -126,10 +125,6 @@ if (argv[0] == 'start') {
       cb()
     }
 
-    // HACK
-    // we need to output the hash of blobs that are added via blobs.add
-    // because muxrpc doesnt support the `sink` callback yet, we need this manual override
-    // -prf
     if (process.argv[2] === 'blobs.add') {
       var filename = process.argv[3]
       var source =
@@ -141,14 +136,12 @@ if (argv[0] == 'start') {
         console.error('  source | blobs.add   # read from stdin')
         process.exit(1)
       })()
-      var hasher = createHash('sha256')
       pull(
         source,
-        hasher,
-        rpc.blobs.add(function (err) {
+        rpc.blobs.add(null, function (err, hash) {
           if (err)
             throw err
-          console.log('&'+hasher.digest)
+          console.log(hash)
           process.exit()
         })
       )
