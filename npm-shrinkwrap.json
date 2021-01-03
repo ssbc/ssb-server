@@ -2819,18 +2819,17 @@
       "integrity": "sha512-PZM4dhYFmCF6uZGWpEmoPMUqJBywS9IcAgybT2GmSpYI1BvGvoWSdbio+ik+q/YD2vodhvslESWIS3NnkKYdqQ=="
     },
     "multiserver": {
-      "version": "3.6.0",
-      "resolved": "https://registry.npmjs.org/multiserver/-/multiserver-3.6.0.tgz",
-      "integrity": "sha512-MeANpx7//lJTwYKLYfsucdRvDafbyxaijUm9BhmF+QfLBMGRebNoKRYLhZItbHYAcsI0HBTtpBVHNw+bmRRnFQ==",
+      "version": "3.7.0",
+      "resolved": "https://registry.npmjs.org/multiserver/-/multiserver-3.7.0.tgz",
+      "integrity": "sha512-70SSDMNT+e3VsDG4x7OKFW8+UqyZsBWfKD9rAvsRWCbMe9ySODheJCZ91Xyha5FrA32UtWIHGSY3m5jATfEmVQ==",
       "requires": {
         "debug": "^4.1.1",
         "multicb": "^1.2.2",
         "multiserver-scopes": "^1.0.0",
-        "pull-cat": "~1.1.5",
         "pull-stream": "^3.6.1",
         "pull-ws": "^3.3.0",
         "secret-handshake": "^1.1.16",
-        "separator-escape": "0.0.0",
+        "separator-escape": "0.0.1",
         "socks": "^2.2.3",
         "stream-to-pull-stream": "^1.7.2"
       }
@@ -5547,9 +5546,9 @@
       "integrity": "sha512-sauaDf/PZdVgrLTNYHRtpXa1iRiKcaebiKQ1BJdpQlWH2lCvexQdX55snPFyK7QzpudqbCI0qXFfOasHdyNDGQ=="
     },
     "separator-escape": {
-      "version": "0.0.0",
-      "resolved": "https://registry.npmjs.org/separator-escape/-/separator-escape-0.0.0.tgz",
-      "integrity": "sha1-5DNnaTICBFTjwUhwxRfqHeVsL6Q="
+      "version": "0.0.1",
+      "resolved": "https://registry.npmjs.org/separator-escape/-/separator-escape-0.0.1.tgz",
+      "integrity": "sha512-daCzTzZVoowYzjW7x9xMH6zr+lt/zsGxV1rtXaoTnlues7ZDx6Qu0l5W3jCdgnXGE1ONAGL+XPWY+IRDxnJ9EQ=="
     },
     "set-value": {
       "version": "2.0.1",
@@ -5729,11 +5728,11 @@
       }
     },
     "socks": {
-      "version": "2.3.3",
-      "resolved": "https://registry.npmjs.org/socks/-/socks-2.3.3.tgz",
-      "integrity": "sha512-o5t52PCNtVdiOvzMry7wU4aOqYWL0PeCXRWBEiJow4/i/wr+wpsJQ9awEu1EonLIqsfGd5qSgDdxEOvCdmBEpA==",
+      "version": "2.5.1",
+      "resolved": "https://registry.npmjs.org/socks/-/socks-2.5.1.tgz",
+      "integrity": "sha512-oZCsJJxapULAYJaEYBSzMcz8m3jqgGrHaGhkmU/o/PQfFWYWxkAaA0UMGImb6s6tEXfKi959X6VJjMMQ3P6TTQ==",
       "requires": {
-        "ip": "1.1.5",
+        "ip": "^1.1.5",
         "smart-buffer": "^4.1.0"
       }
     },
