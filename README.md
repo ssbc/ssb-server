@@ -14,7 +14,7 @@ This means ssb-servers comprise a [global gossip-protocol mesh](https://en.wikip
 
 If you are looking to use ssb-server to run a pub, consider using [ssb-minimal-pub-server](https://github.com/ssbc/ssb-minimal-pub-server) instead.
 
-**Join us in #scuttlebutt on freenode.**
+**Join us in #scuttlebutt on [Libera Chat](https://libera.chat/).**
 
 [![build status](https://secure.travis-ci.org/ssbc/ssb-server.png)](http://travis-ci.org/ssbc/ssb-server)
 
