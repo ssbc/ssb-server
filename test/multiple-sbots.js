@@ -1,7 +1,7 @@
 var tape = require('tape')
 
 tape('createSsbServer method allows creating multiple servers with the same plugins', function (t) {
-  var createSsbServer = require('../').createSsbServer
+  var createSsbServer = require('../lib').createSsbServer
 
   // server1
   createSsbServer()

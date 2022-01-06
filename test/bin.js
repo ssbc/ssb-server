@@ -33,7 +33,7 @@ function ssbServer(t, argv, opts) {
 
   var sh = spawn(
     process.execPath,
-    [join(__dirname, '../bin.js')]
+    [join(__dirname, '../bin/ssb-server')]
     .concat(argv),
     Object.assign({
       env: Object.assign({}, process.env, {ssb_appname: 'test'}),
@@ -97,7 +97,7 @@ function connect(port, host, cb) {
 }
 
 function testSsbServer(t, opts, asConfig, port, cb) {
-  var dir = '/tmp/ssb-server_binjstest_' + Date.now()
+  var dir = '/tmp/ssb-server_/ssb-serverest_' + Date.now()
   if('function' === typeof port)
     cb = port, port = opts.port
   mkdirp.sync(dir)
@@ -144,7 +144,7 @@ function testSsbServer(t, opts, asConfig, port, cb) {
         ws: { port: 9033 }
       }
 //      if(c++) return
-      test('run bin.js server with ' + 
+      test('run ssb-server server with ' + 
         (asConfig ? 'a config file' : 'command line options') +
         ':'+JSON.stringify(opts)+' then connect to port:'+sbotPort
       , function(t) {
@@ -170,7 +170,7 @@ test('ssbServer should have websockets and http server by default', function(t) 
 
   try_often(10, function work(cb) {
     exec([
-      join(__dirname, '../bin.js'),
+      join(__dirname, '../bin/ssb-server'),
       'address',
       'device',
       '--',
@@ -240,7 +240,7 @@ test('ssb-server client should work without options', function(t) {
 
   try_often(10, function work(cb) {
     exec([
-      join(__dirname, '../bin.js'),
+      join(__dirname, '../bin/ssb-server'),
       'address',
       'device',
       '--path', path,

@@ -1,6 +1,6 @@
 //poll the progress() function and report how much waiting there is...
 //just whipped this up, obviously room for improvement here.
-module.exports = function (progress) {
+export default function (progress) {
   function bar (r) {
     var s = '\r', M = 50
     for(var i = 0; i < M; i++)

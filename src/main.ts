@@ -1,18 +1,20 @@
 #! /usr/bin/env node
 
-var fs           = require('fs')
-var path         = require('path')
-var pull         = require('pull-stream')
-var toPull       = require('stream-to-pull-stream')
-var File         = require('pull-file')
-var explain      = require('explain-error')
-var Config       = require('ssb-config/inject')
-var Client       = require('ssb-client')
-var minimist     = require('minimist')
-var muxrpcli     = require('muxrpcli')
-var cmdAliases   = require('./lib/cli-cmd-aliases')
-var ProgressBar  = require('./lib/progress')
-var packageJson  = require('./package.json')
+import { SSBServerFactory } from './index';
+
+import { readFileSync, writeFileSync } from 'fs';
+import * as path from 'path';
+import * as pull from 'pull-stream';
+import * as toPull from 'stream-to-pull-stream';
+import * as File from 'pull-file';
+import * as explain from 'explain-error';
+import * as Config from 'ssb-config/inject';
+import * as Client from 'ssb-client';
+import * as minimist from 'minimist';
+import * as muxrpcli from 'muxrpcli';
+import cmdAliases from './cli/cli-cmd-aliases';
+import ProgressBar from './cli/progress';
+import packageJson from '../package.json';
 
 //get config as cli options after --, options before that are
 //options to the command.
@@ -41,7 +43,7 @@ if (argv[0] == 'start') {
   // special start command:
   // import ssbServer and start the server
 
-  var createSsbServer = require('./')
+  const serverFactory = (new SSBServerFactory)
     .use(require('ssb-private1'))
     .use(require('ssb-onion'))
     .use(require('ssb-unix-socket'))
@@ -59,16 +61,16 @@ if (argv[0] == 'start') {
     .use(require('ssb-links'))
     .use(require('ssb-ws'))
     .use(require('ssb-ebt'))
-    .use(require('ssb-ooo'))
+    .use(require('ssb-ooo'));
   // add third-party plugins
 
-  require('ssb-plugins').loadUserPlugins(createSsbServer, config)
+  require('ssb-plugins').loadUserPlugins(serverFactory, config)
 
   // start server
-  var server = createSsbServer(config)
+  var server = serverFactory.create(config);
 
   // write RPC manifest to ~/.ssb/manifest.json
-  fs.writeFileSync(manifestFile, JSON.stringify(server.getManifest(), null, 2))
+  writeFileSync(manifestFile, JSON.stringify(server.getManifest(), null, 2))
 
   if(process.stdout.isTTY && (config.logging.level != 'info'))
     ProgressBar(server.progress)
@@ -79,7 +81,7 @@ if (argv[0] == 'start') {
   // read manifest.json
   var manifest
   try {
-    manifest = JSON.parse(fs.readFileSync(manifestFile))
+    manifest = JSON.parse(readFileSync(manifestFile, 'utf-8'));
   } catch (err) {
     throw explain(err,
       'no manifest file'
@@ -153,10 +155,3 @@ if (argv[0] == 'start') {
     muxrpcli(argv, manifest, rpc, config.verbose)
   })
 }
-
-
-
-
-
-
-
