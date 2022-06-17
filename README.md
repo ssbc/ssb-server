@@ -22,21 +22,37 @@ If you are looking to use ssb-server to run a pub, consider using [ssb-minimal-p
 
 How to Install `ssb-server` and create a working pub 
 
-1. `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash`
+1. `sudo apt install curl autotools-dev automake`
 
-2. `npm install -g node-gyp`
+2. Install the Node Version Manager (NVM):
 
-3. `apt-get install autotools-dev automake`
+```
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
+```
+
+3. Close and reopen your terminal to start using nvm or run the following:
+
+```
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+```
 
 4. `nvm install 10`
 
 5. `nvm alias default 10`
 
-6. Then to add `ssb-server` to your available CLI commands, install it using the `-g` global flag:
+6. `npm install -g node-gyp`
+
+7. Then to add `ssb-server` to your available CLI commands, install it using the `-g` global flag:
+
 ```
 npm install -g ssb-server
 ```
-7. `nano ~/run-server.sh` and input:
+
+If you are running as the root user this command will fail. Ideally you would run ssb-server as a non-priviledged user, but if you have to run it as root you can do so with `npm install -g ssb-server --unsafe-perm`.
+
+8. `nano ~/run-server.sh` and input:
 
 ```
 #!/bin/bash
@@ -46,11 +62,13 @@ while true; do
 done
 ```
 
+Input Ctrl-X to save and quit.
+
 Be sure to start the pub server from this script (as shown in step 10), as this script will run the pub server and restart it even if it crashes.      
 
-8. `mkdir ~/.ssb/`
+9. `mkdir ~/.ssb/`
 
-9. `nano ~/.ssb/config` and input:
+10. `nano ~/.ssb/config` and input:
 
 ```
 {
@@ -67,15 +85,15 @@ Be sure to start the pub server from this script (as shown in step 10), as this 
 }
 ```
 
-10. Now run `sh ~/run-server.sh` in a detachable  session (e.g. screens)
+11. Now run `sh ~/run-server.sh` in a detachable session (e.g. screens)
 
-11. Detach the session and run `ssb-server whoami` to check to see if the server is working.
+12. Detach the session and run `ssb-server whoami` to check to see if the server is working.
 
-12. Now is the time to think of a really cool name for your new pub server.  Once you have it run:
+13. Now is the time to think of a really cool name for your new pub server.  Once you have it run:
 
 `ssb-server publish --type about --about {pub-id (this is the output from ssb-server whoami)} --name {Your pubs awesome name}`
 
-12. Now it's time to create those invites! 
+14. Now it's time to create those invites! 
 Just run `ssb-server invite.create 1` and send those codes to your friends.
 
 Congratulations!  You are now ready to scuttlebutt with your friends! 
