@@ -1,0 +1,1 @@
+{"version":3,"file":"cli-cmd-aliases.js","sourceRoot":"","sources":["../../../src/cli/cli-cmd-aliases.ts"],"names":[],"mappings":";;AAAA,kBAAe;IACb,IAAI,EAAE,kBAAkB;IACxB,OAAO,EAAE,qBAAqB;IAC9B,IAAI,EAAE,qBAAqB;IAC3B,MAAM,EAAE,cAAc;IACtB,GAAG,EAAE,cAAc;IACnB,GAAG,EAAE,iBAAiB;IACtB,IAAI,EAAE,gBAAgB;IACtB,IAAI,EAAE,QAAQ;CACf,CAAC"}

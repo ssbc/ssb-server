@@ -8,11 +8,15 @@
     "url": "git://github.com/ssbc/ssb-server.git"
   },
   "bin": {
-    "sbot": "./bin.js",
-    "ssb-server": "./bin.js"
+    "sbot": "./bin/sbot",
+    "ssb-server": "./bin/ssb-server"
   },
+  "main": "lib/index.js",
   "scripts": {
-    "start": "node bin start",
+    "compile": "tsc",
+    "pretest": "npm run compile",
+    "build": "npm run compile",
+    "start": "ts-node src/main.ts start",
     "prepublishOnly": "npm test",
     "test": "set -e; for t in test/*.js; do echo TEST $t; node $t; done",
     "test:pretty": "npm run test | tap-spec",
@@ -26,6 +30,8 @@
     "cross-spawn": "^6.0.5",
     "debug": "^4.1.1",
     "deep-equal": "^1.0.1",
+    "eslint": "^8.6.0",
+    "eslint-config-prettier": "^8.3.0",
     "explain-error": "^1.0.3",
     "has-network": "0.0.1",
     "ip": "^1.1.5",
@@ -39,13 +45,14 @@
     "muxrpcli": "3",
     "mv": "^2.1.1",
     "osenv": "^0.1.5",
+    "prettier": "^2.5.1",
     "pull-cat": "~1.1.5",
     "pull-file": "^1.0.0",
     "pull-many": "~1.0.6",
     "pull-pushable": "^2.2.0",
     "pull-stream": "^3.6.2",
-    "rimraf": "^2.4.2",
-    "secret-stack": "^6.3.1",
+    "rimraf": "^2.7.1",
+    "secret-stack": "^6.4.0",
     "ssb-blobs": "1.2.2",
     "ssb-caps": "^1.0.1",
     "ssb-client": "^4.7.9",
@@ -74,6 +81,9 @@
     "zerr": "^1.0.0"
   },
   "devDependencies": {
+    "@types/node": "^17.0.8",
+    "@typescript-eslint/eslint-plugin": "^5.9.0",
+    "@typescript-eslint/parser": "^5.9.0",
     "cat-names": "^2.0.0",
     "dog-names": "~1.0.2",
     "hexpp": "^2.0.0",
@@ -91,6 +101,9 @@
     "ssb-validate": "^4",
     "tap-spec": "^5.0.0",
     "tape": "^4.9.1",
+    "ts-node": "^10.4.0",
+    "tsutils": "^3.21.0",
+    "typescript": "^4.5.4",
     "typewiselite": "^1.0.0"
   },
   "nyc": {
@@ -101,6 +114,7 @@
     "include": [
       "*.js",
       "lib/*.js",
+      "src/*.ts",
       "plugins/*.js",
       "node_modules/{ssb-*,flume*,secret-stack,muxrpc,multiserver}/*.js",
       "node_modules/{ssb-*,flume*,secret-stack,muxrpc,multiserver}/{util,lib,frame,indexes}/*.js"

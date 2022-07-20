@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   feed: 'createFeedStream',
   history: 'createHistoryStream',
   hist: 'createHistoryStream',
@@ -7,4 +7,4 @@ module.exports = {
   log: 'createLogStream',
   logt: 'messagesByType',
   conf: 'config'
-}
+};
